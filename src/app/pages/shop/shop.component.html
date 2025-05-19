@@ -1,0 +1,251 @@
+<!-- ========================= Breadcrumb Start =============================== -->
+<app-breadcrumb title="Shop" subtitle="Product Shop"></app-breadcrumb>
+
+<!-- ========================= Breadcrumb End =============================== -->
+
+<!-- =============================== Shop Section Start ======================================== -->
+<section class="shop py-80">
+    <div class="container container-lg">
+        <div class="row">
+
+            <!-- Sidebar Start -->
+            <div class="col-lg-3">
+                <div class="shop-sidebar">
+                    <button type="button"
+                        class="shop-sidebar__close d-lg-none d-flex w-32 h-32 flex-center border border-gray-100 rounded-circle hover-bg-main-600 position-absolute inset-inline-end-0 me-10 mt-8 hover-text-white hover-border-main-600">
+                        <i class="ph ph-x"></i>
+                    </button>
+                    <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
+                        <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">Product Category</h6>
+                        <ul class="max-h-540 overflow-y-auto scroll-sm">
+                            <li class="mb-24" *ngFor="let category of categories; let last = last"
+                                [ngClass]="{ 'mb-0': last }">
+
+                                <a [routerLink]="[category.routerLink]" class="text-gray-900 hover-text-main-600">
+                                    {{ category.name }} ({{ category.count }})
+                                </a>
+                            </li>
+                        </ul>
+
+                    </div>
+                    <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
+                        <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">Filter by Price</h6>
+                        <div class="custom--range">
+                            <div id="slider-range"></div>
+                            <div class="flex-between flex-wrap-reverse gap-8 mt-24 ">
+                                <button type="button" class="btn btn-main h-40 flex-align">Filter </button>
+                                <div class="custom--range__content flex-align gap-8">
+                                    <span class="text-gray-500 text-md flex-shrink-0">Price:</span>
+                                    <input type="text"
+                                        class="custom--range__prices text-neutral-600 text-start text-md fw-medium"
+                                        id="amount" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
+                        <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">Filter by Rating</h6>
+                        <div *ngFor="let rating of ratings" class="flex-align gap-8 position-relative mb-20">
+                            <!-- Label for radio button -->
+                            <label class="position-absolute w-100 h-100 cursor-pointer"
+                                [for]="'rating' + rating.rating"></label>
+
+                            <!-- Radio Button -->
+                            <div class="common-check common-radio mb-0">
+                                <input class="form-check-input" type="radio" name="flexRadioDefault"
+                                    [id]="'rating' + rating.rating">
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="progress w-100 bg-gray-100 rounded-pill h-8" role="progressbar"
+                                [attr.aria-valuenow]="rating.progress" aria-valuemin="0" aria-valuemax="100">
+                                <div class="progress-bar bg-main-600 rounded-pill" [style.width.%]="rating.progress">
+                                </div>
+                            </div>
+
+                            <!-- Stars -->
+                            <div class="flex-align gap-4">
+                                <ng-container *ngFor="let star of [].constructor(rating.rating); let i = index">
+                                    <span class="text-xs fw-medium text-warning-600 d-flex">
+                                        <i class="ph-fill ph-star"></i>
+                                    </span>
+                                </ng-container>
+                                <ng-container *ngFor="let star of [].constructor(5 - rating.rating); let i = index">
+                                    <span class="text-xs fw-medium text-gray-400 d-flex">
+                                        <i class="ph-fill ph-star"></i>
+                                    </span>
+                                </ng-container>
+                            </div>
+
+                            <!-- Total count -->
+                            <span class="text-gray-900 flex-shrink-0">{{ rating.total }}</span>
+                        </div>
+
+                    </div>
+                    <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
+                        <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">Filter by Color</h6>
+                        <ul class="max-h-540 overflow-y-auto scroll-sm">
+                            <li *ngFor="let color of colors" class="mb-24">
+                                <div class="form-check common-check common-radio" [ngClass]="color.class">
+                                    <input class="form-check-input" type="radio" name="color" [id]="color.id">
+                                    <label class="form-check-label" [for]="color.id">{{ color.name }} ({{ color.count
+                                        }})</label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
+                        <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">Filter by Brand</h6>
+                        <ul class="max-h-540 overflow-y-auto scroll-sm">
+                            <li *ngFor="let brand of brands" class="mb-24">
+                                <div class="form-check common-check common-radio">
+                                    <input class="form-check-input" type="radio" name="color" [id]="brand.id">
+                                    <label class="form-check-label" [for]="brand.id">{{ brand.name }}</label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="shop-sidebar__box rounded-8">
+                        <img src="assets/images/thumbs/advertise-img1.png" alt="">
+                    </div>
+                </div>
+            </div>
+            <!-- Sidebar End -->
+
+            <!-- Content Start -->
+            <div class="col-lg-9">
+                <!-- Top Start -->
+                <div class="flex-between gap-16 flex-wrap mb-40">
+                    <span class="text-gray-900">Showing 1-20 of 85 result</span>
+                    <div class="position-relative flex-align gap-16 flex-wrap">
+
+                        <!-- List/Grid Toggle -->
+                        <div class="list-grid-btns flex-align gap-16">
+                            <!-- List View Button -->
+                            <button type="button" class="w-44 h-44 flex-center border rounded-6 text-2xl list-btn"
+                                [ngClass]="{
+            'border-gray-100 text-gray-700': listview !== 'list',
+            'border-main-600 text-white bg-main-600': listview === 'list'
+          }" (click)="listview = 'list'">
+                                <i class="ph-bold ph-list-dashes"></i>
+                            </button>
+
+                            <!-- Grid View Button -->
+                            <button type="button" class="w-44 h-44 flex-center border rounded-6 text-2xl grid-btn"
+                                [ngClass]="{
+            'border-gray-100 text-gray-700': listview !== 'grid',
+            'border-main-600 text-white bg-main-600': listview === 'grid'
+          }" (click)="listview = 'grid'">
+                                <i class="ph ph-squares-four"></i>
+                            </button>
+                        </div>
+
+                        <!-- Sorting -->
+                        <div class="position-relative text-gray-500 flex-align gap-4 text-14">
+                            <label for="sorting" class="text-inherit flex-shrink-0">Sort by: </label>
+                            <select class="form-control common-input px-14 py-14 text-inherit rounded-6 w-auto"
+                                id="sorting">
+                                <option value="1" selected>Popular</option>
+                                <option value="1">Latest</option>
+                                <option value="1">Trending</option>
+                                <option value="1">Matches</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter (Mobile Only) -->
+                        <button type="button"
+                            class="w-44 h-44 d-lg-none d-flex flex-center border border-gray-100 rounded-6 text-2xl sidebar-btn">
+                            <i class="ph-bold ph-funnel"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- Top End -->
+
+                <div class="list-grid-wrapper"
+                    [ngClass]="{'list-view': listview === 'list', 'grid-view': listview === 'grid'}">
+                    <div *ngFor="let product of products"
+                        class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2">
+                        <a [routerLink]="['product-details']"
+                            class="product-card__thumb flex-center rounded-8 bg-gray-50 position-relative">
+                            <img [src]="product.image" alt="" class="w-auto max-w-unset">
+                            <span *ngIf="product.badge"
+                                class="product-card__badge {{product.badgeClass}} px-8 py-4 text-sm text-white position-absolute inset-inline-start-0 inset-block-start-0">
+                                {{ product.badge }}
+                            </span>
+                        </a>
+                        <div class="product-card__content mt-16">
+                            <h6 class="title text-lg fw-semibold mt-12 mb-8">
+                                <a [routerLink]="['product-details']" class="link text-line-2" tabindex="0">{{
+                                    product.title }}</a>
+                            </h6>
+
+                            <div class="flex-align mb-20 mt-16 gap-6">
+                                <span class="text-xs fw-medium text-gray-500">{{ product.rating }}</span>
+                                <span class="text-xs fw-medium text-warning-600 d-flex"><i
+                                        class="ph-fill ph-star"></i></span>
+                                <span class="text-xs fw-medium text-gray-500">({{ product.reviews }})</span>
+                            </div>
+
+                            <div class="mt-8">
+                                <div class="progress w-100 bg-color-three rounded-pill h-4" role="progressbar"
+                                    [attr.aria-valuenow]="product.progress" aria-valuemin="0" aria-valuemax="100">
+                                    <div class="progress-bar bg-main-two-600 rounded-pill"
+                                        [style.width.%]="product.progress"></div>
+                                </div>
+                                <span class="text-gray-900 text-xs fw-medium mt-8">Sold: {{ product.sold }}</span>
+                            </div>
+
+                            <div class="product-card__price my-20">
+                                <span class="text-gray-400 text-md fw-semibold text-decoration-line-through">{{
+                                    product.oldPrice }}</span>
+                                <span class="text-heading text-md fw-semibold">{{ product.newPrice }} <span
+                                        class="text-gray-500 fw-normal">{{ product.unit }}</span></span>
+                            </div>
+
+                            <a [routerLink]="['cart']"
+                                class="product-card__cart btn bg-gray-50 text-heading hover-bg-main-600 hover-text-white py-11 px-24 rounded-8 flex-center gap-8 fw-medium"
+                                tabindex="0">
+                                Add To Cart <i class="ph ph-shopping-cart"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Pagination Start -->
+                <ul class="pagination flex-center flex-wrap gap-16">
+                    <li class="page-item">
+                        <a class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
+                            href="#" (click)="onPageChange(currentPage - 1)" [class.disabled]="currentPage === 1">
+                            <i class="ph-bold ph-arrow-left"></i>
+                        </a>
+                    </li>
+
+                    <!-- Loop through the pages dynamically -->
+                    <li *ngFor="let page of getPages()" class="page-item" [class.active]="page === currentPage">
+                        <a class="page-link h-64 w-64 flex-center text-md rounded-8 fw-medium text-neutral-600 border border-gray-100"
+                            href="#" (click)="onPageChange(page)">
+                            {{ page < 10 ? '0' + page : page }} </a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
+                            href="#" (click)="onPageChange(currentPage + 1)"
+                            [class.disabled]="currentPage === totalPages">
+                            <i class="ph-bold ph-arrow-right"></i>
+                        </a>
+                    </li>
+                </ul>
+                <!-- Pagination End -->
+            </div>
+            <!-- Content End -->
+
+        </div>
+    </div>
+</section>
+<!-- =============================== Shop Section End ======================================== -->
+
+<!-- ========================== Shipping Section Start ============================ -->
+<app-shipping></app-shipping>
+
+<!-- ========================== Shipping Section End ============================ -->
