@@ -1,3 +1,4 @@
+// src\app\app.routes.ts
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './layouts/main-layouts/layout/layout.component';
 import { SecondlayoutComponent } from './layouts/alt-layouts/secondlayout/secondlayout.component';
@@ -19,7 +20,7 @@ import { ProductDetailsComponent } from './pages/product-details/product-details
 import { ProductDetailsTwoComponent } from './pages/product-details-two/product-details-two.component';
 import { IndexTwoComponent } from './pages/index-two/index-two.component';
 import { IndexThreeComponent } from './pages/index-three/index-three.component';
-
+import { authGuard } from './guards/auth.guard';
 
 
 export const routes: Routes = [

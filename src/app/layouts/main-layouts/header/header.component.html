@@ -1,3 +1,4 @@
+<!-- src\app\layouts\main-layouts\header\header.component.html -->
 <!-- <p>header works!</p> -->
 <!--==================== Preloader Start ====================-->
 <!-- <div class="preloader">
@@ -423,12 +424,13 @@
                             <i class="ph ph-magnifying-glass"></i>
                         </span>
                     </button>
-                    <a href="javascript:void(0)" class="flex-align gap-4 item-hover">
+                    <!-- <a href="javascript:void(0)" class="flex-align gap-4 item-hover">
                         <span class="text-xl text-gray-700 d-flex position-relative item-hover__text">
                             <i class="ph ph-user"></i>
                         </span>
                         <span class="text-md text-heading-three item-hover__text d-none d-lg-flex">Profile</span>
-                    </a>
+                    </a> -->
+                    <app-user-profile></app-user-profile>
                     <a [routerLink]="['cart']" class="flex-align gap-4 item-hover">
                         <span class="text-xl text-gray-700 d-flex position-relative me-6 mt-6 item-hover__text">
                             <i class="ph ph-heart"></i>

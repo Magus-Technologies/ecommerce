@@ -1,97 +1,194 @@
+<!-- src/app/pages/account/account.component.html -->
 <!-- ========================= Breadcrumb Start =============================== -->
-<app-breadcrumb title="My Account" subtitle="Account"></app-breadcrumb>
+<app-breadcrumb title="Mi Cuenta" subtitle="Cuenta"></app-breadcrumb>
 
 <!-- ========================= Breadcrumb End =============================== -->
 
 <!-- =============================== Account Section Start =========================== -->
 <section class="account py-80">
     <div class="container container-lg">
-        <form action="#">
-            <div class="row gy-4">
+        <div class="row gy-4">
 
-                <!-- Login Card Start -->
-                <div class="col-xl-6 pe-xl-5">
-                    <div class="border border-gray-100 hover-border-main-600 transition-1 rounded-16 px-24 py-40 h-100">
-                        <h6 class="text-xl mb-32">Login</h6>
+            <!-- Login Card Start -->
+            <div class="col-xl-6 pe-xl-5">
+                <div class="border border-gray-100 hover-border-main-600 transition-1 rounded-16 px-24 py-40 h-100">
+                    <h6 class="text-xl mb-32">Iniciar Sesión</h6>
+                    
+                    <!-- Mensaje de error -->
+                    <div *ngIf="loginError" class="alert alert-danger mb-3">
+                        {{ loginError }}
+                    </div>
+                    
+                    <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
                         <div class="mb-24">
-                            <label for="username" class="text-neutral-900 text-lg mb-8 fw-medium">Username or email
-                                address <span class="text-danger">*</span> </label>
-                            <input type="text" class="common-input" id="username" placeholder="First Name">
-                        </div>
-                        <div class="mb-24">
-                            <label for="password" class="text-neutral-900 text-lg mb-8 fw-medium">Password</label>
-                            <div class="position-relative">
-                                <input type="password" class="common-input" id="password" placeholder="Enter Password"
-                                    value="password">
-                                <span
-                                    class="toggle-password position-absolute top-50 inset-inline-end-0 me-16 translate-middle-y cursor-pointer ph ph-eye-slash"
-                                    id="#password"></span>
+                            <label for="email" class="text-neutral-900 text-lg mb-8 fw-medium">
+                                Correo electrónico <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="email" 
+                                class="common-input" 
+                                id="email" 
+                                formControlName="email"
+                                placeholder="Ingresa tu correo electrónico"
+                                [ngClass]="{'is-invalid': loginEmail?.invalid && loginEmail?.touched}"
+                            >
+                            <div *ngIf="loginEmail?.invalid && loginEmail?.touched" class="text-danger mt-1">
+                                <small *ngIf="loginEmail?.errors?.['required']">El correo electrónico es requerido</small>
+                                <small *ngIf="loginEmail?.errors?.['email']">Ingresa un correo electrónico válido</small>
                             </div>
                         </div>
+                        
+                        <div class="mb-24">
+                            <label for="password" class="text-neutral-900 text-lg mb-8 fw-medium">
+                                Contraseña <span class="text-danger">*</span>
+                            </label>
+                            <div class="position-relative">
+                                <input 
+                                    [type]="showPassword ? 'text' : 'password'" 
+                                    class="common-input" 
+                                    id="password" 
+                                    formControlName="password"
+                                    placeholder="Ingresa tu contraseña"
+                                    [ngClass]="{'is-invalid': loginPassword?.invalid && loginPassword?.touched}"
+                                >
+                                <span
+                                    class="toggle-password position-absolute top-50 inset-inline-end-0 me-16 translate-middle-y cursor-pointer"
+                                    [class.ph-eye]="showPassword"
+                                    [class.ph-eye-slash]="!showPassword"
+                                    (click)="togglePasswordVisibility()"
+                                ></span>
+                            </div>
+                            <div *ngIf="loginPassword?.invalid && loginPassword?.touched" class="text-danger mt-1">
+                                <small *ngIf="loginPassword?.errors?.['required']">La contraseña es requerida</small>
+                            </div>
+                        </div>
+                        
                         <div class="mb-24 mt-48">
                             <div class="flex-align gap-48 flex-wrap">
-                                <button type="submit" class="btn btn-main py-18 px-40">Log in</button>
+                                <button 
+                                    type="submit" 
+                                    class="btn btn-main py-18 px-40"
+                                    [disabled]="isLoading"
+                                >
+                                    <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Iniciar Sesión
+                                </button>
                                 <div class="form-check common-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="remember">
-                                    <label class="form-check-label flex-grow-1" for="remember">Remember me</label>
+                                    <input class="form-check-input" type="checkbox" formControlName="remember" id="remember">
+                                    <label class="form-check-label flex-grow-1" for="remember">Recordarme</label>
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="mt-48">
-                            <a href="#"
-                                class="text-danger-600 text-sm fw-semibold hover-text-decoration-underline">Forgot your
-                                password?</a>
+                            <a href="#" class="text-danger-600 text-sm fw-semibold hover-text-decoration-underline">
+                                ¿Olvidaste tu contraseña?
+                            </a>
                         </div>
-                    </div>
+                    </form>
                 </div>
-                <!-- Login Card End -->
+            </div>
+            <!-- Login Card End -->
 
-                <!-- Register Card Start -->
-                <div class="col-xl-6">
-                    <div class="border border-gray-100 hover-border-main-600 transition-1 rounded-16 px-24 py-40">
-                        <h6 class="text-xl mb-32">Register</h6>
+            <!-- Register Card Start -->
+            <div class="col-xl-6">
+                <div class="border border-gray-100 hover-border-main-600 transition-1 rounded-16 px-24 py-40">
+                    <h6 class="text-xl mb-32">Registro</h6>
+                    
+                    <!-- Mensaje de error -->
+                    <div *ngIf="registerError" class="alert alert-danger mb-3">
+                        {{ registerError }}
+                    </div>
+                    
+                    <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
                         <div class="mb-24">
-                            <label for="usernameTwo" class="text-neutral-900 text-lg mb-8 fw-medium">Username <span
-                                    class="text-danger">*</span> </label>
-                            <input type="text" class="common-input" id="usernameTwo" placeholder="Write a username">
-                        </div>
-                        <div class="mb-24">
-                            <label for="emailTwo" class="text-neutral-900 text-lg mb-8 fw-medium">Email address <span
-                                    class="text-danger">*</span> </label>
-                            <input type="email" class="common-input" id="emailTwo" placeholder="Enter Email Address">
-                        </div>
-                        <div class="mb-24">
-                            <label for="enter-password" class="text-neutral-900 text-lg mb-8 fw-medium">Password <span
-                                    class="text-danger">*</span></label>
-                            <div class="position-relative">
-                                <input type="password" class="common-input" id="enter-password"
-                                    placeholder="Enter Password" value="password">
-                                <span
-                                    class="toggle-password position-absolute top-50 inset-inline-end-0 me-16 translate-middle-y cursor-pointer ph ph-eye-slash"
-                                    id="#enter-password"></span>
+                            <label for="username" class="text-neutral-900 text-lg mb-8 fw-medium">
+                                Nombre de usuario <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                class="common-input" 
+                                id="username" 
+                                formControlName="username"
+                                placeholder="Ingresa un nombre de usuario"
+                                [ngClass]="{'is-invalid': registerUsername?.invalid && registerUsername?.touched}"
+                            >
+                            <div *ngIf="registerUsername?.invalid && registerUsername?.touched" class="text-danger mt-1">
+                                <small *ngIf="registerUsername?.errors?.['required']">El nombre de usuario es requerido</small>
                             </div>
                         </div>
+                        
+                        <div class="mb-24">
+                            <label for="registerEmail" class="text-neutral-900 text-lg mb-8 fw-medium">
+                                Correo electrónico <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="email" 
+                                class="common-input" 
+                                id="registerEmail" 
+                                formControlName="email"
+                                placeholder="Ingresa tu correo electrónico"
+                                [ngClass]="{'is-invalid': registerEmail?.invalid && registerEmail?.touched}"
+                            >
+                            <div *ngIf="registerEmail?.invalid && registerEmail?.touched" class="text-danger mt-1">
+                                <small *ngIf="registerEmail?.errors?.['required']">El correo electrónico es requerido</small>
+                                <small *ngIf="registerEmail?.errors?.['email']">Ingresa un correo electrónico válido</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-24">
+                            <label for="registerPassword" class="text-neutral-900 text-lg mb-8 fw-medium">
+                                Contraseña <span class="text-danger">*</span>
+                            </label>
+                            <div class="position-relative">
+                                <input 
+                                    [type]="showRegisterPassword ? 'text' : 'password'" 
+                                    class="common-input" 
+                                    id="registerPassword" 
+                                    formControlName="password"
+                                    placeholder="Ingresa una contraseña"
+                                    [ngClass]="{'is-invalid': registerPassword?.invalid && registerPassword?.touched}"
+                                >
+                                <span
+                                    class="toggle-password position-absolute top-50 inset-inline-end-0 me-16 translate-middle-y cursor-pointer"
+                                    [class.ph-eye]="showRegisterPassword"
+                                    [class.ph-eye-slash]="!showRegisterPassword"
+                                    (click)="toggleRegisterPasswordVisibility()"
+                                ></span>
+                            </div>
+                            <div *ngIf="registerPassword?.invalid && registerPassword?.touched" class="text-danger mt-1">
+                                <small *ngIf="registerPassword?.errors?.['required']">La contraseña es requerida</small>
+                                <small *ngIf="registerPassword?.errors?.['minlength']">La contraseña debe tener al menos 8 caracteres</small>
+                            </div>
+                        </div>
+                        
                         <div class="my-48">
-                            <p class="text-gray-500">Your personal data will be used to process your order, support your
-                                experience throughout this website, and for other purposes described in our
-                                <a href="#" class="text-main-600 text-decoration-underline"> privacy policy</a>
-                                .
+                            <p class="text-gray-500">
+                                Tus datos personales se utilizarán para procesar tu pedido, mejorar tu experiencia en este sitio web y para otros fines descritos en nuestra
+                                <a href="#" class="text-main-600 text-decoration-underline">política de privacidad</a>.
                             </p>
                         </div>
+                        
                         <div class="mt-48">
-                            <button type="submit" class="btn btn-main py-18 px-40">Register</button>
+                            <button 
+                                type="submit" 
+                                class="btn btn-main py-18 px-40"
+                                [disabled]="isLoading"
+                            >
+                                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Registrarse
+                            </button>
                         </div>
-                    </div>
+                    </form>
                 </div>
-                <!-- Register Card End -->
-
             </div>
-        </form>
+            <!-- Register Card End -->
+
+        </div>
     </div>
 </section>
 <!-- =============================== Account Section End =========================== -->
 
 <!-- ========================== Shipping Section Start ============================ -->
 <app-shipping></app-shipping>
-
 <!-- ========================== Shipping Section End ============================ -->
