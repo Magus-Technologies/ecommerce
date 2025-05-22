@@ -53,6 +53,8 @@ export class AuthService {
             
             // Actualizar el BehaviorSubject
             this.currentUserSubject.next(response.user);
+
+      this.router.navigateByUrl('/dashboard', { replaceUrl: true });
           }
         })
       );
