@@ -22,14 +22,10 @@ import { IndexTwoComponent } from './pages/index-two/index-two.component';
 import { IndexThreeComponent } from './pages/index-three/index-three.component';
 import { authGuard } from './guards/auth.guard';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { DashboardLayoutComponent } from './layouts/dashboard-layout/dashboard-layout.component';
 
 export const routes: Routes = [
-  {
-    path: 'dashboard',
-    component: DashboardComponent,
-    canActivate: [authGuard],
-    title: 'Dashboard',
-  },
+  
   {
     path: '',
     component: LayoutComponent,
@@ -124,6 +120,34 @@ export const routes: Routes = [
         component: IndexThreeComponent,
         title: 'Index Three',
       },
+    ],
+  },
+  {
+    path: 'dashboard',
+    component: DashboardLayoutComponent,
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        component: DashboardComponent,
+        title: 'Dashboard',
+      },
+      // Aquí puedes añadir más rutas para el dashboard
+    //   {
+    //     path: 'pedidos',
+    //     component: PedidosComponent, // Deberás crear este componente
+    //     title: 'Pedidos',
+    //   },
+    //   {
+    //     path: 'perfil',
+    //     component: PerfilComponent, // Deberás crear este componente
+    //     title: 'Perfil',
+    //   },
+    //   {
+    //     path: 'configuracion',
+    //     component: ConfiguracionComponent, // Deberás crear este componente
+    //     title: 'Configuración',
+    //   }
     ],
   },
   {
