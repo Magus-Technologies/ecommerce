@@ -1,3 +1,4 @@
+// src\app\pages\index\index.component.ts
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common'; // ✅ Import this
 import { NgFor } from '@angular/common'; // (Optional: For tree-shaking optimization)
