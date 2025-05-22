@@ -4,7 +4,6 @@ import { LayoutComponent } from './layouts/main-layouts/layout/layout.component'
 import { SecondlayoutComponent } from './layouts/alt-layouts/secondlayout/secondlayout.component';
 import { IndexComponent } from './pages/index/index.component';
 import { BlogComponent } from './pages/blog/blog.component';
-import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ContactComponent } from './pages/contact/contact.component';
 import { BlogDetailsComponent } from './pages/blog-details/blog-details.component';
 import { VendorComponent } from './pages/vendor/vendor.component';
@@ -22,119 +21,138 @@ import { ProductDetailsTwoComponent } from './pages/product-details-two/product-
 import { IndexTwoComponent } from './pages/index-two/index-two.component';
 import { IndexThreeComponent } from './pages/index-three/index-three.component';
 import { authGuard } from './guards/auth.guard';
-
+import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { DashboardLayoutComponent } from './layouts/dashboard-layout/dashboard-layout.component';
 
 export const routes: Routes = [
-    {
+  
+  {
+    path: '',
+    component: LayoutComponent,
+    children: [
+      {
         path: '',
-        component: LayoutComponent,
-        children: [
-            {
-                path: '',
-                component: IndexComponent,
-                title: 'Home',
-            },
-            {
-                path: 'vendor',
-                component: VendorComponent,
-                title: 'Vendor'
-            },
-            {
-                path: 'vendor-details',
-                component: VendorDetailsComponent,
-                title: 'Vendor Details'
-            },
-            {
-                path: 'blog',
-                component: BlogComponent,
-                title: 'Blog',
-            },
-            {
-                path: 'contact',
-                component: ContactComponent,
-                title: 'Contact'
-            },
-            {
-                path: 'blog-details',
-                component: BlogDetailsComponent,
-                title: 'Blog Details'
-            },
-            {
-                path: 'vendor-two',
-                component: VendorTwoComponent,
-                title: 'Vendor Details'
-            },
-            {
-                path: 'vendor-two-details',
-                component: VendorTwoDetailsComponent,
-                title: 'Vendor Two details'
-            },
-            {
-                path: 'cart',
-                component: CartComponent,
-                title: 'Cart'
-            },
-            {
-                path: 'wishlist',
-                component: WishlistComponent,
-                title: 'Wishlist'
-            },
-            {
-                path: 'checkout',
-                component: CheckoutComponent,
-                title: 'Checkout'
-            },
-            {
-                path: 'become-seller',
-                component: BecomeSellerComponent,
-                title: 'Become Seller'
-            },
-            {
-                path: 'account',
-                component: AccountComponent,
-                title: 'Account'
-            },
-            {
-                path: 'shop',
-                component: ShopComponent,
-                title: 'Shop'
-            },
-            {
-                path: 'product-details',
-                component: ProductDetailsComponent,
-                title: 'Product Details'
-            },
-            {
-                path: 'product-details-two',
-                component: ProductDetailsTwoComponent,
-                title: 'Product Details Two'
-            },
-            {
-                path: 'index-two',
-                component: IndexTwoComponent,
-                title: 'Index Two'
-            },
-            {
-                path: 'index-three',
-                component: IndexThreeComponent,
-                title: 'Index Three'
-            },
-            { path: 'dashboard', component: DashboardComponent },
-        ]
-
-    },
-
-    {
-        path: 'dashboard',
-        loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
-        title: 'Dashboard - Ecommerce'
-    },
-
-    {
+        component: IndexComponent,
+        title: 'Home',
+      },
+      {
+        path: 'vendor',
+        component: VendorComponent,
+        title: 'Vendor',
+      },
+      {
+        path: 'vendor-details',
+        component: VendorDetailsComponent,
+        title: 'Vendor Details',
+      },
+      {
+        path: 'blog',
+        component: BlogComponent,
+        title: 'Blog',
+      },
+      {
+        path: 'contact',
+        component: ContactComponent,
+        title: 'Contact',
+      },
+      {
+        path: 'blog-details',
+        component: BlogDetailsComponent,
+        title: 'Blog Details',
+      },
+      {
+        path: 'vendor-two',
+        component: VendorTwoComponent,
+        title: 'Vendor Details',
+      },
+      {
+        path: 'vendor-two-details',
+        component: VendorTwoDetailsComponent,
+        title: 'Vendor Two details',
+      },
+      {
+        path: 'cart',
+        component: CartComponent,
+        title: 'Cart',
+      },
+      {
+        path: 'wishlist',
+        component: WishlistComponent,
+        title: 'Wishlist',
+      },
+      {
+        path: 'checkout',
+        component: CheckoutComponent,
+        title: 'Checkout',
+      },
+      {
+        path: 'become-seller',
+        component: BecomeSellerComponent,
+        title: 'Become Seller',
+      },
+      {
+        path: 'account',
+        component: AccountComponent,
+        title: 'Account',
+      },
+      {
+        path: 'shop',
+        component: ShopComponent,
+        title: 'Shop',
+      },
+      {
+        path: 'product-details',
+        component: ProductDetailsComponent,
+        title: 'Product Details',
+      },
+      {
+        path: 'product-details-two',
+        component: ProductDetailsTwoComponent,
+        title: 'Product Details Two',
+      },
+      {
+        path: 'index-two',
+        component: IndexTwoComponent,
+        title: 'Index Two',
+      },
+      {
+        path: 'index-three',
+        component: IndexThreeComponent,
+        title: 'Index Three',
+      },
+    ],
+  },
+  {
+    path: 'dashboard',
+    component: DashboardLayoutComponent,
+    canActivate: [authGuard],
+    children: [
+      {
         path: '',
-        component: SecondlayoutComponent,
-        children: [
-
-        ]
-    }
+        component: DashboardComponent,
+        title: 'Dashboard',
+      },
+      // Aquí puedes añadir más rutas para el dashboard
+    //   {
+    //     path: 'pedidos',
+    //     component: PedidosComponent, // Deberás crear este componente
+    //     title: 'Pedidos',
+    //   },
+    //   {
+    //     path: 'perfil',
+    //     component: PerfilComponent, // Deberás crear este componente
+    //     title: 'Perfil',
+    //   },
+    //   {
+    //     path: 'configuracion',
+    //     component: ConfiguracionComponent, // Deberás crear este componente
+    //     title: 'Configuración',
+    //   }
+    ],
+  },
+  {
+    path: '',
+    component: SecondlayoutComponent,
+    children: [],
+  },
 ];

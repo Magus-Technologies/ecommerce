@@ -1,3 +1,4 @@
+// src\app\layouts\alt-layouts\secondlayout\secondlayout.component.ts
 import { Component } from '@angular/core';
 import { SecondfooterComponent } from '../secondfooter/secondfooter.component';
 import { SecondheaderComponent } from '../secondheader/secondheader.component';
