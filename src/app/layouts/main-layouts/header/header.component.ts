@@ -1,14 +1,23 @@
+// src\app\layouts\main-layouts\header\header.component.ts
 import { Component, ElementRef, Inject, OnInit, ViewChild,  PLATFORM_ID, HostListener,AfterViewInit  } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Select2, Select2Data } from 'ng-select2-component';
-
+import { UserProfileComponent } from '../../../component/user-profile/user-profile.component';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [RouterLink, FormsModule, CommonModule, ReactiveFormsModule, Select2, RouterLinkActive],
+  imports: [
+    RouterLink, 
+    FormsModule, 
+    CommonModule, 
+    ReactiveFormsModule, 
+    Select2, 
+    RouterLinkActive,
+    UserProfileComponent
+  ],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
