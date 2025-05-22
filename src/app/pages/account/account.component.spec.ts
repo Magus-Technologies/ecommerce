@@ -89,7 +89,7 @@ export class AccountComponent implements OnInit {
           localStorage.removeItem('remember_email');
         }
         // Redirigir a la página principal
-        this.router.navigate(['/']);
+       this.router.navigateByUrl('/dashboard');
       },
       error: (error) => {
         this.isLoading = false;
