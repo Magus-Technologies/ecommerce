@@ -1,0 +1,360 @@
+// Variables
+$primary-color: #007bff;
+$success-color: #28a745;
+$warning-color: #ffc107;
+$danger-color: #dc3545;
+$info-color: #17a2b8;
+$light-bg: #f8f9fa;
+$border-radius: 12px;
+$box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+$box-shadow-hover: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+
+// Dashboard Container
+.dashboard-container {
+  padding: 2rem;
+  background-color: $light-bg;
+  min-height: 100vh;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+}
+
+// Dashboard Title
+.dashboard-title {
+  color: #2c3e50;
+  font-weight: 700;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
+
+  i {
+    color: $primary-color;
+  }
+}
+
+// Stats Cards
+.stats-card {
+  background: white;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  transition: all 0.3s ease;
+  border: none;
+  overflow: hidden;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $box-shadow-hover;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, $primary-color, lighten($primary-color, 20%));
+  }
+
+  &-orders::before {
+    background: linear-gradient(90deg, $primary-color, lighten($primary-color, 20%));
+  }
+
+  &-customers::before {
+    background: linear-gradient(90deg, $success-color, lighten($success-color, 20%));
+  }
+
+  &-revenue::before {
+    background: linear-gradient(90deg, $warning-color, lighten($warning-color, 20%));
+  }
+
+  &-products::before {
+    background: linear-gradient(90deg, $info-color, lighten($info-color, 20%));
+  }
+
+  &-reports::before {
+    background: linear-gradient(90deg, $danger-color, lighten($danger-color, 20%));
+  }
+}
+
+.stats-card-body {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stats-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+  background: linear-gradient(135deg, $primary-color, lighten($primary-color, 10%));
+  flex-shrink: 0;
+
+  .stats-card-customers & {
+    background: linear-gradient(135deg, $success-color, lighten($success-color, 10%));
+  }
+
+  .stats-card-revenue & {
+    background: linear-gradient(135deg, $warning-color, lighten($warning-color, 10%));
+  }
+
+  .stats-card-products & {
+    background: linear-gradient(135deg, $info-color, lighten($info-color, 10%));
+  }
+
+  .stats-card-reports & {
+    background: linear-gradient(135deg, $danger-color, lighten($danger-color, 10%));
+  }
+}
+
+.stats-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stats-number {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  color: #2c3e50;
+  line-height: 1.2;
+
+  @media (max-width: 576px) {
+    font-size: 1.5rem;
+  }
+}
+
+.stats-label {
+  color: #6c757d;
+  font-size: 0.875rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+// Table Card
+.table-card {
+  background: white;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  overflow: hidden;
+}
+
+.table-card-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #f8f9fa, white);
+
+  @media (max-width: 576px) {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+}
+
+.table-title {
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 1.25rem;
+  margin: 0;
+
+  i {
+    color: $primary-color;
+  }
+}
+
+// Table Styles
+.table {
+  margin-bottom: 0;
+
+  th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+    padding: 1rem 0.75rem;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f3f4;
+  }
+
+  .table-row:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s ease;
+  }
+}
+
+// Product Cell
+.product-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.product-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid #f1f3f4;
+}
+
+.product-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.product-name {
+  font-weight: 500;
+  color: #2c3e50;
+  display: block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 200px;
+
+  @media (max-width: 768px) {
+    max-width: 150px;
+  }
+}
+
+// Table Content Styling
+.order-id {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: $primary-color;
+  background-color: rgba($primary-color, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.customer-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.price {
+  font-weight: 600;
+  color: $success-color;
+  font-size: 1rem;
+}
+
+.seller {
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.date {
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+// Payment Status
+.payment-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+
+  &.paid {
+    color: $success-color;
+  }
+
+  &.unpaid {
+    color: $danger-color;
+  }
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+// Status Badges
+.badge {
+  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// Responsive Table
+.table-responsive {
+  border-radius: 0 0 $border-radius $border-radius;
+
+  @media (max-width: 768px) {
+    font-size: 0.875rem;
+
+    .product-image {
+      width: 40px;
+      height: 40px;
+    }
+
+    .stats-number {
+      font-size: 1.5rem;
+    }
+
+    th, td {
+      padding: 0.75rem 0.5rem;
+    }
+  }
+}
+
+// Animation Classes
+@keyframes slideInUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Loading States (para futuro uso)
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

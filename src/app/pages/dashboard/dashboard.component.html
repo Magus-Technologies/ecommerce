@@ -1,0 +1,383 @@
+<div class="dashboard-container" [@fadeIn]>
+  <!-- Header -->
+  <div class="row mb-4" [@slideInUp]>
+    <div class="col-12">
+      <h1 class="dashboard-title">
+        <i class="fas fa-tachometer-alt me-3"></i>
+        Dashboard
+      </h1>
+      <p class="text-muted">Resumen general de tu tienda online</p>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row g-4 mb-5" [@staggerAnimation]>
+    <!-- Total Pedidos -->
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+      <div class="stats-card stats-card-orders h-100">
+        <div class="stats-card-body">
+          <div class="stats-icon">
+            <i class="fas fa-shopping-cart"></i>
+          </div>
+          <div class="stats-content">
+            <h3 class="stats-number">{{ stats.totalOrders.toLocaleString('es-ES') }}</h3>
+            <p class="stats-label">Total Pedidos</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Clientes -->
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+      <div class="stats-card stats-card-customers h-100">
+        <div class="stats-card-body">
+          <div class="stats-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stats-content">
+            <h3 class="stats-number">{{ stats.totalCustomers.toLocaleString('es-ES') }}</h3>
+            <p class="stats-label">Total Clientes</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Ingresos -->
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+      <div class="stats-card stats-card-revenue h-100">
+        <div class="stats-card-body">
+          <div class="stats-icon">
+            <i class="fas fa-euro-sign"></i>
+          </div>
+          <div class="stats-content">
+            <h3 class="stats-number">{{ formatCurrency(stats.totalRevenue) }}</h3>
+            <p class="stats-label">Total Ingresos</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Productos -->
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+      <div class="stats-card stats-card-products h-100">
+        <div class="stats-card-body">
+          <div class="stats-icon">
+            <i class="fas fa-box"></i>
+          </div>
+          <div class="stats-content">
+            <h3 class="stats-number">{{ stats.totalProducts.toLocaleString('es-ES') }}</h3>
+            <p class="stats-label">Total Productos</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Producto más vendido del mes y Contador de ganancias -->
+  <div class="row g-4 mb-5">
+    <!-- Producto más vendido -->
+    <div class="col-lg-8">
+      <div class="top-product-card">
+        <div class="growth-badge">
+          <i class="fas fa-arrow-up me-1"></i>
+          +{{ topProduct.growth }}%
+        </div>
+        <div class="top-product-content">
+          <img [src]="topProduct.image" [alt]="topProduct.name" class="top-product-image">
+          <div class="top-product-info">
+            <h3>🏆 Producto del Mes</h3>
+            <h4>{{ topProduct.name }}</h4>
+            <div class="product-stats">
+              <div class="stat-item">
+                <span class="stat-number">{{ topProduct.sales }}</span>
+                <span class="stat-label">Ventas</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">{{ formatCurrency(topProduct.revenue) }}</span>
+                <span class="stat-label">Ingresos</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contador animado de ganancias -->
+    <div class="col-lg-4">
+      <div class="earnings-counter">
+        <div class="counter-icon">
+          <i class="fas fa-coins"></i>
+        </div>
+        <div class="counter-value">{{ formatCurrency(monthlyEarnings) }}</div>
+        <div class="counter-label">Ganancias del Mes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stock crítico y Gráfico de categorías -->
+  <div class="row g-4 mb-5">
+    <!-- Stock crítico -->
+    <div class="col-lg-6">
+      <div class="critical-stock-card">
+        <div class="stock-header">
+          <h4>
+            <i class="fas fa-exclamation-triangle"></i>
+            Stock Crítico
+          </h4>
+        </div>
+        <div class="stock-list">
+          <div class="stock-item" *ngFor="let item of criticalStock">
+            <div class="item-info">
+              <span class="item-name">{{ item.name }}</span>
+              <span class="stock-level">{{ item.stock }} unidades restantes</span>
+            </div>
+            <button class="btn btn-outline-danger btn-sm restock-btn">
+              <i class="fas fa-plus me-1"></i>
+              Solicitar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico de torta -->
+    <div class="col-lg-6">
+      <div class="category-chart">
+        <div class="chart-header">
+          <h4>
+            <i class="fas fa-chart-pie me-2"></i>
+            Categorías más Vendidas
+          </h4>
+        </div>
+        <div class="pie-chart">
+          <div class="chart-center">
+            <span class="total-label">Total</span>
+            <span class="total-value">100%</span>
+          </div>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item" *ngFor="let category of categoryData">
+            <div class="legend-color" [style.background-color]="category.color"></div>
+            <span class="legend-text">{{ category.name }} ({{ category.value }}%)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Orders Table -->
+  <div class="row mb-5" [@slideInUp]>
+    <div class="col-12">
+      <div class="table-card">
+        <div class="table-card-header">
+          <h2 class="table-title">
+            <i class="fas fa-list-alt me-2"></i>
+            Órdenes Recientes
+          </h2>
+          <button class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-download me-1"></i>
+            Exportar
+          </button>
+        </div>
+        
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th scope="col">Producto</th>
+                <th scope="col">ID Orden</th>
+                <th scope="col">Cliente</th>
+                <th scope="col">Precio</th>
+                <th scope="col">Vendedor</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Pago</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let order of recentOrders; trackBy: trackByOrderId" class="table-row">
+                <!-- Producto con imagen -->
+                <td>
+                  <div class="product-cell">
+                    <img [src]="order.productImage" 
+                         [alt]="order.productName" 
+                         class="product-image">
+                    <div class="product-info">
+                      <span class="product-name">{{ order.productName }}</span>
+                    </div>
+                  </div>
+                </td>
+                
+                <!-- ID Orden -->
+                <td>
+                  <span class="order-id">{{ order.id }}</span>
+                </td>
+                
+                <!-- Cliente -->
+                <td>
+                  <span class="customer-name">{{ order.customer }}</span>
+                </td>
+                
+                <!-- Precio -->
+                <td>
+                  <span class="price">{{ formatCurrency(order.price) }}</span>
+                </td>
+                
+                <!-- Vendedor -->
+                <td>
+                  <span class="seller">{{ order.seller }}</span>
+                </td>
+                
+                <!-- Fecha -->
+                <td>
+                  <span class="date">{{ formatDate(order.date) }}</span>
+                </td>
+                
+                <!-- Estado -->
+                <td>
+                  <span class="badge" [ngClass]="getStatusClass(order.status)">
+                    {{ order.status }}
+                  </span>
+                </td>
+                
+                <!-- Pago -->
+                <td>
+                  <span class="payment-status" [ngClass]="order.isPaid ? 'paid' : 'unpaid'">
+                    <i class="fas" [ngClass]="order.isPaid ? 'fa-check-circle' : 'fa-times-circle'"></i>
+                    {{ order.isPaid ? 'Pagado' : 'No pagado' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos de barras y líneas -->
+  <div class="row g-4 mb-5">
+    <!-- Gráfico de barras - Pedidos por día -->
+    <div class="col-lg-6">
+      <div class="bar-chart-card">
+        <div class="chart-header">
+          <h4>
+            <i class="fas fa-chart-bar me-2"></i>
+            Pedidos por Día de la Semana
+          </h4>
+        </div>
+        <div class="bar-chart">
+          <div class="bar-item" *ngFor="let day of weeklyOrders">
+            <div class="bar" [style.height.%]="(day.orders / getMaxOrders()) * 100">
+              <span class="bar-value">{{ day.orders }}</span>
+            </div>
+            <span class="bar-label">{{ day.day }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico de líneas - Ventas mensuales -->
+    <div class="col-lg-6">
+      <div class="line-chart-card">
+        <div class="chart-header">
+          <h4>
+            <i class="fas fa-chart-line me-2"></i>
+            Ventas por Mes
+          </h4>
+        </div>
+        <div class="line-chart">
+          <svg viewBox="0 0 400 150">
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#007bff;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#007bff;stop-opacity:0" />
+              </linearGradient>
+            </defs>
+            
+            <!-- Área bajo la línea -->
+            <path class="chart-area" d="M 10 130 L 75 110 L 140 120 L 205 95 L 270 100 L 335 70 L 335 140 L 10 140 Z" />
+            
+            <!-- Línea principal -->
+            <path class="chart-line" d="M 10 130 L 75 110 L 140 120 L 205 95 L 270 100 L 335 70" />
+            
+            <!-- Puntos -->
+            <circle class="chart-dots" cx="10" cy="130" r="4" />
+            <circle class="chart-dots" cx="75" cy="110" r="4" />
+            <circle class="chart-dots" cx="140" cy="120" r="4" />
+            <circle class="chart-dots" cx="205" cy="95" r="4" />
+            <circle class="chart-dots" cx="270" cy="100" r="4" />
+            <circle class="chart-dots" cx="335" cy="70" r="4" />
+          </svg>
+        </div>
+        <div class="chart-labels">
+          <span class="label" *ngFor="let month of salesData">{{ month.month }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mini calendario -->
+  <div class="row mb-5">
+    <div class="col-lg-4">
+      <div class="mini-calendar">
+        <div class="calendar-header">
+          <h4>
+            <i class="fas fa-calendar-alt me-2"></i>
+            Enero 2024
+          </h4>
+        </div>
+        <div class="calendar-grid">
+          <!-- Headers de días -->
+          <div class="calendar-day header">D</div>
+          <div class="calendar-day header">L</div>
+          <div class="calendar-day header">M</div>
+          <div class="calendar-day header">M</div>
+          <div class="calendar-day header">J</div>
+          <div class="calendar-day header">V</div>
+          <div class="calendar-day header">S</div>
+          
+          <!-- Días del mes -->
+          <div class="calendar-day day"></div>
+          <div class="calendar-day day">1</div>
+          <div class="calendar-day day">2</div>
+          <div class="calendar-day day">3</div>
+          <div class="calendar-day day">4</div>
+          <div class="calendar-day day">5</div>
+          <div class="calendar-day day">6</div>
+          <div class="calendar-day day">7</div>
+          <div class="calendar-day day">8</div>
+          <div class="calendar-day day">9</div>
+          <div class="calendar-day day">10</div>
+          <div class="calendar-day day">11</div>
+          <div class="calendar-day day">12</div>
+          <div class="calendar-day day">13</div>
+          <div class="calendar-day day">14</div>
+          <div class="calendar-day day event">15</div>
+          <div class="calendar-day day">16</div>
+          <div class="calendar-day day">17</div>
+          <div class="calendar-day day">18</div>
+          <div class="calendar-day day">19</div>
+          <div class="calendar-day day">20</div>
+          <div class="calendar-day day">21</div>
+          <div class="calendar-day day event">22</div>
+          <div class="calendar-day day">23</div>
+          <div class="calendar-day day">24</div>
+          <div class="calendar-day day">25</div>
+          <div class="calendar-day day">26</div>
+          <div class="calendar-day day">27</div>
+          <div class="calendar-day day event">28</div>
+          <div class="calendar-day day">29</div>
+          <div class="calendar-day day">30</div>
+          <div class="calendar-day day">31</div>
+        </div>
+        <div class="calendar-events">
+          <div class="event-item" *ngFor="let event of calendarEvents">
+            <span class="event-day">{{ event.day }}</span> -
+            <span class="event-desc">{{ event.event }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
