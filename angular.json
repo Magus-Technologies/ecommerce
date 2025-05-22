@@ -32,6 +32,7 @@
             "styles": [
               "src/styles.scss",
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "node_modules/@fortawesome/fontawesome-free/css/all.min.css", 
               "src/assets/css/select2.min.css",
               "node_modules/animate.css/animate.min.css",
               "src/assets/css/jquery-ui.css",
@@ -43,7 +44,7 @@
             ],
             "scripts": [
               "node_modules/jquery/dist/jquery.min.js",
-              "node_modules/bootstrap/dist/js/bootstrap.min.js",
+              "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
               "src/assets/js/phosphor-icon.js",
               "src/assets/js/select2.min.js",
               "node_modules/slick-carousel/slick/slick.min.js",

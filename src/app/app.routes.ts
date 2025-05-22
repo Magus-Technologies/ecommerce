@@ -4,6 +4,7 @@ import { LayoutComponent } from './layouts/main-layouts/layout/layout.component'
 import { SecondlayoutComponent } from './layouts/alt-layouts/secondlayout/secondlayout.component';
 import { IndexComponent } from './pages/index/index.component';
 import { BlogComponent } from './pages/blog/blog.component';
+import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ContactComponent } from './pages/contact/contact.component';
 import { BlogDetailsComponent } from './pages/blog-details/blog-details.component';
 import { VendorComponent } from './pages/vendor/vendor.component';
@@ -118,10 +119,17 @@ export const routes: Routes = [
                 component: IndexThreeComponent,
                 title: 'Index Three'
             },
-
+            { path: 'dashboard', component: DashboardComponent },
         ]
 
     },
+
+    {
+        path: 'dashboard',
+        loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
+        title: 'Dashboard - Ecommerce'
+    },
+
     {
         path: '',
         component: SecondlayoutComponent,

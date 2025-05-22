@@ -3,15 +3,22 @@ import { RouterLink } from '@angular/router';
 import { BreadcrumbComponent } from '../../component/breadcrumb/breadcrumb.component';
 import { RecentPostComponent } from '../../component/recent-post/recent-post.component';
 import { BlogCategoryListComponent } from '../../component/blog-category-list/blog-category-list.component';
-
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-blog',
-  imports: [RouterLink, BreadcrumbComponent, RecentPostComponent, BlogCategoryListComponent],
+ imports: [
+    CommonModule, // 👈 AÑADE ESTO
+    RouterLink,
+    BreadcrumbComponent,
+    RecentPostComponent,
+    BlogCategoryListComponent
+  ],
   templateUrl: './blog.component.html',
   styleUrl: './blog.component.scss'
 })
 export class BlogComponent {
+  posts: any[] = []; 
   // blog 
   blogPosts = [
     {
