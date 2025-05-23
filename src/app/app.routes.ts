@@ -23,6 +23,8 @@ import { IndexThreeComponent } from './pages/index-three/index-three.component';
 import { authGuard } from './guards/auth.guard';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { DashboardLayoutComponent } from './layouts/dashboard-layout/dashboard-layout.component';
+import { UsuariosListComponent } from './component/usuarios/usuarios-list/usuarios-list.component';
+import { UserRegistrationComponent } from './component/user-registration/user-registration.component';
 
 export const routes: Routes = [
   
@@ -132,6 +134,13 @@ export const routes: Routes = [
         component: DashboardComponent,
         title: 'Dashboard',
       },
+
+      {
+        path: 'usuarios',                     // <-- flecha 2: ruta "usuarios" dentro de dashboard
+        component: UsuariosListComponent,    // <-- flecha 3: componente para esa ruta
+        title: 'Gestión de Usuarios',        // <-- flecha 4: título para esta ruta
+      },
+      { path: 'users/create', component: UserRegistrationComponent },
       // Aquí puedes añadir más rutas para el dashboard
     //   {
     //     path: 'pedidos',

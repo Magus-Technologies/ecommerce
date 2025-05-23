@@ -26,6 +26,11 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
               <i class="fas fa-user"></i> Perfil
             </a>
           </li>
+          <li *ngIf="esSuperadmin"> <!-- 🔒 Solo visible si es superadmin -->
+            <a routerLink="/dashboard/usuarios" routerLinkActive="active">
+              <i class="fas fa-users"></i> Usuarios
+            </a>
+          </li>
           <li>
             <a routerLink="/dashboard/configuracion" routerLinkActive="active">
               <i class="fas fa-cog"></i> Configuración
@@ -78,4 +83,15 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
     }
   `]
 })
-export class DashboardSidebarComponent {}
+export class DashboardSidebarComponent {
+  esSuperadmin = false; // 🔴 Variable para controlar visibilidad del menú
+
+  constructor() {
+    // 🔴 Al iniciar el componente, leemos el usuario del localStorage
+    const userJson = localStorage.getItem('current_user');
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      this.esSuperadmin = user.role?.nombre === 'superadmin'; // ✅ Evalúa si es superadmin
+    }
+  }
+}

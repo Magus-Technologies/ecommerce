@@ -1,4 +1,3 @@
-// src/app/services/auth.service.ts
 import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, of } from 'rxjs';
@@ -25,7 +24,6 @@ export class AuthService {
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     
-    // Solo intentar cargar datos del localStorage si estamos en el navegador
     if (this.isBrowser) {
       this.loadStoredUserData();
     }
@@ -38,7 +36,13 @@ export class AuthService {
     const storedToken = localStorage.getItem(this.tokenKey);
     
     if (storedUser && storedToken) {
-      this.currentUserSubject.next(JSON.parse(storedUser));
+      try { // 🔴 Agregado try-catch para manejar JSON inválido
+        const user = JSON.parse(storedUser);
+        this.currentUserSubject.next(user);
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        this.clearSession(); // 🔴 Limpiar datos inválidos
+      }
     }
   }
 
@@ -47,21 +51,33 @@ export class AuthService {
       .pipe(
         tap(response => {
           if (response.status === 'success' && this.isBrowser) {
-            // Guardar token y datos de usuario solo en el navegador
+            // 🔴 Guardar token
             localStorage.setItem(this.tokenKey, response.token);
-            localStorage.setItem(this.userKey, JSON.stringify(response.user));
             
-            // Actualizar el BehaviorSubject
-            this.currentUserSubject.next(response.user);
+            // 🔴 Crear objeto de usuario con la estructura correcta
+            const user: User = {
+              id: response.user.id,
+              name: response.user.name,
+              email: response.user.email,
+              role: response.user.role // ✅ Solución correcta
+            };
+            
+            // 🔴 Guardar usuario como string JSON
+            localStorage.setItem(this.userKey, JSON.stringify(user));
+            
+            // 🔴 Actualizar el BehaviorSubject
+            this.currentUserSubject.next(user);
 
-      this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+            console.log('Login exitoso, redirigiendo...', user); // 🔴 Log para debugging
+            
+            // 🔴 Redirigir al dashboard
+            this.router.navigate(['/dashboard']);
           }
         })
       );
   }
 
   logout(): Observable<any> {
-    // Solo hacer la petición si hay un usuario logueado
     if (this.currentUserSubject.value) {
       return this.http.post<any>(`${environment.apiUrl}/logout`, {})
         .pipe(
@@ -69,22 +85,17 @@ export class AuthService {
         );
     }
     
-    // Si no hay usuario, solo limpiar la sesión local
     this.clearSession();
     return of({ status: 'success' });
   }
 
   private clearSession(): void {
-    // Eliminar datos del localStorage solo en el navegador
     if (this.isBrowser) {
       localStorage.removeItem(this.tokenKey);
       localStorage.removeItem(this.userKey);
     }
     
-    // Actualizar el BehaviorSubject
     this.currentUserSubject.next(null);
-    
-    // Redirigir al login
     this.router.navigate(['/account']);
   }
 
@@ -94,14 +105,13 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    return !!this.getToken() && !!this.currentUserSubject.value; // 🔴 Verificar también el usuario
   }
 
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
   }
 
-  // Método para obtener el perfil del usuario desde el backend
   getUserProfile(): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/user`);
   }
