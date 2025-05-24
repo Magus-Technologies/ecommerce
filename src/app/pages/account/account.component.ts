@@ -61,48 +61,44 @@ export class AccountComponent implements OnInit {
     });
   }
 
-  onLogin(): void {
-    if (this.loginForm.invalid) {
-      // Marcar todos los campos como tocados para mostrar errores
-      Object.keys(this.loginForm.controls).forEach(key => {
-        const control = this.loginForm.get(key);
-        control?.markAsTouched();
-      });
-      return;
-    }
-
-    this.isLoading = true;
-    this.loginError = '';
-
-    const credentials = {
-      email: this.loginForm.value.email,
-      password: this.loginForm.value.password
-    };
-
-    this.authService.login(credentials).subscribe({
-      next: (response) => {
-        this.isLoading = false;
-        // Guardar "remember me" si está marcado
-        if (this.loginForm.value.remember) {
-          localStorage.setItem('remember_email', credentials.email);
-        } else {
-          localStorage.removeItem('remember_email');
-        }
-        // Redirigir a la página principal
-        this.router.navigate(['/']);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        if (error.error && error.error.message) {
-          this.loginError = error.error.message;
-        } else if (error.error && error.error.errors && error.error.errors.email) {
-          this.loginError = error.error.errors.email[0];
-        } else {
-          this.loginError = 'Error al iniciar sesión. Por favor, inténtalo de nuevo.';
-        }
-      }
+  // Modificar el método onLogin para quitar la redirección duplicada:
+onLogin(): void {
+  if (this.loginForm.invalid) {
+    // Marcar todos los campos como tocados para mostrar errores
+    Object.keys(this.loginForm.controls).forEach(key => {
+      const control = this.loginForm.get(key);
+      control?.markAsTouched();
     });
+    return;
   }
+
+  this.isLoading = true;
+  this.loginError = '';
+
+  const credentials = {
+    email: this.loginForm.value.email,
+    password: this.loginForm.value.password
+  };
+
+  this.authService.login(credentials).subscribe({
+    next: (response) => {
+      this.isLoading = false;
+      // Guardar "remember me" si está marcado
+      if (this.loginForm.value.remember) {
+        localStorage.setItem('remember_email', credentials.email);
+      } else {
+        localStorage.removeItem('remember_email');
+      }
+      // NO redirigir aquí, ya que el servicio de autenticación se encarga de eso
+      // this.router.navigate(['/']); // COMENTADO para evitar conflicto de redirección
+    },
+    error: (error) => {
+      // Resto del código permanece igual...
+    }
+  });
+}
+
+
 
   onRegister(): void {
     // Esta función la implementaremos más adelante

@@ -1,0 +1,148 @@
+<p>Hola!</p>
+<div class="usuarios-container">
+  <!-- Header con título y botón crear -->
+  <div class="usuarios-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="page-title">
+          <i class="fas fa-users"></i>
+          Gestión de Usuarios
+        </h1>
+        <p class="page-subtitle">Administra los usuarios de tu plataforma ecommerce</p>
+      </div>
+      <button 
+        class="btn btn-create"
+        (click)="onCrearUsuario()"
+        type="button" style="background: #2563eb">
+        <i class="fas fa-plus"></i>
+        Crear Usuario
+      </button>
+    </div>
+  </div>
+
+  <!-- Estadísticas rápidas -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon blue">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ usuarios.length }}</h3>
+        <p>Total Usuarios</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">
+        <i class="fas fa-user-check"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ getUsuariosActivos() }}</h3>
+        <p>Habilitados</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange">
+        <i class="fas fa-crown"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ getUsuariosAdministradores() }}</h3>
+        <p>Deshabilitados</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de usuarios -->
+  <div class="table-container">
+    <div class="table-header">
+      <h2 class="table-title">Lista de Usuarios</h2>
+      <div class="table-actions">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Buscar usuarios...">
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="usuarios-table">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Fecha Registro</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let usuario of usuarios; trackBy: trackByUserId" class="table-row">
+            <td class="user-cell">
+              <div class="user-info">
+                <div class="user-avatar">
+                  {{ usuario.nombre.charAt(0).toUpperCase() }}
+                </div>
+                <div class="user-details">
+                  <span class="user-name">{{ usuario.nombre }}</span>
+                  <span class="user-id">ID: {{ usuario.id }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="email-cell">
+              <span class="email">{{ usuario.email }}</span>
+            </td>
+            <td class="rol-cell">
+              <span class="badge" [ngClass]="getRolClass(usuario.rol)">
+                {{ usuario.rol }}
+              </span>
+            </td>
+            <td class="estado-cell">
+            <span class="badge" [ngClass]="getEstadoClass(usuario.estado)">
+              <i class="fas" [ngClass]="usuario.estado === 'habilitado' ? 'fa-check-circle' : 'fa-times-circle'"></i>
+              {{ usuario.estado === 'habilitado' ? 'Habilitado' : 'Deshabilitado' }}
+            </span>
+          </td>
+            <td class="fecha-cell">
+              <span class="fecha">{{ usuario.fechaCreacion | date:'dd/MM/yyyy' }}</span>
+            </td>
+            <td class="actions-cell">
+              <div class="action-buttons">
+                <button 
+                  class="btn-action btn-edit"
+                  (click)="onEditarUsuario(usuario)"
+                  title="Editar usuario">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button 
+                  class="btn-action btn-delete"
+                  (click)="onEliminarUsuario(usuario)"
+                  title="Eliminar usuario">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mensaje cuando no hay usuarios -->
+    <div *ngIf="usuarios.length === 0" class="empty-state">
+      <div class="empty-icon">
+        <i class="fas fa-users"></i>
+      </div>
+      <h3>No hay usuarios registrados</h3>
+      <p>Comienza creando tu primer usuario</p>
+      <button class="btn btn-create" (click)="onCrearUsuario()">
+        <i class="fas fa-plus"></i>
+        Crear Usuario
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading state -->
+<div *ngIf="loading" class="loading-overlay">
+  <div class="spinner"></div>
+  <p>Cargando usuarios...</p>
+</div>
