@@ -37,7 +37,7 @@
       </div>
       <div class="stat-content">
         <h3>{{ getUsuariosActivos() }}</h3>
-        <p>Activos</p>
+        <p>Habilitados</p>
       </div>
     </div>
     <div class="stat-card">
@@ -46,6 +46,7 @@
       </div>
       <div class="stat-content">
         <h3>{{ getUsuariosAdministradores() }}</h3>
+        <p>Deshabilitados</p>
       </div>
     </div>
   </div>
@@ -96,11 +97,11 @@
               </span>
             </td>
             <td class="estado-cell">
-              <span class="badge" [ngClass]="getEstadoClass(usuario.estado)">
-                <i class="fas" [ngClass]="usuario.estado === 'activo' ? 'fa-check-circle' : 'fa-times-circle'"></i>
-                {{ usuario.estado | titlecase }}
-              </span>
-            </td>
+            <span class="badge" [ngClass]="getEstadoClass(usuario.estado)">
+              <i class="fas" [ngClass]="usuario.estado === 'habilitado' ? 'fa-check-circle' : 'fa-times-circle'"></i>
+              {{ usuario.estado === 'habilitado' ? 'Habilitado' : 'Deshabilitado' }}
+            </span>
+          </td>
             <td class="fecha-cell">
               <span class="fecha">{{ usuario.fechaCreacion | date:'dd/MM/yyyy' }}</span>
             </td>

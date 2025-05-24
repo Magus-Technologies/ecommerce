@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 
 interface Address {
   label: string;
@@ -87,7 +88,7 @@ userForm!: FormGroup;
     { id: 5, name: 'Argentina' }
   ];
 
-  constructor(private fb: FormBuilder) {}
+constructor(private fb: FormBuilder, private router: Router) {}
 
   ngOnInit(): void {
     this.initializeForm();
@@ -276,5 +277,9 @@ userForm!: FormGroup;
       if (field.errors['passwordMismatch']) return 'Las contraseñas no coinciden';
     }
     return '';
+  }
+
+  irListaUsuarios() {
+    this.router.navigate(['/dashboard/usuarios']);
   }
 }

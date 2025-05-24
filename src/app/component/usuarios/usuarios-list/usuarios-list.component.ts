@@ -8,7 +8,7 @@ interface Usuario {
   nombre: string;
   email: string;
   rol: string;
-  estado: 'activo' | 'inactivo';
+  estado: 'habilitado' | 'deshabilitado';
   fechaCreacion: Date;
 }
 
@@ -31,10 +31,11 @@ export class UsuariosListComponent implements OnInit {
   this.cargarUsuariosFalsos();
 }
 
-// Función para contar usuarios activos
+// Función para contar usuarios habilitados
 getUsuariosActivos(): number {
-  return this.usuarios.filter(u => u.estado === 'activo').length;
+  return this.usuarios.filter(u => u.estado === 'habilitado').length;
 }
+
 
 // Función para contar administradores
 getUsuariosAdministradores(): number {
@@ -51,39 +52,39 @@ getUsuariosAdministradores(): number {
         nombre: 'Ana García',
         email: 'ana.garcia@email.com',
         rol: 'Administrador',
-        estado: 'activo',
+        estado: 'habilitado',
         fechaCreacion: new Date('2024-01-15')
       },
       {
         id: 2,
         nombre: 'Carlos López',
         email: 'carlos.lopez@email.com',
-        rol: 'Vendedor',
-        estado: 'activo',
+        rol: 'Asesor', // Antes: 'Vendedor'
+        estado: 'habilitado',
         fechaCreacion: new Date('2024-02-20')
       },
       {
         id: 3,
         nombre: 'María Rodríguez',
         email: 'maria.rodriguez@email.com',
-        rol: 'Cliente',
-        estado: 'activo',
+         rol: 'Soporte',
+        estado: 'habilitado',
         fechaCreacion: new Date('2024-03-10')
       },
       {
         id: 4,
         nombre: 'José Martínez',
         email: 'jose.martinez@email.com',
-        rol: 'Vendedor',
-        estado: 'inactivo',
+        rol: 'Asesor',
+        estado: 'deshabilitado',
         fechaCreacion: new Date('2024-01-25')
       },
       {
         id: 5,
         nombre: 'Laura Sánchez',
         email: 'laura.sanchez@email.com',
-        rol: 'Cliente',
-        estado: 'activo',
+        rol: 'Soporte',
+        estado: 'habilitado',
         fechaCreacion: new Date('2024-04-05')
       },
       {
@@ -91,7 +92,7 @@ getUsuariosAdministradores(): number {
         nombre: 'David González',
         email: 'david.gonzalez@email.com',
         rol: 'Administrador',
-        estado: 'activo',
+        estado: 'habilitado',
         fechaCreacion: new Date('2024-02-14')
       }
     ];
@@ -115,9 +116,9 @@ getUsuariosAdministradores(): number {
     switch (rol.toLowerCase()) {
       case 'administrador':
         return 'badge-admin';
-      case 'vendedor':
+       case 'asesor':
         return 'badge-vendedor';
-      case 'cliente':
+       case 'soporte':
         return 'badge-cliente';
       default:
         return 'badge-default';
@@ -125,7 +126,7 @@ getUsuariosAdministradores(): number {
   }
 
   getEstadoClass(estado: string): string {
-    return estado === 'activo' ? 'badge-activo' : 'badge-inactivo';
+    return estado === 'habilitado' ? 'badge-activo' : 'badge-inactivo';
   }
 
    trackByUserId(index: number, usuario: Usuario): number {
