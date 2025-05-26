@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { UsuariosService, Usuario as UsuarioBackend } from '../../../services/usuarios.service';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common'; // 
+import { Component, OnInit } from '@angular/core';
 
 
 interface Usuario {
@@ -25,10 +26,13 @@ export class UsuariosListComponent implements OnInit {
   usuarios: Usuario[] = [];
   loading = false;
 
-  constructor(private router: Router) {}
+constructor(
+  private router: Router,
+  private usuariosService: UsuariosService
+) {}
 
  ngOnInit(): void {
-  this.cargarUsuariosFalsos();
+  this.cargarUsuarios();
 }
 
 // Función para contar usuarios habilitados
@@ -44,58 +48,28 @@ getUsuariosAdministradores(): number {
 
 
 
-  private cargarUsuariosFalsos(): void {
-    // Datos de ejemplo simulados
-    this.usuarios = [
-      {
-        id: 1,
-        nombre: 'Ana García',
-        email: 'ana.garcia@email.com',
-        rol: 'Administrador',
-        estado: 'habilitado',
-        fechaCreacion: new Date('2024-01-15')
+  // Reemplaza la función cargarUsuariosFalsos() con esta nueva:
+  private cargarUsuarios(): void {
+    this.loading = true;
+    
+    this.usuariosService.obtenerUsuarios().subscribe({
+      next: (usuariosBackend: UsuarioBackend[]) => {
+        this.usuarios = usuariosBackend.map(usuario => ({
+          id: usuario.id,
+          nombre: usuario.name,
+          email: usuario.email,
+          rol: usuario.role?.nombre || 'Sin rol',
+          estado: 'habilitado' as const, // Por ahora todos habilitados, puedes agregar este campo al modelo
+          fechaCreacion: new Date(usuario.created_at)
+        }));
+        this.loading = false;
       },
-      {
-        id: 2,
-        nombre: 'Carlos López',
-        email: 'carlos.lopez@email.com',
-        rol: 'Asesor', // Antes: 'Vendedor'
-        estado: 'habilitado',
-        fechaCreacion: new Date('2024-02-20')
-      },
-      {
-        id: 3,
-        nombre: 'María Rodríguez',
-        email: 'maria.rodriguez@email.com',
-         rol: 'Soporte',
-        estado: 'habilitado',
-        fechaCreacion: new Date('2024-03-10')
-      },
-      {
-        id: 4,
-        nombre: 'José Martínez',
-        email: 'jose.martinez@email.com',
-        rol: 'Asesor',
-        estado: 'deshabilitado',
-        fechaCreacion: new Date('2024-01-25')
-      },
-      {
-        id: 5,
-        nombre: 'Laura Sánchez',
-        email: 'laura.sanchez@email.com',
-        rol: 'Soporte',
-        estado: 'habilitado',
-        fechaCreacion: new Date('2024-04-05')
-      },
-      {
-        id: 6,
-        nombre: 'David González',
-        email: 'david.gonzalez@email.com',
-        rol: 'Administrador',
-        estado: 'habilitado',
-        fechaCreacion: new Date('2024-02-14')
+       error: (error: any) => {
+        console.error('Error al cargar usuarios:', error);
+        this.loading = false;
+        // Opcional: mostrar mensaje de error al usuario
       }
-    ];
+    });
   }
 
   onCrearUsuario(): void {
