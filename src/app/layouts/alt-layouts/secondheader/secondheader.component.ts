@@ -1,3 +1,4 @@
+// src\app\layouts\alt-layouts\secondheader\secondheader.component.ts
 import { Component, Inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';

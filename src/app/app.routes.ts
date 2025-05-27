@@ -25,6 +25,8 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { DashboardLayoutComponent } from './layouts/dashboard-layout/dashboard-layout.component';
 import { UsuariosListComponent } from './component/usuarios/usuarios-list/usuarios-list.component';
 import { UserRegistrationComponent } from './component/user-registration/user-registration.component';
+import { ProductosListComponent } from './pages/dashboard/productos/productos-list/productos-list.component';
+import { CategoriasListComponent } from './pages/dashboard/categorias/categorias-list/categorias-list.component';
 
 export const routes: Routes = [
   
@@ -141,22 +143,19 @@ export const routes: Routes = [
         title: 'Gestión de Usuarios',        // <-- flecha 4: título para esta ruta
       },
       { path: 'users/create', component: UserRegistrationComponent },
-      // Aquí puedes añadir más rutas para el dashboard
-    //   {
-    //     path: 'pedidos',
-    //     component: PedidosComponent, // Deberás crear este componente
-    //     title: 'Pedidos',
-    //   },
-    //   {
-    //     path: 'perfil',
-    //     component: PerfilComponent, // Deberás crear este componente
-    //     title: 'Perfil',
-    //   },
-    //   {
-    //     path: 'configuracion',
-    //     component: ConfiguracionComponent, // Deberás crear este componente
-    //     title: 'Configuración',
-    //   }
+      {
+        path: 'productos',
+        component: ProductosListComponent,
+        title: 'Productos',
+      },
+      
+      {
+        path:'categorias',
+        component: CategoriasListComponent,
+        title: 'Categorías',
+      },
+     
+    
     ],
   },
   {

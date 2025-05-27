@@ -1,97 +1,59 @@
 // src/app/layouts/dashboard-layout/dashboard-sidebar/dashboard-sidebar.component.ts
-import { Component } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, Input, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterModule } from '@angular/router';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
-  template: `
-    <aside class="dashboard-sidebar">
-      <nav class="sidebar-nav">
-        <ul>
-          <li>
-            <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-              <i class="fas fa-home"></i> Inicio
-            </a>
-          </li>
-          <li>
-            <a routerLink="/dashboard/pedidos" routerLinkActive="active">
-              <i class="fas fa-shopping-cart"></i> Pedidos
-            </a>
-          </li>
-          <li>
-            <a routerLink="/dashboard/perfil" routerLinkActive="active">
-              <i class="fas fa-user"></i> Perfil
-            </a>
-          </li>
-          <li *ngIf="esSuperadmin"> <!-- 🔒 Solo visible si es superadmin -->
-            <a routerLink="/dashboard/usuarios" routerLinkActive="active">
-              <i class="fas fa-users"></i> Usuarios
-            </a>
-          </li>
-          <li>
-            <a routerLink="/dashboard/configuracion" routerLinkActive="active">
-              <i class="fas fa-cog"></i> Configuración
-            </a>
-          </li>
-          <li>
-            <a routerLink="/" class="back-to-site">
-              <i class="fas fa-arrow-left"></i> Volver al sitio
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </aside>
-  `,
-  styles: [`
-    .dashboard-sidebar {
-      width: 250px;
-      background-color: #2c3e50;
-      color: white;
-      height: 100%;
-      overflow-y: auto;
-    }
-    .sidebar-nav ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .sidebar-nav li {
-      margin: 0;
-    }
-    .sidebar-nav a {
-      display: flex;
-      align-items: center;
-      padding: 15px 20px;
-      color: #ecf0f1;
-      text-decoration: none;
-      transition: background-color 0.3s;
-    }
-    .sidebar-nav a:hover, .sidebar-nav a.active {
-      background-color: #34495e;
-    }
-    .sidebar-nav i {
-      margin-right: 10px;
-      width: 20px;
-      text-align: center;
-    }
-    .back-to-site {
-      margin-top: 20px;
-      border-top: 1px solid #34495e;
-    }
-  `]
+  imports: [CommonModule, RouterModule],
+  templateUrl: './dashboard-sidebar.component.html',
+  styleUrls: ['./dashboard-sidebar.component.scss']
 })
-export class DashboardSidebarComponent {
-  esSuperadmin = false; // 🔴 Variable para controlar visibilidad del menú
+export class DashboardSidebarComponent implements OnInit {
+  
+  @Input() isSidebarOpen = false;
+  @Output() sidebarToggled = new EventEmitter<boolean>();
+  @Output() sidebarCollapsed = new EventEmitter<boolean>(); // ✅ Nuevo output
 
-  constructor() {
-    // 🔴 Al iniciar el componente, leemos el usuario del localStorage
-    const userJson = localStorage.getItem('current_user');
-    if (userJson) {
-      const user = JSON.parse(userJson);
-      this.esSuperadmin = user.role?.nombre === 'superadmin'; // ✅ Evalúa si es superadmin
+  isCollapsed = false;
+  esSuperadmin = false;
+  isDesktop = false;
+
+  constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    const currentUser = this.authService.getCurrentUser();
+    this.esSuperadmin = currentUser?.role?.nombre === 'superadmin';
+    
+    this.checkScreenSize();
+    this.sidebarToggled.emit(!this.isCollapsed);
+    this.sidebarCollapsed.emit(this.isCollapsed); // ✅ Emitir estado inicial
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.checkScreenSize();
+  }
+
+  private checkScreenSize(): void {
+    this.isDesktop = window.innerWidth >= 992;
+    
+    if (!this.isDesktop) {
+      this.isCollapsed = false;
+      this.isSidebarOpen = false;
+      this.sidebarCollapsed.emit(false); 
+    } else {
+      this.isSidebarOpen = true;
+    }
+  }
+
+  toggleCollapse(): void {
+    if (this.isDesktop) {
+      this.isCollapsed = !this.isCollapsed;
+      this.sidebarToggled.emit(!this.isCollapsed);
+      this.sidebarCollapsed.emit(this.isCollapsed);
     }
   }
 }
