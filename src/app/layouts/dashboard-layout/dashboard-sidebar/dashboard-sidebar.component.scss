@@ -1,0 +1,220 @@
+// src/app/layouts/dashboard-layout/dashboard-sidebar/dashboard-sidebar.component.scss
+.dashboard-sidebar {
+  width: 280px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1050;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+
+  // Estado colapsado en desktop
+  &.collapsed {
+    width: 80px;
+    
+    .sidebar-header {
+      text-align: center;
+    }
+    
+    .nav-link {
+      justify-content: center;
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+  }
+
+  // Mobile: oculto por defecto
+  @media (max-width: 991.98px) {
+    transform: translateX(-100%);
+    
+    &.show {
+      transform: translateX(0);
+    }
+    
+    // En mobile nunca colapsado
+    &.collapsed {
+      width: 280px;
+      
+      .nav-link {
+        justify-content: flex-start;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+    }
+  }
+
+  // Desktop: siempre visible
+  @media (min-width: 992px) {
+    transform: translateX(0);
+  }
+
+  .sidebar-header {
+    position: sticky;
+    top: 0;
+    background: inherit;
+    z-index: 1;
+  }
+
+  .sidebar-nav {
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+  }
+
+  .nav-link {
+    &.active {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+      border-left: 3px solid white;
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+  }
+
+  // Scroll personalizado
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+// Clases de utilidad (si no las tienes en tu CSS global)
+.flex-align {
+  display: flex;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+.list-style-none {
+  list-style: none;
+}
+
+.text-decoration-none {
+  text-decoration: none;
+}
+
+.transition-2 {
+  transition: all 0.2s ease;
+}
+
+.hover-bg-main-500:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.bg-main-600 {
+  background-color: #2563eb; // Ajusta según tu color principal
+}
+
+.border-main-500 {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.text-white {
+  color: white;
+}
+
+.fw-medium {
+  font-weight: 500;
+}
+
+.fw-semibold {
+  font-weight: 600;
+}
+
+.rounded-8 {
+  border-radius: 8px;
+}
+
+.w-40 {
+  width: 40px;
+}
+
+.h-40 {
+  height: 40px;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+}
+
+.p-24 {
+  padding: 24px;
+}
+
+.p-16 {
+  padding: 16px;
+}
+
+.px-16 {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.py-12 {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.gap-12 {
+  gap: 12px;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.mb-8 {
+  margin-bottom: 8px;
+}
+
+.my-16 {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.mt-24 {
+  margin-top: 24px;
+}
+
+.pt-16 {
+  padding-top: 16px;
+}
+
+.border-bottom {
+  border-bottom: 1px solid;
+}
+
+.border-top {
+  border-top: 1px solid;
+}
+
+.opacity-50 {
+  opacity: 0.5;
+}

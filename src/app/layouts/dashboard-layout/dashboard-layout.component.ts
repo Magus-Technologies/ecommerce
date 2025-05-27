@@ -1,41 +1,65 @@
 // src/app/layouts/dashboard-layout/dashboard-layout.component.ts
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DashboardHeaderComponent } from './dashboard-header/dashboard-header.component';
+import { RouterModule } from '@angular/router';
 import { DashboardSidebarComponent } from './dashboard-sidebar/dashboard-sidebar.component';
+import { DashboardHeaderComponent } from './dashboard-header/dashboard-header.component';
 
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, DashboardHeaderComponent, DashboardSidebarComponent],
-  template: `
-    <div class="dashboard-layout">
-      <app-dashboard-header></app-dashboard-header>
-      <div class="dashboard-container">
-        <app-dashboard-sidebar></app-dashboard-sidebar>
-        <main class="dashboard-content">
-          <router-outlet></router-outlet>
-        </main>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .dashboard-layout {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-    .dashboard-container {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-    .dashboard-content {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-    }
-  `]
+  imports: [
+    CommonModule,
+    RouterModule,
+    DashboardSidebarComponent,
+    DashboardHeaderComponent
+  ],
+  templateUrl: './dashboard-layout.component.html',
+  styleUrls: ['./dashboard-layout.component.scss']
 })
-export class DashboardLayoutComponent {}
+export class DashboardLayoutComponent implements OnInit {
+  
+  isSidebarOpen = false;
+  isSidebarCollapsed = false; 
+  isDesktop = false;
+
+  constructor() {}
+
+  ngOnInit(): void {
+    this.checkScreenSize();
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.checkScreenSize();
+  }
+
+  private checkScreenSize(): void {
+    this.isDesktop = window.innerWidth >= 992;
+    if (this.isDesktop) {
+      this.isSidebarOpen = true;
+    } else {
+      this.isSidebarOpen = false;
+      this.isSidebarCollapsed = false; 
+    }
+  }
+
+  // ✅ Nuevo método para manejar el colapso
+  onSidebarCollapse(isCollapsed: boolean): void {
+    this.isSidebarCollapsed = isCollapsed;
+  }
+
+  onSidebarToggle(isOpen: boolean): void {
+    this.isSidebarOpen = isOpen;
+  }
+
+  toggleSidebar(): void {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
+  closeSidebar(): void {
+    if (!this.isDesktop) {
+      this.isSidebarOpen = false;
+    }
+  }
+}

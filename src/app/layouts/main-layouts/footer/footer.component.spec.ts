@@ -1,3 +1,4 @@
+// src\app\layouts\main-layouts\footer\footer.component.spec.ts
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { FooterComponent } from './footer.component';
