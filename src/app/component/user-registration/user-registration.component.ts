@@ -2,6 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+// Agregar después de las importaciones existentes
+import { RegistrationService, Role, DocumentType, UbigeoItem } from '../../services/registration.service';
+import { HttpClient } from '@angular/common/http';
+
+
 
 interface Address {
   label: string;
@@ -13,6 +18,9 @@ interface Address {
   country: string;
   is_default: boolean;
 }
+
+
+
 
 @Component({
   selector: 'app-user-registration',
@@ -26,59 +34,19 @@ userForm!: FormGroup;
   selectedFile: File | null = null;
   previewUrl: string | null = null;
 
-  // Datos ficticios para los selects
-  roles = [
-    { id: 1, name: 'Admin' },
-    { id: 2, name: 'Usuario' },
-    { id: 3, name: 'Moderador' },
-    { id: 4, name: 'Editor' }
-  ];
+  roles: Role[] = [];
 
-  documentTypes = [
-    { id: 1, name: 'DNI' },
-    { id: 2, name: 'Pasaporte' },
-    { id: 3, name: 'Carnet de Extranjería' },
-    { id: 4, name: 'Cédula' }
-  ];
+  documentTypes: DocumentType[] = [];
 
   genders = [
     { id: 'M', name: 'Masculino' },
     { id: 'F', name: 'Femenino' },
-    { id: 'O', name: 'Otro' },
-    { id: 'N', name: 'Prefiero no decir' }
   ];
 
-  districts = [
-    { id: 1, name: 'Miraflores' },
-    { id: 2, name: 'San Isidro' },
-    { id: 3, name: 'Barranco' },
-    { id: 4, name: 'Surco' },
-    { id: 5, name: 'La Molina' }
-  ];
+  // Reemplazar por:
+  addressUbigeoData: { [key: number]: { provinces: UbigeoItem[], districts: UbigeoItem[] } } = {};
 
-  cities = [
-    { id: 1, name: 'Lima' },
-    { id: 2, name: 'Arequipa' },
-    { id: 3, name: 'Trujillo' },
-    { id: 4, name: 'Cusco' },
-    { id: 5, name: 'Piura' }
-  ];
-
-  provinces = [
-    { id: 1, name: 'Lima' },
-    { id: 2, name: 'Arequipa' },
-    { id: 3, name: 'La Libertad' },
-    { id: 4, name: 'Cusco' },
-    { id: 5, name: 'Piura' }
-  ];
-
-  departments = [
-    { id: 1, name: 'Lima' },
-    { id: 2, name: 'Arequipa' },
-    { id: 3, name: 'La Libertad' },
-    { id: 4, name: 'Cusco' },
-    { id: 5, name: 'Piura' }
-  ];
+  departments: UbigeoItem[] = [];
 
   countries = [
     { id: 1, name: 'Perú' },
@@ -88,11 +56,21 @@ userForm!: FormGroup;
     { id: 5, name: 'Argentina' }
   ];
 
-constructor(private fb: FormBuilder, private router: Router) {}
+// REEMPLAZA el constructor existente con:
+constructor(
+  private fb: FormBuilder, 
+  private router: Router,
+  private registrationService: RegistrationService
+) {}
 
-  ngOnInit(): void {
-    this.initializeForm();
-  }
+ // REEMPLAZA el método ngOnInit existente con:
+ngOnInit(): void {
+  console.log('=== DEBUG ngOnInit ===');
+  console.log('RegistrationService disponible:', !!this.registrationService);
+  
+  this.initializeForm();
+  this.loadInitialData();
+}
 
   initializeForm(): void {
     this.userForm = this.fb.group({
@@ -134,8 +112,8 @@ constructor(private fb: FormBuilder, private router: Router) {}
   createAddressGroup(): FormGroup {
     return this.fb.group({
       label: ['Casa', [Validators.required]],
-      district: [''],
-      city: ['', [Validators.required]],
+      detalle_direccion: ['', [Validators.required]],
+      district: ['', [Validators.required]], 
       province: ['', [Validators.required]],
       department: ['', [Validators.required]],
       postal_code: [''],
@@ -156,6 +134,14 @@ constructor(private fb: FormBuilder, private router: Router) {}
     if (this.addresses.length > 1) {
       this.addresses.removeAt(index);
     }
+  }
+
+  getProvincesForAddress(addressIndex: number): UbigeoItem[] {
+    return this.addressUbigeoData[addressIndex]?.provinces || [];
+  }
+
+  getDistrictsForAddress(addressIndex: number): UbigeoItem[] {
+    return this.addressUbigeoData[addressIndex]?.districts || [];
   }
 
   onDefaultAddressChange(selectedIndex: number): void {
@@ -192,52 +178,67 @@ constructor(private fb: FormBuilder, private router: Router) {}
     }
   }
 
-  onSubmit(): void {
-    if (this.userForm.valid) {
-      const formData = this.userForm.value;
-      
-      // Aquí procesarías los datos del formulario
-      console.log('Datos del formulario:', formData);
-      console.log('Archivo seleccionado:', this.selectedFile);
-      
-      // Ejemplo de cómo enviarías los datos
-      this.submitUserData(formData);
-    } else {
-      // Marcar todos los campos como tocados para mostrar errores
-      this.markFormGroupTouched(this.userForm);
+ onSubmit(): void {
+  console.log('=== DEBUG onSubmit ===');
+  console.log('Form valid:', this.userForm.valid);
+  console.log('Form errors:', this.getFormErrors());
+  
+  if (this.userForm.valid) {
+    const formData = this.userForm.value;
+    
+    console.log('Datos del formulario:', formData);
+    console.log('Archivo seleccionado:', this.selectedFile);
+    
+    this.submitUserData(formData);
+  } else {
+    console.log('Formulario INVÁLIDO - marcando campos como tocados');
+    this.markFormGroupTouched(this.userForm);
+  }
+}
+
+
+
+ private submitUserData(formData: any): void {
+  // Convertir IDs de país a nombres de país en las direcciones
+  const processedAddresses = formData.addresses.map((address: any) => {
+    const countryName = this.countries.find(c => c.id == address.country)?.name || '';
+    return {
+      ...address,
+      country: countryName // Enviar el nombre del país en lugar del ID
+    };
+  });
+
+  // Preparar datos para envío
+  const userData = {
+    name: formData.name,
+    email: formData.email,
+    password: formData.password,
+    role: formData.role,
+    first_name: formData.first_name,
+    apellido_paterno: formData.apellido_paterno,
+    apellido_materno: formData.apellido_materno,
+    phone: formData.phone,
+    document_type: formData.document_type,
+    document_number: formData.document_number,
+    birth_date: formData.birth_date,
+    gender: formData.gender,
+    addresses: processedAddresses // Usar las direcciones procesadas
+  };
+
+  console.log('addresses antes de enviar:', formData.addresses);
+
+  this.registrationService.registerUser(userData, this.selectedFile ?? undefined).subscribe({
+    next: (response: any) => {
+      console.log('Usuario registrado exitosamente:', response);
+      // Redirigir a la lista de usuarios o mostrar mensaje de éxito
+      this.router.navigate(['/dashboard/usuarios']);
+    },
+    error: (error: any) => {
+      console.error('Error al registrar usuario:', error);
+      // Manejar errores aquí
     }
-  }
-
-  private submitUserData(formData: any): void {
-    // Separar los datos según las tablas
-    const userData = {
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      role: formData.role
-    };
-
-    const profileData = {
-      first_name: formData.first_name,
-      apellido_paterno: formData.apellido_paterno,
-      apellido_materno: formData.apellido_materno,
-      phone: formData.phone,
-      document_type: formData.document_type,
-      document_number: formData.document_number,
-      birth_date: formData.birth_date,
-      gender: formData.gender,
-      avatar_url: formData.avatar_url
-    };
-
-    const addressesData = formData.addresses;
-
-    console.log('User Data:', userData);
-    console.log('Profile Data:', profileData);
-    console.log('Addresses Data:', addressesData);
-
-    // Aquí harías las llamadas a tu servicio/API
-    // this.userService.createUser(userData, profileData, addressesData, this.selectedFile);
-  }
+  });
+}
 
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {
@@ -279,7 +280,160 @@ constructor(private fb: FormBuilder, private router: Router) {}
     return '';
   }
 
+  // ← AGREGAR ESTE MÉTODO NUEVO:
+  getAddressFieldError(index: number, fieldName: string): string {
+    const field = this.addresses.at(index).get(fieldName);
+    if (field?.errors) {
+      if (field.errors['required']) return 'Este campo es requerido';
+      if (field.errors['minlength']) return `Mínimo ${field.errors['minlength'].requiredLength} caracteres`;
+      if (field.errors['pattern']) return 'Formato inválido';
+    }
+    return '';
+  }
+
+  // Función para debug - eliminar en producción
+  private getFormErrors(): any {
+    let formErrors: any = {};
+    
+    Object.keys(this.userForm.controls).forEach(key => {
+      const control = this.userForm.get(key);
+      if (control && !control.valid) {
+        formErrors[key] = control.errors;
+      }
+    });
+    
+    // Revisar errores en addresses
+    const addressesControl = this.userForm.get('addresses') as FormArray;
+    if (addressesControl) {
+      addressesControl.controls.forEach((addressControl, index) => {
+        Object.keys(addressControl.value).forEach(fieldKey => {
+          const field = addressControl.get(fieldKey);
+          if (field && !field.valid) {
+            if (!formErrors[`address_${index}`]) {
+              formErrors[`address_${index}`] = {};
+            }
+            formErrors[`address_${index}`][fieldKey] = field.errors;
+          }
+        });
+      });
+    }
+    
+    return formErrors;
+  }
+
   irListaUsuarios() {
     this.router.navigate(['/dashboard/usuarios']);
   }
+
+  // AGREGAR estos métodos nuevos:
+  private loadInitialData(): void {
+    this.loadRoles();
+    this.loadDocumentTypes();
+    this.loadDepartments();
+  }
+
+  private loadRoles(): void {
+    this.registrationService.getRoles().subscribe({
+      next: (roles: Role[]) => {
+        this.roles = roles;
+      },
+      error: (error: any) => {
+        console.error('Error cargando roles:', error);
+      }
+    });
+  }
+
+  private loadDocumentTypes(): void {
+    this.registrationService.getDocumentTypes().subscribe({
+      next: (documentTypes: DocumentType[]) => {
+        // Aquí debes asignar los tipos de documento a alguna variable de tu componente
+        this.documentTypes = documentTypes;
+      },
+      error: (error: any) => {
+        console.error('Error cargando tipos de documento:', error);
+      }
+    });
+  }
+
+  private loadDepartments(): void {
+  this.registrationService.getDepartamentos().subscribe({
+    next: (departments: UbigeoItem[]) => {
+      // El controlador ya retorna 'id_ubigeo as id', así que no necesitamos mapear
+      this.departments = departments;
+    },
+    error: (error: any) => {
+      console.error('Error cargando departamentos:', error);
+    }
+  });
+}
+
+// Busca onDepartmentChange y reemplázala completamente:
+onDepartmentChange(event: any, addressIndex: number): void {
+  const departmentIdUbigeo = event.target.value; // ← Ahora es id_ubigeo
+  
+  // Inicializar datos para esta dirección si no existen
+  if (!this.addressUbigeoData[addressIndex]) {
+    this.addressUbigeoData[addressIndex] = { provinces: [], districts: [] };
+  }
+  
+  // Resetear provincias y distritos para esta dirección específica
+  this.addressUbigeoData[addressIndex].provinces = [];
+  this.addressUbigeoData[addressIndex].districts = [];
+  
+  // Resetear los valores en el formulario
+  const addressControl = this.addresses.at(addressIndex);
+  addressControl.get('province')?.setValue('');
+  addressControl.get('district')?.setValue('');
+  
+  if (departmentIdUbigeo) {
+    // Encontrar el código de departamento basado en el id_ubigeo seleccionado
+    const selectedDepartment = this.departments.find(d => d.id_ubigeo == departmentIdUbigeo);
+    if (selectedDepartment) {
+      this.registrationService.getProvincias(selectedDepartment.id).subscribe({ // ← Usar el código, no id_ubigeo
+        next: (provinces: UbigeoItem[]) => {
+          this.addressUbigeoData[addressIndex].provinces = provinces;
+        },
+        error: (error: any) => {
+          console.error('Error cargando provincias:', error);
+        }
+      });
+    }
+  }
+}
+
+// Busca onProvinceChange y reemplázala completamente:
+onProvinceChange(event: any, addressIndex: number): void {
+  const provinceIdUbigeo = event.target.value; // ← Ahora es id_ubigeo
+  const addressControl = this.addresses.at(addressIndex);
+  
+  // Inicializar datos para esta dirección si no existen
+  if (!this.addressUbigeoData[addressIndex]) {
+    this.addressUbigeoData[addressIndex] = { provinces: [], districts: [] };
+  }
+  
+  // Resetear distritos para esta dirección específica
+  this.addressUbigeoData[addressIndex].districts = [];
+  addressControl.get('district')?.setValue('');
+  
+  if (provinceIdUbigeo) {
+    // Encontrar los códigos basados en los id_ubigeo seleccionados
+    const departmentIdUbigeo = addressControl.get('department')?.value;
+    const selectedDepartment = this.departments.find(d => d.id_ubigeo == departmentIdUbigeo);
+    const selectedProvince = this.addressUbigeoData[addressIndex].provinces.find(p => p.id_ubigeo == provinceIdUbigeo);
+    
+    if (selectedDepartment && selectedProvince) {
+      this.registrationService.getDistritos(selectedDepartment.id, selectedProvince.id).subscribe({ // ← Usar códigos
+        next: (districts: UbigeoItem[]) => {
+          this.addressUbigeoData[addressIndex].districts = districts;
+        },
+        error: (error: any) => {
+          console.error('Error cargando distritos:', error);
+        }
+      });
+    }
+  }
+}
+
+
+
 }

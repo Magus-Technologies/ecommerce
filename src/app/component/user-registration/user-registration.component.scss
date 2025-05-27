@@ -19,6 +19,7 @@
   font-weight: 600;
   color: #495057;
   margin: 0;
+  margin-top: 23px;
 }
 
 /* Estilos para los inputs */
@@ -245,4 +246,17 @@ pre {
   font-weight: 600;
   color: #495057;
   margin-bottom: 0.5rem;
+}
+
+/* Estilos para botones de direcciones - con fondo de color */
+.btn-outline-success {
+  color: #ffffff;
+  background-color: #198754;
+  border-color: #198754;
+}
+
+.btn-outline-danger {
+  color: #ffffff;
+  background-color: #dc3545;
+  border-color: #dc3545;
 }
