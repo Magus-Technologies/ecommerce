@@ -252,6 +252,8 @@
 .user-avatar {
   width: 40px;
   height: 40px;
+  min-width: 40px; /* Añadido para prevenir encogimiento */
+  min-height: 40px; /* Añadido para prevenir encogimiento */
   border-radius: 50%;
   background: linear-gradient(135deg, var(--primary-color), #2563eb);
   color: white;
@@ -260,6 +262,19 @@
   justify-content: center;
   font-weight: 600;
   font-size: 16px;
+}
+
+/* Modificado: Estilos específicos para la imagen del avatar */
+.user-avatar-img {
+  width: 40px !important; /* Forzar ancho */
+  height: 40px !important; /* Forzar alto */
+  min-width: 40px !important; /* Prevenir encogimiento */
+  min-height: 40px !important; /* Prevenir encogimiento */
+  border-radius: 50% !important; /* Forzar bordes redondeados */
+  object-fit: cover !important; /* Mantener proporción */
+  border: 2px solid #e5e7eb;
+  display: block !important; /* Prevenir comportamiento inline */
+  flex-shrink: 0 !important; /* Prevenir encogimiento en flexbox */
 }
 
 .user-details {
@@ -277,6 +292,7 @@
   font-size: 12px;
   color: var(--text-secondary);
 }
+
 
 /* Email */
 .email {
@@ -468,12 +484,116 @@
   }
   
   .action-buttons {
-    flex-direction: column;
-    gap: 4px;
+    gap: 4px; /* Mantener solo el gap, eliminar flex-direction: column */
   }
   
   .btn-action {
     width: 32px;
     height: 32px;
+  }
+
+  // Agregar después de los estilos existentes
+
+  .user-avatar-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover; /* Asegura que la imagen cubra el contenedor manteniendo proporciones */
+    border: 2px solid #e5e7eb;
+    overflow: hidden; /* Previene que la imagen se desborde */
+  }
+
+  .btn-action.btn-view {
+    background-color: #10b981;
+    
+    &:hover {
+      background-color: #059669;
+    }
+  }
+
+  /* Responsive mejorado para tabla */
+@media (max-width: 768px) {
+  /* Hacer la tabla scrolleable horizontalmente */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling en iOS */
+  }
+  
+  .usuarios-table {
+    min-width: 800px; /* Ancho mínimo para mantener estructura */
+    font-size: 13px;
+  }
+  
+  /* Ajustar padding de celdas */
+  .usuarios-table th,
+  .usuarios-table td {
+    padding: 10px 8px;
+    white-space: nowrap; /* Prevenir salto de línea */
+  }
+  
+  /* Columna de usuario más compacta */
+  .user-info {
+    gap: 8px;
+  }
+  
+  .user-avatar,
+  .user-avatar-img {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    font-size: 12px;
+  }
+  
+  .user-name {
+    font-size: 13px;
+  }
+  
+  .user-id {
+    font-size: 11px;
+  }
+  
+  /* Botones de acción más pequeños pero visibles */
+  .action-buttons {
+    flex-direction: row; /* Mantener en fila */
+    gap: 4px;
+    min-width: 120px; /* Ancho mínimo para mostrar todos los botones */
+  }
+  
+  .btn-action {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+    flex-shrink: 0; /* Prevenir que se encojan */
+  }
+  
+  /* Badges más compactos */
+  .badge {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  
+  /* Email y fecha más compactos */
+  .email,
+  .fecha {
+    font-size: 12px;
+  }
+}
+
+  /* Media query adicional para pantallas muy pequeñas */
+  @media (max-width: 480px) {
+    .usuarios-table {
+      min-width: 700px; /* Reducir un poco más el ancho mínimo */
+    }
+    
+    .btn-action {
+      width: 28px;
+      height: 28px;
+    }
+    
+    .action-buttons {
+      min-width: 100px;
+      gap: 2px;
+    }
   }
 }

@@ -156,6 +156,33 @@ export const routes: Routes = [
       },
      
     
+      // ← AGREGAR ESTAS RUTAS NUEVAS:
+      {
+        path: 'users/edit/:id',
+        component: UserRegistrationComponent, // Reutilizar el mismo componente
+        title: 'Editar Usuario'
+      },
+      {
+        path: 'users/:id',
+        component: UserRegistrationComponent, // O crear un componente específico para ver
+        title: 'Ver Usuario'
+      }
+      // Aquí puedes añadir más rutas para el dashboard
+    //   {
+    //     path: 'pedidos',
+    //     component: PedidosComponent, // Deberás crear este componente
+    //     title: 'Pedidos',
+    //   },
+    //   {
+    //     path: 'perfil',
+    //     component: PerfilComponent, // Deberás crear este componente
+    //     title: 'Perfil',
+    //   },
+    //   {
+    //     path: 'configuracion',
+    //     component: ConfiguracionComponent, // Deberás crear este componente
+    //     title: 'Configuración',
+    //   }
     ],
   },
   {
