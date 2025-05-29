@@ -63,7 +63,7 @@ import { CategoriasService, Categoria, CategoriaCreate } from '../../services/ca
                   <div class="upload-area border-2 border-dashed border-gray-200 rounded-8 p-16 text-center"
                        [class.border-main-600]="imagePreview">
                     
-                    <div *ngIf="!imagePreview" class="text-center">
+                   <div *ngIf="!imagePreview" class="text-center">
                       <i class="ph ph-image text-gray-400 text-3xl mb-8"></i>
                       <p class="text-gray-500 text-sm mb-8">Seleccionar imagen</p>
                       <label class="btn bg-main-50 text-main-600 px-12 py-6 rounded-6 cursor-pointer text-sm">
@@ -158,7 +158,7 @@ export class CategoriaModalComponent implements OnInit, OnChanges {
         descripcion: this.categoria.descripcion,
         activo: this.categoria.activo
       });
-      this.imagePreview = this.categoria.imagen || null;
+      this.imagePreview = this.categoria.imagen_url || null;
     } else {
       // Modo creación
       this.categoriaForm.reset({

@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CategoriasService, Categoria } from '../../../../services/categorias.service';
 import { CategoriaModalComponent } from '../../../../component/categoria-modal/categoria-modal.component';
-
+import Swal from 'sweetalert2';
 @Component({
   selector: 'app-categorias-list',
   standalone: true,
@@ -110,7 +110,7 @@ import { CategoriaModalComponent } from '../../../../component/categoria-modal/c
 
                       <button class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
                               title="Eliminar"
-                              (click)="eliminarCategoria(categoria.id)">
+                              (click)="eliminarCategoria(categoria)">
                         <i class="ph ph-trash text-sm"></i>
                       </button>
                     </div>
@@ -161,6 +161,7 @@ export class CategoriasListComponent implements OnInit {
   isLoading = true;
   categoriaSeleccionada: Categoria | null = null;
 
+
   constructor(private categoriasService: CategoriasService) {}
 
   ngOnInit(): void {
@@ -190,18 +191,54 @@ export class CategoriasListComponent implements OnInit {
     }
   }
 
-  eliminarCategoria(id: number): void {
-    if (confirm('¿Estás seguro de que quieres eliminar esta categoría?')) {
-      this.categoriasService.eliminarCategoria(id).subscribe({
+eliminarCategoria(categoria: Categoria): void {
+  Swal.fire({
+    title: '¿Eliminar categoría?',
+    html: `Estás a punto de eliminar la categoría <strong>"${categoria.nombre}"</strong>.<br>Esta acción no se puede deshacer.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar',
+    customClass: {
+      popup: 'rounded-12',
+      confirmButton: 'rounded-8',
+      cancelButton: 'rounded-8'
+    }
+  }).then((result) => {
+    if (result.isConfirmed) {
+      this.categoriasService.eliminarCategoria(categoria.id).subscribe({
         next: () => {
+          Swal.fire({
+            title: '¡Eliminada!',
+            text: 'La categoría ha sido eliminada exitosamente.',
+            icon: 'success',
+            confirmButtonColor: '#198754',
+            customClass: {
+              popup: 'rounded-12',
+              confirmButton: 'rounded-8'
+            }
+          });
           this.cargarCategorias();
         },
         error: (error) => {
+          Swal.fire({
+            title: 'Error',
+            text: 'No se pudo eliminar la categoría. Inténtalo de nuevo.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545',
+            customClass: {
+              popup: 'rounded-12',
+              confirmButton: 'rounded-8'
+            }
+          });
           console.error('Error al eliminar categoría:', error);
         }
       });
     }
-  }
+  });
+}
 
   toggleEstado(categoria: Categoria): void {
     this.categoriasService.actualizarCategoria(categoria.id, { 

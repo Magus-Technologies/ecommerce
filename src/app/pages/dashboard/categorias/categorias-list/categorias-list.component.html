@@ -43,8 +43,8 @@
               <!-- Imagen -->
               <td class="px-24 py-16">
                 <div class="w-48 h-48 bg-gray-100 rounded-8 flex-center overflow-hidden">
-                  <img *ngIf="categoria.imagen" 
-                       [src]="categoria.imagen" 
+                  <img *ngIf="categoria.imagen_url" 
+                       [src]="categoria.imagen_url" 
                        [alt]="categoria.nombre"
                        class="w-100 h-100 object-fit-cover">
                   <i *ngIf="!categoria.imagen" class="ph ph-image text-gray-400 text-xl"></i>

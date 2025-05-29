@@ -276,7 +276,7 @@ export class ProductoModalComponent implements OnInit, OnChanges {
         stock_minimo: this.producto.stock_minimo,
         activo: this.producto.activo
       });
-      this.imagePreview = this.producto.imagen || null;
+      this.imagePreview = this.producto.imagen_url || null;
     } else {
       // Modo creación
       this.productoForm.reset({

@@ -56,7 +56,7 @@ import { ProductoModalComponent } from '../../../../component/producto-modal/pro
                   <!-- Imagen -->
                   <td class="px-24 py-16">
                     <div class="w-48 h-48 bg-gray-100 rounded-8 flex-center overflow-hidden position-relative">
-                      <!-- 🔥 CAMBIO AQUÍ: usar imagen_url en lugar de imagen -->
+                    
                       <img *ngIf="producto.imagen_url" 
                            [src]="producto.imagen_url" 
                            [alt]="producto.nombre"
