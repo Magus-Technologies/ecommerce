@@ -25,4 +25,50 @@ private apiUrl = `${environment.apiUrl}/usuarios`; // Ajusta según tu configura
   obtenerUsuarios(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(this.apiUrl);
   }
+
+  obtenerUsuario(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${id}`);
+  }
+
+
+// Método anterior eliminado - Laravel no maneja PUT con FormData correctamente
+actualizarUsuario(id: number, formData: FormData): Observable<any> {
+  // Cambiar a POST con _method=PUT para FormData
+  return this.http.post(`${this.apiUrl}/${id}`, formData, {
+    headers: {}
+  });
+}
+
+actualizarUsuarioSinArchivo(id: number, userData: any): Observable<any> {
+  return this.http.put(`${this.apiUrl}/${id}`, userData, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+}
+
+
+  eliminarUsuario(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${id}`);
+  }
+
+  obtenerTiposDocumento(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/document-types`);
+  }
+
+  obtenerRoles(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/roles`);
+  }
+
+  obtenerDepartamentos(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/departamentos`);
+  }
+
+  obtenerProvincias(departamentoId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/provincias/${departamentoId}`);
+  }
+
+  obtenerDistritos(departamentoId: number, provinciaId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/distritos/${departamentoId}/${provinciaId}`);
+  }
 }

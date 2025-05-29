@@ -79,9 +79,15 @@
           <tr *ngFor="let usuario of usuarios; trackBy: trackByUserId" class="table-row">
             <td class="user-cell">
               <div class="user-info">
-                <div class="user-avatar">
-                  {{ usuario.nombre.charAt(0).toUpperCase() }}
+                <div class="user-avatar" 
+                    [style.background-color]="getAvatarDisplay(usuario).color"
+                    *ngIf="getAvatarDisplay(usuario).type === 'initial'">
+                  {{ getAvatarDisplay(usuario).value }}
                 </div>
+                <img class="user-avatar-img" 
+                    [src]="getAvatarDisplay(usuario).value" 
+                    [alt]="usuario.nombre"
+                    *ngIf="getAvatarDisplay(usuario).type === 'image'">
                 <div class="user-details">
                   <span class="user-name">{{ usuario.nombre }}</span>
                   <span class="user-id">ID: {{ usuario.id }}</span>
@@ -107,6 +113,12 @@
             </td>
             <td class="actions-cell">
               <div class="action-buttons">
+                <button 
+                  class="btn-action btn-view"
+                  (click)="onVerUsuario(usuario)"
+                  title="Ver usuario">
+                  <i class="fas fa-eye"></i>
+                </button>
                 <button 
                   class="btn-action btn-edit"
                   (click)="onEditarUsuario(usuario)"
@@ -140,6 +152,15 @@
     </div>
   </div>
 </div>
+
+<!-- Modal de usuario -->
+<app-usuario-modal
+  [usuarioId]="selectedUsuarioId"
+  [isVisible]="showModal"
+  [mode]="modalMode"
+  (closeModal)="onCloseModal()"
+  (usuarioActualizado)="onUsuarioActualizado()">
+</app-usuario-modal>
 
 <!-- Loading state -->
 <div *ngIf="loading" class="loading-overlay">

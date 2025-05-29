@@ -141,6 +141,17 @@ export const routes: Routes = [
         title: 'Gestión de Usuarios',        // <-- flecha 4: título para esta ruta
       },
       { path: 'users/create', component: UserRegistrationComponent },
+      // ← AGREGAR ESTAS RUTAS NUEVAS:
+      {
+        path: 'users/edit/:id',
+        component: UserRegistrationComponent, // Reutilizar el mismo componente
+        title: 'Editar Usuario'
+      },
+      {
+        path: 'users/:id',
+        component: UserRegistrationComponent, // O crear un componente específico para ver
+        title: 'Ver Usuario'
+      }
       // Aquí puedes añadir más rutas para el dashboard
     //   {
     //     path: 'pedidos',
