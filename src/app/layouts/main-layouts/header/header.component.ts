@@ -6,6 +6,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Select2, Select2Data } from 'ng-select2-component';
 import { UserProfileComponent } from '../../../component/user-profile/user-profile.component';
+import { CategoriasPublicasService, CategoriaPublica } from '../../../services/categorias-publicas.service';
 @Component({
   selector: 'app-header',
   standalone: true,
@@ -91,36 +92,44 @@ export class HeaderComponent {
       }
     }
   }
+  onImageError(event: any): void {
+  const img = event.target as HTMLImageElement;
+  img.src = 'assets/images/icon/category-default.png';
+}
 
   categories: Select2Data = [
-    { value: '', label: 'All categories' },
-    { value: 'grocery', label: 'Grocery' },
-    { value: 'breakfast', label: 'Breakfast & Dairy' },
-    { value: 'vegetables', label: 'Vegetables' },
-    { value: 'milk', label: 'Milks and Dairies' },
-    { value: 'pet', label: 'Pet Foods & Toy' },
-    { value: 'bakery', label: 'Breads & Bakery' },
-    { value: 'seafood', label: 'Fresh Seafood' },
-    { value: 'frozen', label: 'Fronzen Foods' },
-    { value: 'noodles', label: 'Noodles & Rice' },
-    { value: 'icecream', label: 'Ice Cream' }
+    { value: '', label: 'Todas las categorias' },
+    // { value: 'grocery', label: 'Tienda de comestibles' },
+    // { value: 'breakfast', label: 'Breakfast & Dairy' },
+    // { value: 'vegetables', label: 'Desayuno y Lácteos' },
+    // { value: 'milk', label: 'Leches y productos lácteos' },
+    // { value: 'pet', label: 'Pet Foods & Toy' },
+    // { value: 'bakery', label: 'Panes y panadería' },
+    // { value: 'seafood', label: 'Mariscos frescos' },
+    // { value: 'frozen', label: 'Alimentos Congelados' },
+    // { value: 'noodles', label: 'Fideos y arroz' },
+    // { value: 'icecream', label: 'Helado' }
   ];
 
-  categorie = [
-    { name: 'Vegetables', icon: 'assets/images/icon/category-1.png', route: 'shop' },
-    { name: 'Milk & Cake', icon: 'assets/images/icon/category-2.png', route: 'shop' },
-    { name: 'Grocery', icon: 'assets/images/icon/category-3.png', route: 'shop' },
-    { name: 'Beauty', icon: 'assets/images/icon/category-4.png', route: 'shop' },
-    { name: 'Wines & Drinks', icon: 'assets/images/icon/category-5.png', route: 'shop' },
-    { name: 'Snacks', icon: 'assets/images/icon/category-6.png', route: 'shop' },
-    { name: 'Juice', icon: 'assets/images/icon/category-7.png', route: 'shop' },
-    { name: 'Fruits', icon: 'assets/images/icon/category-8.png', route: 'shop' },
-    { name: 'Tea & Coffee', icon: 'assets/images/icon/category-9.png', route: 'shop' }
-  ];
+  // categorie = [
+  //   { name: 'Vegetales', icon: 'assets/images/icon/category-1.png', route: 'shop' },
+  //   { name: 'Leche y pastel', icon: 'assets/images/icon/category-2.png', route: 'shop' },
+  //   { name: 'Tienda de comestibles', icon: 'assets/images/icon/category-3.png', route: 'shop' },
+  //   { name: 'Belleza', icon: 'assets/images/icon/category-4.png', route: 'shop' },
+  //   { name: 'Vinos y bebidas', icon: 'assets/images/icon/category-5.png', route: 'shop' },
+  //   { name: 'Aperitivos', icon: 'assets/images/icon/category-6.png', route: 'shop' },
+  //   { name: 'Jugos', icon: 'assets/images/icon/category-7.png', route: 'shop' },
+  //   { name: 'Frutas', icon: 'assets/images/icon/category-8.png', route: 'shop' },
+  //   { name: 'Té y café', icon: 'assets/images/icon/category-9.png', route: 'shop' }
+  // ];
+  categorie: any[] = [];
 
+  categoriasPublicas: CategoriaPublica[] = [];
+  isLoadingCategorias = false;
   constructor(
     @Inject(PLATFORM_ID) private platformId: any,
-    private router: Router
+    private router: Router,
+    private categoriasPublicasService: CategoriasPublicasService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
@@ -131,7 +140,45 @@ export class HeaderComponent {
   ngOnInit() {
     this.isHomePageActive = this.router.url === '/' || this.router.url === '/index-two' || this.router.url === '/index-three';
     // console.log(this.router.url);
+    this.cargarCategoriasPublicas();
    
+  }
+  cargarCategoriasPublicas(): void {
+    if (!this.isBrowser) return;
+    
+    this.isLoadingCategorias = true;
+    this.categoriasPublicasService.obtenerCategoriasPublicas().subscribe({
+      next: (categorias) => {
+        this.categoriasPublicas = categorias;
+        this.actualizarCategoriasDropdown(categorias);
+        this.actualizarCategoriasGrid(categorias);
+        this.isLoadingCategorias = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías públicas:', error);
+        this.isLoadingCategorias = false;
+      }
+    });
+  }
+  private actualizarCategoriasDropdown(categorias: CategoriaPublica[]): void {
+    this.categories = [
+      { value: '', label: 'Todas las categorias' },
+      ...categorias.map(cat => ({
+        value: cat.id.toString(),
+        label: cat.nombre
+      }))
+    ];
+  }
+
+
+  private actualizarCategoriasGrid(categorias: CategoriaPublica[]): void {
+    this.categorie = categorias.map(cat => ({
+      id: cat.id,
+      name: cat.nombre,
+      icon: cat.imagen_url || 'assets/images/icon/category-default.png',
+      route: 'shop',
+      categoria: cat
+    }));
   }
   ngAfterViewInit(): void {
     if (this.isBrowser && this.progressPathRef) {
