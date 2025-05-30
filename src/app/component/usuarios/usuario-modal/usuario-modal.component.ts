@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { UsuariosService } from '../../../services/usuarios.service';
+import Swal from 'sweetalert2'; // ← AGREGAR ESTA LÍNEA
 
 @Component({
   selector: 'app-usuario-modal',
@@ -169,15 +170,21 @@ cargarUsuario() {
         // Cargar direcciones y ubicaciones
         this.cargarDirecciones(usuario.addresses || []);
         
-        // Establecer preview del avatar
+       // Establecer preview del avatar
         if (usuario.profile?.avatar_url) {
-          this.previewUrl = 'http://ecommerce-back.test' + usuario.profile.avatar_url;
+          this.previewUrl = 'http://localhost:8000' + usuario.profile.avatar_url;
         }
 
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error al cargar usuario:', error);
+        console.error('Error al cargar usuario:', error); // Mantener para depuración
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudo cargar la información del usuario',
+          icon: 'error',
+          confirmButtonText: 'Entendido'
+        });
         this.loading = false;
       }
     });
@@ -409,11 +416,23 @@ onSubmit() {
       this.usuariosService.actualizarUsuario(this.usuarioId!, formData).subscribe({
         next: (response) => {
           this.loading = false;
+          Swal.fire({
+            title: '¡Éxito!',
+            text: 'Usuario actualizado correctamente',
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+          });
           this.usuarioActualizado.emit();
           this.cerrarModal();
         },
         error: (error) => {
           console.error('Error al actualizar usuario:', error);
+          Swal.fire({
+            title: 'Error',
+            text: 'No se pudo actualizar el usuario. Inténtalo nuevamente.',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+          });
           this.loading = false;
         }
       });
@@ -431,11 +450,23 @@ onSubmit() {
       this.usuariosService.actualizarUsuarioSinArchivo(this.usuarioId!, userData).subscribe({
         next: (response) => {
           this.loading = false;
+          Swal.fire({
+            title: '¡Éxito!',
+            text: 'Usuario actualizado correctamente',
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+          });
           this.usuarioActualizado.emit();
           this.cerrarModal();
         },
         error: (error) => {
           console.error('Error al actualizar usuario:', error);
+          Swal.fire({
+            title: 'Error',
+            text: 'No se pudo actualizar el usuario. Inténtalo nuevamente.',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+          });
           this.loading = false;
         }
       });

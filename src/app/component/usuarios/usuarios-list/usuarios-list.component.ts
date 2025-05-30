@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common'; // 
 import { Component, OnInit } from '@angular/core';
 import { UsuarioModalComponent } from '../usuario-modal/usuario-modal.component';
-
+import Swal from 'sweetalert2';
 
 interface Usuario {
   id: number;
@@ -70,7 +70,12 @@ getUsuariosAdministradores(): number {
         this.loading = false;
       },
       error: (error: any) => {
-        console.error('Error al cargar usuarios:', error);
+        Swal.fire({
+          title: 'Error',
+          text: 'Error al cargar usuarios',
+          icon: 'error',
+          confirmButtonText: 'Aceptar'
+        });
         this.loading = false;
       }
     });
@@ -93,18 +98,42 @@ getUsuariosAdministradores(): number {
   }
 
   onEliminarUsuario(usuario: Usuario): void {
-    if (confirm(`¿Estás seguro de que deseas eliminar al usuario ${usuario.nombre}?`)) {
-      this.usuariosService.eliminarUsuario(usuario.id).subscribe({
-        next: () => {
-          this.cargarUsuarios(); // Recargar la lista
-        },
-        error: (error) => {
-          console.error('Error al eliminar usuario:', error);
-          alert('Error al eliminar el usuario');
-        }
-      });
-    }
+    // Eliminado: if (confirm(`¿Estás seguro de que deseas eliminar al usuario ${usuario.nombre}?`)) {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: `¿Deseas eliminar al usuario ${usuario.nombre}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.usuariosService.eliminarUsuario(usuario.id).subscribe({
+          next: () => {
+            Swal.fire({
+              title: '¡Eliminado!',
+              text: 'El usuario ha sido eliminado correctamente',
+              icon: 'success',
+              confirmButtonText: 'Aceptar'
+            });
+            this.cargarUsuarios(); // Recargar la lista
+          },
+          error: (error) => {
+            // Eliminado: console.error('Error al eliminar usuario:', error);
+            // Eliminado: alert('Error al eliminar el usuario');
+            Swal.fire({
+              title: 'Error',
+              text: 'Error al eliminar el usuario',
+              icon: 'error',
+              confirmButtonText: 'Aceptar'
+            });
+          }
+        });
+      }
+    });
   }
+
 
   onCloseModal(): void {
     this.showModal = false;
@@ -123,7 +152,7 @@ getUsuariosAdministradores(): number {
     if (usuarioBackend?.profile?.avatar_url) {
       return {
         type: 'image',
-        value: `http://ecommerce-back.test${usuarioBackend.profile.avatar_url}`
+        value: `http://localhost:8000${usuarioBackend.profile.avatar_url}`
       };
     }
     
