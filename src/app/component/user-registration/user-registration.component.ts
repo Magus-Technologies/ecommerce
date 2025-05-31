@@ -5,7 +5,8 @@ import { Router } from '@angular/router';
 // Agregar después de las importaciones existentes
 import { RegistrationService, Role, DocumentType, UbigeoItem } from '../../services/registration.service';
 import { HttpClient } from '@angular/common/http';
-
+import { ReniecService, ReniecResponse } from '../../services/reniec.service'; // コード ← este es el bueno
+import Swal from 'sweetalert2';
 
 
 interface Address {
@@ -43,6 +44,9 @@ userForm!: FormGroup;
     { id: 'F', name: 'Femenino' },
   ];
 
+  // Agregar después de las propiedades existentes (línea ~45 aprox)
+  isSearchingReniec: boolean = false;
+
   // Reemplazar por:
   addressUbigeoData: { [key: number]: { provinces: UbigeoItem[], districts: UbigeoItem[] } } = {};
 
@@ -60,7 +64,8 @@ userForm!: FormGroup;
 constructor(
   private fb: FormBuilder, 
   private router: Router,
-  private registrationService: RegistrationService
+  private registrationService: RegistrationService,
+  private reniecService: ReniecService
 ) {}
 
  // REEMPLAZA el método ngOnInit existente con:
@@ -434,6 +439,62 @@ onProvinceChange(event: any, addressIndex: number): void {
   }
 }
 
+buscarEnReniec(): void {
+  const dni = this.userForm.get('document_number')?.value;
+  
+  if (!dni || dni.length !== 8) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'DNI Inválido',
+      text: 'Por favor ingrese un DNI válido de 8 dígitos',
+      confirmButtonColor: '#3085d6'
+    });
+    return;
+  }
 
+  this.isSearchingReniec = true;
+  
+      this.reniecService.buscarPorDni(dni).subscribe({ 
+    next: (response: ReniecResponse) => {
+      this.isSearchingReniec = false;
+      
+      if (response.success && response.nombres && response.apellidoPaterno && response.apellidoMaterno) { // コード
+
+        this.userForm.patchValue({
+          first_name: response.nombres || '',               // コード
+          apellido_paterno: response.apellidoPaterno || '', // コード
+          apellido_materno: response.apellidoMaterno || ''  // コード
+        });
+
+        Swal.fire({
+          icon: 'success',
+          title: '¡Datos encontrados!',
+          text: `Datos de ${response.nombres} cargados correctamente`, // コード
+          confirmButtonColor: '#28a745',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'No encontrado',
+          text: 'No se encontraron datos para este DNI',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    },
+    error: (error) => {
+      this.isSearchingReniec = false;
+      console.error('Error buscando en RENIEC:', error);
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de conexión',
+        text: 'No se pudo conectar con el servicio de RENIEC. Intente nuevamente.',
+        confirmButtonColor: '#dc3545'
+      });
+    }
+  });
+}
 
 }
