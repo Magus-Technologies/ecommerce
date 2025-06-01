@@ -28,6 +28,7 @@
   import { ProductosListComponent } from './pages/dashboard/productos/productos-list/productos-list.component';
   import { CategoriasListComponent } from './pages/dashboard/categorias/categorias-list/categorias-list.component';
 
+
   export const routes: Routes = [
     
     {
@@ -190,4 +191,6 @@
       component: SecondlayoutComponent,
       children: [],
     },
+
+
   ];

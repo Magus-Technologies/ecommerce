@@ -11,12 +11,18 @@ import { isPlatformBrowser } from '@angular/common';
   providedIn: 'root'
 })
 export class AuthService {
-  private currentUserSubject = new BehaviorSubject<User | null>(null);
-  public currentUser = this.currentUserSubject.asObservable();
+
+  setCurrentUser(user: User): void { // コード 🇯🇵
+    this.currentUserSubject.next(user); // コード 🇯🇵
+  } // コード 🇯🇵
+
+  private isBrowser: boolean; // 🐱 Muevo esta línea antes de currentUserSubject
+  private currentUserSubject: BehaviorSubject<User | null>; // 🐱 Cambio a inicialización en constructor
+  public currentUser: Observable<User | null>; // 🐱 Cambiado para inicializar en constructor
   
   private tokenKey = 'auth_token';
   private userKey = 'current_user';
-  private isBrowser: boolean;
+
 
   constructor(
     private http: HttpClient,
@@ -25,13 +31,24 @@ export class AuthService {
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     
-    if (this.isBrowser) {
+    if (this.isBrowser) { // 🐱 Solo acceder a localStorage si está en navegador
+      const storedUser = localStorage.getItem(this.userKey); // 🐱
+      const user = storedUser ? JSON.parse(storedUser) : null; // 🐱
+    
+      this.currentUserSubject = new BehaviorSubject<User | null>(user); // 🐱 Inicializo con usuario o null
+    } else {
+      this.currentUserSubject = new BehaviorSubject<User | null>(null); // 🐱 En servidor, no hay usuario
+    }
+    this.currentUser = this.currentUserSubject.asObservable(); // 🐱 Inicializo observable siempre
+
+    if (this.isBrowser) { // 🐱 Cargo datos de localStorage si estoy en navegador
       this.loadStoredUserData();
     }
+    
   }
 
   private loadStoredUserData(): void {
-    if (!this.isBrowser) return;
+    if (!this.isBrowser) return; 
     
     const storedUser = localStorage.getItem(this.userKey);
     const storedToken = localStorage.getItem(this.tokenKey);
@@ -60,7 +77,7 @@ export class AuthService {
               id: response.user.id,
               name: response.user.name,
               email: response.user.email,
-              role: response.user.role // ✅ Solución correcta
+              roles: response.user.roles,
             };
             
             // 🔴 Guardar usuario como string JSON
@@ -101,7 +118,7 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    if (!this.isBrowser) return null;
+    if (!this.isBrowser) return null; 
     return localStorage.getItem(this.tokenKey);
   }
 

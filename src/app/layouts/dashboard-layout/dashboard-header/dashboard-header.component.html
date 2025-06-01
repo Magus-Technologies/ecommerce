@@ -34,16 +34,21 @@
           <!-- Avatar -->
           <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
                style="width: 40px; height: 40px;">
-            {{ (authService.getCurrentUser()?.name || 'U').charAt(0).toUpperCase() }}
+          {{ authService.getCurrentUser()?.roles?.[0] || 'Usuario' }}
+
           </div>
           
           <!-- User Info (hidden on mobile) -->
           <div class="d-none d-md-block">
             <p class="mb-0 text-dark fw-medium small">
-              {{ authService.getCurrentUser()?.name || 'Usuario' }}
+          {{ authService.getCurrentUser()?.roles?.[0] || 'Usuario' }}
+
+
             </p>
             <p class="mb-0 text-muted" style="font-size: 0.75rem;">
-              {{ authService.getCurrentUser()?.role?.nombre || 'Usuario' }}
+           {{ authService.getCurrentUser()?.roles?.[0] || 'Usuario' }}
+
+
             </p>
           </div>
 

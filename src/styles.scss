@@ -1,1 +1,4 @@
-/* You can add global styles to this file, and also import other style files */
+@use 'components/_dashboard';
+@use 'components/_registro';
+@use 'components/_listusers';
+@use 'components/_modalusers';

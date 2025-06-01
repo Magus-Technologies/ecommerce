@@ -82,6 +82,10 @@ onLogin(): void {
 
   this.authService.login(credentials).subscribe({
     next: (response) => {
+
+      localStorage.setItem('current_user', JSON.stringify(response.user)); // コード 🇯🇵
+      this.authService.setCurrentUser(response.user); // コード 🇯🇵
+
       this.isLoading = false;
       // Guardar "remember me" si está marcado
       if (this.loginForm.value.remember) {

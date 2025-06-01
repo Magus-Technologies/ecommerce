@@ -44,11 +44,17 @@ export class UserProfileComponent implements OnInit {
 
   constructor(private authService: AuthService) {}
 
+  esSuperadmin = false;
+
   ngOnInit(): void {
-    // Suscribirse a los cambios del usuario actual
     this.authService.currentUser.subscribe(user => {
       this.user = user;
       this.isLoggedIn = !!user;
+
+      // ✅ Aquí evaluamos si tiene el rol 'superadmin'
+      if (user && user.roles) {
+        this.esSuperadmin = user.roles.includes('superadmin');
+      }
     });
   }
 

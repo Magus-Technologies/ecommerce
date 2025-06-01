@@ -25,7 +25,7 @@ export class DashboardSidebarComponent implements OnInit {
 
   ngOnInit(): void {
     const currentUser = this.authService.getCurrentUser();
-    this.esSuperadmin = currentUser?.role?.nombre === 'superadmin';
+    this.esSuperadmin = currentUser?.roles.includes('superadmin') ?? false; // コード 🇯🇵
     
     this.checkScreenSize();
     this.sidebarToggled.emit(!this.isCollapsed);
