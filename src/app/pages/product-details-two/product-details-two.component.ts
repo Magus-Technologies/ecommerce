@@ -48,7 +48,7 @@ export class ProductDetailsTwoComponent {
 
   products = [
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img26.png",
       price: 14.99,
       oldPrice: 28.99,
@@ -59,7 +59,7 @@ export class ProductDetailsTwoComponent {
       total: 35
     },
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img27.png",
       price: 14.99,
       oldPrice: 28.99,
@@ -70,7 +70,7 @@ export class ProductDetailsTwoComponent {
       total: 35
     },
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img28.png",
       price: 14.99,
       oldPrice: 28.99,
@@ -81,7 +81,7 @@ export class ProductDetailsTwoComponent {
       total: 35
     },
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img29.png",
       price: 14.99,
       oldPrice: 28.99,
@@ -92,7 +92,7 @@ export class ProductDetailsTwoComponent {
       total: 35
     },
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img30.png",
       price: 14.99,
       oldPrice: 28.99,
@@ -103,7 +103,7 @@ export class ProductDetailsTwoComponent {
       total: 35
     },
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img13.png",
       price: 14.99,
       oldPrice: 28.99,
@@ -114,7 +114,7 @@ export class ProductDetailsTwoComponent {
       total: 35
     },
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img3.png",
       price: 14.99,
       oldPrice: 28.99,

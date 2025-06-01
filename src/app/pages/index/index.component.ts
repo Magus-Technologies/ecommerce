@@ -1,20 +1,26 @@
 // src\app\pages\index\index.component.ts
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common'; // ✅ Import this
+import { Component ,OnInit} from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { NgFor } from '@angular/common'; // (Optional: For tree-shaking optimization)
 // Import your library
 import { SlickCarouselModule } from 'ngx-slick-carousel';
 import { RouterLink } from '@angular/router';
+import { CategoriaPublica, CategoriasPublicasService } from '../../services/categorias-publicas.service';
 
+interface CategoriaConImagen extends CategoriaPublica {
+  img: string;
+  title: string;
+}
 @Component({
   selector: 'app-index',
   imports: [CommonModule, SlickCarouselModule, RouterLink],
   templateUrl: './index.component.html',
   styleUrl: './index.component.scss'
 })
-export class IndexComponent {
+export class IndexComponent implements OnInit {
 
   slides = [
+    
     { img: "http://placehold.it/350x150/000000" },
     { img: "http://placehold.it/350x150/111111" },
     { img: "http://placehold.it/350x150/333333" },
@@ -25,6 +31,8 @@ export class IndexComponent {
     prevArrow: '#banner-prev',
     nextArrow: '#banner-next',
   };
+
+  
 
   breakpoint(e: any) {
     console.log('breakpoint');
@@ -61,19 +69,23 @@ export class IndexComponent {
     }
   ];
 
-  featureItems = [
-    { img: 'assets/images/thumbs/feature-img1.png', title: 'Vegetables' },
-    { img: 'assets/images/thumbs/feature-img2.png', title: 'Fish & Meats' },
-    { img: 'assets/images/thumbs/feature-img3.png', title: 'Desserts' },
-    { img: 'assets/images/thumbs/feature-img4.png', title: 'Drinks & Juice' },
-    { img: 'assets/images/thumbs/feature-img5.png', title: 'Animals Food' },
-    { img: 'assets/images/thumbs/feature-img6.png', title: 'Fresh Fruits' },
-    { img: 'assets/images/thumbs/feature-img7.png', title: 'Yummy Candy' },
-    { img: 'assets/images/thumbs/feature-img2.png', title: 'Fish & Meats' },
-    { img: 'assets/images/thumbs/feature-img8.png', title: 'Dairy & Eggs' },
-    { img: 'assets/images/thumbs/feature-img9.png', title: 'Snacks' },
-    { img: 'assets/images/thumbs/feature-img10.png', title: 'Frozen Foods' }
-  ];
+      // featureItems = [
+      //   { img: 'assets/images/thumbs/feature-img1.png', title: 'Verduras' },
+      //   { img: 'assets/images/thumbs/feature-img2.png', title: 'Pescados y Carnes' },
+      //   { img: 'assets/images/thumbs/feature-img3.png', title: 'Postres' },
+      //   { img: 'assets/images/thumbs/feature-img4.png', title: 'Bebidas y jugos' },
+      //   { img: 'assets/images/thumbs/feature-img5.png', title: 'Alimentos para animales' },
+      //   { img: 'assets/images/thumbs/feature-img6.png', title: 'frutas frescas' },
+      //   { img: 'assets/images/thumbs/feature-img7.png', title: 'Delicioso caramelo' },
+      //   { img: 'assets/images/thumbs/feature-img2.png', title: 'Pescados y Carnes' },
+      //   { img: 'assets/images/thumbs/feature-img8.png', title: 'Lácteos y huevos' },
+      //   { img: 'assets/images/thumbs/feature-img9.png', title: 'Aperitivos' },
+      //   { img: 'assets/images/thumbs/feature-img10.png', title: 'Alimentos Congelados' }
+      // ];
+
+   featureItems: CategoriaConImagen[] = [];
+  isLoadingCategorias = false;
+
   featureSlideConfig = {
     slidesToShow: 10,
     slidesToScroll: 1,
@@ -172,7 +184,7 @@ export class IndexComponent {
 
   products = [
     {
-      name: 'Taylor Farms Broccoli Florets Vegetables',
+      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img26.png',
       price: 14.99,
       oldPrice: 28.99,
@@ -183,7 +195,7 @@ export class IndexComponent {
       total: 35
     },
     {
-      name: 'Taylor Farms Broccoli Florets Vegetables',
+      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img27.png',
       price: 14.99,
       oldPrice: 28.99,
@@ -194,7 +206,7 @@ export class IndexComponent {
       total: 35
     },
     {
-      name: 'Taylor Farms Broccoli Florets Vegetables',
+      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img28.png',
       price: 14.99,
       oldPrice: 28.99,
@@ -205,7 +217,7 @@ export class IndexComponent {
       total: 35
     },
     {
-      name: 'Taylor Farms Broccoli Florets Vegetables',
+      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img29.png',
       price: 14.99,
       oldPrice: 28.99,
@@ -216,7 +228,7 @@ export class IndexComponent {
       total: 35
     },
     {
-      name: 'Taylor Farms Broccoli Florets Vegetables',
+      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img30.png',
       price: 14.99,
       oldPrice: 28.99,
@@ -227,7 +239,7 @@ export class IndexComponent {
       total: 35
     },
     {
-      name: 'Taylor Farms Broccoli Florets Vegetables',
+      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img13.png',
       price: 14.99,
       oldPrice: 28.99,
@@ -238,7 +250,7 @@ export class IndexComponent {
       total: 35
     },
     {
-      name: 'Taylor Farms Broccoli Florets Vegetables',
+      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img3.png',
       price: 14.99,
       oldPrice: 28.99,
@@ -454,11 +466,35 @@ export class IndexComponent {
 
   ];
 
-  constructor() { }
+  // Inyectar el servicio en el constructor
+constructor(private categoriasPublicasService: CategoriasPublicasService) { }
 
   ngOnInit(): void {
+    this.cargarCategoriasPublicas();
+  }
+cargarCategoriasPublicas(): void {
+    this.isLoadingCategorias = true;
+    this.categoriasPublicasService.obtenerCategoriasPublicas().subscribe({
+      next: (categorias) => {
+        // ✅ MAPEAR CON TIPO CORRECTO
+        this.featureItems = categorias.map(cat => ({
+          ...cat,
+          img: cat.imagen_url || 'assets/images/thumbs/feature-img-default.png',
+          title: cat.nombre
+        })) as CategoriaConImagen[];
+        this.isLoadingCategorias = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías públicas:', error);
+        this.isLoadingCategorias = false;
+      }
+    });
   }
 
+  onImageError(event: any): void {
+    const img = event.target as HTMLImageElement;
+    img.src = 'assets/images/thumbs/feature-img-default.png';
+  }
   // flashsale
   flashSales = [
     {
@@ -513,7 +549,7 @@ export class IndexComponent {
       alt: "Product 1",
       rating: 4.8,
       ratingCount: "17k",
-      title: "Taylor Farms Broccoli Florets Vegetables",
+      title: "Hortalizas en floretes de brócoli de Taylor Farms",
       price: "$1500.00"
     },
     {
@@ -521,7 +557,7 @@ export class IndexComponent {
       alt: "Product 2",
       rating: 4.8,
       ratingCount: "17k",
-      title: "Taylor Farms Broccoli Florets Vegetables",
+      title: "Hortalizas en floretes de brócoli de Taylor Farms",
       price: "$1500.00"
     },
     {
@@ -529,7 +565,7 @@ export class IndexComponent {
       alt: "Product 3",
       rating: 4.8,
       ratingCount: "17k",
-      title: "Taylor Farms Broccoli Florets Vegetables",
+      title: "Hortalizas en floretes de brócoli de Taylor Farms",
       price: "$1500.00"
     },
     {
@@ -537,7 +573,7 @@ export class IndexComponent {
       alt: "Product 4",
       rating: 4.8,
       ratingCount: "17k",
-      title: "Taylor Farms Broccoli Florets Vegetables",
+      title: "Hortalizas en floretes de brócoli de Taylor Farms",
       price: "$1500.00"
     }
   ];
@@ -547,7 +583,7 @@ export class IndexComponent {
       alt: "Product 1",
       rating: 4.8,
       ratingCount: "17k",
-      title: "Taylor Farms Broccoli Florets Vegetables",
+      title: "Hortalizas en floretes de brócoli de Taylor Farms",
       price: "$1500.00"
     },
     {
@@ -555,7 +591,7 @@ export class IndexComponent {
       alt: "Product 2",
       rating: 4.8,
       ratingCount: "17k",
-      title: "Taylor Farms Broccoli Florets Vegetables",
+      title: "Hortalizas en floretes de brócoli de Taylor Farms",
       price: "$1500.00"
     },
     {
@@ -563,7 +599,7 @@ export class IndexComponent {
       alt: "Product 3",
       rating: 4.8,
       ratingCount: "17k",
-      title: "Taylor Farms Broccoli Florets Vegetables",
+      title: "Hortalizas en floretes de brócoli de Taylor Farms",
       price: "$1500.00"
     },
     {
@@ -571,7 +607,7 @@ export class IndexComponent {
       alt: "Product 4",
       rating: 4.8,
       ratingCount: "17k",
-      title: "Taylor Farms Broccoli Florets Vegetables",
+      title: "Hortalizas en floretes de brócoli de Taylor Farms",
       price: "$1500.00"
     }
   ];
@@ -581,7 +617,7 @@ export class IndexComponent {
       alt: "Product 1",
       rating: 4.8,
       ratingCount: "17k",
-      title: "Taylor Farms Broccoli Florets Vegetables",
+      title: "Hortalizas en floretes de brócoli de Taylor Farms",
       price: "$1500.00"
     },
     {
@@ -589,7 +625,7 @@ export class IndexComponent {
       alt: "Product 2",
       rating: 4.8,
       ratingCount: "17k",
-      title: "Taylor Farms Broccoli Florets Vegetables",
+      title: "Hortalizas en floretes de brócoli de Taylor Farms",
       price: "$1500.00"
     },
     {
@@ -597,7 +633,7 @@ export class IndexComponent {
       alt: "Product 3",
       rating: 4.8,
       ratingCount: "17k",
-      title: "Taylor Farms Broccoli Florets Vegetables",
+      title: "Hortalizas en floretes de brócoli de Taylor Farms",
       price: "$1500.00"
     },
     {
@@ -605,7 +641,7 @@ export class IndexComponent {
       alt: "Product 4",
       rating: 4.8,
       ratingCount: "17k",
-      title: "Taylor Farms Broccoli Florets Vegetables",
+      title: "Hortalizas en floretes de brócoli de Taylor Farms",
       price: "$1500.00"
     }
   ];
@@ -613,7 +649,7 @@ export class IndexComponent {
   bestProduct = [
     {
       id: 1,
-      name: 'Taylor Farms Broccoli Florets Vegetables',
+      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/best-sell1.png',
       originalPrice: 28.99,
       discountedPrice: 14.99,
@@ -627,7 +663,7 @@ export class IndexComponent {
     },
     {
       id: 2,
-      name: 'Taylor Farms Broccoli Florets Vegetables',
+      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/best-sell2.png',
       originalPrice: 28.99,
       discountedPrice: 14.99,
@@ -641,7 +677,7 @@ export class IndexComponent {
     },
     {
       id: 3,
-      name: 'Taylor Farms Broccoli Florets Vegetables',
+      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/best-sell3.png',
       originalPrice: 28.99,
       discountedPrice: 14.99,
@@ -655,7 +691,7 @@ export class IndexComponent {
     },
     {
       id: 4,
-      name: 'Taylor Farms Broccoli Florets Vegetables',
+      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/best-sell4.png',
       originalPrice: 28.99,
       discountedPrice: 14.99,
@@ -673,7 +709,7 @@ export class IndexComponent {
   // hot product
   hotPoducts = [
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img26.png",
       price: 14.99,
       oldPrice: 28.99,
@@ -684,7 +720,7 @@ export class IndexComponent {
       total: 35
     },
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img27.png",
       price: 14.99,
       oldPrice: 28.99,
@@ -695,7 +731,7 @@ export class IndexComponent {
       total: 35
     },
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img28.png",
       price: 14.99,
       oldPrice: 28.99,
@@ -706,7 +742,7 @@ export class IndexComponent {
       total: 35
     },
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img29.png",
       price: 14.99,
       oldPrice: 28.99,
@@ -717,7 +753,7 @@ export class IndexComponent {
       total: 35
     },
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img30.png",
       price: 14.99,
       oldPrice: 28.99,
@@ -728,7 +764,7 @@ export class IndexComponent {
       total: 35
     },
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img13.png",
       price: 14.99,
       oldPrice: 28.99,
@@ -739,7 +775,7 @@ export class IndexComponent {
       total: 35
     },
     {
-      name: "Taylor Farms Broccoli Florets Vegetables",
+      name: "Hortalizas en floretes de brócoli de Taylor Farms",
       image: "assets/images/thumbs/product-img3.png",
       price: 14.99,
       oldPrice: 28.99,

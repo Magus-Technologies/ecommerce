@@ -9,6 +9,7 @@ export interface CategoriaPublica {
   descripcion?: string;
   imagen?: string;
   imagen_url?: string;
+  productos_count?: number;
 }
 
 @Injectable({
