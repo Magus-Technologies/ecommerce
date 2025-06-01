@@ -1,6 +1,6 @@
 // src/app/services/productos.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -44,7 +44,39 @@ export interface ProductoCreate {
   imagen?: File;
   activo: boolean;
 }
+export interface ProductoPublico {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  precio_oferta?: number;
+  stock: number;
+  imagen_principal: string;
+  categoria: string;
+  categoria_id: number;
+  rating: number;
+  total_reviews: string;
+  reviews_count: number;
+  sold_count: number;
+  total_stock: number;
+  is_on_sale: boolean;
+  discount_percentage: number;
+}
+export interface ProductosPublicosResponse {
+  productos: ProductoPublico[];
+  pagination: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}
 
+export interface CategoriaParaSidebar {
+  id: number;
+  nombre: string;
+  productos_count: number;
+}
 @Injectable({
   providedIn: 'root'
 })
@@ -125,5 +157,28 @@ export class ProductosService {
 
   crearCategoria(categoria: Omit<Categoria, 'id' | 'created_at' | 'updated_at'>): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/categorias`, categoria);
+  }
+  obtenerProductosPublicos(filtros?: {
+    categoria?: number;
+    search?: string;
+    page?: number;
+  }): Observable<ProductosPublicosResponse> {
+    let params = new HttpParams();
+    
+    if (filtros?.categoria) {
+      params = params.set('categoria', filtros.categoria.toString());
+    }
+    if (filtros?.search) {
+      params = params.set('search', filtros.search);
+    }
+    if (filtros?.page) {
+      params = params.set('page', filtros.page.toString());
+    }
+
+    return this.http.get<ProductosPublicosResponse>(`${this.apiUrl}/productos-publicos`, { params });
+  }
+
+  obtenerCategoriasParaSidebar(): Observable<CategoriaParaSidebar[]> {
+    return this.http.get<CategoriaParaSidebar[]>(`${this.apiUrl}/categorias-sidebar`);
   }
 }

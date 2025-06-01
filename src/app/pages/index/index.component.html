@@ -119,18 +119,22 @@
             </div>
 
             <ngx-slick-carousel class="feature-item-wrapper" #slickModal="slick-carousel" [config]="featureSlideConfig">
-                <div ngxSlickItem *ngFor="let item of featureItems" class="feature-item text-center">
-                    <div class="feature-item__thumb rounded-circle">
-                        <a [routerLink]="['shop']" class="w-100 h-100 flex-center">
-                            <img [src]="item.img" [alt]="item.title">
-                        </a>
-                    </div>
-                    <div class="feature-item__content mt-16">
-                        <h6 class="text-lg mb-8"><a [routerLink]="['shop']" class="text-inherit">{{ item.title }}</a>
-                        </h6>
-                        <span class="text-sm text-gray-400">125+ Products</span>
-                    </div>
-                </div>
+            
+<div ngxSlickItem *ngFor="let item of featureItems" class="feature-item text-center">
+    <div class="feature-item__thumb rounded-circle">
+        <a [routerLink]="['shop']" [queryParams]="{categoria: item.id}" class="w-100 h-100 flex-center">
+            <img [src]="item.img" [alt]="item.title" (error)="onImageError($event)">
+        </a>
+    </div>
+    <div class="feature-item__content mt-16">
+        <h6 class="text-lg mb-8">
+            <a [routerLink]="['shop']" [queryParams]="{categoria: item.id}" class="text-inherit">{{ item.title }}</a>
+        </h6>
+        <span class="text-sm text-gray-400">
+            {{ item.productos_count || 0 }}{{ item.productos_count === 1 ? ' Producto' : '+ Productos' }}
+        </span>
+    </div>
+</div>
             </ngx-slick-carousel>
         </div>
     </div>
