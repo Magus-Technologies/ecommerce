@@ -27,8 +27,28 @@ export class DashboardHeaderComponent implements OnInit {
     this.toggleSidebar.emit();
   }
 
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
+isDropdownOpen = false;
+
+toggleDropdown(): void {
+  this.isDropdownOpen = !this.isDropdownOpen;
+}
+
+closeDropdown(): void {
+  this.isDropdownOpen = false;
+}
+
+logout(): void {
+  this.closeDropdown();
+  this.authService.logout().subscribe({
+    next: () => {
+      // Cambia '/login' por la ruta correcta que tengas
+      this.router.navigate(['/account']); // o la ruta que uses para login
+    },
+    error: (error) => {
+      console.error('Error al cerrar sesión:', error);
+      // Aún así redirigir al login
+      this.router.navigate(['/account']);
+    }
+  });
+}
 }

@@ -1,7 +1,7 @@
 // src/app/pages/account/account.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import {  Router } from '@angular/router'; //removido RouterLink
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { BreadcrumbComponent } from '../../component/breadcrumb/breadcrumb.component';
 import { ShippingComponent } from '../../component/shipping/shipping.component';
@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
+    // RouterLink,
     BreadcrumbComponent,
     ShippingComponent,
     ReactiveFormsModule
