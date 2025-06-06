@@ -1,14 +1,19 @@
 <!-- src/app/layouts/dashboard-layout/dashboard-sidebar/dashboard-sidebar.component.html -->
-<aside class="dashboard-sidebar bg-main-600" 
-       [class.show]="isSidebarOpen"
-       [class.collapsed]="isCollapsed">
-  
+<aside
+  class="dashboard-sidebar bg-main-600"
+  [class.show]="isSidebarOpen"
+  [class.collapsed]="isCollapsed"
+>
   <!-- Header del sidebar -->
   <div class="sidebar-header p-24 border-bottom border-main-500">
     <div class="flex-between align-items-center">
-      <h5 class="text-white mb-0 fw-semibold" *ngIf="!isCollapsed">MAGUS tec</h5>
-      <button class="btn text-white hover-bg-main-500 w-40 h-40 rounded-8 flex-center transition-2 d-none d-lg-block" 
-              (click)="toggleCollapse()">
+      <h5 class="text-white mb-0 fw-semibold" *ngIf="!isCollapsed">
+        MAGUS tec
+      </h5>
+      <button
+        class="btn text-white hover-bg-main-500 w-40 h-40 rounded-8 flex-center transition-2 d-none d-lg-block"
+        (click)="toggleCollapse()"
+      >
         <i class="ph ph-list text-xl"></i>
       </button>
     </div>
@@ -19,20 +24,35 @@
     <ul class="list-style-none p-0 m-0">
       <!-- Inicio -->
       <li class="mb-8">
-        <a routerLink="/dashboard" 
-           routerLinkActive="active" 
-           [routerLinkActiveOptions]="{exact: true}"
-           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500">
+        <a
+          routerLink="/dashboard"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
           <i class="ph ph-house text-xl flex-shrink-0"></i>
           <span *ngIf="!isCollapsed" class="fw-medium">Inicio</span>
+        </a>
+      </li>
+      <!-- banners -->
+      <li class="mb-8">
+        <a
+          routerLink="/dashboard/banners"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
+          <i class="ph ph-image text-xl flex-shrink-0"></i>
+          <span *ngIf="!isCollapsed" class="fw-medium">Banners</span>
         </a>
       </li>
 
       <!-- Productos -->
       <li class="mb-8">
-        <a routerLink="/dashboard/productos" 
-           routerLinkActive="active"
-           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500">
+        <a
+          routerLink="/dashboard/productos"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
           <i class="ph ph-package text-xl flex-shrink-0"></i>
           <span *ngIf="!isCollapsed" class="fw-medium">Productos</span>
         </a>
@@ -40,9 +60,11 @@
 
       <!-- Categorías -->
       <li class="mb-8">
-        <a routerLink="/dashboard/categorias" 
-           routerLinkActive="active"
-           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500">
+        <a
+          routerLink="/dashboard/categorias"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
           <i class="ph ph-squares-four text-xl flex-shrink-0"></i>
           <span *ngIf="!isCollapsed" class="fw-medium">Categorías</span>
         </a>
@@ -50,9 +72,11 @@
 
       <!-- Clientes -->
       <li class="mb-8">
-        <a routerLink="/dashboard/clientes" 
-           routerLinkActive="active"
-           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500">
+        <a
+          routerLink="/dashboard/clientes"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
           <i class="ph ph-users text-xl flex-shrink-0"></i>
           <span *ngIf="!isCollapsed" class="fw-medium">Clientes</span>
         </a>
@@ -61,9 +85,11 @@
       <!-- Usuarios (solo superadmin) -->
       <!-- Temporalmente: visible para todos -->
       <li class="mb-8">
-        <a routerLink="/dashboard/usuarios" 
-           routerLinkActive="active"
-           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500">
+        <a
+          routerLink="/dashboard/usuarios"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
           <i class="ph ph-user-gear text-xl flex-shrink-0"></i>
           <span *ngIf="!isCollapsed" class="fw-medium">Usuarios</span>
         </a>
@@ -71,14 +97,16 @@
 
       <!-- Separador -->
       <li class="my-16" *ngIf="!isCollapsed">
-        <hr class="border-main-500 opacity-50">
+        <hr class="border-main-500 opacity-50" />
       </li>
 
       <!-- Perfil -->
       <li class="mb-8">
-        <a routerLink="/dashboard/perfil" 
-           routerLinkActive="active"
-           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500">
+        <a
+          routerLink="/dashboard/perfil"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
           <i class="ph ph-user text-xl flex-shrink-0"></i>
           <span *ngIf="!isCollapsed" class="fw-medium">Perfil</span>
         </a>
@@ -86,9 +114,11 @@
 
       <!-- Configuración -->
       <li class="mb-8">
-        <a routerLink="/dashboard/configuracion" 
-           routerLinkActive="active"
-           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500">
+        <a
+          routerLink="/dashboard/configuracion"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
           <i class="ph ph-gear text-xl flex-shrink-0"></i>
           <span *ngIf="!isCollapsed" class="fw-medium">Configuración</span>
         </a>
@@ -96,8 +126,10 @@
 
       <!-- Volver al sitio -->
       <li class="mt-24 pt-16 border-top border-main-500" *ngIf="!isCollapsed">
-        <a routerLink="/" 
-           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500">
+        <a
+          routerLink="/"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
           <i class="ph ph-arrow-left text-xl flex-shrink-0"></i>
           <span class="fw-medium">Volver al sitio</span>
         </a>
@@ -105,8 +137,10 @@
 
       <!-- Volver al sitio (versión colapsada) -->
       <li class="mt-24 pt-16" *ngIf="isCollapsed">
-        <a routerLink="/" 
-           class="nav-link flex-center px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500">
+        <a
+          routerLink="/"
+          class="nav-link flex-center px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
           <i class="ph ph-arrow-left text-xl"></i>
         </a>
       </li>

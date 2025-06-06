@@ -1,4 +1,4 @@
-// src\app\pages\index\index.component.ts
+// src/app/pages/index/index.component.ts
 import { Component ,OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgFor } from '@angular/common'; // (Optional: For tree-shaking optimization)
@@ -6,11 +6,14 @@ import { NgFor } from '@angular/common'; // (Optional: For tree-shaking optimiza
 import { SlickCarouselModule } from 'ngx-slick-carousel';
 import { RouterLink } from '@angular/router';
 import { CategoriaPublica, CategoriasPublicasService } from '../../services/categorias-publicas.service';
+// ✅ NUEVA IMPORTACIÓN PARA BANNERS
+import { BannersService, Banner } from '../../services/banner.service';
 
 interface CategoriaConImagen extends CategoriaPublica {
   img: string;
   title: string;
 }
+
 @Component({
   selector: 'app-index',
   imports: [CommonModule, SlickCarouselModule, RouterLink],
@@ -50,8 +53,6 @@ export class IndexComponent implements OnInit {
     console.log('slick initialized');
   }
 
-
-
   banners = [
     {
       subtitle: 'Save up to 50% off on your first order',
@@ -69,19 +70,9 @@ export class IndexComponent implements OnInit {
     }
   ];
 
-      // featureItems = [
-      //   { img: 'assets/images/thumbs/feature-img1.png', title: 'Verduras' },
-      //   { img: 'assets/images/thumbs/feature-img2.png', title: 'Pescados y Carnes' },
-      //   { img: 'assets/images/thumbs/feature-img3.png', title: 'Postres' },
-      //   { img: 'assets/images/thumbs/feature-img4.png', title: 'Bebidas y jugos' },
-      //   { img: 'assets/images/thumbs/feature-img5.png', title: 'Alimentos para animales' },
-      //   { img: 'assets/images/thumbs/feature-img6.png', title: 'frutas frescas' },
-      //   { img: 'assets/images/thumbs/feature-img7.png', title: 'Delicioso caramelo' },
-      //   { img: 'assets/images/thumbs/feature-img2.png', title: 'Pescados y Carnes' },
-      //   { img: 'assets/images/thumbs/feature-img8.png', title: 'Lácteos y huevos' },
-      //   { img: 'assets/images/thumbs/feature-img9.png', title: 'Aperitivos' },
-      //   { img: 'assets/images/thumbs/feature-img10.png', title: 'Alimentos Congelados' }
-      // ];
+  // ✅ NUEVAS PROPIEDADES PARA BANNERS DINÁMICOS
+  bannersDinamicos: Banner[] = [];
+  isLoadingBanners = false;
 
    featureItems: CategoriaConImagen[] = [];
   isLoadingCategorias = false;
@@ -466,13 +457,18 @@ export class IndexComponent implements OnInit {
 
   ];
 
-  // Inyectar el servicio en el constructor
-constructor(private categoriasPublicasService: CategoriasPublicasService) { }
+  // ✅ ACTUALIZAR CONSTRUCTOR PARA INYECTAR EL SERVICIO DE BANNERS
+  constructor(
+    private categoriasPublicasService: CategoriasPublicasService,
+    private bannersService: BannersService // ✅ NUEVO SERVICIO
+  ) { }
 
   ngOnInit(): void {
     this.cargarCategoriasPublicas();
+    this.cargarBannersDinamicos(); // ✅ NUEVA LLAMADA
   }
-cargarCategoriasPublicas(): void {
+
+  cargarCategoriasPublicas(): void {
     this.isLoadingCategorias = true;
     this.categoriasPublicasService.obtenerCategoriasPublicas().subscribe({
       next: (categorias) => {
@@ -491,10 +487,28 @@ cargarCategoriasPublicas(): void {
     });
   }
 
+  // ✅ NUEVO MÉTODO PARA CARGAR BANNERS
+  cargarBannersDinamicos(): void {
+    this.isLoadingBanners = true;
+    this.bannersService.obtenerBannersPublicos().subscribe({
+      next: (banners) => {
+        this.bannersDinamicos = banners;
+        this.isLoadingBanners = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar banners:', error);
+        this.isLoadingBanners = false;
+        // En caso de error, usar banners estáticos como fallback
+        this.bannersDinamicos = [];
+      }
+    });
+  }
+
   onImageError(event: any): void {
     const img = event.target as HTMLImageElement;
     img.src = 'assets/images/thumbs/feature-img-default.png';
   }
+
   // flashsale
   flashSales = [
     {
@@ -785,8 +799,6 @@ cargarCategoriasPublicas(): void {
       fadeDuration: 800,
       total: 35
     }
-
-
 
   ]
 

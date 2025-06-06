@@ -81,40 +81,59 @@ export const routes: Routes = [
       // ✅ Lazy Loading para Shop
       {
         path: 'shop',
-        loadComponent: () => import('./pages/shop/shop.component').then(m => m.ShopComponent),
-        title: 'Shop'
+        loadComponent: () =>
+          import('./pages/shop/shop.component').then((m) => m.ShopComponent),
+        title: 'Shop',
       },
       // ✅ Lazy Loading para Vendor
       {
         path: 'vendor',
-        loadComponent: () => import('./pages/vendor/vendor.component').then(m => m.VendorComponent),
-        title: 'Vendor'
+        loadComponent: () =>
+          import('./pages/vendor/vendor.component').then(
+            (m) => m.VendorComponent
+          ),
+        title: 'Vendor',
       },
       {
         path: 'vendor-details',
-        loadComponent: () => import('./pages/vendor-details/vendor-details.component').then(m => m.VendorDetailsComponent),
-        title: 'Vendor Details'
+        loadComponent: () =>
+          import('./pages/vendor-details/vendor-details.component').then(
+            (m) => m.VendorDetailsComponent
+          ),
+        title: 'Vendor Details',
       },
       {
         path: 'vendor-two',
-        loadComponent: () => import('./pages/vendor-two/vendor-two.component').then(m => m.VendorTwoComponent),
-        title: 'Vendor Two'
+        loadComponent: () =>
+          import('./pages/vendor-two/vendor-two.component').then(
+            (m) => m.VendorTwoComponent
+          ),
+        title: 'Vendor Two',
       },
       {
         path: 'vendor-two-details',
-        loadComponent: () => import('./pages/vendor-two-details/vendor-two-details.component').then(m => m.VendorTwoDetailsComponent),
-        title: 'Vendor Two Details'
+        loadComponent: () =>
+          import(
+            './pages/vendor-two-details/vendor-two-details.component'
+          ).then((m) => m.VendorTwoDetailsComponent),
+        title: 'Vendor Two Details',
       },
       {
         path: 'product-details',
-        loadComponent: () => import('./pages/product-details/product-details.component').then(m => m.ProductDetailsComponent),
-        title: 'Product Details'
+        loadComponent: () =>
+          import('./pages/product-details/product-details.component').then(
+            (m) => m.ProductDetailsComponent
+          ),
+        title: 'Product Details',
       },
       {
         path: 'product-details-two',
-        loadComponent: () => import('./pages/product-details-two/product-details-two.component').then(m => m.ProductDetailsTwoComponent),
-        title: 'Product Details Two'
-      }
+        loadComponent: () =>
+          import(
+            './pages/product-details-two/product-details-two.component'
+          ).then((m) => m.ProductDetailsTwoComponent),
+        title: 'Product Details Two',
+      },
     ],
   },
   // ✅ Lazy Loading para Dashboard
@@ -125,40 +144,69 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
+        loadComponent: () =>
+          import('./pages/dashboard/dashboard.component').then(
+            (m) => m.DashboardComponent
+          ),
         title: 'Dashboard',
       },
       {
         path: 'usuarios',
-        loadComponent: () => import('./component/usuarios/usuarios-list/usuarios-list.component').then(m => m.UsuariosListComponent),
+        loadComponent: () =>
+          import(
+            './component/usuarios/usuarios-list/usuarios-list.component'
+          ).then((m) => m.UsuariosListComponent),
         title: 'Gestión de Usuarios',
       },
       {
         path: 'users/create',
-        loadComponent: () => import('./component/user-registration/user-registration.component').then(m => m.UserRegistrationComponent),
-        title: 'Crear Usuario'
+        loadComponent: () =>
+          import(
+            './component/user-registration/user-registration.component'
+          ).then((m) => m.UserRegistrationComponent),
+        title: 'Crear Usuario',
       },
       {
         path: 'productos',
-        loadComponent: () => import('./pages/dashboard/productos/productos-list/productos-list.component').then(m => m.ProductosListComponent),
+        loadComponent: () =>
+          import(
+            './pages/dashboard/productos/productos-list/productos-list.component'
+          ).then((m) => m.ProductosListComponent),
         title: 'Productos',
       },
       {
         path: 'categorias',
-        loadComponent: () => import('./pages/dashboard/categorias/categorias-list/categorias-list.component').then(m => m.CategoriasListComponent),
+        loadComponent: () =>
+          import(
+            './pages/dashboard/categorias/categorias-list/categorias-list.component'
+          ).then((m) => m.CategoriasListComponent),
         title: 'Categorías',
       },
       {
         path: 'users/edit/:id',
-        loadComponent: () => import('./component/user-registration/user-registration.component').then(m => m.UserRegistrationComponent),
-        title: 'Editar Usuario'
+        loadComponent: () =>
+          import(
+            './component/user-registration/user-registration.component'
+          ).then((m) => m.UserRegistrationComponent),
+        title: 'Editar Usuario',
       },
       {
         path: 'users/:id',
-        loadComponent: () => import('./component/user-registration/user-registration.component').then(m => m.UserRegistrationComponent),
-        title: 'Ver Usuario'
-      }
-    ]
+        loadComponent: () =>
+          import(
+            './component/user-registration/user-registration.component'
+          ).then((m) => m.UserRegistrationComponent),
+        title: 'Ver Usuario',
+      },
+      {
+        path: 'banners',
+        loadComponent: () =>
+          import(
+            './pages/dashboard/banners/banners-list/banners-list.component'
+          ).then((m) => m.BannersListComponent),
+        title: 'Gestión de Banners',
+      },
+    ],
   },
   {
     path: '',
