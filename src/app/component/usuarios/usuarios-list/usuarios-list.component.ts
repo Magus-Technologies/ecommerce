@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common'; //
 import { Component, OnInit } from '@angular/core';
 import { UsuarioModalComponent } from '../usuario-modal/usuario-modal.component';
 import Swal from 'sweetalert2';
+import { environment } from '../../../../environments/environment';
 
 interface Usuario {
   id: number;
@@ -152,7 +153,7 @@ getUsuariosAdministradores(): number {
     if (usuarioBackend?.profile?.avatar_url) {
       return {
         type: 'image',
-        value: `http://localhost:8000${usuarioBackend.profile.avatar_url}`
+        value: `${environment.baseUrl}${usuarioBackend.profile.avatar_url}`
       };
     }
     

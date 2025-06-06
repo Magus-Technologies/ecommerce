@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { UsuariosService } from '../../../services/usuarios.service';
 import Swal from 'sweetalert2'; // ← AGREGAR ESTA LÍNEA
-
+import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-usuario-modal',
   standalone: true,
@@ -172,7 +172,8 @@ cargarUsuario() {
         
        // Establecer preview del avatar
         if (usuario.profile?.avatar_url) {
-          this.previewUrl = 'http://localhost:8000' + usuario.profile.avatar_url;
+          // this.previewUrl = 'http://localhost:8000' + usuario.profile.avatar_url;
+          this.previewUrl = `${environment.baseUrl}${usuario.profile.avatar_url}`
         }
 
         this.loading = false;

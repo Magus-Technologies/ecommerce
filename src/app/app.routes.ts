@@ -209,7 +209,15 @@ export const routes: Routes = [
         title: 'Ver Usuario',
         canActivate: [permissionGuard],
         data: { permission: 'usuarios.ver' }
-      }
+      },
+        {
+        path: 'banners',
+        loadComponent: () =>
+          import(
+            './pages/dashboard/banners/banners-list/banners-list.component'
+          ).then((m) => m.BannersListComponent),
+        title: 'Gestión de Banners',
+      },
     ]
   },
   {
