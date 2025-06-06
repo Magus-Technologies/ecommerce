@@ -95,6 +95,16 @@
         </a>
       </li>
 
+      <!-- Permisos (gestión de roles) 😺 agregado -->
+      <li *ngIf="esSuperadmin" class="mb-8"> 
+        <a routerLink="/dashboard/roles"  
+          routerLinkActive="active"  
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"> 
+          <i class="ph ph-shield-check text-xl flex-shrink-0"></i> 
+          <span *ngIf="!isCollapsed" class="fw-medium">Permisos</span> 
+        </a> <!-- 😺 agregado -->
+      </li> <!-- 😺 agregado -->
+
       <!-- Separador -->
       <li class="my-16" *ngIf="!isCollapsed">
         <hr class="border-main-500 opacity-50" />

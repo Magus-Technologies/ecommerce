@@ -3,7 +3,7 @@ import { Component, OnInit, AfterViewInit, Output, EventEmitter, Input, HostList
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-
+import { PermissionsService } from '../../../services/permissions.service';
 @Component({
   selector: 'app-dashboard-sidebar',
   standalone: true,
@@ -19,15 +19,36 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit {
 
   isCollapsed = false;
   esSuperadmin = false;
+  puedeVerUsuarios = false;
   isDesktop = false;
+  private permisosSub: any;
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private permissionsService: PermissionsService
+  ) {}
 
   ngOnInit(): void {
     const currentUser = this.authService.getCurrentUser();
-    this.esSuperadmin = currentUser?.roles?.includes('superadmin') ?? false; // コード 🇯🇵
+    this.esSuperadmin = currentUser?.roles?.includes('superadmin') ?? false;
+    this.puedeVerUsuarios = this.permissionsService.hasPermission('usuarios.ver');
     
     this.checkScreenSize();
+
+    // 🔁 Suscribirse a los cambios de permisos en tiempo real
+    this.permisosSub = this.permissionsService.permissions$.subscribe(perms => {
+      this.puedeVerUsuarios = perms.includes('usuarios.ver');
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.permisosSub?.unsubscribe();
+  }
+
+  cargarPermisos(): void {
+    const currentUser = this.authService.getCurrentUser();
+    this.esSuperadmin = currentUser?.roles?.includes('superadmin') ?? false;
+    this.puedeVerUsuarios = this.permissionsService.hasPermission('usuarios.ver');
   }
 
   // ✅ Mover las emisiones iniciales aquí para evitar ExpressionChangedAfterItHasBeenCheckedError

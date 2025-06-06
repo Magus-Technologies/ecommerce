@@ -8,9 +8,9 @@ export interface Usuario {
   id: number;
   name: string;
   email: string;
-  role: {
-    nombre: string;
-  };
+  roles: {
+    name: string;
+  }[];
   created_at: string;
   // Agrega otros campos que necesites del backend
 }

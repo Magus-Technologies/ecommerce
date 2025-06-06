@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 export interface Role {
   id: number;
-  nombre: string;
+  name: string;
 }
 
 export interface DocumentType {

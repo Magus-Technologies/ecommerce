@@ -329,7 +329,7 @@
 
 .badge-activo {
   background-color: #d1fae5;
-  color: #065f46;
+  color: #065f46 !important;
 }
 
 .badge-inactivo {
@@ -339,7 +339,7 @@
 
 .badge-default {
   background-color: #f1f5f9;
-  color: var(--text-secondary);
+  color: var(--text-secondary)!important;
 }
 
 /* Fecha */
@@ -509,6 +509,7 @@
       background-color: #059669;
     }
   }
+
 
   /* Responsive mejorado para tabla */
 @media (max-width: 768px) {

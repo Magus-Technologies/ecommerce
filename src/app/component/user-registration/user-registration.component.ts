@@ -236,11 +236,23 @@ ngOnInit(): void {
     next: (response: any) => {
       console.log('Usuario registrado exitosamente:', response);
       // Redirigir a la lista de usuarios o mostrar mensaje de éxito
+      Swal.fire({
+        icon: 'success',
+        title: '¡Éxito!',
+        text: response.message || 'Usuario registrado correctamente',
+        confirmButtonText: 'OK'
+      });
       this.router.navigate(['/dashboard/usuarios']);
     },
     error: (error: any) => {
       console.error('Error al registrar usuario:', error);
       // Manejar errores aquí
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.error?.message || 'Ocurrió un error al registrar el usuario',
+        confirmButtonText: 'OK'
+      });
     }
   });
 }
