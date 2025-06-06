@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface ReniecResponse {
   success: boolean;
@@ -19,11 +20,11 @@ export interface ReniecResponse {
 })
 export class ReniecService {
 
-  private baseUrl = 'http://localhost:8000'; // Ajusta según tu configuración
+  private baseUrl = `${environment.apiUrl}` // Ajusta según tu configuración
 
   constructor(private http: HttpClient) { }
 
   buscarPorDni(dni: string): Observable<ReniecResponse> {
-    return this.http.get<ReniecResponse>(`${this.baseUrl}/api/reniec/buscar/${dni}`);
+    return this.http.get<ReniecResponse>(`${this.baseUrl}/reniec/buscar/${dni}`);
   }
 }

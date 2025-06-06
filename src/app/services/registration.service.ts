@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Role {
   id: number;
@@ -24,7 +25,8 @@ export interface UbigeoItem {
 })
 export class RegistrationService {
 
-  private apiUrl = 'http://localhost:8000/api'; // Cambia por tu URL base
+    private apiUrl = `${environment.apiUrl}`; // Cambia por tu URL base
+
 
   constructor(private http: HttpClient) { }
 
