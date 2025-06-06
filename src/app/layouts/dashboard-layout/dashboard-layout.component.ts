@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DashboardSidebarComponent } from './dashboard-sidebar/dashboard-sidebar.component';
 import { DashboardHeaderComponent } from './dashboard-header/dashboard-header.component';
+import { AuthService } from '../../services/auth.service';
+import { PermissionsService } from '../../services/permissions.service';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -22,12 +24,27 @@ export class DashboardLayoutComponent implements OnInit {
   isSidebarOpen = false;
   isSidebarCollapsed = false; 
   isDesktop = false;
+  public esSuperadmin: boolean = false;
+  puedeVerUsuarios = false;
 
-  constructor() {}
-
-  ngOnInit(): void {
-    this.checkScreenSize();
+  constructor(
+    private authService: AuthService,
+    private permissionsService: PermissionsService
+  ) {
+      // Escuchar cambios de permisos
+    window.addEventListener('permissionsUpdated', () => {
+      this.puedeVerUsuarios = this.permissionsService.hasPermission('usuarios.ver');
+    });
   }
+
+ // In dashboard-sidebar.component.ts - Update the ngOnInit method
+ngOnInit(): void {
+  const currentUser = this.authService.getCurrentUser();
+  // Usar getRoleNames() de Spatie que devuelve un array
+  this.esSuperadmin = currentUser?.roles?.includes('superadmin') ?? false; 
+  this.puedeVerUsuarios = this.permissionsService.hasPermission('usuarios.ver');
+  this.checkScreenSize();
+}
 
   @HostListener('window:resize', ['$event'])
   onResize(event: any) {

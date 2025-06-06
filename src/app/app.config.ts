@@ -13,6 +13,8 @@ import {
   withFetch,
 } from '@angular/common/http';
 import { authInterceptor } from './interceptors/auth.interceptor';
+import { logInterceptor } from './interceptors/log.interceptor'; 
+
 import { provideAnimations } from '@angular/platform-browser/animations';
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,7 +23,8 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay()),
     provideHttpClient(
       withFetch(), // Añade esta línea
-      withInterceptors([authInterceptor])
+      withInterceptors([authInterceptor, // ✅ ya lo tienes
+        logInterceptor])
     ),
       provideAnimations(),
   ],

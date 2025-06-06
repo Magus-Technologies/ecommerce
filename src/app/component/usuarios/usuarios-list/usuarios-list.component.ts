@@ -63,7 +63,7 @@ getUsuariosAdministradores(): number {
           id: usuario.id,
           nombre: usuario.name,
           email: usuario.email,
-          rol: usuario.role?.nombre || 'Sin rol',
+          rol: usuario.roles?.[0]?.name || 'Sin rol',
           estado: 'habilitado' as const,
           fechaCreacion: new Date(usuario.created_at)
         }));

@@ -146,23 +146,23 @@ cargarUsuario() {
           birthDate = date.toISOString().split('T')[0];
         }
         
-       // ← MODIFICAR ESTA SECCIÓN:
-        this.usuarioForm.patchValue({
-          name: usuario.name,
-          email: usuario.email,
-          role_id: usuario.role_id,
-          profile: {
-            first_name: usuario.profile?.first_name || '',
-            last_name_father: usuario.profile?.last_name_father || '',
-            last_name_mother: usuario.profile?.last_name_mother || '',
-            phone: usuario.profile?.phone || '',
-            document_type: usuario.profile?.document_type?.id || '', // ← Usar el ID del objeto document_type
-            document_number: usuario.profile?.document_number || '',
-            birth_date: birthDate,
-            genero: usuario.profile?.genero || '',
-            avatar_url: usuario.profile?.avatar_url || ''
-          }
-        });
+       // ← ACTUALIZADO: Usamos role_id del usuario transformado
+      this.usuarioForm.patchValue({
+        name: usuario.name,
+        email: usuario.email,
+        role_id: usuario.role_id, // ← ahora viene correctamente del backend
+        profile: {
+          first_name: usuario.profile?.first_name || '',
+          last_name_father: usuario.profile?.last_name_father || '',
+          last_name_mother: usuario.profile?.last_name_mother || '',
+          phone: usuario.profile?.phone || '',
+          document_type: usuario.profile?.document_type?.id || '',
+          document_number: usuario.profile?.document_number || '',
+          birth_date: birthDate,
+          genero: usuario.profile?.genero || '',
+          avatar_url: usuario.profile?.avatar_url || ''
+        }
+      });
 
         // Agregar este log para verificar
         console.log('Tipo de documento establecido:', usuario.profile?.document_type?.id);
@@ -360,7 +360,11 @@ onSubmit() {
       const formValues = this.usuarioForm.value;
       formData.append('name', formValues.name || '');
       formData.append('email', formValues.email || '');
-      formData.append('role_id', formValues.role_id?.toString() || '');
+      // Asegurar que role_id se envíe como número (no como string)
+      const roleId = parseInt(formValues.role_id);
+      if (!isNaN(roleId)) {
+        formData.append('role_id', roleId.toString());
+      }
       
       // Debug: Verificar valores del formulario
       console.log('Valores del formulario:', formValues);
@@ -442,7 +446,7 @@ onSubmit() {
       const userData = {
         name: this.usuarioForm.get('name')?.value,
         email: this.usuarioForm.get('email')?.value,
-        role_id: this.usuarioForm.get('role_id')?.value,
+        role_id: parseInt(this.usuarioForm.get('role_id')?.value) || null,
         profile: this.usuarioForm.get('profile')?.value,
         addresses: this.addressesArray.value
       };

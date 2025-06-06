@@ -118,8 +118,8 @@
                   id="role" 
                   formControlName="role">
                   <option value="">Seleccione un rol</option>
-                  <option *ngFor="let role of roles" [value]="role.id">
-                    {{ role.nombre }}
+                  <option *ngFor="let role of roles" [value]="role.name">
+                    {{ role.name }} <!-- ← Ahora usa 'name' y envía el nombre como value -->
                   </option>
                 </select>
               </div>

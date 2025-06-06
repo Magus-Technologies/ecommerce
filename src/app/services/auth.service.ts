@@ -1,7 +1,8 @@
 // src\app\services\auth.service.ts
 import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, of } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, BehaviorSubject, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { User, AuthResponse, LoginRequest } from '../models/user.model';
 import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
@@ -12,22 +13,22 @@ import { isPlatformBrowser } from '@angular/common';
 })
 export class AuthService {
 
-  setCurrentUser(user: User): void { // コード 🇯🇵
-    this.currentUserSubject.next(user); // コード 🇯🇵
-  } // コード 🇯🇵
+  private isBrowser: boolean; // si lo usas, mantenlo
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  public currentUser = this.currentUserSubject.asObservable();
 
-  private isBrowser: boolean; // 🐱 Muevo esta línea antes de currentUserSubject
-  private currentUserSubject: BehaviorSubject<User | null>; // 🐱 Cambio a inicialización en constructor
-  public currentUser: Observable<User | null>; // 🐱 Cambiado para inicializar en constructor
-  
-  private tokenKey = 'auth_token';
-  private userKey = 'current_user';
+  private readonly tokenKey = 'auth_token';
+  private readonly userKey = 'current_user';
+
+  setCurrentUser(user: User): void {
+    this.currentUserSubject.next(user);
+  }
 
 
   constructor(
     private http: HttpClient,
     private router: Router,
-    @Inject(PLATFORM_ID) private platformId: any
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     
@@ -47,6 +48,7 @@ export class AuthService {
     
   }
 
+
   private loadStoredUserData(): void {
     if (!this.isBrowser) return; 
     
@@ -65,34 +67,55 @@ export class AuthService {
   }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${environment.apiUrl}/login`, credentials)
-      .pipe(
-        tap(response => {
-          if (response.status === 'success' && this.isBrowser) {
-            // 🔴 Guardar token
-            localStorage.setItem(this.tokenKey, response.token);
-            
-            // 🔴 Crear objeto de usuario con la estructura correcta
-            const user: User = {
-              id: response.user.id,
-              name: response.user.name,
-              email: response.user.email,
-              roles: response.user.roles,
-            };
-            
-            // 🔴 Guardar usuario como string JSON
-            localStorage.setItem(this.userKey, JSON.stringify(user));
-            
-            // 🔴 Actualizar el BehaviorSubject
-            this.currentUserSubject.next(user);
+  return this.http.post<AuthResponse>(`${environment.apiUrl}/login`, credentials)
+    .pipe(
+      tap(response => {
+        if (response.status === 'success' && this.isBrowser) {
+          // Guardar token
+          localStorage.setItem(this.tokenKey, response.token);
+          
+          // Crear objeto de usuario con conversión segura de roles y permisos
+          const user: User = {
+            id: response.user.id,
+            name: response.user.name,
+            email: response.user.email,
+            roles: Array.isArray(response.user.roles) ? response.user.roles : [],
+            permissions: Array.isArray(response.user.permissions) ? response.user.permissions : []
+          };
+          
+          // Guardar usuario como string JSON
+          localStorage.setItem(this.userKey, JSON.stringify(user));
+          
+          // Actualizar el BehaviorSubject
+          this.currentUserSubject.next(user);
 
-            console.log('Login exitoso, redirigiendo...', user); // 🔴 Log para debugging
-            
-            // 🔴 Redirigir al dashboard
-            this.router.navigate(['/dashboard']);
-          }
-        })
-      );
+          // ✅ REDIRECCIÓN AL DASHBOARD
+          this.router.navigate(['/dashboard']);
+
+          // Forzar actualización de permisos en el sidebar
+          setTimeout(() => {
+            window.dispatchEvent(new Event('permissionsUpdated'));
+          }, 100);
+
+          console.log('Login exitoso, redirigiendo...', user);
+        }
+      }),
+      catchError(this.handleError) // solo si tienes definida la función handleError
+    );
+}
+
+
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = '';
+    if (error.error instanceof ErrorEvent) {
+      // Error cliente
+      errorMessage = `Error cliente: ${error.error.message}`;
+    } else {
+      // Error servidor
+      errorMessage = `Error servidor: Código ${error.status}, mensaje: ${error.message}`;
+    }
+    console.error(errorMessage);
+    return throwError(() => new Error(errorMessage));
   }
 
   logout(): Observable<any> {

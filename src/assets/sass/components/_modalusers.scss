@@ -17,8 +17,10 @@
   width: 90%;
   max-width: 800px;
   max-height: 90vh;
+  margin-left: 30px;
   overflow-y: auto;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 20px 0 20px 30px; // ← top, right, bottom, left
 }
 
 .modal-header {
@@ -35,20 +37,6 @@
     font-weight: 600;
   }
   
-  .btn-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #6b7280;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 6px;
-    
-    &:hover {
-      background-color: #f3f4f6;
-      color: #374151;
-    }
-  }
 }
 
 .modal-body {

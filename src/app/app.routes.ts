@@ -17,6 +17,8 @@ import { AccountComponent } from './pages/account/account.component';
 import { IndexTwoComponent } from './pages/index-two/index-two.component';
 import { IndexThreeComponent } from './pages/index-three/index-three.component';
 import { authGuard } from './guards/auth.guard';
+import { permissionGuard } from './guards/permission.guard';
+
 
 export const routes: Routes = [
   {
@@ -129,14 +131,23 @@ export const routes: Routes = [
         title: 'Dashboard',
       },
       {
+        path: 'access-denied',
+        loadComponent: () => import('./component/access-denied/access-denied.component').then(m => m.AccessDeniedComponent),
+        title: 'Acceso Denegado',
+      },
+      {
         path: 'usuarios',
         loadComponent: () => import('./component/usuarios/usuarios-list/usuarios-list.component').then(m => m.UsuariosListComponent),
         title: 'Gestión de Usuarios',
+        canActivate: [permissionGuard],
+        data: { permission: 'usuarios.ver' }
       },
       {
         path: 'users/create',
         loadComponent: () => import('./component/user-registration/user-registration.component').then(m => m.UserRegistrationComponent),
-        title: 'Crear Usuario'
+        title: 'Crear Usuario',
+        canActivate: [permissionGuard],
+        data: { permission: 'usuarios.ver' }
       },
       {
         path: 'productos',
@@ -148,15 +159,25 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/dashboard/categorias/categorias-list/categorias-list.component').then(m => m.CategoriasListComponent),
         title: 'Categorías',
       },
+      // Agregar después de la ruta de categorías
+      {
+        path: 'roles',
+        loadComponent: () => import('./pages/dashboard/roles/roles-management/roles-management.component').then(m => m.RolesManagementComponent),
+        title: 'Gestión de Roles',
+      },
       {
         path: 'users/edit/:id',
         loadComponent: () => import('./component/user-registration/user-registration.component').then(m => m.UserRegistrationComponent),
-        title: 'Editar Usuario'
+        title: 'Editar Usuario',
+        canActivate: [permissionGuard],
+        data: { permission: 'usuarios.ver' }
       },
       {
         path: 'users/:id',
         loadComponent: () => import('./component/user-registration/user-registration.component').then(m => m.UserRegistrationComponent),
-        title: 'Ver Usuario'
+        title: 'Ver Usuario',
+        canActivate: [permissionGuard],
+        data: { permission: 'usuarios.ver' }
       }
     ]
   },
