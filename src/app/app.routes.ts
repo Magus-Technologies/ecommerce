@@ -218,6 +218,14 @@ export const routes: Routes = [
           ).then((m) => m.BannersListComponent),
         title: 'Gestión de Banners',
       },
+        {
+        path: 'banners-promocionales',
+        loadComponent: () =>
+          import(
+            './pages/dashboard/banners-promocionales/banners-promocionales-list/banners-promocionales-list.component'
+          ).then((m) => m.BannersPromocionalesListComponent),
+        title: 'Banners Promocionales',
+      },
     ]
   },
   {

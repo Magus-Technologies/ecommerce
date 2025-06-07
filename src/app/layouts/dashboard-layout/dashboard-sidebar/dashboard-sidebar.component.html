@@ -34,6 +34,28 @@
           <span *ngIf="!isCollapsed" class="fw-medium">Inicio</span>
         </a>
       </li>
+        <!-- ventas -->
+      <li class="mb-8">
+        <a
+          routerLink="/dashboard/ventas"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
+          <i class="ph ph-image text-xl flex-shrink-0"></i>
+          <span *ngIf="!isCollapsed" class="fw-medium">Ventas</span>
+        </a>
+      </li>
+        <!-- Almacen -->
+      <li class="mb-8">
+        <a
+          routerLink="/dashboard/almacen"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
+          <i class="ph ph-image text-xl flex-shrink-0"></i>
+          <span *ngIf="!isCollapsed" class="fw-medium">Almacen</span>
+        </a>
+      </li>
       <!-- banners -->
       <li class="mb-8">
         <a
@@ -43,6 +65,17 @@
         >
           <i class="ph ph-image text-xl flex-shrink-0"></i>
           <span *ngIf="!isCollapsed" class="fw-medium">Banners</span>
+        </a>
+      </li>
+      <!-- banners promocional -->
+      <li class="mb-8">
+        <a
+          routerLink="/dashboard/banners-promocionales"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
+          <i class="ph ph-image text-xl flex-shrink-0"></i>
+          <span *ngIf="!isCollapsed" class="fw-medium">Banners Promocionales</span>
         </a>
       </li>
 
