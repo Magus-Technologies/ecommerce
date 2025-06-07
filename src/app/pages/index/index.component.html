@@ -168,22 +168,39 @@
 <!-- ============================ Feature Section End =============================== -->
 <section class="promotional-banner pt-80">
     <div class="container container-lg">
-        <div class="row gy-4">
-            <div class="col-xl-3 col-sm-6 col-xs-6 wow bounceIn" *ngFor="let banner of promotionalBanners"
-                [attr.data-aos]="'fade-up'" [attr.data-aos-duration]="banner.animationDelay">
-                <div
-                    class="promotional-banner-item position-relative rounded-24 overflow-hidden z-1 py-52 ps-40 pe-24 h-100">
-                    <img [src]="banner.image" alt=""
-                        class="position-absolute inset-block-start-0 inset-inline-start-0 w-100 h-100 object-fit-cover z-n1">
-                    <div class="promotional-banner-item__content">
-                        <h6 class="promotional-banner-item__title text-2xl max-w-184">{{ banner.title }}</h6>
+        <!-- Loading state -->
+        <div *ngIf="isLoadingPromotionalBanners" class="row gy-4">
+            <div class="col-xl-3 col-sm-6 col-xs-6" *ngFor="let i of [1,2,3,4]">
+                <div class="promotional-banner-item position-relative rounded-24 overflow-hidden z-1 py-52 ps-40 pe-24 h-100">
+                    <div class="placeholder-glow">
+                        <span class="placeholder col-8 mb-16" style="height: 24px;"></span>
+                        <span class="placeholder col-6 mb-16" style="height: 20px;"></span>
+                        <span class="placeholder col-4" style="height: 32px;"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                        <div *ngIf="banner.price" class="d-flex align-items-end gap-8">
+        <!-- Banners dinámicos -->
+        <div *ngIf="!isLoadingPromotionalBanners" class="row gy-4">
+            <div class="col-xl-3 col-sm-6 col-xs-6 wow bounceIn" 
+                 *ngFor="let banner of promotionalBanners"
+                 [attr.data-aos]="'fade-up'" 
+                 [attr.data-aos-duration]="banner.animacion_delay">
+                <div class="promotional-banner-item position-relative rounded-24 overflow-hidden z-1 py-52 ps-40 pe-24 h-100">
+                    <img [src]="banner.imagen_url || 'assets/images/thumbs/promotional-banner-default.png'" 
+                         [alt]="banner.titulo"
+                         class="position-absolute inset-block-start-0 inset-inline-start-0 w-100 h-100 object-fit-cover z-n1"
+                         (error)="onImageError($event)">
+                    <div class="promotional-banner-item__content">
+                        <h6 class="promotional-banner-item__title text-2xl max-w-184">{{ banner.titulo }}</h6>
+
+                        <div *ngIf="banner.precio" class="d-flex align-items-end gap-8">
                             <span class="text-heading fst-italic text-sm">Starting at</span>
-                            <h6 class="text-danger-600 mb-0 text-xl">{{ banner.price }}</h6>
+                            <h6 class="text-danger-600 mb-0 text-xl">{{ banner.precio }}</h6>
                         </div>
 
-                        <a [href]="banner.link"
+                        <a [routerLink]="[banner.enlace_url]"
                             class="btn btn-main d-inline-flex align-items-center rounded-pill gap-8 mt-24">
                             Compra ahora
                             <span class="icon text-xl d-flex"><i class="ph ph-arrow-right"></i></span>
@@ -191,19 +208,25 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Fallback si no hay banners -->
+            <div *ngIf="promotionalBanners.length === 0" class="col-12 text-center py-40">
+                <p class="text-gray-500">No hay banners promocionales disponibles</p>
+            </div>
         </div>
     </div>
 </section>
+
 
 <div class="product pt-60">
     <div class="container container-lg">
         <div class="section-heading">
             <div class="flex-between flex-wrap gap-8">
-                <h5 class="mb-0">Flash Sales Today</h5>
+                <h5 class="mb-0">Ventas flash hoy</h5>
                 <div class="flex-align gap-16">
                     <a [routerLink]="['shop']"
                         class="text-sm fw-medium text-gray-700 hover-text-main-600 hover-text-decoration-underline">
-                        View All Deals
+                        Ver todas las ofertas
                     </a>
                     <div class="flex-align gap-8">
                         <button (click)="slickModal.slickPrev()" class="slick-prev slick-arrow">‹</button>
@@ -766,11 +789,11 @@ Alimentos orgánicos</button>
     <div class="container container-lg">
         <div class="section-heading">
             <div class="flex-between flex-wrap gap-8">
-                <h5 class="mb-0 wow fadeInLeft">Hot Deals Todays</h5>
+                <h5 class="mb-0 wow fadeInLeft">Ofertas especiales de hoy</h5>
                 <div class="flex-align gap-16 wow fadeInRight">
                     <a [routerLink]="['shop']"
-                        class="text-sm fw-medium text-gray-700 hover-text-main-600 hover-text-decoration-underline">View
-                        All Deals</a>
+                        class="text-sm fw-medium text-gray-700 hover-text-main-600 hover-text-decoration-underline">Ver
+                        Todas las ofertas</a>
                     <div class="flex-align gap-8">
                         <button type="button" id="deals-prev"
                             class="slick-prev slick-arrow flex-center rounded-circle border border-gray-100 hover-border-main-600 text-xl hover-bg-main-600 hover-text-white transition-1">
@@ -898,9 +921,8 @@ Alimentos orgánicos</button>
     <div class="container container-lg">
         <div
             class="border border-main-500 bg-main-50 border-dashed rounded-8 py-20 d-flex align-items-center justify-content-evenly">
-            <p class="h6 text-main-600 fw-normal">Super discount for your <a href="javascript:void(0)"
-                    class="fw-bold text-decoration-underline text-main-600 hover-text-decoration-none hover-text-primary-600 ">first
-                    purchase</a> </p>
+            <p class="h6 text-main-600 fw-normal">Súper descuento para tu <a href="javascript:void(0)"
+                    class="fw-bold text-decoration-underline text-main-600 hover-text-decoration-none hover-text-primary-600 ">primera compra </a> </p>
             <div class="position-relative">
                 <button
                     class="copy-coupon-btn px-32 py-10 text-white text-uppercase bg-main-600 rounded-pill border-0 hover-bg-main-800 ">
@@ -910,8 +932,8 @@ Alimentos orgánicos</button>
                 <span
                     class="copy-text bg-main-600 text-white fw-normal position-absolute px-16 py-6 rounded-pill bottom-100 start-50 translate-middle-x min-w-max mb-8 text-xs"></span>
             </div>
-            <p class="text-md text-main-600 fw-normal">Use discount code to get <span class="fw-bold text-main-600">20%
-                </span> discount for any item</p>
+            <p class="text-md text-main-600 fw-normal">Utilice el código de descuento para obtener un <span class="fw-bold text-main-600">20%
+                </span>de descuento en cualquier artículo.</p>
         </div>
     </div>
 </div>
@@ -1212,11 +1234,10 @@ Alimentos orgánicos</button>
         <div class="brand-inner p-24 rounded-16">
             <div class="section-heading">
                 <div class="flex-between flex-wrap gap-8">
-                    <h5 class="mb-0 wow fadeInLeft">Shop by Brands</h5>
+                    <h5 class="mb-0 wow fadeInLeft">Comprar por marcas</h5>
                     <div class="flex-align gap-16 wow fadeInRight">
                         <a [routerLink]="['shop']"
-                            class="text-sm fw-medium text-gray-700 hover-text-main-600 hover-text-decoration-underline">View
-                            All Deals</a>
+                            class="text-sm fw-medium text-gray-700 hover-text-main-600 hover-text-decoration-underline">Ver todas las ofertas</a>
                         <div class="flex-align gap-8">
                             <button type="button" id="brand-prev"
                                 class="slick-prev slick-arrow flex-center rounded-circle border border-gray-100 hover-border-main-600 text-xl hover-bg-main-600 hover-text-white transition-1">
@@ -1247,7 +1268,7 @@ Alimentos orgánicos</button>
     <div class="container container-lg">
         <div class="section-heading">
             <div class="flex-between flex-wrap gap-8">
-                <h5 class="mb-0 wow fadeInLeft">Daily Best Sells</h5>
+                <h5 class="mb-0 wow fadeInLeft">Mejores ventas diarias</h5>
             </div>
         </div>
 
@@ -1347,14 +1368,14 @@ Alimentos orgánicos</button>
         <div
             class="py-20 px-80-px bg-neutral-100 rounded-12 d-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap gap-32">
             <div class="max-w-700">
-                <h3 class="mb-30">Stay home & get your daily needs from our shop</h3>
+                <h3 class="mb-30">Quédate en casa y compra tus productos diarios en nuestra tienda.</h3>
                 <form action="#" class="d-flex gap-8 flex-wrap flex-sm-nowrap">
                     <input type="text"
                         class="form-control bg-white px-20 shadow-none py-16 rounded placeholder-text-14 flex-grow-1"
                         placeholder="Enter your mail">
                     <button type="submit"
-                        class="btn py-20 px-32 bg-success-600 flex-shrink-0 hover-bg-success-700 flex-grow-1">Subscribe
-                        now</button>
+                        class="btn py-20 px-32 bg-success-600 flex-shrink-0 hover-bg-success-700 flex-grow-1">Suscríbete 
+                        ahora</button>
                 </form>
                 <p class="text-heading text-sm mt-20 fw-medium">I agree that my submitted data is being collected
                     and stored.</p>

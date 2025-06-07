@@ -7,7 +7,7 @@ import { SlickCarouselModule } from 'ngx-slick-carousel';
 import { RouterLink } from '@angular/router';
 import { CategoriaPublica, CategoriasPublicasService } from '../../services/categorias-publicas.service';
 // ✅ NUEVA IMPORTACIÓN PARA BANNERS
-import { BannersService, Banner } from '../../services/banner.service';
+import { BannersService, Banner, BannerPromocional } from '../../services/banner.service';
 
 interface CategoriaConImagen extends CategoriaPublica {
   img: string;
@@ -142,37 +142,27 @@ export class IndexComponent implements OnInit {
     ]
   };
 
-  promotionalBanners = [
-    {
-      title: "Everyday Fresh Meat",
-      price: "$60.99",
-      image: "assets/images/thumbs/promotional-banner-img1.png",
-      link: "shop",
-      animationDelay: 400
-    },
-    {
-      title: "Daily Fresh Vegetables",
-      price: "$60.99",
-      image: "assets/images/thumbs/promotional-banner-img2.png",
-      link: "shop",
-      animationDelay: 600
-    },
-    {
-      title: "Everyday Fresh Milk",
-      price: "$60.99",
-      image: "assets/images/thumbs/promotional-banner-img3.png",
-      link: "shop",
-      animationDelay: 800
-    },
-    {
-      title: "Everyday Fresh Fruits",
-      price: null,
-      image: "assets/images/thumbs/promotional-banner-img4.png",
-      link: "shop",
-      animationDelay: 1000
-    }
-  ];
+promotionalBanners: BannerPromocional[] = [];
+isLoadingPromotionalBanners = false;
 
+
+
+// Agregar este nuevo método:
+cargarBannersPromocionales(): void {
+  this.isLoadingPromotionalBanners = true;
+  this.bannersService.obtenerBannersPromocionalesPublicos().subscribe({
+    next: (banners) => {
+      this.promotionalBanners = banners;
+      this.isLoadingPromotionalBanners = false;
+    },
+    error: (error) => {
+      console.error('Error al cargar banners promocionales:', error);
+      this.isLoadingPromotionalBanners = false;
+      // Fallback a banners estáticos en caso de error
+      this.promotionalBanners = [];
+    }
+  });
+}
   products = [
     {
       name: 'Hortalizas en floretes de brócoli de Taylor Farms',
@@ -466,6 +456,7 @@ export class IndexComponent implements OnInit {
   ngOnInit(): void {
     this.cargarCategoriasPublicas();
     this.cargarBannersDinamicos(); // ✅ NUEVA LLAMADA
+    this.cargarBannersPromocionales();
   }
 
   cargarCategoriasPublicas(): void {
@@ -509,11 +500,11 @@ export class IndexComponent implements OnInit {
     img.src = 'assets/images/thumbs/feature-img-default.png';
   }
 
-  // flashsale
+  // venta flash
   flashSales = [
     {
-      title: 'X-Connect Smart Television',
-      description: 'Time remaining until the end of the offer.',
+      title: 'Televisión inteligente X-Connect',
+      description: 'Tiempo restante hasta el final de la oferta.',
       backgroundImage: 'assets/images/bg/flash-sale-bg1.png',
       buttonClass: 'btn btn-main d-inline-flex align-items-center rounded-pill gap-8 mt-24',
       countdownId: 'countdown1',
@@ -523,8 +514,8 @@ export class IndexComponent implements OnInit {
       countdownStyleClass: ''
     },
     {
-      title: 'Vegetables Combo Box',
-      description: 'Time remaining until the end of the offer.',
+      title: 'Caja combinada de verduras',
+      description: 'Tiempo restante hasta el final de la oferta.',
       backgroundImage: 'assets/images/bg/flash-sale-bg2.png',
       buttonClass: 'btn bg-success-600 hover-bg-success-700 d-inline-flex align-items-center rounded-pill gap-8 mt-24',
       countdownId: 'countdown2',

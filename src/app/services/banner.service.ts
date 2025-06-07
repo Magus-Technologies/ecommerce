@@ -1,4 +1,4 @@
-// src/app/services/banners.service.ts
+// src/app/services/banner.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -32,6 +32,30 @@ export interface BannerCreate {
   orden: number;
 }
 
+// ✅ NUEVA INTERFAZ PARA BANNERS PROMOCIONALES
+export interface BannerPromocional {
+  id: number;
+  titulo: string;
+  precio?: number;
+  imagen_url?: string;
+  enlace_url: string;
+  orden: number;
+  animacion_delay: number;
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BannerPromocionalCreate {
+  titulo: string;
+  precio?: number;
+  imagen?: File;
+  enlace_url: string;
+  orden: number;
+  animacion_delay?: number;
+  activo: boolean;
+}
+
 interface ApiResponse<T> {
   status: string;
   data: T;
@@ -47,6 +71,7 @@ export class BannersService {
 
   constructor(private http: HttpClient) { }
 
+  // ===== MÉTODOS PARA BANNERS PRINCIPALES =====
   obtenerBanners(): Observable<Banner[]> {
     return this.http.get<ApiResponse<Banner[]>>(`${this.apiUrl}/banners`)
       .pipe(
@@ -57,14 +82,12 @@ export class BannersService {
       );
   }
 
-   // ✅ ACTUALIZAR MÉTODO PARA MAPEAR LA RESPUESTA
   obtenerBannersPublicos(): Observable<Banner[]> {
     return this.http.get<ApiResponse<Banner[]>>(`${this.apiUrl}/banners/publicos`)
       .pipe(
         map(response => response.data)
       );
   }
-
 
   obtenerBanner(id: number): Observable<Banner> {
     return this.http.get<ApiResponse<Banner>>(`${this.apiUrl}/banners/${id}`)
@@ -120,5 +143,75 @@ export class BannersService {
 
   toggleEstado(id: number): Observable<any> {
     return this.http.patch(`${this.apiUrl}/banners/${id}/toggle-estado`, {});
+  }
+
+  // ===== MÉTODOS PARA BANNERS PROMOCIONALES =====
+  obtenerBannersPromocionales(): Observable<BannerPromocional[]> {
+    return this.http.get<ApiResponse<BannerPromocional[]>>(`${this.apiUrl}/banners-promocionales`)
+      .pipe(
+        map(response => response.data.map(banner => ({
+          ...banner,
+          imagen_url: banner.imagen_url ? `${this.baseUrl}/storage/${banner.imagen_url}` : undefined
+        })))
+      );
+  }
+
+  obtenerBannersPromocionalesPublicos(): Observable<BannerPromocional[]> {
+    return this.http.get<ApiResponse<BannerPromocional[]>>(`${this.apiUrl}/banners-promocionales/publicos`)
+      .pipe(
+        map(response => response.data)
+      );
+  }
+
+  obtenerBannerPromocional(id: number): Observable<BannerPromocional> {
+    return this.http.get<ApiResponse<BannerPromocional>>(`${this.apiUrl}/banners-promocionales/${id}`)
+      .pipe(
+        map(response => ({
+          ...response.data,
+          imagen_url: response.data.imagen_url ? `${this.baseUrl}/storage/${response.data.imagen_url}` : undefined
+        }))
+      );
+  }
+
+  crearBannerPromocional(bannerData: BannerPromocionalCreate): Observable<any> {
+    const formData = new FormData();
+    
+    formData.append('titulo', bannerData.titulo);
+    if (bannerData.precio) formData.append('precio', bannerData.precio.toString());
+    formData.append('enlace_url', bannerData.enlace_url);
+    formData.append('orden', bannerData.orden.toString());
+    if (bannerData.animacion_delay) formData.append('animacion_delay', bannerData.animacion_delay.toString());
+    formData.append('activo', bannerData.activo ? '1' : '0');
+    
+    if (bannerData.imagen) {
+      formData.append('imagen', bannerData.imagen);
+    }
+
+    return this.http.post(`${this.apiUrl}/banners-promocionales`, formData);
+  }
+
+  actualizarBannerPromocional(id: number, bannerData: Partial<BannerPromocionalCreate>): Observable<any> {
+    const formData = new FormData();
+    
+    if (bannerData.titulo) formData.append('titulo', bannerData.titulo);
+    if (bannerData.precio) formData.append('precio', bannerData.precio.toString());
+    if (bannerData.enlace_url) formData.append('enlace_url', bannerData.enlace_url);
+    if (bannerData.orden !== undefined) formData.append('orden', bannerData.orden.toString());
+    if (bannerData.animacion_delay !== undefined) formData.append('animacion_delay', bannerData.animacion_delay.toString());
+    if (bannerData.activo !== undefined) formData.append('activo', bannerData.activo ? '1' : '0');
+    
+    if (bannerData.imagen) {
+      formData.append('imagen', bannerData.imagen);
+    }
+    
+    return this.http.post(`${this.apiUrl}/banners-promocionales/${id}`, formData);
+  }
+
+  eliminarBannerPromocional(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/banners-promocionales/${id}`);
+  }
+
+  toggleEstadoBannerPromocional(id: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/banners-promocionales/${id}/toggle-estado`, {});
   }
 }
