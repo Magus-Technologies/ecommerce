@@ -116,7 +116,8 @@
                 <button 
                   class="btn-action btn-view"
                   (click)="onVerUsuario(usuario)"
-                  title="Ver usuario">
+                  title="Ver usuario"
+                  *ngIf="canShowUser$ | async"> <!-- ← MODIFICADO: agregar *ngIf -->
                   <i class="fas fa-eye"></i>
                 </button>
                 <button 

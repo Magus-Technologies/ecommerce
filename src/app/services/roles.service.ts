@@ -3,6 +3,7 @@ import { HttpClient } from "@angular/common/http"
 import { Observable } from "rxjs"
 import { environment } from "../../environments/environment"
 import { Role, Permission } from "../models/role.model"
+import { tap } from 'rxjs/operators'; // ← NUEVO
 
 @Injectable({
   providedIn: 'root'
@@ -27,11 +28,24 @@ export class RolesService {
     return this.http.get<Permission[]>(`${this.apiUrl}/roles/${roleId}/permissions`)
   }
 
-  // Actualizar permisos de un rol
   updateRolePermissions(roleId: number, permissions: string[]): Observable<any> {
     return this.http.put(`${this.apiUrl}/roles/${roleId}/permissions`, {
       permissions: permissions,
-    })
+    }).pipe(
+      tap((response: any) => {
+        // Notificar cambios en tiempo real si hay usuarios afectados
+        if (response.affected_users && response.affected_users.length > 0) {
+          // Disparar actualización de permisos
+          this.notifyPermissionChange();
+        }
+      })
+    );
+  }
+
+  // Nuevo método para notificar cambios
+  private notifyPermissionChange(): void {
+    // Emitir evento para que otros componentes actualicen permisos
+    window.dispatchEvent(new CustomEvent('permissions-updated'));
   }
 
   // Crear nuevo rol
