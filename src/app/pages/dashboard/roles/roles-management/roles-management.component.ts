@@ -260,7 +260,7 @@ export class RolesManagementComponent implements OnInit {
   loadRoles() {
     this.rolesService.getRoles().subscribe({
       next: (roles) => {
-        this.roles = roles
+        this.roles = roles.filter(role => role.name !== 'superadmin')
       },
       error: (error) => {
         console.error("Error loading roles:", error)

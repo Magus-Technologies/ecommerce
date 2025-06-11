@@ -7,6 +7,8 @@ import { User, AuthResponse, LoginRequest } from '../models/user.model';
 import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
+import { PermissionsService } from './permissions.service'; 
+import { Injector } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +18,8 @@ export class AuthService {
   private isBrowser: boolean; // si lo usas, mantenlo
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser = this.currentUserSubject.asObservable();
+  private permissionsService!: PermissionsService;
+
 
   private readonly tokenKey = 'auth_token';
   private readonly userKey = 'current_user';
@@ -28,8 +32,15 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router,
+    private injector: Injector, 
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
+
+    // Inyectamos PermissionsService manualmente para evitar circularidad directa
+    setTimeout(() => {
+      this.permissionsService = this.injector.get(PermissionsService);
+    }, 0);
+
     this.isBrowser = isPlatformBrowser(this.platformId);
     
     if (this.isBrowser) { // 🐱 Solo acceder a localStorage si está en navegador
@@ -88,6 +99,14 @@ export class AuthService {
           
           // Actualizar el BehaviorSubject
           this.currentUserSubject.next(user);
+
+          // ✅ NUEVO: Actualizamos los permisos del usuario en localStorage 🐱
+          const currentUser = this.getCurrentUser(); // 🐱
+          if (currentUser) { // 🐱
+            currentUser.permissions = [...response.user.permissions]; // 🐱 usamos los permisos que vinieron del backend 🐱
+            localStorage.setItem(this.userKey, JSON.stringify(currentUser)); // 🐱 actualizamos localStorage 🐱
+            this.permissionsService.setPermissions([...response.user.permissions]); // 🐱 notificamos al PermissionsService 🐱
+          } // 🐱
 
           // ✅ REDIRECCIÓN AL DASHBOARD
           this.router.navigate(['/dashboard']);
@@ -155,5 +174,19 @@ export class AuthService {
 
   getUserProfile(): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/user`);
+  }
+
+  // Nuevo método para refrescar permisos
+  refreshPermissions(): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/refresh-permissions`).pipe(
+      tap((response: any) => {
+        const currentUser = this.getCurrentUser();
+        if (currentUser && response.permissions) {
+          currentUser.permissions = response.permissions;
+          localStorage.setItem('current_user', JSON.stringify(currentUser));
+          this.currentUserSubject.next(currentUser);
+        }
+      })
+    );
   }
 }

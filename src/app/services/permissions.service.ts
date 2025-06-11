@@ -19,6 +19,10 @@ public permissions$: Observable<string[]> = this.permissionsSubject.asObservable
       }
    }
 
+   public refreshPermissions(): Observable<any> {
+  return this.authService.refreshPermissions();
+}
+
    setPermissions(permissions: string[]): void {
     this.permissionsSubject.next(permissions);
   }
@@ -40,6 +44,24 @@ public permissions$: Observable<string[]> = this.permissionsSubject.asObservable
   canAccess(permission: string): Observable<boolean> {
     return this.authService.currentUser.pipe(
       map(user => user?.permissions?.includes(permission) ?? false)
+    );
+  }
+
+  // Nuevo método para actualizar permisos en tiempo real
+  updatePermissions(newPermissions: string[]): void {
+    const user = this.authService.getCurrentUser();
+    if (user) {
+      user.permissions = newPermissions;
+      localStorage.setItem('current_user', JSON.stringify(user));
+      this.authService.setCurrentUser(user);
+      this.setPermissions(newPermissions);
+    }
+  }
+
+  // Método para verificar permisos en tiempo real
+  hasPermissionRealTime(permission: string): Observable<boolean> {
+    return this.permissions$.pipe(
+      map(permissions => permissions.includes(permission))
     );
   }
 }

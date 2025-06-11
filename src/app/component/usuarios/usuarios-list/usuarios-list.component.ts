@@ -1,10 +1,13 @@
 import { UsuariosService, Usuario as UsuarioBackend } from '../../../services/usuarios.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common'; // 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { UsuarioModalComponent } from '../usuario-modal/usuario-modal.component';
 import Swal from 'sweetalert2';
 import { environment } from '../../../../environments/environment';
+import { PermissionsService } from '../../../services/permissions.service'; // ← NUEVO
+import { Observable } from 'rxjs'; // ← NUEVO si no existe
+
 
 interface Usuario {
   id: number;
@@ -28,19 +31,44 @@ export class UsuariosListComponent implements OnInit {
   usuarios: Usuario[] = [];
   usuariosBackend: any[] = [];
   loading = false;
+ 
 
   // Modal properties
   showModal = false;
   selectedUsuarioId: number | null = null;
   modalMode: 'view' | 'edit' = 'view';
+  canShowUser$!: Observable<boolean>;
 
 constructor(
   private router: Router,
-  private usuariosService: UsuariosService
+  private usuariosService: UsuariosService,
+  private permissionsService: PermissionsService // ← NUEVO
 ) {}
 
  ngOnInit(): void {
   this.cargarUsuarios();
+  this.canShowUser$ = this.permissionsService.hasPermissionRealTime('usuarios.show'); // ← NUEVO
+}
+
+
+// Nuevo método para escuchar cambios de permisos
+private setupPermissionListener(): void {
+  window.addEventListener('permissions-updated', () => {
+    // Refrescar permisos del usuario actual
+    this.refreshUserPermissions();
+  });
+}
+
+// Nuevo método para refrescar permisos
+private refreshUserPermissions(): void {
+  this.permissionsService.refreshPermissions().subscribe({
+    next: (response) => {
+      this.permissionsService.updatePermissions(response.permissions);
+    },
+    error: (error) => {
+      console.error('Error al refrescar permisos:', error);
+    }
+  });
 }
 
 // Función para contar usuarios habilitados
@@ -188,5 +216,9 @@ getUsuariosAdministradores(): number {
 
    trackByUserId(index: number, usuario: Usuario): number {
     return usuario.id;
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('permissions-updated', this.refreshUserPermissions);
   }
 }
