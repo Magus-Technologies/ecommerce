@@ -38,9 +38,13 @@ slideConfig = {
   speed: 800,           
   dots: false,
   infinite: true,           
-  pauseOnHover: true,       
-  prevArrow: '#banner-prev',
-  nextArrow: '#banner-next',
+  pauseOnHover: true, 
+  fade: false, 
+  cssEase:'ease-in-out',
+  // prevArrow: '<button type="button" class="slick-prev custom-arrow">‹</button>',
+  // nextArrow: '<button type="button" class="slick-next custom-arrow">›</button>',
+  // prevArrow: '#banner-prev',
+  // nextArrow: '#banner-next',
   responsive: [
     {
       breakpoint: 768,
@@ -51,6 +55,7 @@ slideConfig = {
     }
   ]
 };
+
 
   
 
