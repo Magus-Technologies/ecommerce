@@ -100,7 +100,11 @@ export class AuthService {
           console.log('Login exitoso, redirigiendo...', user);
         }
       }),
-      catchError(this.handleError) // solo si tienes definida la función handleError
+      catchError((error: HttpErrorResponse) => {
+          // NO usar handleError, devolver el error original
+          console.log('Error HTTP original:', error);
+          return throwError(() => error);
+        })
     );
 }
 

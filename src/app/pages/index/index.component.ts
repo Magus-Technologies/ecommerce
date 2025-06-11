@@ -29,11 +29,28 @@ export class IndexComponent implements OnInit {
     { img: "http://placehold.it/350x150/333333" },
     { img: "http://placehold.it/350x150/666666" }
   ];
-  slideConfig = {
-    "slidesToShow": 1, "slidesToScroll": 1, arrows: true,
-    prevArrow: '#banner-prev',
-    nextArrow: '#banner-next',
-  };
+slideConfig = {
+  slidesToShow: 1, 
+  slidesToScroll: 1, 
+  arrows: true,
+  autoplay: true,          
+  autoplaySpeed: 4000,      
+  speed: 800,           
+  dots: false,
+  infinite: true,           
+  pauseOnHover: true,       
+  prevArrow: '#banner-prev',
+  nextArrow: '#banner-next',
+  responsive: [
+    {
+      breakpoint: 768,
+      settings: {
+        arrows: true,         // ✅ Mantener flechas en móvil
+        autoplay: true,
+      }
+    }
+  ]
+};
 
   
 
