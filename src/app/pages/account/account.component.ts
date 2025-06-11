@@ -61,48 +61,71 @@ export class AccountComponent implements OnInit {
     });
   }
 
-  // Modificar el método onLogin para quitar la redirección duplicada:
-onLogin(): void {
-  if (this.loginForm.invalid) {
-    // Marcar todos los campos como tocados para mostrar errores
-    Object.keys(this.loginForm.controls).forEach(key => {
-      const control = this.loginForm.get(key);
-      control?.markAsTouched();
-    });
-    return;
-  }
-
-  this.isLoading = true;
-  this.loginError = '';
-
-  const credentials = {
-    email: this.loginForm.value.email,
-    password: this.loginForm.value.password
-  };
-
-  this.authService.login(credentials).subscribe({
-    next: (response) => {
-
-      localStorage.setItem('current_user', JSON.stringify(response.user)); // コード 🇯🇵
-      this.authService.setCurrentUser(response.user); // コード 🇯🇵
-
-      this.isLoading = false;
-      // Guardar "remember me" si está marcado
-      if (this.loginForm.value.remember) {
-        localStorage.setItem('remember_email', credentials.email);
-      } else {
-        localStorage.removeItem('remember_email');
-      }
-      // NO redirigir aquí, ya que el servicio de autenticación se encarga de eso
-      // this.router.navigate(['/']); // COMENTADO para evitar conflicto de redirección
-    },
-    error: (error) => {
-      // Resto del código permanece igual...
+  onLogin(): void {
+    if (this.loginForm.invalid) {
+      // Marcar todos los campos como tocados para mostrar errores
+      Object.keys(this.loginForm.controls).forEach(key => {
+        const control = this.loginForm.get(key);
+        control?.markAsTouched();
+      });
+      return;
     }
-  });
-}
 
+    this.isLoading = true;
+    this.loginError = '';
 
+    const credentials = {
+      email: this.loginForm.value.email,
+      password: this.loginForm.value.password
+    };
+
+    this.authService.login(credentials).subscribe({
+      next: (response) => {
+        localStorage.setItem('current_user', JSON.stringify(response.user));
+        this.authService.setCurrentUser(response.user);
+
+        this.isLoading = false;
+        // Guardar "remember me" si está marcado
+        if (this.loginForm.value.remember) {
+          localStorage.setItem('remember_email', credentials.email);
+        } else {
+          localStorage.removeItem('remember_email');
+        }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        
+        console.log('Error completo:', error); // Para debug
+        
+        // Manejo seguro de errores - siempre mensaje genérico
+        if (error.status === 401) {
+          // Error de autenticación (credenciales incorrectas)
+          this.loginError = 'Las credenciales proporcionadas son incorrectas.';
+        } else if (error.status === 422) {
+          // Error de validación
+          if (error.error && error.error.errors) {
+            // Mostrar errores de validación específicos
+            const errors = error.error.errors;
+            if (errors.email && errors.email.length > 0) {
+              this.loginError = errors.email[0];
+            } else if (errors.password && errors.password.length > 0) {
+              this.loginError = errors.password[0];
+            } else {
+              this.loginError = 'Por favor, verifica los datos ingresados.';
+            }
+          } else {
+            this.loginError = 'Por favor, verifica los datos ingresados.';
+          }
+        } else if (error.status === 0) {
+          // Error de conexión
+          this.loginError = 'Error de conexión. Verifica tu conexión a internet.';
+        } else {
+          // Otros errores del servidor
+          this.loginError = 'Error del servidor. Por favor, inténtalo más tarde.';
+        }
+      }
+    });
+  }
 
   onRegister(): void {
     // Esta función la implementaremos más adelante

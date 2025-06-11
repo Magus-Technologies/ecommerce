@@ -19,7 +19,7 @@ import { User } from '../../models/user.model';
           <span class="text-md text-heading-three item-hover__text d-none d-lg-flex">{{ user?.name || 'Mi Perfil' }}</span>
         </button>
         <ul class="dropdown-menu" aria-labelledby="userDropdown">
-          <li><a class="dropdown-item" routerLink="/account">Mi Perfil</a></li>
+          <li><a class="dropdown-item" routerLink="/dashboard">Mi Perfil</a></li>
           <li><a class="dropdown-item" routerLink="/wishlist">Mis Favoritos</a></li>
           <li><a class="dropdown-item" routerLink="/cart">Mi Carrito</a></li>
           <li><hr class="dropdown-divider"></li>
