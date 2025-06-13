@@ -6,6 +6,7 @@ import { PermissionsService } from '../services/permissions.service';
 export const permissionGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const permissionsService = inject(PermissionsService);
   const router = inject(Router);
+  
 
   const requiredPermission = route.data['permission'] as string;
 

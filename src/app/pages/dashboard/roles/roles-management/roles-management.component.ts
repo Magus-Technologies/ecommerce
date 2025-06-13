@@ -382,13 +382,6 @@ export class RolesManagementComponent implements OnInit {
         this.originalRolePermissions = [...this.rolePermissions]
         this.hasChanges = false
 
-        // ✅ NUEVO: Actualizamos los permisos del usuario en localStorage
-        const user = this.authService.getCurrentUser(); // ✅ obtenemos el usuario actual
-        if (user) { // ✅ validamos que exista
-          user.permissions = [...this.rolePermissions]; // ✅ sobrescribimos los permisos
-          localStorage.setItem('current_user', JSON.stringify(user)); // ✅ actualizamos localStorage
-          this.permissionsService.setPermissions([...this.rolePermissions]); // ✅ notificamos a PermissionsService
-        }
         // Eliminado: alert("Permisos actualizados correctamente") - reemplazado por Swal
         Swal.fire({
           title: '¡Éxito!',

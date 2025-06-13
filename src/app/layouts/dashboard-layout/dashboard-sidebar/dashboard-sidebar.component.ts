@@ -20,6 +20,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit {
   isCollapsed = false;
   esSuperadmin = false;
   puedeVerUsuarios = false;
+  puedeVerBanners = false;
   isDesktop = false;
   private permisosSub: any;
 
@@ -32,12 +33,14 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit {
     const currentUser = this.authService.getCurrentUser();
     this.esSuperadmin = currentUser?.roles?.includes('superadmin') ?? false;
     this.puedeVerUsuarios = this.permissionsService.hasPermission('usuarios.ver');
+    this.puedeVerBanners = this.permissionsService.hasPermission('banners.ver');
     
     this.checkScreenSize();
 
     // 🔁 Suscribirse a los cambios de permisos en tiempo real
     this.permisosSub = this.permissionsService.permissions$.subscribe(perms => {
       this.puedeVerUsuarios = perms.includes('usuarios.ver');
+      this.puedeVerBanners = perms.includes('banners.ver');
     });
   }
 
@@ -49,6 +52,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit {
     const currentUser = this.authService.getCurrentUser();
     this.esSuperadmin = currentUser?.roles?.includes('superadmin') ?? false;
     this.puedeVerUsuarios = this.permissionsService.hasPermission('usuarios.ver');
+    this.puedeVerBanners = this.permissionsService.hasPermission('banners.ver');
   }
 
   // ✅ Mover las emisiones iniciales aquí para evitar ExpressionChangedAfterItHasBeenCheckedError

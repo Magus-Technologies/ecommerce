@@ -11,6 +11,7 @@
         <p class="page-subtitle">Administra los usuarios de tu plataforma ecommerce</p>
       </div>
       <button 
+        *ngIf="canCreateUser$ | async"
         class="btn btn-create"
         (click)="onCrearUsuario()"
         type="button" style="background: #2563eb">
@@ -117,19 +118,21 @@
                   class="btn-action btn-view"
                   (click)="onVerUsuario(usuario)"
                   title="Ver usuario"
-                  *ngIf="canShowUser$ | async"> <!-- ← MODIFICADO: agregar *ngIf -->
+                  *ngIf="canShowUser$ | async">
                   <i class="fas fa-eye"></i>
                 </button>
                 <button 
                   class="btn-action btn-edit"
                   (click)="onEditarUsuario(usuario)"
-                  title="Editar usuario">
+                  title="Editar usuario"
+                  *ngIf="canEditUser()">
                   <i class="fas fa-edit"></i>
                 </button>
                 <button 
                   class="btn-action btn-delete"
                   (click)="onEliminarUsuario(usuario)"
-                  title="Eliminar usuario">
+                  title="Eliminar usuario"
+                  *ngIf="canDeleteUser()">
                   <i class="fas fa-trash"></i>
                 </button>
               </div>

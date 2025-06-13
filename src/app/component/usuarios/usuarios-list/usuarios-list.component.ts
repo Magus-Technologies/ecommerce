@@ -38,6 +38,9 @@ export class UsuariosListComponent implements OnInit {
   selectedUsuarioId: number | null = null;
   modalMode: 'view' | 'edit' = 'view';
   canShowUser$!: Observable<boolean>;
+  canEditUser$!: Observable<boolean>;  // ← NUEVO
+  canDeleteUser$!: Observable<boolean>; // ← NUEVO
+  canCreateUser$!: Observable<boolean>; 
 
 constructor(
   private router: Router,
@@ -48,6 +51,10 @@ constructor(
  ngOnInit(): void {
   this.cargarUsuarios();
   this.canShowUser$ = this.permissionsService.hasPermissionRealTime('usuarios.show'); // ← NUEVO
+  // ← NUEVO: Agregar estos observables
+  this.canEditUser$ = this.permissionsService.hasPermissionRealTime('usuarios.edit');
+  this.canDeleteUser$ = this.permissionsService.hasPermissionRealTime('usuarios.delete');
+  this.canCreateUser$ = this.permissionsService.hasPermissionRealTime('usuarios.create'); // ← AGREGADO
 }
 
 
@@ -221,4 +228,15 @@ getUsuariosAdministradores(): number {
   ngOnDestroy(): void {
     window.removeEventListener('permissions-updated', this.refreshUserPermissions);
   }
+
+  // Agregar estos métodos al final de la clase UsuariosListComponent, antes del ngOnDestroy():
+
+  canEditUser(): boolean {
+    return this.permissionsService.hasPermission('usuarios.edit');
+  }
+
+  canDeleteUser(): boolean {
+    return this.permissionsService.hasPermission('usuarios.delete');
+  }
+
 }

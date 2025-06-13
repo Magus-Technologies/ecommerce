@@ -10,14 +10,17 @@ private permissionsSubject = new BehaviorSubject<string[]>([]);
 public permissions$: Observable<string[]> = this.permissionsSubject.asObservable();
 
 
-   constructor(private authService: AuthService) {
-      // Cargar permisos del usuario actual al iniciar (si existe en localStorage)
-      const userData = localStorage.getItem('current_user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        this.setPermissions(user.permissions || []);
-      }
-   }
+ constructor(private authService: AuthService) {
+  // Evitar error en SSR verificando si estamos en el navegador
+  if (typeof window !== 'undefined' && localStorage) {
+    const userData = localStorage.getItem('current_user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      this.setPermissions(user.permissions || []);
+    }
+  }
+}
+
 
    public refreshPermissions(): Observable<any> {
   return this.authService.refreshPermissions();

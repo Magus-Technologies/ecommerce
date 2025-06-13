@@ -6,7 +6,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { BannersService, Banner } from '../../../../services/banner.service';
 import { BannerModalComponent } from '../../../../component/banner-modal/banner-modal.component';
-
+import { PermissionsService } from '../../../../services/permissions.service';
+import { Observable } from 'rxjs';
 @Component({
   selector: 'app-banners-list',
   standalone: true,
@@ -19,7 +20,7 @@ import { BannerModalComponent } from '../../../../component/banner-modal/banner-
           <h4 class="text-heading fw-semibold mb-8"> Banners</h4>
           <p class="text-gray-500 mb-0">Administra los banners del sitio web</p>
         </div>
-        <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
+        <button *ngIf="canCreate$" class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
                 data-bs-toggle="modal" 
                 data-bs-target="#modalCrearBanner">
           <i class="ph ph-plus me-8"></i>
@@ -106,23 +107,24 @@ import { BannerModalComponent } from '../../../../component/banner-modal/banner-
                   <td class="px-24 py-16 text-center">
                     <div class="d-flex justify-content-center gap-8">
                       <!-- Toggle Estado -->
-                      <button class="btn w-32 h-32 rounded-6 flex-center transition-2"
+                      <button *ngIf="canEdit$"
+                              class="btn w-32 h-32 rounded-6 flex-center transition-2"
                               [class]="banner.activo ? 'bg-warning-50 hover-bg-warning-100 text-warning-600' : 'bg-success-50 hover-bg-success-100 text-success-600'"
                               [title]="banner.activo ? 'Desactivar' : 'Activar'"
                               (click)="toggleEstado(banner)">
                         <i class="ph text-sm" 
-                           [class]="banner.activo ? 'ph-eye-slash' : 'ph-eye'"></i>
+                          [class]="banner.activo ? 'ph-eye-slash' : 'ph-eye'"></i>
                       </button>
 
-                      <!-- Editar -->
-                      <button class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
+                      <!-- Modificar el botón de edición -->
+                      <button *ngIf="canEdit$" class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
                               title="Editar"
                               (click)="editarBanner(banner)">
                         <i class="ph ph-pencil text-sm"></i>
                       </button>
 
                       <!-- Eliminar -->
-                      <button class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
+                      <button *ngIf="canDelete$" class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
                               title="Eliminar"
                               (click)="eliminarBanner(banner.id)">
                         <i class="ph ph-trash text-sm"></i>
@@ -168,11 +170,33 @@ export class BannersListComponent implements OnInit {
   banners: Banner[] = [];
   isLoading = true;
   bannerSeleccionado: Banner | null = null;
+  canCreate$!: boolean;
+  canEdit$!: boolean;
+  canDelete$!: boolean;
 
-  constructor(private bannersService: BannersService) {}
+
+  constructor(
+    private bannersService: BannersService,
+    private permissionsService: PermissionsService // 🔥 lo agregas aquí sin borrar el otro
+  ) {}
 
   ngOnInit(): void {
     this.cargarBanners();
+    // Verificar permisos al inicializar
+    this.checkPermissions();
+  }
+
+  // Nuevo método para verificar permisos
+  private checkPermissions(): void {
+   this.canCreate$ = this.permissionsService.hasPermission('banners.create');
+      this.canEdit$ = this.permissionsService.hasPermission('banners.edit');
+      this.canDelete$ = this.permissionsService.hasPermission('banners.delete');
+
+  }
+
+  // Método para recargar permisos (si cambian en tiempo real)
+  refreshPermissions(): void {
+    this.checkPermissions();
   }
 
   cargarBanners(): void {
@@ -232,4 +256,5 @@ export class BannersListComponent implements OnInit {
   onModalCerrado(): void {
     this.bannerSeleccionado = null;
   }
+
 }
