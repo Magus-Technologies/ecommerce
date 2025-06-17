@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { BannersService, BannerPromocional } from '../../../../services/banner.service';
 import { BannerPromocionalModalComponent } from '../../../../component/banner-promocional-modal/banner-promocional-modal.component';
-
+import { PermissionsService } from '../../../../services/permissions.service';
+import { Observable } from 'rxjs';
 @Component({
   selector: 'app-banners-promocionales-list',
   standalone: true,
@@ -17,7 +18,7 @@ import { BannerPromocionalModalComponent } from '../../../../component/banner-pr
           <h4 class="text-heading fw-semibold mb-8">Banners Promocionales</h4>
           <p class="text-gray-500 mb-0">Administra los banners promocionales de la sección principal</p>
         </div>
-        <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
+        <button *ngIf="canCreateBanner_promocionales" class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
                 data-bs-toggle="modal" 
                 data-bs-target="#modalCrearBannerPromocional">
           <i class="ph ph-plus me-8"></i>
@@ -121,7 +122,7 @@ import { BannerPromocionalModalComponent } from '../../../../component/banner-pr
                   <td class="px-24 py-16 text-center">
                     <div class="d-flex justify-content-center gap-8">
                       <!-- Toggle Estado -->
-                      <button class="btn w-32 h-32 rounded-6 flex-center transition-2"
+                      <button *ngIf="canEdit" class="btn w-32 h-32 rounded-6 flex-center transition-2"
                               [class]="banner.activo ? 'bg-warning-50 hover-bg-warning-100 text-warning-600' : 'bg-success-50 hover-bg-success-100 text-success-600'"
                               [title]="banner.activo ? 'Desactivar' : 'Activar'"
                               (click)="toggleEstado(banner)">
@@ -130,14 +131,14 @@ import { BannerPromocionalModalComponent } from '../../../../component/banner-pr
                       </button>
 
                       <!-- Editar -->
-                      <button class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
+                      <button *ngIf="canEdit" class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
                               title="Editar"
                               (click)="editarBanner(banner)">
                         <i class="ph ph-pencil text-sm"></i>
                       </button>
 
                       <!-- Eliminar -->
-                      <button class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
+                      <button *ngIf="canDelete" class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
                               title="Eliminar"
                               (click)="eliminarBanner(banner.id)">
                         <i class="ph ph-trash text-sm"></i>
@@ -153,7 +154,7 @@ import { BannerPromocionalModalComponent } from '../../../../component/banner-pr
               <i class="ph ph-image text-gray-300 text-6xl mb-16"></i>
               <h6 class="text-heading fw-semibold mb-8">No hay banners promocionales</h6>
               <p class="text-gray-500 mb-16">Aún no has creado ningún banner promocional</p>
-              <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
+              <button *ngIf="canCreateBanner_promocionales" class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
                       data-bs-toggle="modal" 
                       data-bs-target="#modalCrearBannerPromocional">
                 <i class="ph ph-plus me-8"></i>
@@ -188,10 +189,28 @@ export class BannersPromocionalesListComponent implements OnInit {
   isLoading = true;
   bannerSeleccionado: BannerPromocional | null = null;
 
-  constructor(private bannersService: BannersService) {}
+  canCreateBanner_promocionales!: boolean;
+  canEdit!: boolean;
+  canDelete!: boolean;
+
+    constructor(private bannersService: BannersService,
+    private permissionsService: PermissionsService
+  ) {}
 
   ngOnInit(): void {
-    this.cargarBannersPromocionales();
+    this.cargarBannersPromocionales(); 
+    this.checkPermissions();
+  }
+
+  private checkPermissions(): void {
+    this.canCreateBanner_promocionales = this.permissionsService.hasPermission('banners_promocionales.create');
+    this.canEdit = this.permissionsService.hasPermission('banners_promocionales.edit');
+    this.canDelete = this.permissionsService.hasPermission('banners_promocionales.delete');
+  }
+
+  // Método para recargar permisos (si cambian en tiempo real)
+  refreshPermissions(): void {
+    this.checkPermissions();
   }
 
   cargarBannersPromocionales(): void {

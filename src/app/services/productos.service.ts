@@ -77,6 +77,20 @@ export interface CategoriaParaSidebar {
   nombre: string;
   productos_count: number;
 }
+
+export interface EstadisticasProductos {
+  total_productos: number;
+}
+
+export interface ProductoStockCritico {
+  id: number;
+  nombre: string;
+  stock: number;
+  stock_minimo: number;
+  categoria_id: number;
+  categoria?: Categoria;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -180,5 +194,13 @@ export class ProductosService {
 
   obtenerCategoriasParaSidebar(): Observable<CategoriaParaSidebar[]> {
     return this.http.get<CategoriaParaSidebar[]>(`${this.apiUrl}/categorias-sidebar`);
+  }
+
+  obtenerEstadisticasProductos(): Observable<EstadisticasProductos> {
+    return this.http.get<EstadisticasProductos>(`${this.apiUrl}/productos/estadisticas`);
+  }
+
+  obtenerProductosStockCritico(): Observable<ProductoStockCritico[]> {
+    return this.http.get<ProductoStockCritico[]>(`${this.apiUrl}/productos/stock-critico`);
   }
 }

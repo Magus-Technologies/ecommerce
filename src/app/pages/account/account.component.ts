@@ -151,6 +151,12 @@ export class AccountComponent implements OnInit {
     this.showRegisterPassword = !this.showRegisterPassword;
   }
 
+  loginWithGoogle(): void {
+    console.log('Login con Google clickeado');
+    // Aquí después vas a integrar con Google Auth
+  }
+
+
   // Getters para facilitar el acceso a los campos del formulario en el template
   get loginEmail() { return this.loginForm.get('email'); }
   get loginPassword() { return this.loginForm.get('password'); }

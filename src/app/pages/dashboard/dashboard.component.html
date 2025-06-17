@@ -9,7 +9,7 @@
       <p class="text-muted">Resumen general de tu tienda online</p>
     </div>
   </div>
-
+  
   <!-- Stats Cards -->
   <div class="row g-4 mb-5" [@staggerAnimation]>
     <!-- Total Pedidos -->
@@ -124,19 +124,25 @@
             <i class="fas fa-exclamation-triangle"></i>
             Stock Crítico
           </h4>
-        </div>
-        <div class="stock-list">
-          <div class="stock-item" *ngFor="let item of criticalStock">
-            <div class="item-info">
-              <span class="item-name">{{ item.name }}</span>
-              <span class="stock-level">{{ item.stock }} unidades restantes</span>
             </div>
-            <button class="btn btn-outline-danger btn-sm restock-btn">
-              <i class="fas fa-plus me-1"></i>
-              Solicitar
-            </button>
-          </div>
-        </div>
+            <div class="stock-list">
+              <div class="stock-item" *ngFor="let item of criticalStock">
+                <div class="item-info">
+                  <span class="item-name">{{ item.nombre }}</span>
+                  <span class="stock-level">{{ item.stock }} unidades restantes (mín: {{ item.stock_minimo }})</span>
+                </div>
+                <button class="btn btn-outline-danger btn-sm restock-btn">
+                  <i class="fas fa-plus me-1"></i>
+                  Solicitar
+                </button>
+              </div>
+              <div *ngIf="criticalStock.length === 0" class="no-critical-stock">
+                <p class="text-muted text-center py-3">
+                  <i class="fas fa-check-circle me-2"></i>
+                  No hay productos con stock crítico
+                </p>
+              </div>
+            </div>
       </div>
     </div>
 

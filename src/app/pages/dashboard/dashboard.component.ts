@@ -8,6 +8,12 @@ import {
   stagger,
   query
 } from '@angular/animations';
+
+import { ProductosService, EstadisticasProductos, ProductoStockCritico } from '../../services/productos.service';
+import { EstadisticasGenerales } from '../../models/cliente.model';
+import { ClienteService } from '../../services/cliente.service';
+
+
 interface DashboardStats {
   totalOrders: number;
   totalCustomers: number;
@@ -63,13 +69,17 @@ export class DashboardComponent {
       return item.orderId; // o la propiedad única que identifique cada item
     }
 
-  stats: DashboardStats = {
+    stats: DashboardStats = {
     totalOrders: 1250,
     totalCustomers: 890,
     totalRevenue: 45300,
-    totalProducts: 340,
+    totalProducts: 0, // Ahora vendrá del backend
     totalReports: 25
   };
+
+  // Stock crítico - ahora vendrá del backend
+  criticalStock: ProductoStockCritico[] = [];
+  
 
   recentOrders: OrderItem[] = [
     {
@@ -150,14 +160,6 @@ topProduct = {
   growth: 23.5
 };
 
-// Stock crítico
-criticalStock = [
-  { name: 'AirPods Pro 2', stock: 2, minStock: 10 },
-  { name: 'Samsung Galaxy S24', stock: 3, minStock: 15 },
-  { name: 'MacBook Air M3', stock: 1, minStock: 5 },
-  { name: 'iPad Pro 12.9"', stock: 4, minStock: 8 }
-];
-
 // Datos para gráfico de categorías (torta)
 categoryData = [
   { name: 'Electrónicos', value: 45, color: '#007bff' },
@@ -198,10 +200,16 @@ calendarEvents = [
   { day: 28, event: 'Reunión proveedores' }
 ];
 
-  constructor() { }
+  constructor(
+    private productosService: ProductosService,
+    private clienteService: ClienteService // ← NUEVA LÍNEA
+  ) { }
 
   ngOnInit(): void {
-     setTimeout(() => this.animateEarnings(), 500);
+    setTimeout(() => this.animateEarnings(), 500);
+    this.cargarEstadisticasProductos();
+    this.cargarProductosStockCritico();
+    this.cargarEstadisticasClientes();
   }
 
   getStatusClass(status: string): string {
@@ -260,4 +268,40 @@ getMaxSales(): number {
   return Math.max(...this.salesData.map(d => d.sales));
 }
 
+private cargarEstadisticasProductos(): void {
+    this.productosService.obtenerEstadisticasProductos().subscribe({
+      next: (estadisticas: EstadisticasProductos) => {
+        this.stats.totalProducts = estadisticas.total_productos;
+      },
+      error: (error) => {
+        console.error('Error al cargar estadísticas de productos:', error);
+      }
+    });
+  }
+
+  private cargarProductosStockCritico(): void {
+    this.productosService.obtenerProductosStockCritico().subscribe({
+      next: (productos: ProductoStockCritico[]) => {
+        this.criticalStock = productos;
+      },
+      error: (error) => {
+        console.error('Error al cargar productos con stock crítico:', error);
+      }
+    });
+  }
+
+  
+  // ← AGREGA ESTA NUEVA FUNCIÓN AQUÍ:
+  private cargarEstadisticasClientes(): void {
+    this.clienteService.getEstadisticas().subscribe({
+      next: (response) => {
+        this.stats.totalCustomers = response.data.total_clientes;
+      },
+      error: (error) => {
+        console.error('Error al cargar estadísticas de clientes:', error);
+        // Mantener el valor por defecto en caso de error
+        this.stats.totalCustomers = 890;
+      }
+    });
+  }
 }

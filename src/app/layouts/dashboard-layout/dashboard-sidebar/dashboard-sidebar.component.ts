@@ -21,6 +21,9 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit {
   esSuperadmin = false;
   puedeVerUsuarios = false;
   puedeVerBanners = false;
+  puedeVerBanners_promocionales = false;
+  puedeVerClientes = false;
+
   isDesktop = false;
   private permisosSub: any;
 
@@ -34,6 +37,8 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit {
     this.esSuperadmin = currentUser?.roles?.includes('superadmin') ?? false;
     this.puedeVerUsuarios = this.permissionsService.hasPermission('usuarios.ver');
     this.puedeVerBanners = this.permissionsService.hasPermission('banners.ver');
+    this.puedeVerBanners_promocionales = this.permissionsService.hasPermission('banners_promocionales.ver');
+    this.puedeVerClientes = this.permissionsService.hasPermission('clientes.ver');
     
     this.checkScreenSize();
 
@@ -41,6 +46,8 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit {
     this.permisosSub = this.permissionsService.permissions$.subscribe(perms => {
       this.puedeVerUsuarios = perms.includes('usuarios.ver');
       this.puedeVerBanners = perms.includes('banners.ver');
+      this.puedeVerBanners_promocionales = perms.includes('banners_promocionales.ver');
+      this.puedeVerClientes = perms.includes('clientes.ver');
     });
   }
 
@@ -53,6 +60,8 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit {
     this.esSuperadmin = currentUser?.roles?.includes('superadmin') ?? false;
     this.puedeVerUsuarios = this.permissionsService.hasPermission('usuarios.ver');
     this.puedeVerBanners = this.permissionsService.hasPermission('banners.ver');
+    this.puedeVerBanners_promocionales = this.permissionsService.hasPermission('banners_promocionales.ver');
+    this.puedeVerClientes = this.permissionsService.hasPermission('clientes.ver');
   }
 
   // ✅ Mover las emisiones iniciales aquí para evitar ExpressionChangedAfterItHasBeenCheckedError

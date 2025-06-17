@@ -16,7 +16,8 @@ export interface Permission {
 }
 
 export interface PermissionGroup {
-  module: string
+  module: string;
+  originalModule: string;
   permissions: {
     [action: string]: Permission | null
   }

@@ -71,6 +71,7 @@
       <!-- banners promocional -->
       <li class="mb-8">
         <a
+          *ngIf="puedeVerBanners_promocionales"
           routerLink="/dashboard/banners-promocionales"
           routerLinkActive="active"
           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
@@ -105,7 +106,7 @@
       </li> -->
 
       <!-- Clientes -->
-      <li class="mb-8">
+      <li *ngIf="puedeVerClientes" class="mb-8">
         <a
           routerLink="/dashboard/clientes"
           routerLinkActive="active"

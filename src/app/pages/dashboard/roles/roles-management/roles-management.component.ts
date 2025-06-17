@@ -89,62 +89,58 @@ import Swal from 'sweetalert2'
                             <!-- Eliminado: columna "Acciones" - no tiene utilidad -->
                           </tr>
                         </thead>
+                        <!-- Antes de la línea <tbody> -->
                         <tbody>
                           <tr *ngFor="let group of filteredPermissionGroups">
                             <td class="fw-bold">{{ group.module | titlecase }}</td>
                             <td>
-                              <!-- Eliminado: label con nombre completo del permiso -->
                               <div class="form-check">
                                 <input 
                                   class="form-check-input" 
                                   type="checkbox"
-                                  [checked]="isPermissionChecked(group.module + '.ver')"
-                                  (change)="togglePermission(group.module + '.ver', $event)"
-                                  [disabled]="!getPermissionByName(group.module + '.ver')">
+                                  [checked]="isPermissionChecked(group.originalModule + '.ver')"
+                                  (change)="togglePermission(group.originalModule + '.ver', $event)"
+                                  [disabled]="!getPermissionByName(group.originalModule + '.ver')"> <!-- 🐱 MODIFICADO: usar originalModule -->
                               </div>
                             </td>
                             <td>
-                              <!-- NUEVO: columna para permisos .show (detalle) -->
                               <div class="form-check">
                                 <input 
                                   class="form-check-input" 
                                   type="checkbox"
-                                  [checked]="isPermissionChecked(group.module + '.show')"
-                                  (change)="togglePermission(group.module + '.show', $event)"
-                                  [disabled]="!getPermissionByName(group.module + '.show')">
+                                  [checked]="isPermissionChecked(group.originalModule + '.show')"
+                                  (change)="togglePermission(group.originalModule + '.show', $event)"
+                                  [disabled]="!getPermissionByName(group.originalModule + '.show')"> <!-- 🐱 MODIFICADO: usar originalModule -->
                               </div>
                             </td>
                             <td>
-                              <!-- Eliminado: label con nombre completo del permiso -->
                               <div class="form-check">
                                 <input 
                                   class="form-check-input" 
                                   type="checkbox"
-                                  [checked]="isPermissionChecked(group.module + '.create')"
-                                  (change)="togglePermission(group.module + '.create', $event)"
-                                  [disabled]="!getPermissionByName(group.module + '.create')">
+                                  [checked]="isPermissionChecked(group.originalModule + '.create')"
+                                  (change)="togglePermission(group.originalModule + '.create', $event)"
+                                  [disabled]="!getPermissionByName(group.originalModule + '.create')"> <!-- 🐱 MODIFICADO: usar originalModule -->
                               </div>
                             </td>
                             <td>
-                              <!-- Eliminado: label con nombre completo del permiso -->
                               <div class="form-check">
                                 <input 
                                   class="form-check-input" 
                                   type="checkbox"
-                                  [checked]="isPermissionChecked(group.module + '.edit')"
-                                  (change)="togglePermission(group.module + '.edit', $event)"
-                                  [disabled]="!getPermissionByName(group.module + '.edit')">
+                                  [checked]="isPermissionChecked(group.originalModule + '.edit')"
+                                  (change)="togglePermission(group.originalModule + '.edit', $event)"
+                                  [disabled]="!getPermissionByName(group.originalModule + '.edit')"> <!-- 🐱 MODIFICADO: usar originalModule -->
                               </div>
                             </td>
                             <td>
-                              <!-- Eliminado: label con nombre completo del permiso -->
                               <div class="form-check">
                                 <input 
                                   class="form-check-input" 
                                   type="checkbox"
-                                  [checked]="isPermissionChecked(group.module + '.delete')"
-                                  (change)="togglePermission(group.module + '.delete', $event)"
-                                  [disabled]="!getPermissionByName(group.module + '.delete')">
+                                  [checked]="isPermissionChecked(group.originalModule + '.delete')"
+                                  (change)="togglePermission(group.originalModule + '.delete', $event)"
+                                  [disabled]="!getPermissionByName(group.originalModule + '.delete')"> <!-- 🐱 MODIFICADO: usar originalModule -->
                               </div>
                             </td>
                           </tr>
@@ -256,7 +252,7 @@ export class RolesManagementComponent implements OnInit {
     this.loadRoles()
     this.loadPermissions()
   }
-
+  
   loadRoles() {
     this.rolesService.getRoles().subscribe({
       next: (roles) => {
@@ -271,6 +267,7 @@ export class RolesManagementComponent implements OnInit {
   loadPermissions() {
     this.rolesService.getPermissions().subscribe({
       next: (permissions) => {
+        console.log('🐱 Permisos recibidos del servidor:', permissions);
         this.permissions = permissions
         this.groupPermissionsByModule()
       },
@@ -281,28 +278,33 @@ export class RolesManagementComponent implements OnInit {
   }
 
  groupPermissionsByModule() {
-    const modules = new Set<string>()
+  const modules = new Set<string>()
 
-    // Extraer módulos únicos
-    this.permissions.forEach((permission) => {
-      const [module] = permission.name.split(".")
-      modules.add(module)
-    })
+  // Extraer módulos únicos
+  this.permissions.forEach((permission) => {
+    const [module] = permission.name.split(".")
+    modules.add(module)
+  })
 
-    // Crear grupos de permisos
-    this.permissionGroups = Array.from(modules).map((module) => ({
-      module,
-      permissions: {
-        ver: this.permissions.find((p) => p.name === `${module}.ver`) || null,
-        show: this.permissions.find((p) => p.name === `${module}.show`) || null, // ← NUEVO: agregar permisos .show
-        create: this.permissions.find((p) => p.name === `${module}.create`) || null,
-        edit: this.permissions.find((p) => p.name === `${module}.edit`) || null,
-        delete: this.permissions.find((p) => p.name === `${module}.delete`) || null,
-      },
-    }))
+  console.log('🐱 Módulos únicos extraídos:', Array.from(modules)); // 🐱 NUEVO: ver módulos únicos
 
-    this.filteredPermissionGroups = [...this.permissionGroups]
-  }
+  // Crear grupos de permisos
+  this.permissionGroups = Array.from(modules).map((module) => ({
+    module: module.replace(/_/g, ' '), // 🐱 Para mostrar en la UI
+    originalModule: module, // 🐱 NUEVO: guardar el nombre original para usar en las consultas
+    permissions: {
+      ver: this.permissions.find((p) => p.name === `${module}.ver`) || null,
+      show: this.permissions.find((p) => p.name === `${module}.show`) || null,
+      create: this.permissions.find((p) => p.name === `${module}.create`) || null,
+      edit: this.permissions.find((p) => p.name === `${module}.edit`) || null,
+      delete: this.permissions.find((p) => p.name === `${module}.delete`) || null,
+    },
+  }))
+
+  console.log('🐱 Grupos de permisos procesados:', this.permissionGroups); // 🐱 NUEVO: ver grupos finales
+
+  this.filteredPermissionGroups = [...this.permissionGroups]
+}
 
   selectRole(role: Role) {
     this.selectedRole = role

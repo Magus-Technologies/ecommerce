@@ -1,0 +1,278 @@
+<div class="usuarios-container">
+  <!-- Header -->
+  <div class="usuarios-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="page-title">
+          <i class="ph ph-users"></i>
+          Gestión de Clientes
+        </h1>
+        <p class="page-subtitle">Administra todos los clientes registrados en tu tienda</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon blue">
+        <i class="ph ph-users text-white"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ loadingStats ? '...' : estadisticas.total_clientes }}</h3>
+        <p>Total Clientes</p>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon green">
+        <i class="ph ph-check-circle text-white"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ loadingStats ? '...' : estadisticas.clientes_activos }}</h3>
+        <p>Clientes Activos</p>
+      </div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon orange">
+        <i class="ph ph-user-plus text-white"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ loadingStats ? '...' : estadisticas.clientes_nuevos }}</h3>
+        <p>Nuevos este mes</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de clientes -->
+  <div class="table-container">
+    <div class="table-header">
+      <h2 class="table-title">Lista de Clientes</h2>
+      
+      <!-- Filtros -->
+      <div class="d-flex gap-3 align-items-center flex-wrap">
+        <!-- Búsqueda -->
+        <div class="search-box">
+          <i class="ph ph-magnifying-glass"></i>
+          <input 
+            type="text" 
+            [(ngModel)]="filtros.search"
+            (keyup.enter)="buscar()"
+            placeholder="Buscar por nombre, email o documento..."
+            class="form-control">
+        </div>
+
+        <!-- Filtro Estado -->
+        <select [(ngModel)]="filtros.estado" (change)="buscar()" class="form-select" style="width: 140px;">
+          <option value="">Todos</option>
+          <option value="1">Activos</option>
+          <option value="0">Inactivos</option>
+        </select>
+
+        <!-- Filtro Tipo Login -->
+        <select [(ngModel)]="filtros.tipo_login" (change)="buscar()" class="form-select" style="width: 140px;">
+          <option value="">Tipo Login</option>
+          <option value="manual">Manual</option>
+          <option value="google">Google</option>
+          <option value="facebook">Facebook</option>
+        </select>
+
+        <!-- Botón Buscar -->
+        <button (click)="buscar()" class="btn btn-primary">
+          <i class="ph ph-magnifying-glass"></i>
+          Buscar
+        </button>
+
+        <!-- Botón Limpiar -->
+        <button (click)="limpiarFiltros()" class="btn btn-outline-secondary">
+          <i class="ph ph-x"></i>
+          Limpiar
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center p-4">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrapper" *ngIf="!loading">
+      <table class="usuarios-table">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Documento</th>
+            <th>Contacto</th>
+            <th>Tipo Login</th>
+            <th>Fecha Registro</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cliente of clientes" class="table-row">
+            <!-- Información del cliente -->
+            <td>
+              <div class="user-info">
+                <div class="user-avatar" *ngIf="!cliente.foto">
+                  {{ getInitials(cliente.nombre_completo || cliente.nombres) }}
+                </div>
+                <img 
+                  *ngIf="cliente.foto" 
+                  [src]="cliente.foto" 
+                  [alt]="cliente.nombre_completo"
+                  class="user-avatar-img">
+                <div class="user-details">
+                  <strong>{{ cliente.nombre_completo || (cliente.nombres + ' ' + cliente.apellidos) }}</strong>
+                  <span class="text-muted small">ID: {{ cliente.id_cliente }}</span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Documento -->
+            <td>
+              <div>
+                <strong>{{ cliente.tipo_documento?.nombre || 'N/A' }}</strong><br>
+                <span class="text-muted">{{ cliente.numero_documento }}</span>
+              </div>
+            </td>
+
+            <!-- Contacto -->
+            <td>
+              <div>
+                <div class="mb-1">
+                  <i class="ph ph-envelope me-1"></i>
+                  <small>{{ cliente.email }}</small>
+                </div>
+                <div *ngIf="cliente.telefono">
+                  <i class="ph ph-phone me-1"></i>
+                  <small>{{ cliente.telefono }}</small>
+                </div>
+              </div>
+            </td>
+
+            <!-- Tipo Login -->
+            <td>
+              <span class="badge" [class]="getTipoLoginClass(cliente.tipo_login)">
+                <i [class]="getTipoLoginIcon(cliente.tipo_login)"></i>
+                {{ getTipoLoginText(cliente.tipo_login) }}
+              </span>
+            </td>
+
+            <!-- Fecha Registro -->
+            <td>
+              <div>
+                <div>{{ formatDate(cliente.fecha_registro) }}</div>
+                <small class="text-muted">{{ getTimeAgo(cliente.fecha_registro) }}</small>
+              </div>
+            </td>
+
+            <!-- Estado -->
+            <td>
+              <span class="badge" [class]="cliente.estado ? 'bg-success' : 'bg-danger'">
+                <i [class]="cliente.estado ? 'ph ph-check-circle' : 'ph ph-x-circle'"></i>
+                {{ cliente.estado ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+
+            <!-- Acciones -->
+            <td>
+              <div class="btn-group" role="group">
+                <!-- Ver detalles -->
+                <button 
+                  *ngIf="puedeVerDetalle"
+                  type="button" 
+                  class="btn btn-sm btn-outline-primary"
+                  [title]="'Ver detalles de ' + cliente.nombre_completo"
+                  (click)="verDetalle(cliente.id_cliente)">
+                  <i class="ph ph-eye"></i>
+                </button>
+
+                <!-- Editar -->
+                <button 
+                  *ngIf="puedeEditar"
+                  type="button" 
+                  class="btn btn-sm btn-outline-secondary"
+                  [title]="'Editar ' + cliente.nombre_completo"
+                  (click)="editarCliente(cliente)">
+                  <i class="ph ph-pencil"></i>
+                </button>
+
+                <!-- Toggle Estado -->
+                <button 
+                  *ngIf="puedeEditar"
+                  type="button" 
+                  class="btn btn-sm"
+                  [class]="cliente.estado ? 'btn-outline-warning' : 'btn-outline-success'"
+                  [title]="cliente.estado ? 'Desactivar cliente' : 'Activar cliente'"
+                  (click)="toggleEstado(cliente)">
+                  <i [class]="cliente.estado ? 'ph ph-lock' : 'ph ph-lock-open'"></i>
+                </button>
+
+                <!-- Eliminar -->
+                <button 
+                  *ngIf="puedeEliminar"
+                  type="button" 
+                  class="btn btn-sm btn-outline-danger"
+                  [title]="'Eliminar ' + cliente.nombre_completo"
+                  (click)="eliminarCliente(cliente)">
+                  <i class="ph ph-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Mensaje sin datos -->
+      <div *ngIf="clientes.length === 0" class="text-center p-5">
+        <i class="ph ph-users text-muted" style="font-size: 4rem;"></i>
+        <h5 class="text-muted mt-3">No hay clientes</h5>
+        <p class="text-muted">No hay clientes que coincidan con los filtros aplicados.</p>
+      </div>
+    </div>
+
+    <!-- Paginación -->
+    <div class="d-flex justify-content-between align-items-center p-3" *ngIf="paginacion.total > 0">
+      <div class="text-muted">
+        Mostrando {{ ((paginacion.current_page - 1) * paginacion.per_page) + 1 }} a 
+        {{ Math.min(paginacion.current_page * paginacion.per_page, paginacion.total) }} 
+        de {{ paginacion.total }} registros
+      </div>
+      
+      <nav *ngIf="paginacion.last_page > 1">
+        <ul class="pagination mb-0">
+          <li class="page-item" [class.disabled]="paginacion.current_page === 1">
+            <button class="page-link" (click)="cambiarPagina(paginacion.current_page - 1)">
+              <i class="ph ph-caret-left"></i>
+            </button>
+          </li>
+          
+          <li class="page-item" 
+              *ngFor="let page of getPageNumbers()" 
+              [class.active]="page === paginacion.current_page">
+            <button class="page-link" (click)="cambiarPagina(page)">{{ page }}</button>
+          </li>
+          
+          <li class="page-item" [class.disabled]="paginacion.current_page === paginacion.last_page">
+            <button class="page-link" (click)="cambiarPagina(paginacion.current_page + 1)">
+              <i class="ph ph-caret-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para editar cliente -->
+<app-cliente-edit-modal
+  *ngIf="mostrarModalEditar"
+  [cliente]="clienteEditando"
+  (clienteActualizado)="onClienteActualizado($event)"
+  (cerrar)="cerrarModalEditar()">
+</app-cliente-edit-modal>

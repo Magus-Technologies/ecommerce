@@ -140,7 +140,7 @@ import { Observable } from 'rxjs';
               <i class="ph ph-image text-gray-300 text-6xl mb-16"></i>
               <h6 class="text-heading fw-semibold mb-8">No hay banners</h6>
               <p class="text-gray-500 mb-16">Aún no has creado ningún banner</p>
-              <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
+              <button *nIf="canCreate$" class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
                       data-bs-toggle="modal" 
                       data-bs-target="#modalCrearBanner">
                 <i class="ph ph-plus me-8"></i>

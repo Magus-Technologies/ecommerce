@@ -162,6 +162,18 @@
                             </div>
                         </div>
                         
+                        <!-- Botón de Registro con Google -->
+                        <div class="mt-24">
+                            <button 
+                                type="button"
+                                class="btn d-flex align-items-center justify-content-center gap-2 w-100 border border-gray-300 rounded-12 py-12 hover-bg-main-50 transition-1"
+                                (click)="loginWithGoogle()"
+                            >
+                                <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" width="20" height="20">
+                                <span class="fw-medium text-neutral-800">Registrarse con Google</span>
+                            </button>
+                        </div>
+
                         <div class="my-48">
                             <p class="text-gray-500">
                                 Tus datos personales se utilizarán para procesar tu pedido, mejorar tu experiencia en este sitio web y para otros fines descritos en nuestra

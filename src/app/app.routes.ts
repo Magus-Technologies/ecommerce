@@ -222,6 +222,19 @@ export const routes: Routes = [
           ).then((m) => m.BannersPromocionalesListComponent),
         title: "Banners Promocionales",
       },
+      // Dentro de las rutas de dashboard, agrega:
+      {
+        path: 'clientes',
+        loadComponent: () => import('./pages/dashboard/clientes/clientes.component').then(m => m.ClientesComponent),
+        canActivate: [authGuard, permissionGuard],
+        data: { permission: 'clientes.ver' }
+      },
+      {
+        path: 'clientes/:id',
+        loadComponent: () => import('./pages/dashboard/clientes/cliente-detalle/cliente-detalle.component').then(m => m.ClienteDetalleComponent),
+        canActivate: [authGuard, permissionGuard],
+        data: { permission: 'clientes.show' }
+      },
     ],
   },
   {
