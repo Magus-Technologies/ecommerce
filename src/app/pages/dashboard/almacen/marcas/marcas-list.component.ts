@@ -1,30 +1,30 @@
-// src\app\pages\dashboard\almacen\categorias\categorias-list.component.ts
+// src\app\pages\dashboard\almacen\marcas\marcas-list.component.ts
 import { Component, OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
-import { AlmacenService, Categoria } from "../../../../services/almacen.service"
-import { CategoriaModalComponent } from "./categoria-modal.component"
+import { AlmacenService, MarcaProducto } from "../../../../services/almacen.service"
+import { MarcaModalComponent } from "./marca-modal.component"
 import Swal from "sweetalert2"
 
 @Component({
-  selector: "app-categorias-list",
+  selector: "app-marcas-list",
   standalone: true,
-  imports: [CommonModule, RouterModule, CategoriaModalComponent],
+  imports: [CommonModule, RouterModule, MarcaModalComponent],
   template: `
     <div class="d-flex justify-content-between align-items-center mb-24">
       <div>
-        <h5 class="text-heading fw-semibold mb-8">Listado de Categorías</h5>
-        <p class="text-gray-500 mb-0">Administra las categorías de productos</p>
+        <h5 class="text-heading fw-semibold mb-8">Listado de Marcas</h5>
+        <p class="text-gray-500 mb-0">Administra las marcas de productos</p>
       </div>
       <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
               data-bs-toggle="modal" 
-              data-bs-target="#modalCrearCategoria">
+              data-bs-target="#modalCrearMarca">
         <i class="ph ph-plus me-8"></i>
-        Nueva Categoría
+        Nueva Marca
       </button>
     </div>
 
-    <!-- Tabla de categorías -->
+    <!-- Tabla de marcas -->
     <div class="card border-0 shadow-sm rounded-12">
       <div class="card-body p-0">
         
@@ -33,7 +33,7 @@ import Swal from "sweetalert2"
           <div class="spinner-border text-main-600" role="status">
             <span class="visually-hidden">Cargando...</span>
           </div>
-          <p class="text-gray-500 mt-12 mb-0">Cargando categorías...</p>
+          <p class="text-gray-500 mt-12 mb-0">Cargando marcas...</p>
         </div>
 
         <!-- Tabla -->
@@ -50,45 +50,45 @@ import Swal from "sweetalert2"
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let categoria of categorias" class="border-bottom border-gray-100">
+              <tr *ngFor="let marca of marcas" class="border-bottom border-gray-100">
                 <!-- Imagen -->
                 <td class="px-24 py-16">
                   <div class="w-48 h-48 bg-gray-100 rounded-8 flex-center overflow-hidden position-relative">
-                    <img *ngIf="categoria.imagen_url" 
-                         [src]="categoria.imagen_url" 
-                         [alt]="categoria.nombre"
+                    <img *ngIf="marca.imagen_url" 
+                         [src]="marca.imagen_url" 
+                         [alt]="marca.nombre"
                          class="w-100 h-100 object-fit-cover"
                          (error)="onImageError($event)">
-                    <i *ngIf="!categoria.imagen_url" 
-                       class="ph ph-image text-gray-400 text-xl"></i>
+                    <i *ngIf="!marca.imagen_url" 
+                       class="ph ph-tag text-gray-400 text-xl"></i>
                   </div>
                 </td>
 
                 <!-- Nombre -->
                 <td class="px-24 py-16">
-                  <h6 class="text-heading fw-semibold mb-4">{{ categoria.nombre }}</h6>
+                  <h6 class="text-heading fw-semibold mb-4">{{ marca.nombre }}</h6>
                 </td>
 
                 <!-- Descripción -->
                 <td class="px-24 py-16">
                   <p class="text-gray-600 mb-0" 
-                     [title]="categoria.descripcion">
-                    {{ categoria.descripcion ? (categoria.descripcion.length > 50 ? categoria.descripcion.substring(0, 50) + '...' : categoria.descripcion) : 'Sin descripción' }}
+                     [title]="marca.descripcion">
+                    {{ marca.descripcion ? (marca.descripcion.length > 50 ? marca.descripcion.substring(0, 50) + '...' : marca.descripcion) : 'Sin descripción' }}
                   </p>
                 </td>
 
                 <!-- Estado -->
                 <td class="px-24 py-16">
                   <span class="badge px-12 py-6 rounded-pill fw-medium"
-                        [class]="categoria.activo ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600'">
-                    {{ categoria.activo ? 'Activa' : 'Inactiva' }}
+                        [class]="marca.activo ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600'">
+                    {{ marca.activo ? 'Activa' : 'Inactiva' }}
                   </span>
                 </td>
 
                 <!-- Fecha -->
                 <td class="px-24 py-16">
                   <span class="text-gray-500 text-sm">
-                    {{ categoria.created_at | date:'dd/MM/yyyy' }}
+                    {{ marca.created_at | date:'dd/MM/yyyy' }}
                   </span>
                 </td>
 
@@ -97,24 +97,24 @@ import Swal from "sweetalert2"
                   <div class="d-flex justify-content-center gap-8">
                     <!-- Toggle Estado -->
                     <button class="btn w-32 h-32 rounded-6 flex-center transition-2"
-                            [class]="categoria.activo ? 'bg-warning-50 hover-bg-warning-100 text-warning-600' : 'bg-success-50 hover-bg-success-100 text-success-600'"
-                            [title]="categoria.activo ? 'Desactivar' : 'Activar'"
-                            (click)="toggleEstado(categoria)">
+                            [class]="marca.activo ? 'bg-warning-50 hover-bg-warning-100 text-warning-600' : 'bg-success-50 hover-bg-success-100 text-success-600'"
+                            [title]="marca.activo ? 'Desactivar' : 'Activar'"
+                            (click)="toggleEstado(marca)">
                       <i class="ph text-sm" 
-                         [class]="categoria.activo ? 'ph-eye-slash' : 'ph-eye'"></i>
+                         [class]="marca.activo ? 'ph-eye-slash' : 'ph-eye'"></i>
                     </button>
 
                     <!-- Editar -->
                     <button class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
                             title="Editar"
-                            (click)="editarCategoria(categoria)">
+                            (click)="editarMarca(marca)">
                       <i class="ph ph-pencil text-sm"></i>
                     </button>
 
                     <!-- Eliminar -->
                     <button class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
                             title="Eliminar"
-                            (click)="eliminarCategoria(categoria)">
+                            (click)="eliminarMarca(marca)">
                       <i class="ph ph-trash text-sm"></i>
                     </button>
                   </div>
@@ -124,27 +124,27 @@ import Swal from "sweetalert2"
           </table>
 
           <!-- Empty state -->
-          <div *ngIf="categorias.length === 0" class="text-center py-40">
-            <i class="ph ph-folder-open text-gray-300 text-6xl mb-16"></i>
-            <h6 class="text-heading fw-semibold mb-8">No hay categorías</h6>
-            <p class="text-gray-500 mb-16">Aún no has creado ninguna categoría</p>
+          <div *ngIf="marcas.length === 0" class="text-center py-40">
+            <i class="ph ph-tag text-gray-300 text-6xl mb-16"></i>
+            <h6 class="text-heading fw-semibold mb-8">No hay marcas</h6>
+            <p class="text-gray-500 mb-16">Aún no has creado ninguna marca</p>
             <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
                     data-bs-toggle="modal" 
-                    data-bs-target="#modalCrearCategoria">
+                    data-bs-target="#modalCrearMarca">
               <i class="ph ph-plus me-8"></i>
-              Crear primera categoría
+              Crear primera marca
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal para crear/editar categoría -->
-    <app-categoria-modal 
-      [categoria]="categoriaSeleccionada"
-      (categoriaGuardada)="onCategoriaGuardada()"
+    <!-- Modal para crear/editar marca -->
+    <app-marca-modal 
+      [marca]="marcaSeleccionada"
+      (marcaGuardada)="onMarcaGuardada()"
       (modalCerrado)="onModalCerrado()">
-    </app-categoria-modal>
+    </app-marca-modal>
   `,
   styles: [
     `
@@ -160,44 +160,44 @@ import Swal from "sweetalert2"
   `,
   ],
 })
-export class CategoriasListComponent implements OnInit {
-  categorias: Categoria[] = []
+export class MarcasListComponent implements OnInit {
+  marcas: MarcaProducto[] = []
   isLoading = true
-  categoriaSeleccionada: Categoria | null = null
+  marcaSeleccionada: MarcaProducto | null = null
 
   constructor(private almacenService: AlmacenService) {}
 
   ngOnInit(): void {
-    this.cargarCategorias()
+    this.cargarMarcas()
   }
 
-  cargarCategorias(): void {
+  cargarMarcas(): void {
     this.isLoading = true
-    this.almacenService.obtenerCategorias().subscribe({
-      next: (categorias) => {
-        this.categorias = categorias
+    this.almacenService.obtenerMarcas().subscribe({
+      next: (marcas) => {
+        this.marcas = marcas
         this.isLoading = false
       },
       error: (error) => {
-        console.error("Error al cargar categorías:", error)
+        console.error("Error al cargar marcas:", error)
         this.isLoading = false
       },
     })
   }
 
-  editarCategoria(categoria: Categoria): void {
-    this.categoriaSeleccionada = categoria
-    const modal = document.getElementById("modalCrearCategoria")
+  editarMarca(marca: MarcaProducto): void {
+    this.marcaSeleccionada = marca
+    const modal = document.getElementById("modalCrearMarca")
     if (modal) {
       const bootstrapModal = new (window as any).bootstrap.Modal(modal)
       bootstrapModal.show()
     }
   }
 
-  eliminarCategoria(categoria: Categoria): void {
+  eliminarMarca(marca: MarcaProducto): void {
     Swal.fire({
-      title: "¿Eliminar categoría?",
-      html: `Estás a punto de eliminar la categoría <strong>"${categoria.nombre}"</strong>.<br>Esta acción no se puede deshacer.`,
+      title: "¿Eliminar marca?",
+      html: `Estás a punto de eliminar la marca <strong>"${marca.nombre}"</strong>.<br>Esta acción no se puede deshacer.`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#dc3545",
@@ -211,11 +211,11 @@ export class CategoriasListComponent implements OnInit {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        this.almacenService.eliminarCategoria(categoria.id).subscribe({
+        this.almacenService.eliminarMarca(marca.id).subscribe({
           next: () => {
             Swal.fire({
               title: "¡Eliminada!",
-              text: "La categoría ha sido eliminada exitosamente.",
+              text: "La marca ha sido eliminada exitosamente.",
               icon: "success",
               confirmButtonColor: "#198754",
               customClass: {
@@ -223,12 +223,12 @@ export class CategoriasListComponent implements OnInit {
                 confirmButton: "rounded-8",
               },
             })
-            this.cargarCategorias()
+            this.cargarMarcas()
           },
           error: (error) => {
             Swal.fire({
               title: "Error",
-              text: "No se pudo eliminar la categoría. Inténtalo de nuevo.",
+              text: "No se pudo eliminar la marca. Inténtalo de nuevo.",
               icon: "error",
               confirmButtonColor: "#dc3545",
               customClass: {
@@ -236,34 +236,33 @@ export class CategoriasListComponent implements OnInit {
                 confirmButton: "rounded-8",
               },
             })
-            console.error("Error al eliminar categoría:", error)
+            console.error("Error al eliminar marca:", error)
           },
         })
       }
     })
   }
 
-  toggleEstado(categoria: Categoria): void {
-    // USAR EL NUEVO MÉTODO ESPECÍFICO PARA CAMBIAR ESTADO
+  toggleEstado(marca: MarcaProducto): void {
     this.almacenService
-      .toggleEstadoCategoria(categoria.id, !categoria.activo)
+      .toggleEstadoMarca(marca.id, !marca.activo)
       .subscribe({
         next: () => {
-          this.cargarCategorias()
+          this.cargarMarcas()
         },
         error: (error) => {
-          console.error("Error al actualizar estado de la categoría:", error)
+          console.error("Error al actualizar estado de la marca:", error)
         },
       })
   }
 
-  onCategoriaGuardada(): void {
-    this.cargarCategorias()
-    this.categoriaSeleccionada = null
+  onMarcaGuardada(): void {
+    this.cargarMarcas()
+    this.marcaSeleccionada = null
   }
 
   onModalCerrado(): void {
-    this.categoriaSeleccionada = null
+    this.marcaSeleccionada = null
   }
 
   onImageError(event: any): void {
@@ -274,10 +273,10 @@ export class CategoriasListComponent implements OnInit {
 
     const container = event.target.closest(".w-48.h-48")
     if (container) {
-      let placeholder = container.querySelector(".ph-image")
+      let placeholder = container.querySelector(".ph-tag")
       if (!placeholder) {
         placeholder = document.createElement("i")
-        placeholder.className = "ph ph-image text-gray-400 text-xl"
+        placeholder.className = "ph ph-tag text-gray-400 text-xl"
         container.appendChild(placeholder)
       }
       placeholder.style.display = "block"

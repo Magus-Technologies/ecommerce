@@ -1,10 +1,11 @@
 // src/app/models/user.model.ts
 export interface User {
   id: number;
-  name: string;
+name?: string;
   email: string;
   roles: string[];
   permissions: string[];
+   tipo_usuario?: 'admin' | 'cliente';
   email_verified_at?: string;
   created_at?: string;
   updated_at?: string;
@@ -25,6 +26,15 @@ export interface LoginRequest {
 export interface AuthResponse {
   status: string;
   message: string;
-  user: User;
+
+   tipo_usuario: 'admin' | 'cliente'; // NUEVO
+  user: {
+    id: number;
+    name?: string;
+    nombre_completo?: string; // Para clientes
+    email: string;
+    roles: string[];
+    permissions: string[];
+  };
   token: string;
 }

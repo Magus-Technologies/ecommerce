@@ -17,6 +17,10 @@ import { IndexTwoComponent } from "./pages/index-two/index-two.component"
 import { IndexThreeComponent } from "./pages/index-three/index-three.component"
 import { authGuard } from "./guards/auth.guard"
 import { permissionGuard } from "./guards/permission.guard"
+import { VentasComponent } from "./pages/dashboard/ventas/ventas.component"
+import { VentasListComponent } from "./pages/dashboard/ventas/ventas-list.component"
+import { NuevaVentaComponent } from "./pages/dashboard/ventas/nueva-venta.component"
+import { EstadisticasVentasComponent } from "./pages/dashboard/ventas/estadisticas-ventas.component"
 
 export const routes: Routes = [
   {
@@ -181,7 +185,22 @@ export const routes: Routes = [
               ),
             title: "Categorías",
           },
+          {
+            path: "marcas",
+            loadComponent: () =>
+              import("./pages/dashboard/almacen/marcas/marcas-list.component").then((m) => m.MarcasListComponent),
+            title: "Marcas",
+          }
         ],
+      },
+      {
+ path: 'ventas',
+  component: VentasComponent,
+  children: [
+    { path: '', component: VentasListComponent },
+    { path: 'nueva', component: NuevaVentaComponent },
+    { path: 'estadisticas', component: EstadisticasVentasComponent }
+  ]
       },
       // Agregar después de la ruta de almacén
       {

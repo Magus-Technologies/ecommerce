@@ -23,6 +23,26 @@ export interface CategoriaCreate {
   activo: boolean
 }
 
+// Interfaces para Marcas
+export interface MarcaProducto {
+  id: number
+  nombre: string
+  descripcion?: string
+  imagen?: string
+  imagen_url?: string
+  activo: boolean
+  productos_count?: number
+  created_at: string
+  updated_at: string
+}
+
+export interface MarcaProductoCreate {
+  nombre: string
+  descripcion?: string
+  imagen?: File
+  activo: boolean
+}
+
 // Interfaces para Productos
 export interface Producto {
   id: number
@@ -30,7 +50,9 @@ export interface Producto {
   descripcion?: string
   codigo_producto: string
   categoria_id: number
+  marca_id?: number
   categoria?: Categoria
+  marca?: MarcaProducto
   precio_compra: number
   precio_venta: number
   stock: number
@@ -47,6 +69,7 @@ export interface ProductoCreate {
   descripcion?: string
   codigo_producto: string
   categoria_id: number
+  marca_id?: number
   precio_compra: number
   precio_venta: number
   stock: number
@@ -66,6 +89,8 @@ export interface ProductoPublico {
   imagen_principal: string
   categoria: string
   categoria_id: number
+  marca?: string
+  marca_id?: number
   rating: number
   total_reviews: string
   reviews_count: number
@@ -147,6 +172,8 @@ export class AlmacenService {
       if (value !== null && value !== undefined) {
         if (key === "imagen" && value instanceof File) {
           formData.append(key, value)
+        } else if (key === "activo") {
+          formData.append(key, value ? "1" : "0")
         } else {
           formData.append(key, value.toString())
         }
@@ -157,12 +184,94 @@ export class AlmacenService {
     return this.http.post<any>(`${this.apiUrl}/categorias/${id}`, formData)
   }
 
+  toggleEstadoCategoria(id: number, activo: boolean): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/categorias/${id}/toggle-estado`, { activo })
+  }
+
   eliminarCategoria(id: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/categorias/${id}`)
   }
 
   obtenerCategoriasParaSidebar(): Observable<CategoriaParaSidebar[]> {
     return this.http.get<CategoriaParaSidebar[]>(`${this.apiUrl}/categorias-sidebar`)
+  }
+
+  // ==================== MÉTODOS PARA MARCAS ====================
+
+  obtenerMarcas(): Observable<MarcaProducto[]> {
+    return this.http.get<MarcaProducto[]>(`${this.apiUrl}/marcas`).pipe(
+      map((marcas) =>
+        marcas.map((marca) => ({
+          ...marca,
+          imagen_url: marca.imagen ? `${this.baseUrl}/storage/marcas_productos/${marca.imagen}` : undefined,
+        })),
+      ),
+    )
+  }
+
+  obtenerMarca(id: number): Observable<MarcaProducto> {
+    return this.http.get<MarcaProducto>(`${this.apiUrl}/marcas/${id}`).pipe(
+      map((marca) => ({
+        ...marca,
+        imagen_url: marca.imagen ? `${this.baseUrl}/storage/marcas_productos/${marca.imagen}` : undefined,
+      })),
+    )
+  }
+
+  crearMarca(marca: MarcaProductoCreate): Observable<any> {
+    const formData = new FormData()
+
+    formData.append("nombre", marca.nombre)
+    formData.append("activo", marca.activo ? "1" : "0")
+
+    if (marca.descripcion) {
+      formData.append("descripcion", marca.descripcion)
+    }
+
+    if (marca.imagen) {
+      formData.append("imagen", marca.imagen)
+    }
+
+    return this.http.post<any>(`${this.apiUrl}/marcas`, formData)
+  }
+
+  actualizarMarca(id: number, marca: Partial<MarcaProductoCreate>): Observable<any> {
+    const formData = new FormData()
+
+    Object.keys(marca).forEach((key) => {
+      const value = (marca as any)[key]
+      if (value !== null && value !== undefined) {
+        if (key === "imagen" && value instanceof File) {
+          formData.append(key, value)
+        } else if (key === "activo") {
+          formData.append(key, value ? "1" : "0")
+        } else {
+          formData.append(key, value.toString())
+        }
+      }
+    })
+
+    formData.append("_method", "PUT")
+    return this.http.post<any>(`${this.apiUrl}/marcas/${id}`, formData)
+  }
+
+  toggleEstadoMarca(id: number, activo: boolean): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/marcas/${id}/toggle-estado`, { activo })
+  }
+
+  eliminarMarca(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/marcas/${id}`)
+  }
+
+  obtenerMarcasActivas(): Observable<MarcaProducto[]> {
+    return this.http.get<MarcaProducto[]>(`${this.apiUrl}/marcas/activas`).pipe(
+      map((marcas) =>
+        marcas.map((marca) => ({
+          ...marca,
+          imagen_url: marca.imagen ? `${this.baseUrl}/storage/marcas_productos/${marca.imagen}` : undefined,
+        })),
+      ),
+    )
   }
 
   // ==================== MÉTODOS PARA PRODUCTOS ====================
@@ -203,6 +312,10 @@ export class AlmacenService {
       formData.append("descripcion", producto.descripcion)
     }
 
+    if (producto.marca_id) {
+      formData.append("marca_id", producto.marca_id.toString())
+    }
+
     if (producto.imagen) {
       formData.append("imagen", producto.imagen)
     }
@@ -218,6 +331,8 @@ export class AlmacenService {
       if (value !== null && value !== undefined) {
         if (key === "imagen" && value instanceof File) {
           formData.append(key, value)
+        } else if (key === "activo") {
+          formData.append(key, value ? "1" : "0")
         } else {
           formData.append(key, value.toString())
         }
@@ -228,12 +343,17 @@ export class AlmacenService {
     return this.http.post<any>(`${this.apiUrl}/productos/${id}`, formData)
   }
 
+  toggleEstadoProducto(id: number, activo: boolean): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/productos/${id}/toggle-estado`, { activo })
+  }
+
   eliminarProducto(id: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/productos/${id}`)
   }
 
   obtenerProductosPublicos(filtros?: {
     categoria?: number
+    marca?: number
     search?: string
     page?: number
   }): Observable<ProductosPublicosResponse> {
@@ -241,6 +361,9 @@ export class AlmacenService {
 
     if (filtros?.categoria) {
       params = params.set("categoria", filtros.categoria.toString())
+    }
+    if (filtros?.marca) {
+      params = params.set("marca", filtros.marca.toString())
     }
     if (filtros?.search) {
       params = params.set("search", filtros.search)
@@ -251,4 +374,15 @@ export class AlmacenService {
 
     return this.http.get<ProductosPublicosResponse>(`${this.apiUrl}/productos-publicos`, { params })
   }
+
+  obtenerMarcasPublicas(): Observable<MarcaProducto[]> {
+  return this.http.get<MarcaProducto[]>(`${this.apiUrl}/marcas/publicas`).pipe(
+    map((marcas) =>
+      marcas.map((marca) => ({
+        ...marca,
+        imagen_url: marca.imagen ? `${this.baseUrl}/storage/marcas_productos/${marca.imagen}` : undefined,
+      })),
+    ),
+  )
+}
 }

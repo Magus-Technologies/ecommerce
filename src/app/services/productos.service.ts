@@ -148,9 +148,13 @@ export class ProductosService {
     Object.keys(producto).forEach(key => {
       const value = (producto as any)[key];
       if (value !== null && value !== undefined) {
-        if (key === 'imagen' && value instanceof File) {
+
+        // añadir lógica para manejar tipos específicos
+        if (key === 'activo') {
+          formData.append(key, value.toString()); //envia un boolean
+        } else if (key === 'imagen' && value instanceof File) {
           formData.append(key, value);
-        } else {
+        }else {
           formData.append(key, value.toString());
         }
       }

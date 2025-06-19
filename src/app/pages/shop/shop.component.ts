@@ -1,10 +1,12 @@
-// src\app\pages\shop\shop.component.ts
-import { Component,  OnInit } from "@angular/core"
+// src/app/pages/shop/shop.component.ts
+import { Component, OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
-import { RouterLink,  ActivatedRoute,  Router } from "@angular/router"
+import { RouterLink, ActivatedRoute, Router } from "@angular/router"
 import { BreadcrumbComponent } from "../../component/breadcrumb/breadcrumb.component"
 import { ShippingComponent } from "../../component/shipping/shipping.component"
 import { ProductosService, ProductoPublico, type CategoriaParaSidebar } from "../../services/productos.service"
+import { CartService } from "../../services/cart.service"
+import Swal from 'sweetalert2'
 
 @Component({
   selector: "app-shop",
@@ -58,6 +60,7 @@ export class ShopComponent implements OnInit {
 
   constructor(
     private productosService: ProductosService,
+    private cartService: CartService,
     private route: ActivatedRoute,
     private router: Router,
   ) {}
@@ -127,6 +130,42 @@ export class ShopComponent implements OnInit {
 
   togglelistview(): void {
     this.listview = this.listview === "grid" ? "list" : "grid"
+  }
+
+  // ✅ MÉTODO MEJORADO PARA AGREGAR AL CARRITO
+  addToCart(producto: ProductoPublico): void {
+    if (producto.stock <= 0) {
+      Swal.fire({
+        title: 'Sin stock',
+        text: 'Este producto no tiene stock disponible',
+        icon: 'warning',
+        confirmButtonColor: '#dc3545'
+      });
+      return;
+    }
+
+    const success = this.cartService.addToCart(producto, 1);
+    
+    if (success) {
+      Swal.fire({
+        title: '¡Producto agregado!',
+        text: `${producto.nombre} ha sido agregado a tu carrito`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end',
+        background: '#f8f9fa',
+        color: '#333'
+      });
+    } else {
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo agregar el producto al carrito. Revisa el stock disponible.',
+        icon: 'error',
+        confirmButtonColor: '#dc3545'
+      });
+    }
   }
 
   // ✅ MÉTODO PARA MANEJAR ERRORES DE IMAGEN

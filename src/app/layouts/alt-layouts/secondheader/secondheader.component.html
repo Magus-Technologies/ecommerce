@@ -48,25 +48,25 @@
             <ul class="nav-menu flex-align nav-menu--mobile">
                 <li class="on-hover-item nav-menu__item has-submenu" routerLinkActive="activePage"
                     (click)="toggleSubmenu('home')">
-                    <a href="javascript:void(0)" class="nav-menu__link text-heading-two">Home</a>
+                    <a href="javascript:void(0)" class="nav-menu__link text-heading-two">Hogar</a>
                     <ul class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
                         [style.display]="activeIndex === 'home' ? 'block' : 'none'">
                         <li class="common-dropdown__item nav-submenu__item" routerLinkActive="activePage">
                             <a [routerLink]="['/']"
                                 class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100">
-                                Home Grocery
+                               Abarrotes caseros
                             </a>
                         </li>
                         <li class="common-dropdown__item nav-submenu__item" routerLinkActive="activePage">
                             <a [routerLink]="['/index-two']"
                                 class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100">
-                                Home Electronics
+                               Electrónica para el hogar
                             </a>
                         </li>
                         <li class="common-dropdown__item nav-submenu__item" routerLinkActive="activePage">
                             <a [routerLink]="['/index-three']"
                                 class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100">
-                                Home Fashion
+                                Moda para el hogar
                             </a>
                         </li>
                     </ul>
@@ -224,24 +224,24 @@
                 <ul class="nav-menu flex-align ">
                     <li class="on-hover-item nav-menu__item has-submenu activePage"
                         [class.activePage]="isParentActive(['/', '/index-two', '/index-three'])">
-                        <a href="javascript:void(0)" class="nav-menu__link text-heading-two">Home</a>
+                        <a href="javascript:void(0)" class="nav-menu__link text-heading-two">Hogar</a>
                         <ul class="on-hover-dropdown common-dropdown nav-submenu scroll-sm">
                             <li class="common-dropdown__item nav-submenu__item" [class.activePage]="isRouteActive('/')">
                                 <a [routerLink]="['']"
                                     class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100">
-                                    Home Grocery</a>
+                                    Abarrotes Caseros</a>
                             </li>
                             <li class="common-dropdown__item nav-submenu__item"
                                 [class.activePage]="isRouteActive('/index-two')">
                                 <a [routerLink]="['index-two']"
                                     class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100">
-                                    Home Electronics</a>
+                                    Electrónica para el hogar</a>
                             </li>
                             <li class="common-dropdown__item nav-submenu__item"
                                 [class.activePage]="isRouteActive('/index-three')">
                                 <a [routerLink]="['index-three']"
                                     class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100">
-                                    Home Fashion</a>
+                                    Moda para el hogar</a>
                             </li>
                         </ul>
                     </li>

@@ -1,8 +1,11 @@
+// src\app\pages\dashboard\almacen\productos\productos-list.component.ts
 import { Component, OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
 import { AlmacenService, Producto } from "../../../../services/almacen.service"
 import { ProductoModalComponent } from "./producto-modal.component"
+import Swal from "sweetalert2"
+
 
 @Component({
   selector: "app-productos-list",
@@ -42,6 +45,7 @@ import { ProductoModalComponent } from "./producto-modal.component"
                 <th class="px-24 py-16 text-heading fw-semibold border-0">Imagen</th>
                 <th class="px-24 py-16 text-heading fw-semibold border-0">Producto</th>
                 <th class="px-24 py-16 text-heading fw-semibold border-0">Categoría</th>
+                <th class="px-24 py-16 text-heading fw-semibold border-0">Marca</th>
                 <th class="px-24 py-16 text-heading fw-semibold border-0">Precios</th>
                 <th class="px-24 py-16 text-heading fw-semibold border-0">Stock</th>
                 <th class="px-24 py-16 text-heading fw-semibold border-0">Estado</th>
@@ -74,6 +78,14 @@ import { ProductoModalComponent } from "./producto-modal.component"
                   <span class="badge bg-main-50 text-main-600 px-12 py-6 rounded-pill fw-medium">
                     {{ producto.categoria?.nombre || 'Sin categoría' }}
                   </span>
+                </td>
+
+                <!-- Marca -->
+                <td class="px-24 py-16">
+                  <span *ngIf="producto.marca" class="badge bg-secondary-50 text-secondary-600 px-12 py-6 rounded-pill fw-medium">
+                    {{ producto.marca.nombre }}
+                  </span>
+                  <span *ngIf="!producto.marca" class="text-gray-400 text-sm">Sin marca</span>
                 </td>
 
                 <!-- Precios -->
@@ -125,7 +137,7 @@ import { ProductoModalComponent } from "./producto-modal.component"
                     <!-- Eliminar -->
                     <button class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
                             title="Eliminar"
-                            (click)="eliminarProducto(producto.id)">
+                            (click)="eliminarProducto(producto)">
                       <i class="ph ph-trash text-sm"></i>
                     </button>
                   </div>
@@ -202,30 +214,64 @@ export class ProductosListComponent implements OnInit {
     }
   }
 
-  eliminarProducto(id: number): void {
-    if (confirm("¿Estás seguro de que quieres eliminar este producto?")) {
-      this.almacenService.eliminarProducto(id).subscribe({
-        next: () => {
-          this.cargarProductos()
+  eliminarProducto(producto: Producto): void {
+    Swal.fire({
+        title: "¿Eliminar producto?",
+        html: `Estás a punto de eliminar el producto <strong>"${producto.nombre}"</strong>.<br>Esta acción no se puede deshacer.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc3545",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+        customClass: {
+            popup: "rounded-12",
+            confirmButton: "rounded-8",
+            cancelButton: "rounded-8",
         },
-        error: (error) => {
-          console.error("Error al eliminar producto:", error)
-        },
-      })
-    }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            this.almacenService.eliminarProducto(producto.id).subscribe({
+                next: () => {
+                    Swal.fire({
+                        title: "¡Eliminado!",
+                        text: "El producto ha sido eliminado exitosamente.",
+                        icon: "success",
+                        confirmButtonColor: "#198754",
+                        customClass: {
+                            popup: "rounded-12",
+                            confirmButton: "rounded-8",
+                        },
+                    });
+                    this.cargarProductos();
+                },
+                error: (error) => {
+                    Swal.fire({
+                        title: "Error",
+                        text: "No se pudo eliminar el producto. Inténtalo de nuevo.",
+                        icon: "error",
+                        confirmButtonColor: "#dc3545",
+                        customClass: {
+                            popup: "rounded-12",
+                            confirmButton: "rounded-8",
+                        },
+                    });
+                    console.error("Error al eliminar producto:", error);
+                },
+            });
+        }
+    });
   }
 
   toggleEstado(producto: Producto): void {
     this.almacenService
-      .actualizarProducto(producto.id, {
-        activo: !producto.activo,
-      })
+      .toggleEstadoProducto(producto.id, !producto.activo)
       .subscribe({
         next: () => {
           this.cargarProductos()
         },
         error: (error) => {
-          console.error("Error al actualizar producto:", error)
+          console.error("Error al actualizar estado del producto:", error)
         },
       })
   }
