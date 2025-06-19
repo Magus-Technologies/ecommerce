@@ -1,40 +1,40 @@
-// src\app\pages\dashboard\almacen\categorias\categoria-modal.component.ts
+// src\app\pages\dashboard\almacen\marcas\marca-modal.component.ts
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from "@angular/forms"
-import { AlmacenService, Categoria, CategoriaCreate } from "../../../../services/almacen.service"
+import { AlmacenService, MarcaProducto, MarcaProductoCreate } from "../../../../services/almacen.service"
 
 @Component({
-  selector: "app-categoria-modal",
+  selector: "app-marca-modal",
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
     <!-- Modal -->
-    <div class="modal fade" id="modalCrearCategoria" tabindex="-1">
+    <div class="modal fade" id="modalCrearMarca" tabindex="-1">
       <div class="modal-dialog modal-lg">
         <div class="modal-content border-0 rounded-12">
           <div class="modal-header border-0 pb-0">
             <h5 class="modal-title text-heading fw-semibold">
-              {{ categoria ? 'Editar Categoría' : 'Nueva Categoría' }}
+              {{ marca ? 'Editar Marca' : 'Nueva Marca' }}
             </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           
           <div class="modal-body p-24">
-            <form [formGroup]="categoriaForm" (ngSubmit)="onSubmit()">
+            <form [formGroup]="marcaForm" (ngSubmit)="onSubmit()">
               <div class="row">
                 <!-- Información básica -->
                 <div class="col-md-8">
                   <div class="mb-16">
-                    <label class="form-label text-heading fw-medium mb-8">Nombre de la Categoría *</label>
+                    <label class="form-label text-heading fw-medium mb-8">Nombre de la Marca *</label>
                     <input type="text" 
                            class="form-control px-16 py-12 border rounded-8"
-                           [class.is-invalid]="categoriaForm.get('nombre')?.invalid && categoriaForm.get('nombre')?.touched"
+                           [class.is-invalid]="marcaForm.get('nombre')?.invalid && marcaForm.get('nombre')?.touched"
                            formControlName="nombre"
-                           placeholder="Ej: Electrónicos">
+                           placeholder="Ej: Samsung">
                     <div class="invalid-feedback" 
-                         *ngIf="categoriaForm.get('nombre')?.invalid && categoriaForm.get('nombre')?.touched">
-                      El nombre es requerido (mínimo 3 caracteres)
+                         *ngIf="marcaForm.get('nombre')?.invalid && marcaForm.get('nombre')?.touched">
+                      El nombre es requerido (mínimo 2 caracteres)
                     </div>
                   </div>
 
@@ -43,7 +43,7 @@ import { AlmacenService, Categoria, CategoriaCreate } from "../../../../services
                     <textarea class="form-control px-16 py-12 border rounded-8" 
                               rows="3"
                               formControlName="descripcion"
-                              placeholder="Descripción de la categoría..."></textarea>
+                              placeholder="Descripción de la marca..."></textarea>
                   </div>
 
                   <div class="form-check">
@@ -52,20 +52,20 @@ import { AlmacenService, Categoria, CategoriaCreate } from "../../../../services
                            formControlName="activo"
                            id="activo">
                     <label class="form-check-label text-heading fw-medium" for="activo">
-                      Categoría activa
+                      Marca activa
                     </label>
                   </div>
                 </div>
 
                 <!-- Imagen -->
                 <div class="col-md-4">
-                  <label class="form-label text-heading fw-medium mb-8">Imagen</label>
+                  <label class="form-label text-heading fw-medium mb-8">Logo de la Marca</label>
                   <div class="upload-area border-2 border-dashed border-gray-200 rounded-8 p-16 text-center"
                        [class.border-main-600]="imagePreview">
                     
                    <div *ngIf="!imagePreview" class="text-center">
-                      <i class="ph ph-image text-gray-400 text-3xl mb-8"></i>
-                      <p class="text-gray-500 text-sm mb-8">Seleccionar imagen</p>
+                      <i class="ph ph-tag text-gray-400 text-3xl mb-8"></i>
+                      <p class="text-gray-500 text-sm mb-8">Seleccionar logo</p>
                       <label class="btn bg-main-50 text-main-600 px-12 py-6 rounded-6 cursor-pointer text-sm">
                         <i class="ph ph-upload me-6"></i>
                         Subir
@@ -109,7 +109,7 @@ import { AlmacenService, Categoria, CategoriaCreate } from "../../../../services
                     (click)="onSubmit()">
               <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-8"></span>
               <i *ngIf="!isLoading" class="ph ph-check me-8"></i>
-              {{ isLoading ? 'Guardando...' : (categoria ? 'Actualizar' : 'Guardar') }}
+              {{ isLoading ? 'Guardando...' : (marca ? 'Actualizar' : 'Guardar') }}
             </button>
           </div>
         </div>
@@ -128,12 +128,12 @@ import { AlmacenService, Categoria, CategoriaCreate } from "../../../../services
   `,
   ],
 })
-export class CategoriaModalComponent implements OnInit, OnChanges {
-  @Input() categoria: Categoria | null = null
-  @Output() categoriaGuardada = new EventEmitter<void>()
+export class MarcaModalComponent implements OnInit, OnChanges {
+  @Input() marca: MarcaProducto | null = null
+  @Output() marcaGuardada = new EventEmitter<void>()
   @Output() modalCerrado = new EventEmitter<void>()
 
-  categoriaForm: FormGroup
+  marcaForm: FormGroup
   selectedImage: File | null = null
   imagePreview: string | null = null
   isLoading = false
@@ -142,8 +142,8 @@ export class CategoriaModalComponent implements OnInit, OnChanges {
     private fb: FormBuilder,
     private almacenService: AlmacenService,
   ) {
-    this.categoriaForm = this.fb.group({
-      nombre: ["", [Validators.required, Validators.minLength(3)]],
+    this.marcaForm = this.fb.group({
+      nombre: ["", [Validators.required, Validators.minLength(2)]],
       descripcion: [""],
       activo: [true],
     })
@@ -152,15 +152,15 @@ export class CategoriaModalComponent implements OnInit, OnChanges {
   ngOnInit(): void {}
 
   ngOnChanges(): void {
-    if (this.categoria) {
-      this.categoriaForm.patchValue({
-        nombre: this.categoria.nombre,
-        descripcion: this.categoria.descripcion,
-        activo: this.categoria.activo,
+    if (this.marca) {
+      this.marcaForm.patchValue({
+        nombre: this.marca.nombre,
+        descripcion: this.marca.descripcion,
+        activo: this.marca.activo,
       })
-      this.imagePreview = this.categoria.imagen_url || null
+      this.imagePreview = this.marca.imagen_url || null
     } else {
-      this.categoriaForm.reset({
+      this.marcaForm.reset({
         nombre: "",
         descripcion: "",
         activo: true,
@@ -184,27 +184,27 @@ export class CategoriaModalComponent implements OnInit, OnChanges {
   }
 
   onSubmit(): void {
-    if (this.categoriaForm.valid) {
+    if (this.marcaForm.valid) {
       this.isLoading = true
 
       const formValue = {
-        ...this.categoriaForm.value,
-        activo: Boolean(this.categoriaForm.get('activo')?.value),
+        ...this.marcaForm.value,
+        activo: Boolean(this.marcaForm.get('activo')?.value),
         imagen: this.selectedImage,
       }
 
-      const request = this.categoria
-        ? this.almacenService.actualizarCategoria(this.categoria.id, formValue)
-        : this.almacenService.crearCategoria(formValue)
+      const request = this.marca
+        ? this.almacenService.actualizarMarca(this.marca.id, formValue)
+        : this.almacenService.crearMarca(formValue)
 
       request.subscribe({
         next: (response) => {
-          console.log("Categoría guardada exitosamente:", response)
-          this.categoriaGuardada.emit()
+          console.log("Marca guardada exitosamente:", response)
+          this.marcaGuardada.emit()
           this.cerrarModal()
         },
         error: (error) => {
-          console.error("Error al guardar categoría:", error)
+          console.error("Error al guardar marca:", error)
           this.isLoading = false
         },
       })
@@ -214,15 +214,15 @@ export class CategoriaModalComponent implements OnInit, OnChanges {
   }
 
   private markFormGroupTouched(): void {
-    Object.keys(this.categoriaForm.controls).forEach((key) => {
-      const control = this.categoriaForm.get(key)
+    Object.keys(this.marcaForm.controls).forEach((key) => {
+      const control = this.marcaForm.get(key)
       control?.markAsTouched()
     })
   }
 
   private cerrarModal(): void {
     this.isLoading = false
-    const modal = document.getElementById("modalCrearCategoria")
+    const modal = document.getElementById("modalCrearMarca")
     if (modal) {
       const bootstrapModal = (window as any).bootstrap.Modal.getInstance(modal)
       if (bootstrapModal) {

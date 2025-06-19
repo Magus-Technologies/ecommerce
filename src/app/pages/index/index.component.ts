@@ -1,13 +1,14 @@
 // src/app/pages/index/index.component.ts
-import { Component ,OnInit} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NgFor } from '@angular/common'; // (Optional: For tree-shaking optimization)
-// Import your library
+import { NgFor } from '@angular/common';
 import { SlickCarouselModule } from 'ngx-slick-carousel';
 import { RouterLink } from '@angular/router';
 import { CategoriaPublica, CategoriasPublicasService } from '../../services/categorias-publicas.service';
-// ✅ NUEVA IMPORTACIÓN PARA BANNERS
 import { BannersService, Banner, BannerPromocional } from '../../services/banner.service';
+import { AlmacenService, MarcaProducto } from '../../services/almacen.service';
+import { CartService } from '../../services/cart.service';
+import Swal from 'sweetalert2';
 
 interface CategoriaConImagen extends CategoriaPublica {
   img: string;
@@ -23,41 +24,34 @@ interface CategoriaConImagen extends CategoriaPublica {
 export class IndexComponent implements OnInit {
 
   slides = [
-    
     { img: "http://placehold.it/350x150/000000" },
     { img: "http://placehold.it/350x150/111111" },
     { img: "http://placehold.it/350x150/333333" },
     { img: "http://placehold.it/350x150/666666" }
   ];
-slideConfig = {
-  slidesToShow: 1, 
-  slidesToScroll: 1, 
-  arrows: true,
-  autoplay: true,          
-  autoplaySpeed: 4000,      
-  speed: 800,           
-  dots: false,
-  infinite: true,           
-  pauseOnHover: true, 
-  fade: false, 
-  cssEase:'ease-in-out',
-  // prevArrow: '<button type="button" class="slick-prev custom-arrow">‹</button>',
-  // nextArrow: '<button type="button" class="slick-next custom-arrow">›</button>',
-  // prevArrow: '#banner-prev',
-  // nextArrow: '#banner-next',
-  responsive: [
-    {
-      breakpoint: 768,
-      settings: {
-        arrows: true,         // ✅ Mantener flechas en móvil
-        autoplay: true,
+
+  slideConfig = {
+    slidesToShow: 1, 
+    slidesToScroll: 1, 
+    arrows: true,
+    autoplay: true,          
+    autoplaySpeed: 4000,      
+    speed: 800,           
+    dots: false,
+    infinite: true,           
+    pauseOnHover: true, 
+    fade: false, 
+    cssEase:'ease-in-out',
+    responsive: [
+      {
+        breakpoint: 768,
+        settings: {
+          arrows: true,
+          autoplay: true,
+        }
       }
-    }
-  ]
-};
-
-
-  
+    ]
+  };
 
   breakpoint(e: any) {
     console.log('breakpoint');
@@ -75,29 +69,14 @@ slideConfig = {
     console.log('slick initialized');
   }
 
-  banners = [
-    {
-      subtitle: 'Save up to 50% off on your first order',
-      title: 'Daily Grocery Order and Get <span class="text-main-600">Express</span> Delivery',
-      price: '$60.99',
-      img: 'assets/images/thumbs/banner-img3.png',
-      alt: 'Banner Image 1'
-    },
-    {
-      subtitle: 'Save up to 50% off on your first order',
-      title: 'Daily Grocery Order and Get <span class="text-main-600">Express</span> Delivery',
-      price: '$60.99',
-      img: 'assets/images/thumbs/banner-img1.png',
-      alt: 'Banner Image 2'
-    }
-  ];
-
-  // ✅ NUEVAS PROPIEDADES PARA BANNERS DINÁMICOS
   bannersDinamicos: Banner[] = [];
   isLoadingBanners = false;
 
-   featureItems: CategoriaConImagen[] = [];
+  featureItems: CategoriaConImagen[] = [];
   isLoadingCategorias = false;
+
+  marcasDinamicas: MarcaProducto[] = [];
+  isLoadingMarcas = false;
 
   featureSlideConfig = {
     slidesToShow: 10,
@@ -164,29 +143,27 @@ slideConfig = {
     ]
   };
 
-promotionalBanners: BannerPromocional[] = [];
-isLoadingPromotionalBanners = false;
+  promotionalBanners: BannerPromocional[] = [];
+  isLoadingPromotionalBanners = false;
 
-
-
-// Agregar este nuevo método:
-cargarBannersPromocionales(): void {
-  this.isLoadingPromotionalBanners = true;
-  this.bannersService.obtenerBannersPromocionalesPublicos().subscribe({
-    next: (banners) => {
-      this.promotionalBanners = banners;
-      this.isLoadingPromotionalBanners = false;
-    },
-    error: (error) => {
-      console.error('Error al cargar banners promocionales:', error);
-      this.isLoadingPromotionalBanners = false;
-      // Fallback a banners estáticos en caso de error
-      this.promotionalBanners = [];
-    }
-  });
-}
+  cargarBannersPromocionales(): void {
+    this.isLoadingPromotionalBanners = true;
+    this.bannersService.obtenerBannersPromocionalesPublicos().subscribe({
+      next: (banners) => {
+        this.promotionalBanners = banners;
+        this.isLoadingPromotionalBanners = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar banners promocionales:', error);
+        this.isLoadingPromotionalBanners = false;
+        this.promotionalBanners = [];
+      }
+    });
+  }
+  
   products = [
     {
+      id: 1,
       name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img26.png',
       price: 14.99,
@@ -195,9 +172,11 @@ cargarBannersPromocionales(): void {
       reviews: '17k',
       sold: 18,
       fadeDuration: 200,
-      total: 35
+      total: 35,
+      stock: 50
     },
     {
+      id: 2,
       name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img27.png',
       price: 14.99,
@@ -206,9 +185,11 @@ cargarBannersPromocionales(): void {
       reviews: '17k',
       sold: 18,
       fadeDuration: 200,
-      total: 35
+      total: 35,
+      stock: 30
     },
     {
+      id: 3,
       name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img28.png',
       price: 14.99,
@@ -217,9 +198,11 @@ cargarBannersPromocionales(): void {
       reviews: '17k',
       sold: 18,
       fadeDuration: 200,
-      total: 35
+      total: 35,
+      stock: 20
     },
     {
+      id: 4,
       name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img29.png',
       price: 14.99,
@@ -228,9 +211,11 @@ cargarBannersPromocionales(): void {
       reviews: '17k',
       sold: 18,
       fadeDuration: 200,
-      total: 35
+      total: 35,
+      stock: 40
     },
     {
+      id: 5,
       name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img30.png',
       price: 14.99,
@@ -239,9 +224,11 @@ cargarBannersPromocionales(): void {
       reviews: '17k',
       sold: 18,
       fadeDuration: 200,
-      total: 35
+      total: 35,
+      stock: 25
     },
     {
+      id: 6,
       name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img13.png',
       price: 14.99,
@@ -250,9 +237,11 @@ cargarBannersPromocionales(): void {
       reviews: '17k',
       sold: 18,
       fadeDuration: 200,
-      total: 35
+      total: 35,
+      stock: 35
     },
     {
+      id: 7,
       name: 'Hortalizas en floretes de brócoli de Taylor Farms',
       image: 'assets/images/thumbs/product-img3.png',
       price: 14.99,
@@ -261,7 +250,8 @@ cargarBannersPromocionales(): void {
       reviews: '17k',
       sold: 18,
       fadeDuration: 200,
-      total: 35
+      total: 35,
+      stock: 15
     },
 
   ];
@@ -327,6 +317,7 @@ cargarBannersPromocionales(): void {
 
   recomandedProducts = [
     {
+      id: 8,
       title: 'C-500 Antioxidant Protect Dietary Supplement',
       store: 'Lucky Supermarket',
       image: 'assets/images/thumbs/product-img7.png',
@@ -336,8 +327,10 @@ cargarBannersPromocionales(): void {
       badge: null,
       badgeClass: '',
       reviewCount: 17,
+      stock: 45
     },
     {
+      id: 9,
       title: "Marcel's Modern Pantry Almond Unsweetened",
       store: "Lucky Supermarket",
       image: "assets/images/thumbs/product-img8.png",
@@ -346,9 +339,11 @@ cargarBannersPromocionales(): void {
       rating: 4.8,
       badge: "Sale 50%",
       badgeClass: "bg-danger-600 px-8 py-4 text-sm text-white",
-      reviewCount: 17
+      reviewCount: 17,
+      stock: 22
     },
     {
+      id: 10,
       title: "O Organics Milk, Whole, Vitamin D",
       store: "Lucky Supermarket",
       image: "assets/images/thumbs/product-img9.png",
@@ -359,126 +354,24 @@ cargarBannersPromocionales(): void {
       reviewCount: 17,
       badge: "Sale 50%",
       badgeClass: "bg-danger-600 px-8 py-4 text-sm text-white",
+      stock: 60
     },
-    {
-      title: "Whole Grains and Seeds Organic Bread",
-      store: "Lucky Supermarket",
-      image: "assets/images/thumbs/product-img10.png",
-      price: "$14.99",
-      originalPrice: "$28.99",
-      unit: "/Qty",
-      rating: 4.8,
-      reviewCount: 17,
-      badge: "Best Sale",
-      badgeClass: "bg-info-600 px-8 py-4 text-sm text-white",
-    },
-    {
-      title: "Lucerne Yogurt, Lowfat, Strawberry",
-      store: "Lucky Supermarket",
-      image: "assets/images/thumbs/product-img11.png",
-      price: "$14.99",
-      originalPrice: "$28.99",
-      unit: "/Qty",
-      rating: 4.8,
-      reviewCount: 17,
-      badge: "",
-      badgeClass: ""
-    },
-    {
-      title: "Nature Valley Whole Grain Oats and Honey Protein",
-      store: "Lucky Supermarket",
-      image: "assets/images/thumbs/product-img12.png",
-      price: "$14.99",
-      originalPrice: "$28.99",
-      unit: "/Qty",
-      rating: 4.8,
-      reviewCount: 17,
-      badge: "Sale 50%",
-      badgeClass: "bg-danger-600"
-    },
-    {
-      title: "C-500 Antioxidant Protect Dietary Supplement",
-      store: "Lucky Supermarket",
-      image: "assets/images/thumbs/product-img13.png",
-      price: "$14.99",
-      originalPrice: "$28.99",
-      unit: "/Qty",
-      rating: 4.8,
-      reviewCount: 17,
-      badge: "",
-      badgeClass: ""
-    },
-    {
-      title: "C-500 Antioxidant Protect Dietary Supplement",
-      store: "Lucky Supermarket",
-      image: "assets/images/thumbs/product-img14.png",
-      price: "$14.99",
-      originalPrice: "$28.99",
-      unit: "/Qty",
-      rating: 4.8,
-      reviewCount: 17,
-      badge: "Sale 50%",
-      badgeClass: "bg-danger-600 px-8 py-4 text-sm text-white"
-    },
-    {
-      title: "C-500 Antioxidant Protect Dietary Supplement",
-      store: "Lucky Supermarket",
-      image: "assets/images/thumbs/product-img15.png",
-      price: "$14.99",
-      originalPrice: "$28.99",
-      unit: "/Qty",
-      rating: 4.8,
-      reviewCount: 17,
-      badge: "New",
-      badgeClass: "bg-warning-600 px-8 py-4 text-sm text-white"
-    },
-    {
-      title: 'Good & Gather Farmed Atlantic Salmon',
-      store: 'Lucky Supermarket',
-      image: 'assets/images/thumbs/product-img16.png',
-      price: '$14.99',
-      originalPrice: '$28.99',
-      rating: 4.8,
-      badge: "Sale 50%",
-      badgeClass: "bg-danger-600",
-      reviewCount: 17,
-    },
-    {
-      title: 'Market Pantry 41/50 Raw Tail-Off Large Raw Shrimp',
-      store: 'Lucky Supermarket',
-      image: 'assets/images/thumbs/product-img17.png',
-      price: '$14.99',
-      originalPrice: '$28.99',
-      rating: 4.8,
-      reviewCount: 17,
-      badge: "Sale 50%",
-      badgeClass: "bg-danger-600"
-    },
-    {
-      title: "Tropicana 100% Juice, Orange, No Pulp",
-      store: "Lucky Supermarket",
-      image: "assets/images/thumbs/product-img18.png",
-      price: "$14.99",
-      originalPrice: "$28.99",
-      unit: "/Qty",
-      rating: 4.8,
-      reviewCount: 17,
-      badge: "New",
-      badgeClass: "bg-warning-600 px-8 py-4 text-sm text-white"
-    }
-
+    // ... más productos con stock
   ];
 
   // ✅ ACTUALIZAR CONSTRUCTOR PARA INYECTAR EL SERVICIO DE BANNERS
   constructor(
     private categoriasPublicasService: CategoriasPublicasService,
-    private bannersService: BannersService // ✅ NUEVO SERVICIO
+    private bannersService: BannersService, // ✅ NUEVO SERVICIO
+    private almacenService: AlmacenService,
+    private cartService: CartService 
   ) { }
 
   ngOnInit(): void {
     this.cargarCategoriasPublicas();
     this.cargarBannersDinamicos(); // ✅ NUEVA LLAMADA
     this.cargarBannersPromocionales();
+    this.cargarMarcasDinamicas(); // Cargar marcas dinámicas
   }
 
   cargarCategoriasPublicas(): void {
@@ -515,6 +408,64 @@ cargarBannersPromocionales(): void {
         this.bannersDinamicos = [];
       }
     });
+  }
+  
+  cargarMarcasDinamicas(): void {
+    this.isLoadingMarcas = true;
+    this.almacenService.obtenerMarcasPublicas().subscribe({
+      next: (marcas) => {
+        // Mapear las marcas al formato que espera el slider
+        this.brandSlides[0].slides = marcas.map((marca, index) => ({
+          class: "brand-item",
+          dataAos: "zoom-in",
+          dataAosDuration: 200 + (index * 200), // Incrementar duración
+          imgSrc: marca.imagen_url || 'assets/images/thumbs/brand-default.png',
+          imgAlt: marca.nombre
+        }));
+        this.isLoadingMarcas = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar marcas:', error);
+        this.isLoadingMarcas = false;
+        // Mantener marcas estáticas como fallback
+      }
+    });
+  }
+
+  // ✅ MÉTODO MEJORADO PARA AGREGAR AL CARRITO
+  addToCart(product: any): void {
+    if (product.stock <= 0) {
+      Swal.fire({
+        title: 'Sin stock',
+        text: 'Este producto no tiene stock disponible',
+        icon: 'warning',
+        confirmButtonColor: '#dc3545'
+      });
+      return;
+    }
+
+    const success = this.cartService.addToCart(product, 1);
+    
+    if (success) {
+      Swal.fire({
+        title: '¡Producto agregado!',
+        text: `${product.name || product.title} ha sido agregado a tu carrito`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end',
+        background: '#f8f9fa',
+        color: '#333'
+      });
+    } else {
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo agregar el producto al carrito. Revisa el stock disponible.',
+        icon: 'error',
+        confirmButtonColor: '#dc3545'
+      });
+    }
   }
 
   onImageError(event: any): void {
@@ -730,7 +681,7 @@ cargarBannersPromocionales(): void {
       soldPercentage: 35,
       duration: 400
     },
-    // Add more products here...
+
   ];
 
   // hot product

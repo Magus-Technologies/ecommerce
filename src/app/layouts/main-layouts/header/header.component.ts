@@ -1,5 +1,5 @@
 // src\app\layouts\main-layouts\header\header.component.ts
-import { Component, ElementRef, Inject, OnInit, ViewChild,  PLATFORM_ID, HostListener,AfterViewInit  } from '@angular/core';
+import { Component, ElementRef, Inject, OnInit, ViewChild,  PLATFORM_ID, HostListener,AfterViewInit, OnDestroy  } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { RouterLink, RouterLinkActive } from '@angular/router';
@@ -7,6 +7,9 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Select2, Select2Data } from 'ng-select2-component';
 import { UserProfileComponent } from '../../../component/user-profile/user-profile.component';
 import { CategoriasPublicasService, CategoriaPublica } from '../../../services/categorias-publicas.service';
+import { CartService } from '../../../services/cart.service';
+import { Subject, takeUntil } from 'rxjs';
+
 @Component({
   selector: 'app-header',
   standalone: true,
@@ -22,13 +25,15 @@ import { CategoriasPublicasService, CategoriaPublica } from '../../../services/c
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('progressPath') progressPathRef!: ElementRef<SVGPathElement>;
   isActiveProgress: boolean = false;
   private pathLength!: number;
+  private destroy$ = new Subject<void>();
 
   activeIndex: any | null = null;
   windowWidth: number = 0;
+  cartItemCount: number = 0;
 
   setupPath() {
     const path = this.progressPathRef.nativeElement;
@@ -92,6 +97,7 @@ export class HeaderComponent {
       }
     }
   }
+  
   onImageError(event: any): void {
   const img = event.target as HTMLImageElement;
   img.src = 'assets/images/icon/category-default.png';
@@ -99,37 +105,17 @@ export class HeaderComponent {
 
   categories: Select2Data = [
     { value: '', label: 'Todas las categorias' },
-    // { value: 'grocery', label: 'Tienda de comestibles' },
-    // { value: 'breakfast', label: 'Breakfast & Dairy' },
-    // { value: 'vegetables', label: 'Desayuno y Lácteos' },
-    // { value: 'milk', label: 'Leches y productos lácteos' },
-    // { value: 'pet', label: 'Pet Foods & Toy' },
-    // { value: 'bakery', label: 'Panes y panadería' },
-    // { value: 'seafood', label: 'Mariscos frescos' },
-    // { value: 'frozen', label: 'Alimentos Congelados' },
-    // { value: 'noodles', label: 'Fideos y arroz' },
-    // { value: 'icecream', label: 'Helado' }
   ];
 
-  // categorie = [
-  //   { name: 'Vegetales', icon: 'assets/images/icon/category-1.png', route: 'shop' },
-  //   { name: 'Leche y pastel', icon: 'assets/images/icon/category-2.png', route: 'shop' },
-  //   { name: 'Tienda de comestibles', icon: 'assets/images/icon/category-3.png', route: 'shop' },
-  //   { name: 'Belleza', icon: 'assets/images/icon/category-4.png', route: 'shop' },
-  //   { name: 'Vinos y bebidas', icon: 'assets/images/icon/category-5.png', route: 'shop' },
-  //   { name: 'Aperitivos', icon: 'assets/images/icon/category-6.png', route: 'shop' },
-  //   { name: 'Jugos', icon: 'assets/images/icon/category-7.png', route: 'shop' },
-  //   { name: 'Frutas', icon: 'assets/images/icon/category-8.png', route: 'shop' },
-  //   { name: 'Té y café', icon: 'assets/images/icon/category-9.png', route: 'shop' }
-  // ];
   categorie: any[] = [];
-
   categoriasPublicas: CategoriaPublica[] = [];
   isLoadingCategorias = false;
+  
   constructor(
     @Inject(PLATFORM_ID) private platformId: any,
     private router: Router,
-    private categoriasPublicasService: CategoriasPublicasService
+    private categoriasPublicasService: CategoriasPublicasService,
+    private cartService: CartService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
@@ -139,10 +125,21 @@ export class HeaderComponent {
 
   ngOnInit() {
     this.isHomePageActive = this.router.url === '/' || this.router.url === '/index-two' || this.router.url === '/index-three';
-    // console.log(this.router.url);
     this.cargarCategoriasPublicas();
-   
+    
+    // Suscribirse a los cambios del carrito
+    this.cartService.cartSummary$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(summary => {
+        this.cartItemCount = summary.cantidad_items;
+      });
   }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  
   cargarCategoriasPublicas(): void {
     if (!this.isBrowser) return;
     
@@ -160,6 +157,7 @@ export class HeaderComponent {
       }
     });
   }
+  
   private actualizarCategoriasDropdown(categorias: CategoriaPublica[]): void {
     this.categories = [
       { value: '', label: 'Todas las categorias' },
@@ -170,7 +168,6 @@ export class HeaderComponent {
     ];
   }
 
-
   private actualizarCategoriasGrid(categorias: CategoriaPublica[]): void {
     this.categorie = categorias.map(cat => ({
       id: cat.id,
@@ -180,6 +177,7 @@ export class HeaderComponent {
       categoria: cat
     }));
   }
+  
   ngAfterViewInit(): void {
     if (this.isBrowser && this.progressPathRef) {
       this.setupPath();
@@ -196,7 +194,6 @@ export class HeaderComponent {
   toggleCategoryDropdown() {
     this.isActive = !this.isActive;
     this.categoryDropdownVisible = !this.categoryDropdownVisible;
-    
   }
 
   @HostListener('document:click', ['$event'])
@@ -214,19 +211,11 @@ export class HeaderComponent {
   isParentActive(routes: string[]): boolean {
     const currentUrl = this.router.url;
     return routes.some(route => route !== '/' ? currentUrl.startsWith(route) : currentUrl === route);
- 
   }
+  
   activeDropdown: string | null = null;
 
   toggleDropdown(menu: string): void {
     this.activeDropdown = this.activeDropdown === menu ? null : menu;
   }
-
-  // @HostListener('document:click', ['$event'])
-  // onOutsideClick(event: MouseEvent): void {
-  //   const target = event.target as HTMLElement;
-  //   if (!target.closest('.nav-menu__item')) {
-  //     this.activeDropdown = null;
-  //   }
-  // }
 }

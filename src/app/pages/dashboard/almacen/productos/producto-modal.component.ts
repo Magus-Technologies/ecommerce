@@ -1,7 +1,8 @@
+// src\app\pages\dashboard\almacen\productos\producto-modal.component.ts
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from "@angular/forms"
-import { AlmacenService, Producto, ProductoCreate, Categoria } from "../../../../services/almacen.service"
+import { AlmacenService, Producto, ProductoCreate, Categoria, MarcaProducto } from "../../../../services/almacen.service"
 
 @Component({
   selector: "app-producto-modal",
@@ -60,19 +61,32 @@ import { AlmacenService, Producto, ProductoCreate, Categoria } from "../../../..
                               placeholder="Descripción del producto..."></textarea>
                   </div>
 
-                  <div class="mb-16">
-                    <label class="form-label text-heading fw-medium mb-8">Categoría *</label>
-                    <select class="form-select px-16 py-12 border rounded-8"
-                            [class.is-invalid]="productoForm.get('categoria_id')?.invalid && productoForm.get('categoria_id')?.touched"
-                            formControlName="categoria_id">
-                      <option value="">Seleccionar categoría</option>
-                      <option *ngFor="let categoria of categorias" [value]="categoria.id">
-                        {{ categoria.nombre }}
-                      </option>
-                    </select>
-                    <div class="invalid-feedback" 
-                         *ngIf="productoForm.get('categoria_id')?.invalid && productoForm.get('categoria_id')?.touched">
-                      Selecciona una categoría
+                  <div class="row">
+                    <div class="col-md-6 mb-16">
+                      <label class="form-label text-heading fw-medium mb-8">Categoría *</label>
+                      <select class="form-select px-16 py-12 border rounded-8"
+                              [class.is-invalid]="productoForm.get('categoria_id')?.invalid && productoForm.get('categoria_id')?.touched"
+                              formControlName="categoria_id">
+                        <option value="">Seleccionar categoría</option>
+                        <option *ngFor="let categoria of categorias" [value]="categoria.id">
+                          {{ categoria.nombre }}
+                        </option>
+                      </select>
+                      <div class="invalid-feedback" 
+                           *ngIf="productoForm.get('categoria_id')?.invalid && productoForm.get('categoria_id')?.touched">
+                        Selecciona una categoría
+                      </div>
+                    </div>
+
+                    <div class="col-md-6 mb-16">
+                      <label class="form-label text-heading fw-medium mb-8">Marca</label>
+                      <select class="form-select px-16 py-12 border rounded-8"
+                              formControlName="marca_id">
+                        <option value="">Seleccionar marca (opcional)</option>
+                        <option *ngFor="let marca of marcas" [value]="marca.id">
+                          {{ marca.nombre }}
+                        </option>
+                      </select>
                     </div>
                   </div>
 
@@ -237,6 +251,7 @@ export class ProductoModalComponent implements OnInit, OnChanges {
 
   productoForm: FormGroup
   categorias: Categoria[] = []
+  marcas: MarcaProducto[] = []
   selectedImage: File | null = null
   imagePreview: string | null = null
   isLoading = false
@@ -250,6 +265,7 @@ export class ProductoModalComponent implements OnInit, OnChanges {
       descripcion: [""],
       codigo_producto: ["", [Validators.required]],
       categoria_id: ["", [Validators.required]],
+      marca_id: [""],
       precio_compra: ["", [Validators.required, Validators.min(0)]],
       precio_venta: ["", [Validators.required, Validators.min(0)]],
       stock: ["", [Validators.required, Validators.min(0)]],
@@ -260,6 +276,7 @@ export class ProductoModalComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.cargarCategorias()
+    this.cargarMarcas()
   }
 
   ngOnChanges(): void {
@@ -269,6 +286,7 @@ export class ProductoModalComponent implements OnInit, OnChanges {
         descripcion: this.producto.descripcion,
         codigo_producto: this.producto.codigo_producto,
         categoria_id: this.producto.categoria_id,
+        marca_id: this.producto.marca_id || "",
         precio_compra: this.producto.precio_compra,
         precio_venta: this.producto.precio_venta,
         stock: this.producto.stock,
@@ -282,6 +300,7 @@ export class ProductoModalComponent implements OnInit, OnChanges {
         descripcion: "",
         codigo_producto: "",
         categoria_id: "",
+        marca_id: "",
         precio_compra: "",
         precio_venta: "",
         stock: "",
@@ -304,6 +323,17 @@ export class ProductoModalComponent implements OnInit, OnChanges {
     })
   }
 
+  cargarMarcas(): void {
+    this.almacenService.obtenerMarcasActivas().subscribe({
+      next: (marcas) => {
+        this.marcas = marcas
+      },
+      error: (error) => {
+        console.error("Error al cargar marcas:", error)
+      },
+    })
+  }
+
   onImageSelected(event: any): void {
     const file = event.target.files[0]
     if (file) {
@@ -321,14 +351,20 @@ export class ProductoModalComponent implements OnInit, OnChanges {
     if (this.productoForm.valid) {
       this.isLoading = true
 
-      const productoData: ProductoCreate = {
+      const formValue = {
         ...this.productoForm.value,
+        activo: Boolean(this.productoForm.get('activo')?.value),
         imagen: this.selectedImage,
       }
 
+      // Si marca_id está vacío, convertirlo a null
+      if (!formValue.marca_id) {
+        formValue.marca_id = null
+      }
+
       const request = this.producto
-        ? this.almacenService.actualizarProducto(this.producto.id, productoData)
-        : this.almacenService.crearProducto(productoData)
+        ? this.almacenService.actualizarProducto(this.producto.id, formValue)
+        : this.almacenService.crearProducto(formValue)
 
       request.subscribe({
         next: (response) => {

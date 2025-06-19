@@ -1,4 +1,4 @@
-// src\app\services\auth.service.ts
+// src/app/services/auth.service.ts
 import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, BehaviorSubject, throwError } from 'rxjs';
@@ -15,11 +15,10 @@ import { Injector } from '@angular/core';
 })
 export class AuthService {
 
-  private isBrowser: boolean; // si lo usas, mantenlo
+  private isBrowser: boolean;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser = this.currentUserSubject.asObservable();
   private permissionsService!: PermissionsService;
-
 
   private readonly tokenKey = 'auth_token';
   private readonly userKey = 'current_user';
@@ -27,7 +26,6 @@ export class AuthService {
   setCurrentUser(user: User): void {
     this.currentUserSubject.next(user);
   }
-
 
   constructor(
     private http: HttpClient,
@@ -43,22 +41,20 @@ export class AuthService {
 
     this.isBrowser = isPlatformBrowser(this.platformId);
     
-    if (this.isBrowser) { // 🐱 Solo acceder a localStorage si está en navegador
-      const storedUser = localStorage.getItem(this.userKey); // 🐱
-      const user = storedUser ? JSON.parse(storedUser) : null; // 🐱
+    if (this.isBrowser) {
+      const storedUser = localStorage.getItem(this.userKey);
+      const user = storedUser ? JSON.parse(storedUser) : null;
     
-      this.currentUserSubject = new BehaviorSubject<User | null>(user); // 🐱 Inicializo con usuario o null
+      this.currentUserSubject = new BehaviorSubject<User | null>(user);
     } else {
-      this.currentUserSubject = new BehaviorSubject<User | null>(null); // 🐱 En servidor, no hay usuario
+      this.currentUserSubject = new BehaviorSubject<User | null>(null);
     }
-    this.currentUser = this.currentUserSubject.asObservable(); // 🐱 Inicializo observable siempre
+    this.currentUser = this.currentUserSubject.asObservable();
 
-    if (this.isBrowser) { // 🐱 Cargo datos de localStorage si estoy en navegador
+    if (this.isBrowser) {
       this.loadStoredUserData();
     }
-    
   }
-
 
   private loadStoredUserData(): void {
     if (!this.isBrowser) return; 
@@ -67,78 +63,70 @@ export class AuthService {
     const storedToken = localStorage.getItem(this.tokenKey);
     
     if (storedUser && storedToken) {
-      try { // 🔴 Agregado try-catch para manejar JSON inválido
+      try {
         const user = JSON.parse(storedUser);
         this.currentUserSubject.next(user);
       } catch (error) {
         console.error('Error parsing stored user data:', error);
-        this.clearSession(); // 🔴 Limpiar datos inválidos
+        this.clearSession();
       }
     }
   }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
-  return this.http.post<AuthResponse>(`${environment.apiUrl}/login`, credentials)
-    .pipe(
-      tap(response => {
-        if (response.status === 'success' && this.isBrowser) {
-          // Guardar token
-          localStorage.setItem(this.tokenKey, response.token);
-          
-          // Crear objeto de usuario con conversión segura de roles y permisos
-          const user: User = {
-            id: response.user.id,
-            name: response.user.name,
-            email: response.user.email,
-            roles: Array.isArray(response.user.roles) ? response.user.roles : [],
-            permissions: Array.isArray(response.user.permissions) ? response.user.permissions : []
-          };
-          
-          // Guardar usuario como string JSON
-          localStorage.setItem(this.userKey, JSON.stringify(user));
-          
-          // Actualizar el BehaviorSubject
-          this.currentUserSubject.next(user);
+    return this.http.post<AuthResponse>(`${environment.apiUrl}/login`, credentials)
+      .pipe(
+        tap(response => {
+          if (response.status === 'success' && this.isBrowser) {
+            // Guardar token
+            localStorage.setItem(this.tokenKey, response.token);
+            
+            // Crear objeto de usuario
+            const user: User = {
+              id: response.user.id,
+              name: response.user.name || response.user.nombre_completo,
+              email: response.user.email,
+              tipo_usuario: response.tipo_usuario,
+              roles: Array.isArray(response.user.roles) ? response.user.roles : [],
+              permissions: Array.isArray(response.user.permissions) ? response.user.permissions : []
+            };
+            
+            // Guardar usuario
+            localStorage.setItem(this.userKey, JSON.stringify(user));
+            this.currentUserSubject.next(user);
 
-          // ✅ NUEVO: Actualizamos los permisos del usuario en localStorage 🐱
-          const currentUser = this.getCurrentUser(); // 🐱
-          if (currentUser) { // 🐱
-            currentUser.permissions = [...response.user.permissions]; // 🐱 usamos los permisos que vinieron del backend 🐱
-            localStorage.setItem(this.userKey, JSON.stringify(currentUser)); // 🐱 actualizamos localStorage 🐱
-            this.permissionsService.setPermissions([...response.user.permissions]); // 🐱 notificamos al PermissionsService 🐱
-          } // 🐱
+            // Actualizar permisos si es admin
+            if (response.tipo_usuario === 'admin' && this.permissionsService) {
+              this.permissionsService.setPermissions([...response.user.permissions]);
+            }
 
-          // ✅ REDIRECCIÓN AL DASHBOARD
-          this.router.navigate(['/dashboard']);
-
-          // Forzar actualización de permisos en el sidebar
-          setTimeout(() => {
-            window.dispatchEvent(new Event('permissionsUpdated'));
-          }, 100);
-
-          console.log('Login exitoso, redirigiendo...', user);
-        }
-      }),
-      catchError((error: HttpErrorResponse) => {
-          // NO usar handleError, devolver el error original
+            console.log('Login exitoso:', user);
+          }
+        }),
+        catchError((error: HttpErrorResponse) => {
           console.log('Error HTTP original:', error);
           return throwError(() => error);
         })
-    );
-}
+      );
+  }
 
+  // NUEVO: Método para registrar clientes
+  register(registerData: any): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/register`, registerData)
+      .pipe(
+        tap(response => {
+          console.log('Registro exitoso:', response);
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.log('Error en registro:', error);
+          return throwError(() => error);
+        })
+      );
+  }
 
-  private handleError(error: HttpErrorResponse) {
-    let errorMessage = '';
-    if (error.error instanceof ErrorEvent) {
-      // Error cliente
-      errorMessage = `Error cliente: ${error.error.message}`;
-    } else {
-      // Error servidor
-      errorMessage = `Error servidor: Código ${error.status}, mensaje: ${error.message}`;
-    }
-    console.error(errorMessage);
-    return throwError(() => new Error(errorMessage));
+  // NUEVO: Método para obtener tipos de documento
+  getDocumentTypes(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/document-types`);
   }
 
   logout(): Observable<any> {
@@ -169,7 +157,7 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken() && !!this.currentUserSubject.value; // 🔴 Verificar también el usuario
+    return !!this.getToken() && !!this.currentUserSubject.value;
   }
 
   getCurrentUser(): User | null {
@@ -180,7 +168,6 @@ export class AuthService {
     return this.http.get<any>(`${environment.apiUrl}/user`);
   }
 
-  // Nuevo método para refrescar permisos
   refreshPermissions(): Observable<any> {
     return this.http.get(`${environment.apiUrl}/refresh-permissions`).pipe(
       tap((response: any) => {

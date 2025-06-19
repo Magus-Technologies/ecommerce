@@ -243,10 +243,13 @@
                     <div
                         class="product-card px-20 py-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2">
 
-                        <a [routerLink]="['cart']"
+                        <!-- ✅ BOTÓN MEJORADO PARA AGREGAR AL CARRITO -->
+                        <button
+                            (click)="addToCart(product)"
                             class="product-card__cart btn bg-main-50 text-main-600 hover-bg-main-600 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 position-absolute inset-block-start-0 inset-inline-end-0 me-16 mt-16">
-                            Add <i class="ph ph-shopping-cart"></i>
-                        </a>
+                            <i class="ph ph-shopping-cart me-4"></i>
+                            Agregar
+                        </button>
 
                         <a [routerLink]="['product-details']" class="product-card__thumb flex-center overflow-hidden">
                             <img [src]="product.image" [alt]="product.name">
@@ -254,9 +257,9 @@
 
                         <div class="product-card__content mt-12">
                             <div class="product-card__price mb-8 d-flex align-items-center gap-8">
-                                <span class="text-heading text-md fw-semibold">${{ product.price }} <span
+                                <span class="text-heading text-md fw-semibold">S/ {{ product.price }} <span
                                         class="text-gray-500 fw-normal">/Qty</span></span>
-                                <span class="text-gray-400 text-md fw-semibold text-decoration-line-through">${{
+                                <span class="text-gray-400 text-md fw-semibold text-decoration-line-through">S/ {{
                                     product.oldPrice }}</span>
                             </div>
 
@@ -333,6 +336,111 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+</section>
+<!-- ========================= flash sales End ================================ -->
+
+<section class="recommended overflow-hidden pt-80">
+    <div class="container container-lg">
+        <div class="section-heading flex-between flex-wrap gap-16">
+            <h5 class="mb-0 wow fadeInLeft">Recomendado para ti</h5>
+            <ul class="nav common-tab nav-pills wow fadeInRight" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-medium text-sm border border-white hover-border-main-600 active"
+                        id="pills-all-tab" data-bs-toggle="pill" data-bs-target="#pills-all" type="button" role="tab"
+                        aria-controls="pills-all" aria-selected="true">Todo</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-medium text-sm border border-white hover-border-main-600"
+                        id="pills-grocery-tab" data-bs-toggle="pill" data-bs-target="#pills-grocery" type="button"
+                        role="tab" aria-controls="pills-grocery" aria-selected="false">Tienda de comestibles</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-medium text-sm border border-white hover-border-main-600"
+                        id="pills-fruits-tab" data-bs-toggle="pill" data-bs-target="#pills-fruits" type="button"
+                        role="tab" aria-controls="pills-fruits" aria-selected="false">Frutas</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-medium text-sm border border-white hover-border-main-600"
+                        id="pills-juices-tab" data-bs-toggle="pill" data-bs-target="#pills-juices" type="button"
+                        role="tab" aria-controls="pills-juices" aria-selected="false">Jugos</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-medium text-sm border border-white hover-border-main-600"
+                        id="pills-vegetables-tab" data-bs-toggle="pill" data-bs-target="#pills-vegetables" type="button"
+                        role="tab" aria-controls="pills-vegetables" aria-selected="false">Verduras</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-medium text-sm border border-white hover-border-main-600"
+                        id="pills-snacks-tab" data-bs-toggle="pill" data-bs-target="#pills-snacks" type="button"
+                        role="tab" aria-controls="pills-snacks" aria-selected="false">Aperitivos</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-medium text-sm border border-white hover-border-main-600"
+                        id="pills-organic-tab" data-bs-toggle="pill" data-bs-target="#pills-organic" type="button"
+                        role="tab" aria-controls="pills-organic" aria-selected="false">
+Alimentos orgánicos</button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade show active" id="pills-all" role="tabpanel" aria-labelledby="pills-all-tab"
+                tabindex="0">
+                <div class="row g-12">
+                    <div *ngFor="let product of recomandedProducts" class="col-xxl-2 col-lg-3 col-sm-4 col-6"
+                        data-aos="fade-up" data-aos-duration="200">
+                        <div
+                            class="product-card h-100 p-12 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 group-item">
+                            <button type="button" class="wishlist-btn-two">
+                                <i class="ph-bold ph-heart"></i>
+                            </button>
+                            <span *ngIf="product.badge"
+                                class="product-card__badge {{product.badgeClass}} px-8 py-4 text-sm text-white">
+                                {{ product.badge }}
+                            </span>
+                            <a [routerLink]="['product-details']"
+                                class="product-card__thumb flex-center overflow-hidden">
+                                <img [src]="product.image" alt="">
+                            </a>
+                            <div class="product-card__content p-sm-2 w-100">
+                                <h6 class="title text-lg fw-semibold my-12">
+                                    <a [routerLink]="['product-details']" class="link text-line-2">{{ product.title
+                                        }}</a>
+                                </h6>
+                                <div class="flex-align gap-4">
+                                    <span class="text-main-600 text-md d-flex"><i
+                                            class="ph-fill ph-storefront"></i></span>
+                                    <span class="text-gray-500 text-xs">By {{ product.store }}</span>
+                                </div>
+
+                                <div class="product-card__content mt-12">
+                                    <div class="product-card__price mb-8">
+                                        <span class="text-heading text-md fw-semibold ">{{ product.price }} <span
+                                                class="text-gray-500 fw-normal">/Qty</span> </span>
+                                        <span class="text-gray-400 text-md fw-semibold text-decoration-line-through">{{
+                                            product.originalPrice }}</span>
+                                    </div>
+                                    <div class="flex-align gap-6">
+                                        <span class="text-xs fw-bold text-gray-600">{{ product.rating }}</span>
+                                        <span class="text-15 fw-bold text-warning-600 d-flex"><i
+                                                class="ph-fill ph-star"></i></span>
+                                        <span class="text-xs fw-bold text-gray-600">({{ product.reviewCount }}k)</span>
+                                    </div>
+                                    <!-- ✅ BOTÓN MEJORADO PARA AGREGAR AL CARRITO -->
+                                    <button
+                                        (click)="addToCart(product)"
+                                        class="product-card__cart btn bg-main-50 text-main-600 hover-bg-main-600 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-24 w-100 justify-content-center">
+                                        Agregar al carrito <i class="ph ph-shopping-cart"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Repetir para las demás pestañas con el mismo botón mejorado -->
         </div>
     </div>
 </section>
@@ -1251,17 +1359,46 @@ Alimentos orgánicos</button>
                     </div>
                 </div>
             </div>
-            <ngx-slick-carousel [config]="BrandSlideConfig" class="brand-slider arrow-style-two">
+
+            <!-- Loading state -->
+            <div *ngIf="isLoadingMarcas" class="text-center py-40">
+                <div class="spinner-border text-main-600" role="status">
+                    <span class="visually-hidden">Cargando marcas...</span>
+                </div>
+                <p class="text-gray-500 mt-12 mb-0">Cargando marcas...</p>
+            </div>
+
+            <!-- Slider dinámico -->
+            <ngx-slick-carousel *ngIf="!isLoadingMarcas && brandSlides[0].slides.length > 0" 
+                               [config]="BrandSlideConfig" 
+                               class="brand-slider arrow-style-two">
                 <div ngxSlickItem *ngFor="let slide of brandSlides[0].slides" class="brand-item"
                     [attr.data-aos]="slide.dataAos" [attr.data-aos-duration]="slide.dataAosDuration">
-                    <img [src]="slide.imgSrc" [alt]="slide.imgAlt">
+                    <img [src]="slide.imgSrc" 
+                         [alt]="slide.imgAlt"
+                         (error)="onImageError($event)"
+                         class="img-fluid">
                 </div>
+            </ngx-slick-carousel>
+
+            <!-- Fallback: Marcas estáticas si no hay marcas dinámicas -->
+            <ngx-slick-carousel *ngIf="!isLoadingMarcas && brandSlides[0].slides.length === 0" 
+                               [config]="BrandSlideConfig" 
+                               class="brand-slider arrow-style-two">
+                <div ngxSlickItem class="brand-item" data-aos="zoom-in" data-aos-duration="200">
+                    <img src="assets/images/thumbs/brand-img1.png" alt="Marca por defecto">
+                </div>
+                <div ngxSlickItem class="brand-item" data-aos="zoom-in" data-aos-duration="400">
+                    <img src="assets/images/thumbs/brand-img2.png" alt="Marca por defecto">
+                </div>
+                <!-- Agregar más marcas estáticas como fallback -->
             </ngx-slick-carousel>
 
         </div>
     </div>
 </div>
 <!-- ============================== Brand Section End =============================== -->
+
 
 <!-- ========================= best sells Start ================================ -->
 <section class="best sells pb-80">

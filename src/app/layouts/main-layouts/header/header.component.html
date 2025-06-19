@@ -46,14 +46,14 @@
     <button type="button" class="close-button" (click)="closeMobileMenu()"> <i class="ph ph-x"></i> </button>
     <div class="mobile-menu__inner">
         <a [routerLink]="['/']" class="mobile-menu__logo">
-            <img src="assets/images/logo/logo.png" alt="Logo">
+            <img src="assets/images/logo/logo2.png" alt="Logo">
         </a>
         <div class="mobile-menu__menu">
             <!-- Nav Menu Start -->
             <ul class="nav-menu flex-align nav-menu--mobile">
                 <li class="on-hover-item nav-menu__item has-submenu" routerLinkActive="activePage"
                     (click)="toggleSubmenu('home')">
-                    <a href="javascript:void(0)" class="nav-menu__link text-heading-two">Home</a>
+                    <a href="javascript:void(0)" class="nav-menu__link text-heading-two">Hogar</a>
                     <ul class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
                         [style.display]="activeIndex === 'home' ? 'block' : 'none'">
                         <li class="common-dropdown__item nav-submenu__item" routerLinkActive="activePage">
@@ -379,7 +379,7 @@
             <!-- Logo Start -->
             <div class="logo">
                 <a [routerLink]="['']" class="link">
-                    <img src="assets/images/logo/logo.png" alt="Logo">
+                    <img src="assets/images/logo/logo2.png" alt="Logo">
                 </a>
             </div>
             <!-- Logo End  -->
@@ -422,31 +422,24 @@
                             <i class="ph ph-magnifying-glass"></i>
                         </span>
                     </button>
-                    <!-- <a href="javascript:void(0)" class="flex-align gap-4 item-hover">
-                        <span class="text-xl text-gray-700 d-flex position-relative item-hover__text">
-                            <i class="ph ph-user"></i>
-                        </span>
-
-                        <span class="text-md text-heading-three item-hover__text d-none d-lg-flex">Profile</span>
-                    </a> -->
+                    
                     <app-user-profile></app-user-profile>
+                    <span class="text-md text-heading-three item-hover__text d-none d-lg-flex">Perfil</span>
 
-                        <span class="text-md text-heading-three item-hover__text d-none d-lg-flex">Perfil</span>
-               
-
-                    <a [routerLink]="['cart']" class="flex-align gap-4 item-hover">
+                    <a [routerLink]="['wishlist']" class="flex-align gap-4 item-hover">
                         <span class="text-xl text-gray-700 d-flex position-relative me-6 mt-6 item-hover__text">
                             <i class="ph ph-heart"></i>
                             <span
-                                class="w-16 h-16 flex-center rounded-circle bg-main-600 text-white text-xs position-absolute top-n6 end-n4">2</span>
+                                class="w-16 h-16 flex-center rounded-circle bg-main-600 text-white text-xs position-absolute top-n6 end-n4">0</span>
                         </span>
                         <span class="text-md text-heading-three item-hover__text d-none d-lg-flex">Lista de deseos</span>
                     </a>
+                    
                     <a [routerLink]="['cart']" class="flex-align gap-4 item-hover">
                         <span class="text-xl text-gray-700 d-flex position-relative me-6 mt-6 item-hover__text">
                             <i class="ph ph-shopping-cart-simple"></i>
                             <span
-                                class="w-16 h-16 flex-center rounded-circle bg-main-600 text-white text-xs position-absolute top-n6 end-n4">2</span>
+                                class="w-16 h-16 flex-center rounded-circle bg-main-600 text-white text-xs position-absolute top-n6 end-n4">{{ cartItemCount }}</span>
                         </span>
                         <span class="text-md text-heading-three item-hover__text d-none d-lg-flex">Carrito</span>
                     </a>
@@ -515,25 +508,25 @@
                     <ul class="nav-menu flex-align ">
                         <li class="on-hover-item nav-menu__item has-submenu activePage"
                             [class.activePage]="isParentActive(['/', '/index-two', '/index-three'])">
-                            <a href="javascript:void(0)" class="nav-menu__link text-heading-two">Home</a>
+                            <a href="javascript:void(0)" class="nav-menu__link text-heading-two">Hogar</a>
                             <ul class="on-hover-dropdown common-dropdown nav-submenu scroll-sm">
                                 <li class="common-dropdown__item nav-submenu__item"
                                     [class.activePage]="isRouteActive('/')">
                                     <a [routerLink]="['']"
                                         class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100">
-                                        Home Grocery</a>
+                                        Abarrotes caseros</a>
                                 </li>
                                 <li class="common-dropdown__item nav-submenu__item"
                                     [class.activePage]="isRouteActive('/index-two')">
                                     <a [routerLink]="['index-two']"
                                         class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100">
-                                        Home Electronics</a>
+                                        Electrónica para el hogar</a>
                                 </li>
                                 <li class="common-dropdown__item nav-submenu__item"
                                     [class.activePage]="isRouteActive('/index-three')">
                                     <a [routerLink]="['index-three']"
                                         class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100">
-                                        Home Fashion</a>
+                                        Moda para el hogar</a>
                                 </li>
                             </ul>
                         </li>
