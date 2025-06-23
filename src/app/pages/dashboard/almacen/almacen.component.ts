@@ -2,13 +2,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
-import { AlmacenService } from '../../../services/almacen.service';
+import { AlmacenService, Seccion } from '../../../services/almacen.service';
+import { SeccionesGestionModalComponent } from ".//secciones-gestion-modal/secciones-gestion-modal.component"
+import { SeccionFilterService } from '../../../services/seccion-filter.service';
+import { FormsModule } from '@angular/forms'
 import { filter } from 'rxjs/operators';
+
+
 
 @Component({
   selector: 'app-almacen',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, SeccionesGestionModalComponent, FormsModule],
   template: `
     <div class="container-fluid">
       <!-- Header -->
@@ -18,6 +23,32 @@ import { filter } from 'rxjs/operators';
           <p class="text-gray-500 mb-0">
             Administra productos y categorías desde un solo lugar
           </p>
+        </div>
+      </div>
+
+      <!-- Selector de Sección -->
+      <div class="card border-0 shadow-sm rounded-12 mb-24">
+        <div class="card-body p-24">
+          <div class="row align-items-center">
+            <div class="col-md-6">
+              <label class="form-label text-heading fw-medium mb-8">Filtrar por Sección</label>
+              <select class="form-select" [(ngModel)]="seccionSeleccionada" (change)="onSeccionChange(seccionSeleccionada)">
+                <option [value]="null">Todas las secciones</option>
+                <option *ngFor="let seccion of secciones" [value]="seccion.id">
+                  {{ seccion.nombre }} ({{ seccion.categorias_count || 0 }} categorías)
+                </option>
+              </select>
+            </div>
+            <div class="col-md-6 text-end">
+              <button class="btn bg-success-600 hover-bg-success-700 text-white px-16 py-8 rounded-8"
+                      (click)="abrirModalSeccion()"
+                      [disabled]="secciones.length >= 3">
+                <i class="ph ph-plus me-8"></i>
+                Agregar Sección
+                <span *ngIf="secciones.length >= 3" class="text-xs d-block">(Máximo 3 secciones)</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -70,6 +101,11 @@ import { filter } from 'rxjs/operators';
         <router-outlet></router-outlet>
       </div>
     </div>
+
+    <!-- Modal de gestión de secciones -->
+    <app-secciones-gestion-modal 
+      (seccionesActualizadas)="onSeccionesActualizadas()">
+    </app-secciones-gestion-modal>
   `,
   styles: [
     `
@@ -94,11 +130,18 @@ export class AlmacenComponent implements OnInit {
   totalCategorias = 0;
   totalMarcas = 0;
   activeTab = 'productos';
+  secciones: Seccion[] = [];
+  seccionSeleccionada: number | null = null;
 
-  constructor(private almacenService: AlmacenService, private router: Router) {}
+  constructor(
+    private almacenService: AlmacenService, 
+    private router: Router,
+    private seccionFilterService: SeccionFilterService
+  ) {}
 
   ngOnInit(): void {
     this.cargarTotales();
+    this.cargarSecciones();
     this.detectActiveTab();
 
     // Escuchar cambios de ruta para actualizar la pestaña activa
@@ -110,8 +153,10 @@ export class AlmacenComponent implements OnInit {
   }
 
   private cargarTotales(): void {
+    const seccionId = this.seccionFilterService.getSeccionSeleccionada();
+    
     // Cargar total de productos
-    this.almacenService.obtenerProductos().subscribe({
+    this.almacenService.obtenerProductos(seccionId || undefined).subscribe({
       next: (productos) => {
         this.totalProductos = productos.length;
       },
@@ -122,7 +167,7 @@ export class AlmacenComponent implements OnInit {
     });
 
     // Cargar total de categorías
-    this.almacenService.obtenerCategorias().subscribe({
+    this.almacenService.obtenerCategorias(seccionId || undefined).subscribe({
       next: (categorias) => {
         this.totalCategorias = categorias.length;
       },
@@ -131,7 +176,9 @@ export class AlmacenComponent implements OnInit {
         this.totalCategorias = 0;
       },
     });
-    this.almacenService.obtenerMarcas().subscribe({
+
+    // Cargar total de marcas
+    this.almacenService.obtenerMarcas(seccionId || undefined).subscribe({
       next: (marcas) => {
         this.totalMarcas = marcas.length;
       },
@@ -141,6 +188,7 @@ export class AlmacenComponent implements OnInit {
       },
     });
   }
+
   private detectActiveTab(): void {
     const currentUrl = this.router.url;
     if (currentUrl.includes('/almacen/productos')) {
@@ -155,5 +203,33 @@ export class AlmacenComponent implements OnInit {
   navigateToTab(tab: string): void {
     this.activeTab = tab;
     this.router.navigate(['/dashboard/almacen', tab]);
+  }
+
+  private cargarSecciones(): void {
+    this.almacenService.obtenerSecciones().subscribe({
+      next: (secciones) => {
+        this.secciones = secciones;
+      },
+      error: (error) => {
+        console.error('Error al cargar secciones:', error);
+      },
+    });
+  }
+
+ onSeccionChange(seccionId: number | null): void {
+    this.seccionSeleccionada = seccionId;
+    this.seccionFilterService.setSeccionSeleccionada(seccionId);
+  }
+
+  abrirModalSeccion(): void {
+    const modal = document.getElementById("modalGestionSecciones")
+    if (modal) {
+      const bootstrapModal = new (window as any).bootstrap.Modal(modal)
+      bootstrapModal.show()
+    }
+  }
+
+  onSeccionesActualizadas(): void {
+    this.cargarSecciones()
   }
 }

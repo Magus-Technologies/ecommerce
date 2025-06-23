@@ -8,6 +8,8 @@ import { environment } from "../../environments/environment"
 export interface Categoria {
   id: number
   nombre: string
+  id_seccion?: number; // ← AGREGAR
+  seccion?: Seccion;
   descripcion?: string
   imagen?: string
   imagen_url?: string
@@ -116,6 +118,20 @@ export interface CategoriaParaSidebar {
   productos_count: number
 }
 
+export interface Seccion {
+  id: number;
+  nombre: string;
+  descripcion?: string;
+  categorias_count?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SeccionCreate {
+  nombre: string;
+  descripcion?: string;
+}
+
 @Injectable({
   providedIn: "root",
 })
@@ -127,15 +143,12 @@ export class AlmacenService {
 
   // ==================== MÉTODOS PARA CATEGORÍAS ====================
 
-  obtenerCategorias(): Observable<Categoria[]> {
-    return this.http.get<Categoria[]>(`${this.apiUrl}/categorias`).pipe(
-      map((categorias) =>
-        categorias.map((categoria) => ({
-          ...categoria,
-          imagen_url: categoria.imagen ? `${this.baseUrl}/storage/categorias/${categoria.imagen}` : undefined,
-        })),
-      ),
-    )
+ obtenerCategorias(seccionId?: number): Observable<Categoria[]> {
+    let params = new HttpParams();
+    if (seccionId) {
+      params = params.set('seccion', seccionId.toString());
+    }
+    return this.http.get<Categoria[]>(`${this.apiUrl}/categorias`, { params });
   }
 
   obtenerCategoria(id: number): Observable<Categoria> {
@@ -198,15 +211,12 @@ export class AlmacenService {
 
   // ==================== MÉTODOS PARA MARCAS ====================
 
-  obtenerMarcas(): Observable<MarcaProducto[]> {
-    return this.http.get<MarcaProducto[]>(`${this.apiUrl}/marcas`).pipe(
-      map((marcas) =>
-        marcas.map((marca) => ({
-          ...marca,
-          imagen_url: marca.imagen ? `${this.baseUrl}/storage/marcas_productos/${marca.imagen}` : undefined,
-        })),
-      ),
-    )
+  obtenerMarcas(seccionId?: number): Observable<MarcaProducto[]> {
+    let params = new HttpParams();
+    if (seccionId) {
+      params = params.set('seccion', seccionId.toString());
+    }
+    return this.http.get<MarcaProducto[]>(`${this.apiUrl}/marcas`, { params });
   }
 
   obtenerMarca(id: number): Observable<MarcaProducto> {
@@ -276,15 +286,17 @@ export class AlmacenService {
 
   // ==================== MÉTODOS PARA PRODUCTOS ====================
 
-  obtenerProductos(): Observable<Producto[]> {
-    return this.http.get<Producto[]>(`${this.apiUrl}/productos`).pipe(
-      map((productos) =>
-        productos.map((producto) => ({
-          ...producto,
-          imagen_url: producto.imagen ? `${this.baseUrl}/storage/productos/${producto.imagen}` : undefined,
-        })),
-      ),
-    )
+  obtenerProductos(seccionId?: number): Observable<Producto[]> {
+    let params = new HttpParams();
+    if (seccionId) {
+      params = params.set('seccion', seccionId.toString());
+    }
+    return this.http.get<Producto[]>(`${this.apiUrl}/productos`, { params }).pipe(
+      map(productos => productos.map(producto => ({
+        ...producto,
+        imagen_url: producto.imagen ? `${this.baseUrl}/storage/productos/${producto.imagen}` : undefined
+      })))
+    );
   }
 
   obtenerProducto(id: number): Observable<Producto> {
@@ -384,5 +396,36 @@ export class AlmacenService {
       })),
     ),
   )
+}
+
+// Métodos para secciones
+obtenerSecciones(): Observable<Seccion[]> {
+  return this.http.get<Seccion[]>(`${this.apiUrl}/secciones`);
+}
+
+crearSeccion(seccion: SeccionCreate): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/secciones`, seccion);
+}
+
+actualizarSeccion(id: number, seccion: SeccionCreate): Observable<any> {
+  return this.http.put<any>(`${this.apiUrl}/secciones/${id}`, seccion);
+}
+
+eliminarSeccion(id: number): Observable<any> {
+  return this.http.delete<any>(`${this.apiUrl}/secciones/${id}`);
+}
+
+migrarCategoria(categoriaId: number, nuevaSeccionId: number): Observable<any> {
+  return this.http.patch<any>(`${this.apiUrl}/categorias/${categoriaId}/migrar-seccion`, {
+    nueva_seccion_id: nuevaSeccionId
+  });
+}
+
+// Método para obtener categorías por sección
+obtenerCategoriasPorSeccion(seccionId?: number): Observable<Categoria[]> {
+  const url = seccionId 
+    ? `${this.apiUrl}/categorias?seccion=${seccionId}`
+    : `${this.apiUrl}/categorias`;
+  return this.http.get<Categoria[]>(url);
 }
 }

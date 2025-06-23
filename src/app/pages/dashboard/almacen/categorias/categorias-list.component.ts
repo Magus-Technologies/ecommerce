@@ -4,12 +4,14 @@ import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
 import { AlmacenService, Categoria } from "../../../../services/almacen.service"
 import { CategoriaModalComponent } from "./categoria-modal.component"
+import { MigrarCategoriaModalComponent } from "../migrar-categoria-modal/migrar-categoria-modal.component"
+import { SeccionFilterService } from '../../../../services/seccion-filter.service';
 import Swal from "sweetalert2"
 
 @Component({
   selector: "app-categorias-list",
   standalone: true,
-  imports: [CommonModule, RouterModule, CategoriaModalComponent],
+  imports: [CommonModule, RouterModule, CategoriaModalComponent, MigrarCategoriaModalComponent],
   template: `
     <div class="d-flex justify-content-between align-items-center mb-24">
       <div>
@@ -111,6 +113,13 @@ import Swal from "sweetalert2"
                       <i class="ph ph-pencil text-sm"></i>
                     </button>
 
+                    <!-- Migrar Sección -->
+                    <button class="btn bg-warning-50 hover-bg-warning-100 text-warning-600 w-32 h-32 rounded-6 flex-center transition-2"
+                            title="Cambiar de Sección"
+                            (click)="migrarCategoria(categoria)">
+                      <i class="ph ph-arrows-clockwise text-sm"></i>
+                    </button>
+
                     <!-- Eliminar -->
                     <button class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
                             title="Eliminar"
@@ -145,6 +154,13 @@ import Swal from "sweetalert2"
       (categoriaGuardada)="onCategoriaGuardada()"
       (modalCerrado)="onModalCerrado()">
     </app-categoria-modal>
+
+    <!-- Modal para migrar categoría --> <!-- ← AGREGAR ESTE BLOQUE COMPLETO -->
+    <app-migrar-categoria-modal 
+      [categoria]="categoriaMigracion"
+      (categoriaMigrada)="onCategoriaMigrada()"
+      (modalCerrado)="onModalMigracionCerrado()">
+    </app-migrar-categoria-modal>
   `,
   styles: [
     `
@@ -164,16 +180,26 @@ export class CategoriasListComponent implements OnInit {
   categorias: Categoria[] = []
   isLoading = true
   categoriaSeleccionada: Categoria | null = null
+  categoriaMigracion: Categoria | null = null
 
-  constructor(private almacenService: AlmacenService) {}
+  constructor(
+    private almacenService: AlmacenService,
+    private seccionFilterService: SeccionFilterService
+  ) {}
 
   ngOnInit(): void {
     this.cargarCategorias()
+    // Suscribirse a cambios de sección
+    this.seccionFilterService.seccionSeleccionada$.subscribe(seccionId => {
+      this.cargarCategorias();
+    });
   }
 
   cargarCategorias(): void {
     this.isLoading = true
-    this.almacenService.obtenerCategorias().subscribe({
+    const seccionId = this.seccionFilterService.getSeccionSeleccionada();
+    
+    this.almacenService.obtenerCategorias(seccionId || undefined).subscribe({
       next: (categorias) => {
         this.categorias = categorias
         this.isLoading = false
@@ -282,5 +308,23 @@ export class CategoriasListComponent implements OnInit {
       }
       placeholder.style.display = "block"
     }
+  }
+
+  migrarCategoria(categoria: Categoria): void {
+    this.categoriaMigracion = categoria
+    const modal = document.getElementById("modalMigrarCategoria")
+    if (modal) {
+      const bootstrapModal = new (window as any).bootstrap.Modal(modal)
+      bootstrapModal.show()
+    }
+  }
+
+  onCategoriaMigrada(): void {
+    this.cargarCategorias()
+    this.categoriaMigracion = null
+  }
+
+  onModalMigracionCerrado(): void {
+    this.categoriaMigracion = null
   }
 }

@@ -3,6 +3,7 @@ import { Component, OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
 import { AlmacenService, MarcaProducto } from "../../../../services/almacen.service"
+import { SeccionFilterService } from '../../../../services/seccion-filter.service';
 import { MarcaModalComponent } from "./marca-modal.component"
 import Swal from "sweetalert2"
 
@@ -165,15 +166,25 @@ export class MarcasListComponent implements OnInit {
   isLoading = true
   marcaSeleccionada: MarcaProducto | null = null
 
-  constructor(private almacenService: AlmacenService) {}
+  constructor(
+    private almacenService: AlmacenService,
+    private seccionFilterService: SeccionFilterService
+  ) {}
 
   ngOnInit(): void {
     this.cargarMarcas()
+    
+    // Suscribirse a cambios de sección
+    this.seccionFilterService.seccionSeleccionada$.subscribe(seccionId => {
+      this.cargarMarcas();
+    });
   }
 
   cargarMarcas(): void {
     this.isLoading = true
-    this.almacenService.obtenerMarcas().subscribe({
+    const seccionId = this.seccionFilterService.getSeccionSeleccionada();
+    
+    this.almacenService.obtenerMarcas(seccionId || undefined).subscribe({
       next: (marcas) => {
         this.marcas = marcas
         this.isLoading = false
