@@ -42,4 +42,5 @@ testem.log
 Thumbs.db
 
 .vscode
+# Ignorar archivos de entorno locales
 src/environments/environment.ts

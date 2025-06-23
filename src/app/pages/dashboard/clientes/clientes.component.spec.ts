@@ -1,3 +1,4 @@
+// src\app\pages\dashboard\clientes\clientes.component.spec.ts
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ClientesComponent } from './clientes.component';
