@@ -180,4 +180,21 @@ export class AuthService {
       })
     );
   }
+  /**
+ * Verificar si el email ya existe
+ */
+checkEmail(email: string): Observable<{exists: boolean, message: string}> {
+  return this.http.post<{exists: boolean, message: string}>(`${environment.apiUrl}/check-email`, {
+    email: email
+  });
+}
+
+/**
+ * Verificar si el número de documento ya existe
+ */
+checkDocumento(numeroDocumento: string): Observable<{exists: boolean, message: string}> {
+  return this.http.post<{exists: boolean, message: string}>(`${environment.apiUrl}/check-documento`, {
+    numero_documento: numeroDocumento
+  });
+}
 }

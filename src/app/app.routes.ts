@@ -13,6 +13,7 @@ import { WishlistComponent } from "./pages/wishlist/wishlist.component"
 import { CheckoutComponent } from "./pages/checkout/checkout.component"
 import { BecomeSellerComponent } from "./pages/become-seller/become-seller.component"
 import { AccountComponent } from "./pages/account/account.component"
+import { RegisterComponent } from "./pages/register/register.component"
 import { IndexTwoComponent } from "./pages/index-two/index-two.component"
 import { IndexThreeComponent } from "./pages/index-three/index-three.component"
 import { authGuard } from "./guards/auth.guard"
@@ -71,6 +72,11 @@ export const routes: Routes = [
         path: "account",
         component: AccountComponent,
         title: "Account",
+      },
+      {
+        path: "register",
+        component: RegisterComponent,
+        title: "Register",
       },
       {
         path: "index-two",

@@ -1,3 +1,4 @@
+// src\app\services\reniec.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -20,7 +21,7 @@ export interface ReniecResponse {
 })
 export class ReniecService {
 
-  private baseUrl = `${environment.apiUrl}` // Ajusta según tu configuración
+  private baseUrl = `${environment.apiUrl}` 
 
   constructor(private http: HttpClient) { }
 

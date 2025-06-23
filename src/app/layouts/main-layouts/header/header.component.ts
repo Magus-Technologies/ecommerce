@@ -36,6 +36,9 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   cartItemCount: number = 0;
 
   setupPath() {
+    if (!this.progressPathRef?.nativeElement) {
+      return;
+    }
     const path = this.progressPathRef.nativeElement;
     this.pathLength = path.getTotalLength();
     path.style.transition = path.style.webkitTransition = 'none';
@@ -46,14 +49,20 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // @HostListener('window:scroll')
+  @HostListener('window:scroll', [])
   @HostListener('window:resize', [])
   onScroll() {
-    this.updateProgress();
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    this.isActiveProgress = scrollTop > 50;
+    if (this.isBrowser) {
+      this.updateProgress();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      this.isActiveProgress = scrollTop > 50;
+    }
   }
 
   updateProgress() {
+    if (!this.progressPathRef?.nativeElement || !this.pathLength) {
+      return;
+    }
     const scroll = window.pageYOffset || document.documentElement.scrollTop;
     const height = document.documentElement.scrollHeight - window.innerHeight;
     const progress = this.pathLength - (scroll * this.pathLength / height);
@@ -179,7 +188,7 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   }
   
   ngAfterViewInit(): void {
-    if (this.isBrowser && this.progressPathRef) {
+    if (this.isBrowser && this.progressPathRef?.nativeElement) {
       this.setupPath();
       this.updateProgress();
     }
