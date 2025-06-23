@@ -4,6 +4,7 @@ import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
 import { AlmacenService, Producto } from "../../../../services/almacen.service"
 import { ProductoModalComponent } from "./producto-modal.component"
+import { SeccionFilterService } from '../../../../services/seccion-filter.service';
 import Swal from "sweetalert2"
 
 
@@ -185,15 +186,24 @@ export class ProductosListComponent implements OnInit {
   isLoading = true
   productoSeleccionado: Producto | null = null
 
-  constructor(private almacenService: AlmacenService) {}
+  constructor(
+    private almacenService: AlmacenService,
+    private seccionFilterService: SeccionFilterService
+  ) {}
 
   ngOnInit(): void {
     this.cargarProductos()
+
+    this.seccionFilterService.seccionSeleccionada$.subscribe(seccionId => {
+      this.cargarProductos();
+    });
   }
 
   cargarProductos(): void {
     this.isLoading = true
-    this.almacenService.obtenerProductos().subscribe({
+    const seccionId = this.seccionFilterService.getSeccionSeleccionada();
+    
+    this.almacenService.obtenerProductos(seccionId || undefined).subscribe({
       next: (productos) => {
         this.productos = productos
         this.isLoading = false
