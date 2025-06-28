@@ -1,0 +1,121 @@
+<!-- src\app\components\chatbot\chatbot.component.html -->
+
+<!-- Botón flotante del chat -->
+<div class="chat-widget" [class.open]="isOpen">
+  <!-- Botón principal -->
+  <button 
+    class="chat-toggle-btn" 
+    (click)="toggleChat()"
+    [class.hidden]="isOpen"
+    aria-label="Abrir chat de ayuda">
+    <i class="ph ph-chat-circle-dots"></i>
+    <span class="chat-notification-badge">1</span>
+  </button>
+
+  <!-- Ventana del chat -->
+  <div class="chat-window" [class.open]="isOpen" [class.minimized]="isMinimized">
+    <!-- Header del chat -->
+    <div class="chat-header">
+      <div class="chat-header-info">
+        <div class="chat-avatar">
+          <i class="ph ph-robot"></i>
+        </div>
+        <div class="chat-details">
+          <h4>Asistente Virtual</h4>
+          <span class="chat-status">En línea</span>
+        </div>
+      </div>
+      <div class="chat-actions">
+        <button 
+          class="chat-action-btn" 
+          (click)="minimizeChat()" 
+          *ngIf="!isMinimized"
+          aria-label="Minimizar chat">
+          <i class="ph ph-minus"></i>
+        </button>
+        <button 
+          class="chat-action-btn" 
+          (click)="maximizeChat()" 
+          *ngIf="isMinimized"
+          aria-label="Maximizar chat">
+          <i class="ph ph-plus"></i>
+        </button>
+        <button 
+          class="chat-action-btn" 
+          (click)="closeChat()"
+          aria-label="Cerrar chat">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Cuerpo del chat -->
+    <div class="chat-body" *ngIf="!isMinimized">
+      <!-- Mensajes -->
+      <div class="chat-messages">
+        <div 
+          *ngFor="let message of messages" 
+          class="message"
+          [class.user-message]="message.isUser"
+          [class.bot-message]="!message.isUser">
+          
+          <div class="message-content">
+            <div class="message-text" [innerHTML]="message.text"></div>
+            <div class="message-time">
+              {{ message.timestamp | date:'HH:mm' }}
+            </div>
+          </div>
+
+          <!-- Opciones del bot -->
+          <div class="message-options" *ngIf="!message.isUser && message.options && message.options.length > 0">
+            <button 
+              *ngFor="let option of message.options"
+              class="option-btn"
+              (click)="selectOption(option)">
+              {{ option.text }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Indicador de escritura -->
+        <div class="message bot-message" *ngIf="isTyping">
+          <div class="message-content">
+            <div class="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input de mensaje -->
+      <div class="chat-input">
+        <div class="input-container">
+          <input 
+            type="text" 
+            [(ngModel)]="currentMessage"
+            (keypress)="onKeyPress($event)"
+            placeholder="Escribe tu mensaje..."
+            class="message-input">
+          <button 
+            class="send-btn" 
+            (click)="sendMessage()"
+            [disabled]="!currentMessage.trim()">
+            <i class="ph ph-paper-plane-tilt"></i>
+          </button>
+        </div>
+        
+        <!-- Botón de WhatsApp directo -->
+        <div class="whatsapp-direct">
+          <button 
+            class="whatsapp-btn"
+            (click)="openWhatsApp('Hola! Me gustaría obtener ayuda personalizada.')">
+            <i class="ph ph-whatsapp-logo"></i>
+            Hablar por WhatsApp
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

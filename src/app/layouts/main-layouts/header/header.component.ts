@@ -53,9 +53,9 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   @HostListener('window:resize', [])
   onScroll() {
     if (this.isBrowser) {
-      this.updateProgress();
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      this.isActiveProgress = scrollTop > 50;
+    this.updateProgress();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    this.isActiveProgress = scrollTop > 50;
     }
   }
 
