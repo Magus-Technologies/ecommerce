@@ -9,6 +9,8 @@ import { BannersService, Banner, BannerPromocional } from '../../services/banner
 import { AlmacenService, MarcaProducto } from '../../services/almacen.service';
 import { CartService } from '../../services/cart.service';
 import Swal from 'sweetalert2';
+import { OfertasService, Oferta, ProductoOferta, Cupon } from '../../services/ofertas.service';
+import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 
 interface CategoriaConImagen extends CategoriaPublica {
   img: string;
@@ -17,7 +19,7 @@ interface CategoriaConImagen extends CategoriaPublica {
 
 @Component({
   selector: 'app-index',
-  imports: [CommonModule, SlickCarouselModule, RouterLink],
+  imports: [CommonModule, SlickCarouselModule, RouterLink, ChatbotComponent],
   templateUrl: './index.component.html',
   styleUrl: './index.component.scss'
 })
@@ -145,6 +147,13 @@ export class IndexComponent implements OnInit {
 
   promotionalBanners: BannerPromocional[] = [];
   isLoadingPromotionalBanners = false;
+
+  // ✅ PROPIEDADES PARA OFERTAS DINÁMICAS
+  ofertasActivas: Oferta[] = [];
+  flashSalesActivas: Oferta[] = [];
+  productosEnOferta: ProductoOferta[] = [];
+  cuponesActivos: Cupon[] = []; // ✅ NUEVA PROPIEDAD
+  isLoadingOfertas = false;
 
   cargarBannersPromocionales(): void {
     this.isLoadingPromotionalBanners = true;
@@ -359,26 +368,30 @@ export class IndexComponent implements OnInit {
     // ... más productos con stock
   ];
 
-  // ✅ ACTUALIZAR CONSTRUCTOR PARA INYECTAR EL SERVICIO DE BANNERS
+  // ✅ CONSTRUCTOR ACTUALIZADO
   constructor(
     private categoriasPublicasService: CategoriasPublicasService,
-    private bannersService: BannersService, // ✅ NUEVO SERVICIO
+    private bannersService: BannersService,
     private almacenService: AlmacenService,
-    private cartService: CartService 
+    private cartService: CartService,
+    private ofertasService: OfertasService // ✅ NUEVO SERVICIO
   ) { }
 
   ngOnInit(): void {
     this.cargarCategoriasPublicas();
-    this.cargarBannersDinamicos(); // ✅ NUEVA LLAMADA
+    this.cargarBannersDinamicos();
     this.cargarBannersPromocionales();
-    this.cargarMarcasDinamicas(); // Cargar marcas dinámicas
+    this.cargarMarcasDinamicas();
+    this.cargarOfertasActivas(); // ✅ NUEVO
+    this.cargarFlashSales(); // ✅ NUEVO
+    this.cargarProductosEnOferta(); // ✅ NUEVO
+    this.cargarCuponesActivos(); // ✅ NUEVO
   }
 
   cargarCategoriasPublicas(): void {
     this.isLoadingCategorias = true;
     this.categoriasPublicasService.obtenerCategoriasPublicas().subscribe({
       next: (categorias) => {
-        // ✅ MAPEAR CON TIPO CORRECTO
         this.featureItems = categorias.map(cat => ({
           ...cat,
           img: cat.imagen_url || 'assets/images/thumbs/feature-img-default.png',
@@ -393,7 +406,6 @@ export class IndexComponent implements OnInit {
     });
   }
 
-  // ✅ NUEVO MÉTODO PARA CARGAR BANNERS
   cargarBannersDinamicos(): void {
     this.isLoadingBanners = true;
     this.bannersService.obtenerBannersPublicos().subscribe({
@@ -404,7 +416,6 @@ export class IndexComponent implements OnInit {
       error: (error) => {
         console.error('Error al cargar banners:', error);
         this.isLoadingBanners = false;
-        // En caso de error, usar banners estáticos como fallback
         this.bannersDinamicos = [];
       }
     });
@@ -414,11 +425,10 @@ export class IndexComponent implements OnInit {
     this.isLoadingMarcas = true;
     this.almacenService.obtenerMarcasPublicas().subscribe({
       next: (marcas) => {
-        // Mapear las marcas al formato que espera el slider
         this.brandSlides[0].slides = marcas.map((marca, index) => ({
           class: "brand-item",
           dataAos: "zoom-in",
-          dataAosDuration: 200 + (index * 200), // Incrementar duración
+          dataAosDuration: 200 + (index * 200),
           imgSrc: marca.imagen_url || 'assets/images/thumbs/brand-default.png',
           imgAlt: marca.nombre
         }));
@@ -427,12 +437,10 @@ export class IndexComponent implements OnInit {
       error: (error) => {
         console.error('Error al cargar marcas:', error);
         this.isLoadingMarcas = false;
-        // Mantener marcas estáticas como fallback
       }
     });
   }
 
-  // ✅ MÉTODO MEJORADO PARA AGREGAR AL CARRITO
   addToCart(product: any): void {
     if (product.stock <= 0) {
       Swal.fire({
@@ -449,7 +457,7 @@ export class IndexComponent implements OnInit {
     if (success) {
       Swal.fire({
         title: '¡Producto agregado!',
-        text: `${product.name || product.title} ha sido agregado a tu carrito`,
+        text: `${product.name || product.title || product.nombre} ha sido agregado a tu carrito`,
         icon: 'success',
         timer: 2000,
         showConfirmButton: false,
@@ -466,6 +474,100 @@ export class IndexComponent implements OnInit {
         confirmButtonColor: '#dc3545'
       });
     }
+  }
+
+  // ✅ NUEVOS MÉTODOS PARA OFERTAS
+  cargarOfertasActivas(): void {
+    this.isLoadingOfertas = true;
+    this.ofertasService.obtenerOfertasPublicas().subscribe({
+      next: (ofertas) => {
+        this.ofertasActivas = ofertas;
+        this.isLoadingOfertas = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar ofertas:', error);
+        this.isLoadingOfertas = false;
+      }
+    });
+  }
+
+  cargarFlashSales(): void {
+    this.ofertasService.obtenerFlashSales().subscribe({
+      next: (flashSales) => {
+        this.flashSalesActivas = flashSales;
+      },
+      error: (error) => {
+        console.error('Error al cargar flash sales:', error);
+      }
+    });
+  }
+
+  cargarProductosEnOferta(): void {
+    this.ofertasService.obtenerProductosEnOferta().subscribe({
+      next: (productos) => {
+        this.productosEnOferta = productos;
+      },
+      error: (error) => {
+        console.error('Error al cargar productos en oferta:', error);
+      }
+    });
+  }
+
+  // ✅ NUEVO MÉTODO PARA CARGAR CUPONES
+  cargarCuponesActivos(): void {
+    // Implementar cuando tengas el endpoint para cupones públicos
+    // Por ahora está vacío, podrías agregar cupones dummy o crear la API
+    this.cuponesActivos = [
+      {
+        id: 1,
+        codigo: 'BIENVENIDO20',
+        titulo: 'Bienvenido - 20% de descuento',
+        tipo_descuento: 'porcentaje',
+        valor_descuento: 20,
+        compra_minima: 100
+      },
+      {
+        id: 2,
+        codigo: 'ENVIOGRATIS',
+        titulo: 'Envío gratis',
+        tipo_descuento: 'cantidad_fija',
+        valor_descuento: 15,
+        compra_minima: 50
+      }
+    ];
+  }
+
+  // ✅ MÉTODO PARA COPIAR CUPÓN
+  copiarCupon(codigo: string): void {
+    navigator.clipboard.writeText(codigo).then(() => {
+      Swal.fire({
+        title: '¡Cupón copiado!',
+        text: `El código "${codigo}" ha sido copiado al portapapeles`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end'
+      });
+    }).catch(() => {
+      // Fallback para navegadores que no soportan clipboard
+      const textArea = document.createElement('textarea');
+      textArea.value = codigo;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      Swal.fire({
+        title: '¡Cupón copiado!',
+        text: `El código "${codigo}" ha sido copiado`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end'
+      });
+    });
   }
 
   onImageError(event: any): void {
@@ -498,6 +600,7 @@ export class IndexComponent implements OnInit {
       countdownStyleClass: 'bg-main-600 text-white'
     }
   ];
+
   // offers
   offers = [
     {
@@ -521,6 +624,7 @@ export class IndexComponent implements OnInit {
       btnClass: 'mt-16 btn bg-white hover-text-white hover-bg-main-800 text-heading fw-medium d-inline-flex align-items-center rounded-pill gap-8'
     }
   ];
+
   productSlides = [
     {
       imgSrc: "assets/images/thumbs/short-product-img1.png",
@@ -555,6 +659,7 @@ export class IndexComponent implements OnInit {
       price: "$1500.00"
     }
   ];
+
   topProductSlides = [
     {
       imgSrc: "assets/images/thumbs/short-product-img5.png",
@@ -589,6 +694,7 @@ export class IndexComponent implements OnInit {
       price: "$1500.00"
     }
   ];
+
   onProductSlides = [
     {
       imgSrc: "assets/images/thumbs/short-product-img5.png",
@@ -623,6 +729,7 @@ export class IndexComponent implements OnInit {
       price: "$1500.00"
     }
   ];
+
   // best  deal product
   bestProduct = [
     {

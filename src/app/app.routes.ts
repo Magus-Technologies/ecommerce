@@ -200,13 +200,30 @@ export const routes: Routes = [
         ],
       },
       {
- path: 'ventas',
-  component: VentasComponent,
-  children: [
-    { path: '', component: VentasListComponent },
-    { path: 'nueva', component: NuevaVentaComponent },
-    { path: 'estadisticas', component: EstadisticasVentasComponent }
-  ]
+        path: 'ventas',
+        component: VentasComponent,
+        children: [
+          { path: '', component: VentasListComponent },
+          { path: 'nueva', component: NuevaVentaComponent },
+          { path: 'estadisticas', component: EstadisticasVentasComponent }
+        ]
+      },
+      // ✅ NUEVAS RUTAS PARA OFERTAS Y CUPONES
+      {
+        path: "ofertas",
+        loadComponent: () =>
+          import("./pages/dashboard/ofertas/ofertas-list/ofertas-list.component").then((m) => m.OfertasListComponent),
+        title: "Gestión de Ofertas",
+        canActivate: [permissionGuard],
+        data: { permission: "ofertas.ver" },
+      },
+      {
+        path: "cupones",
+        loadComponent: () =>
+          import("./pages/dashboard/cupones/cupones-list/cupones-list.component").then((m) => m.CuponesListComponent),
+        title: "Gestión de Cupones",
+        canActivate: [permissionGuard],
+        data: { permission: "cupones.ver" },
       },
       // Agregar después de la ruta de almacén
       {

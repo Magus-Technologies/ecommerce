@@ -41,7 +41,7 @@
           routerLinkActive="active"
           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
         >
-          <i class="ph ph-image text-xl flex-shrink-0"></i>
+          <i class="ph ph-shopping-cart text-xl flex-shrink-0"></i>
           <span *ngIf="!isCollapsed" class="fw-medium">Ventas</span>
         </a>
       </li>
@@ -52,10 +52,35 @@
           routerLinkActive="active"
           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
         >
-          <i class="ph ph-image text-xl flex-shrink-0"></i>
+          <i class="ph ph-package text-xl flex-shrink-0"></i>
           <span *ngIf="!isCollapsed" class="fw-medium">Almacen</span>
         </a>
       </li>
+
+      <!-- ✅ NUEVO: Ofertas y Promociones -->
+      <li *ngIf="puedeVerOfertas" class="mb-8">
+        <a
+          routerLink="/dashboard/ofertas"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
+          <i class="ph ph-tag text-xl flex-shrink-0"></i>
+          <span *ngIf="!isCollapsed" class="fw-medium">Ofertas</span>
+        </a>
+      </li>
+
+      <!-- ✅ NUEVO: Cupones -->
+      <li *ngIf="puedeVerCupones" class="mb-8">
+        <a
+          routerLink="/dashboard/cupones"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
+          <i class="ph ph-ticket text-xl flex-shrink-0"></i>
+          <span *ngIf="!isCollapsed" class="fw-medium">Cupones</span>
+        </a>
+      </li>
+
       <!-- banners -->
       <li class="mb-8">
         <a
@@ -81,30 +106,6 @@
         </a>
       </li>
 
-      <!-- Productos -->
-      <!-- <li class="mb-8">
-        <a
-          routerLink="/dashboard/productos"
-          routerLinkActive="active"
-          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
-        >
-          <i class="ph ph-package text-xl flex-shrink-0"></i>
-          <span *ngIf="!isCollapsed" class="fw-medium">Productos</span>
-        </a>
-      </li> -->
-
-      <!-- Categorías -->
-      <!-- <li class="mb-8">
-        <a
-          routerLink="/dashboard/categorias"
-          routerLinkActive="active"
-          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
-        >
-          <i class="ph ph-squares-four text-xl flex-shrink-0"></i>
-          <span *ngIf="!isCollapsed" class="fw-medium">Categorías</span>
-        </a>
-      </li> -->
-
       <!-- Clientes -->
       <li *ngIf="puedeVerClientes" class="mb-8">
         <a
@@ -127,15 +128,15 @@
         </a>
       </li>
 
-      <!-- Permisos (gestión de roles) 😺 agregado -->
+      <!-- Permisos (gestión de roles) -->
       <li *ngIf="esSuperadmin" class="mb-8"> 
         <a routerLink="/dashboard/roles"  
           routerLinkActive="active"  
           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"> 
           <i class="ph ph-shield-check text-xl flex-shrink-0"></i> 
           <span *ngIf="!isCollapsed" class="fw-medium">Permisos</span> 
-        </a> <!-- 😺 agregado -->
-      </li> <!-- 😺 agregado -->
+        </a>
+      </li>
 
       <!-- Separador -->
       <li class="my-16" *ngIf="!isCollapsed">
