@@ -7,11 +7,13 @@ import {
   EventEmitter,
   Input,
   HostListener,
+  OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { PermissionsService } from '../../../services/permissions.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard-sidebar',
@@ -20,24 +22,25 @@ import { PermissionsService } from '../../../services/permissions.service';
   templateUrl: './dashboard-sidebar.component.html',
   styleUrls: ['./dashboard-sidebar.component.scss'],
 })
-export class DashboardSidebarComponent implements OnInit, AfterViewInit {
+export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() isSidebarOpen = false;
   @Output() sidebarToggled = new EventEmitter<boolean>();
   @Output() sidebarCollapsed = new EventEmitter<boolean>();
 
   isCollapsed = false;
   esSuperadmin = false;
+  
+  // Permisos
   puedeVerUsuarios = false;
   puedeVerBanners = false;
   puedeVerBanners_promocionales = false;
   puedeVerClientes = false;
-  puedeVerOfertas = false; // ✅ NUEVO
-  puedeVerCupones = false; // ✅ NUEVO
-  // Agrega esta línea después de puedeVerClientes = false;
+  puedeVerOfertas = false;
+  puedeVerCupones = false;
   puedeVerPedidos = false;
 
   isDesktop = false;
-  private permisosSub: any;
+  private permisosSub: Subscription | null = null;
 
   constructor(
     private authService: AuthService,
@@ -47,30 +50,14 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     const currentUser = this.authService.getCurrentUser();
     this.esSuperadmin = currentUser?.roles?.includes('superadmin') ?? false;
+    
+    // Verificar permisos iniciales
     this.checkPermissions();
     this.checkScreenSize();
 
-    // Suscribirse a los cambios de permisos en tiempo real
-    this.permisosSub = this.permissionsService.permissions$.subscribe(
-      (perms) => {
-        this.checkPermissions();
-      }
-    );
-    this.puedeVerUsuarios = this.permissionsService.hasPermission('usuarios.ver');
-    this.puedeVerBanners = this.permissionsService.hasPermission('banners.ver');
-    this.puedeVerBanners_promocionales = this.permissionsService.hasPermission('banners_promocionales.ver');
-    this.puedeVerClientes = this.permissionsService.hasPermission('clientes.ver');
-    this.puedeVerPedidos = this.permissionsService.hasPermission('pedidos.ver');
-    
-    this.checkScreenSize();
-
-    // 🔁 Suscribirse a los cambios de permisos en tiempo real
-    this.permisosSub = this.permissionsService.permissions$.subscribe(perms => {
-      this.puedeVerUsuarios = perms.includes('usuarios.ver');
-      this.puedeVerBanners = perms.includes('banners.ver');
-      this.puedeVerBanners_promocionales = perms.includes('banners_promocionales.ver');
-      this.puedeVerClientes = perms.includes('clientes.ver');
-      this.puedeVerPedidos = perms.includes('pedidos.ver');
+    // Suscribirse a cambios de permisos
+    this.permisosSub = this.permissionsService.permissions$.subscribe(() => {
+      this.checkPermissions();
     });
   }
 
@@ -79,18 +66,13 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit {
   }
 
   private checkPermissions(): void {
-    this.puedeVerUsuarios =
-      this.permissionsService.hasPermission('usuarios.ver');
+    // Todas las asignaciones de permisos en un solo lugar
+    this.puedeVerUsuarios = this.permissionsService.hasPermission('usuarios.ver');
     this.puedeVerBanners = this.permissionsService.hasPermission('banners.ver');
-    this.puedeVerBanners_promocionales = this.permissionsService.hasPermission(
-      'banners_promocionales.ver'
-    );
-    this.puedeVerClientes =
-      this.permissionsService.hasPermission('clientes.ver');
-    this.puedeVerOfertas = this.permissionsService.hasPermission('ofertas.ver'); // ✅ NUEVO
-    this.puedeVerCupones = this.permissionsService.hasPermission('cupones.ver'); // ✅ NUEVO
     this.puedeVerBanners_promocionales = this.permissionsService.hasPermission('banners_promocionales.ver');
     this.puedeVerClientes = this.permissionsService.hasPermission('clientes.ver');
+    this.puedeVerOfertas = this.permissionsService.hasPermission('ofertas.ver');
+    this.puedeVerCupones = this.permissionsService.hasPermission('cupones.ver');
     this.puedeVerPedidos = this.permissionsService.hasPermission('pedidos.ver');
   }
 
