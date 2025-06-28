@@ -67,4 +67,70 @@ public permissions$: Observable<string[]> = this.permissionsSubject.asObservable
       map(permissions => permissions.includes(permission))
     );
   }
+
+  // Métodos específicos para módulos de almacén
+  canViewProductos(): boolean {
+    return this.hasPermission('productos.ver');
+  }
+
+  canCreateProductos(): boolean {
+    return this.hasPermission('productos.create');
+  }
+
+  canEditProductos(): boolean {
+    return this.hasPermission('productos.edit');
+  }
+
+  canDeleteProductos(): boolean {
+    return this.hasPermission('productos.delete');
+  }
+
+  canViewCategorias(): boolean {
+    return this.hasPermission('categorias.ver');
+  }
+
+  canCreateCategorias(): boolean {
+    return this.hasPermission('categorias.create');
+  }
+
+  canEditCategorias(): boolean {
+    return this.hasPermission('categorias.edit');
+  }
+
+  canDeleteCategorias(): boolean {
+    return this.hasPermission('categorias.delete');
+  }
+
+  canViewMarcas(): boolean {
+    return this.hasPermission('marcas.ver');
+  }
+
+  canCreateMarcas(): boolean {
+    return this.hasPermission('marcas.create');
+  }
+
+  canEditMarcas(): boolean {
+    return this.hasPermission('marcas.edit');
+  }
+
+  canDeleteMarcas(): boolean {
+    return this.hasPermission('marcas.delete');
+  }
+
+  canViewSecciones(): boolean {
+    return this.hasPermission('secciones.ver');
+  }
+
+  canCreateSecciones(): boolean {
+    return this.hasPermission('secciones.create');
+  }
+
+  canEditSecciones(): boolean {
+    return this.hasPermission('secciones.edit');
+  }
+
+  canDeleteSecciones(): boolean {
+    return this.hasPermission('secciones.delete');
+  }
+
 }

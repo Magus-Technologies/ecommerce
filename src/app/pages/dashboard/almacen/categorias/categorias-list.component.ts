@@ -6,6 +6,7 @@ import { AlmacenService, Categoria } from "../../../../services/almacen.service"
 import { CategoriaModalComponent } from "./categoria-modal.component"
 import { MigrarCategoriaModalComponent } from "../migrar-categoria-modal/migrar-categoria-modal.component"
 import { SeccionFilterService } from '../../../../services/seccion-filter.service';
+import { PermissionsService } from '../../../../services/permissions.service';
 import Swal from "sweetalert2"
 
 @Component({
@@ -19,8 +20,9 @@ import Swal from "sweetalert2"
         <p class="text-gray-500 mb-0">Administra las categorías de productos</p>
       </div>
       <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
-              data-bs-toggle="modal" 
-              data-bs-target="#modalCrearCategoria">
+        *ngIf="permissionsService.canCreateCategorias()"
+        data-bs-toggle="modal" 
+        data-bs-target="#modalCrearCategoria">
         <i class="ph ph-plus me-8"></i>
         Nueva Categoría
       </button>
@@ -97,8 +99,9 @@ import Swal from "sweetalert2"
                 <!-- Acciones -->
                 <td class="px-24 py-16 text-center">
                   <div class="d-flex justify-content-center gap-8">
-                    <!-- Toggle Estado -->
+                    <!-- Botón Toggle Estado -->
                     <button class="btn w-32 h-32 rounded-6 flex-center transition-2"
+                            *ngIf="permissionsService.canEditCategorias()"
                             [class]="categoria.activo ? 'bg-warning-50 hover-bg-warning-100 text-warning-600' : 'bg-success-50 hover-bg-success-100 text-success-600'"
                             [title]="categoria.activo ? 'Desactivar' : 'Activar'"
                             (click)="toggleEstado(categoria)">
@@ -106,22 +109,25 @@ import Swal from "sweetalert2"
                          [class]="categoria.activo ? 'ph-eye-slash' : 'ph-eye'"></i>
                     </button>
 
-                    <!-- Editar -->
+                    <!-- Botón Editar -->
                     <button class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
+                            *ngIf="permissionsService.canEditCategorias()"
                             title="Editar"
                             (click)="editarCategoria(categoria)">
                       <i class="ph ph-pencil text-sm"></i>
                     </button>
 
-                    <!-- Migrar Sección -->
+                    <!-- Botón Migrar Sección -->
                     <button class="btn bg-warning-50 hover-bg-warning-100 text-warning-600 w-32 h-32 rounded-6 flex-center transition-2"
+                            *ngIf="permissionsService.canEditCategorias()"
                             title="Cambiar de Sección"
                             (click)="migrarCategoria(categoria)">
                       <i class="ph ph-arrows-clockwise text-sm"></i>
                     </button>
 
-                    <!-- Eliminar -->
+                    <!-- Botón Eliminar -->
                     <button class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
+                            *ngIf="permissionsService.canDeleteCategorias()"
                             title="Eliminar"
                             (click)="eliminarCategoria(categoria)">
                       <i class="ph ph-trash text-sm"></i>
@@ -138,6 +144,7 @@ import Swal from "sweetalert2"
             <h6 class="text-heading fw-semibold mb-8">No hay categorías</h6>
             <p class="text-gray-500 mb-16">Aún no has creado ninguna categoría</p>
             <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
+                    *ngIf="permissionsService.canCreateCategorias()"       
                     data-bs-toggle="modal" 
                     data-bs-target="#modalCrearCategoria">
               <i class="ph ph-plus me-8"></i>
@@ -184,7 +191,8 @@ export class CategoriasListComponent implements OnInit {
 
   constructor(
     private almacenService: AlmacenService,
-    private seccionFilterService: SeccionFilterService
+    private seccionFilterService: SeccionFilterService,
+    public permissionsService: PermissionsService
   ) {}
 
   ngOnInit(): void {
@@ -195,14 +203,20 @@ export class CategoriasListComponent implements OnInit {
     });
   }
 
+  // Busca este método y reemplázalo:
   cargarCategorias(): void {
     this.isLoading = true
     const seccionId = this.seccionFilterService.getSeccionSeleccionada();
+    
+    // ← MODIFICAR ESTA LÍNEA
+    console.log('Cargando categorías con sección:', seccionId);
     
     this.almacenService.obtenerCategorias(seccionId || undefined).subscribe({
       next: (categorias) => {
         this.categorias = categorias
         this.isLoading = false
+        // ← AGREGAR ESTA LÍNEA
+        console.log('Categorías cargadas:', categorias.length);
       },
       error: (error) => {
         console.error("Error al cargar categorías:", error)
@@ -286,6 +300,13 @@ export class CategoriasListComponent implements OnInit {
   onCategoriaGuardada(): void {
     this.cargarCategorias()
     this.categoriaSeleccionada = null
+
+    // ← AGREGAR ESTAS LÍNEAS
+    // Actualizar totales en el componente padre
+    const almacenComponent = document.querySelector('app-almacen') as any
+    if (almacenComponent && almacenComponent.onDatosActualizados) {
+      almacenComponent.onDatosActualizados()
+    }
   }
 
   onModalCerrado(): void {

@@ -5,6 +5,7 @@ import { RouterModule } from "@angular/router"
 import { AlmacenService, Producto } from "../../../../services/almacen.service"
 import { ProductoModalComponent } from "./producto-modal.component"
 import { SeccionFilterService } from '../../../../services/seccion-filter.service';
+import { PermissionsService } from '../../../../services/permissions.service';
 import Swal from "sweetalert2"
 
 
@@ -18,7 +19,9 @@ import Swal from "sweetalert2"
         <h5 class="text-heading fw-semibold mb-8">Listado de Productos</h5>
         <p class="text-gray-500 mb-0">Administra el inventario de productos</p>
       </div>
+      <!-- Reemplázala por: -->
       <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
+              *ngIf="permissionsService.canCreateProductos()"
               data-bs-toggle="modal" 
               data-bs-target="#modalCrearProducto">
         <i class="ph ph-plus me-8"></i>
@@ -121,6 +124,7 @@ import Swal from "sweetalert2"
                   <div class="d-flex justify-content-center gap-8">
                     <!-- Toggle Estado -->
                     <button class="btn w-32 h-32 rounded-6 flex-center transition-2"
+                            *ngIf="permissionsService.canEditProductos()"
                             [class]="producto.activo ? 'bg-warning-50 hover-bg-warning-100 text-warning-600' : 'bg-success-50 hover-bg-success-100 text-success-600'"
                             [title]="producto.activo ? 'Desactivar' : 'Activar'"
                             (click)="toggleEstado(producto)">
@@ -128,15 +132,17 @@ import Swal from "sweetalert2"
                          [class]="producto.activo ? 'ph-eye-slash' : 'ph-eye'"></i>
                     </button>
 
-                    <!-- Editar -->
+                    <!-- Reemplázalo por: -->
                     <button class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
+                            *ngIf="permissionsService.canEditProductos()"
                             title="Editar"
                             (click)="editarProducto(producto)">
                       <i class="ph ph-pencil text-sm"></i>
                     </button>
 
-                    <!-- Eliminar -->
+                    <!-- Reemplázalo por: -->
                     <button class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
+                            *ngIf="permissionsService.canDeleteProductos()"
                             title="Eliminar"
                             (click)="eliminarProducto(producto)">
                       <i class="ph ph-trash text-sm"></i>
@@ -153,6 +159,7 @@ import Swal from "sweetalert2"
             <h6 class="text-heading fw-semibold mb-8">No hay productos</h6>
             <p class="text-gray-500 mb-16">Aún no has agregado ningún producto</p>
             <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
+                    *ngIf="permissionsService.canCreateProductos()"
                     data-bs-toggle="modal" 
                     data-bs-target="#modalCrearProducto">
               <i class="ph ph-plus me-8"></i>
@@ -186,9 +193,11 @@ export class ProductosListComponent implements OnInit {
   isLoading = true
   productoSeleccionado: Producto | null = null
 
+  // Reemplázalo por:
   constructor(
     private almacenService: AlmacenService,
-    private seccionFilterService: SeccionFilterService
+    private seccionFilterService: SeccionFilterService,
+    public permissionsService: PermissionsService
   ) {}
 
   ngOnInit(): void {

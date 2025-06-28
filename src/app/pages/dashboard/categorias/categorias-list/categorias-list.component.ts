@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CategoriasService, Categoria } from '../../../../services/categorias.service';
 import { CategoriaModalComponent } from '../../../../component/categoria-modal/categoria-modal.component';
+import { PermissionsService } from '../../../../services/permissions.service';
 import Swal from 'sweetalert2';
 @Component({
   selector: 'app-categorias-list',
@@ -162,7 +163,7 @@ export class CategoriasListComponent implements OnInit {
   categoriaSeleccionada: Categoria | null = null;
 
 
-  constructor(private categoriasService: CategoriasService) {}
+  constructor(private categoriasService: CategoriasService, public permissionsService: PermissionsService) {}
 
   ngOnInit(): void {
     this.cargarCategorias();

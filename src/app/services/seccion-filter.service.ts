@@ -16,4 +16,9 @@ private seccionSeleccionadaSubject = new BehaviorSubject<number | null>(null);
   getSeccionSeleccionada(): number | null {
     return this.seccionSeleccionadaSubject.value;
   }
+
+  // Agregar este método después de getSeccionSeleccionada():
+  clearSeccionSeleccionada(): void {
+    this.seccionSeleccionadaSubject.next(null);
+  }
 }

@@ -2,7 +2,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from "@angular/forms"
-import { AlmacenService, Categoria, CategoriaCreate } from "../../../../services/almacen.service"
+import { AlmacenService, Categoria, CategoriaCreate, Seccion } from "../../../../services/almacen.service"
 
 @Component({
   selector: "app-categoria-modal",
@@ -35,6 +35,23 @@ import { AlmacenService, Categoria, CategoriaCreate } from "../../../../services
                     <div class="invalid-feedback" 
                          *ngIf="categoriaForm.get('nombre')?.invalid && categoriaForm.get('nombre')?.touched">
                       El nombre es requerido (mínimo 3 caracteres)
+                    </div>
+                  </div>
+
+                  <!-- Agregar este bloque después del div del campo "nombre" y antes del campo "descripcion" -->
+                  <div class="mb-16">
+                    <label class="form-label text-heading fw-medium mb-8">Sección *</label>
+                    <select class="form-select px-16 py-12 border rounded-8"
+                            [class.is-invalid]="categoriaForm.get('id_seccion')?.invalid && categoriaForm.get('id_seccion')?.touched"
+                            formControlName="id_seccion">
+                      <option value="">Seleccionar sección</option>
+                      <option *ngFor="let seccion of secciones" [value]="seccion.id">
+                        {{ seccion.nombre }}
+                      </option>
+                    </select>
+                    <div class="invalid-feedback" 
+                        *ngIf="categoriaForm.get('id_seccion')?.invalid && categoriaForm.get('id_seccion')?.touched">
+                      Selecciona una sección
                     </div>
                   </div>
 
@@ -137,6 +154,7 @@ export class CategoriaModalComponent implements OnInit, OnChanges {
   selectedImage: File | null = null
   imagePreview: string | null = null
   isLoading = false
+  secciones: Seccion[] = []
 
   constructor(
     private fb: FormBuilder,
@@ -144,17 +162,33 @@ export class CategoriaModalComponent implements OnInit, OnChanges {
   ) {
     this.categoriaForm = this.fb.group({
       nombre: ["", [Validators.required, Validators.minLength(3)]],
+      id_seccion: ["", [Validators.required]],
       descripcion: [""],
       activo: [true],
     })
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.cargarSecciones()
+  }
+
+  // ← NUEVO MÉTODO
+  cargarSecciones(): void {
+    this.almacenService.obtenerSecciones().subscribe({
+      next: (secciones) => {
+        this.secciones = secciones
+      },
+      error: (error) => {
+        console.error("Error al cargar secciones:", error)
+      },
+    })
+  }
 
   ngOnChanges(): void {
     if (this.categoria) {
       this.categoriaForm.patchValue({
         nombre: this.categoria.nombre,
+        id_seccion: this.categoria.id_seccion,
         descripcion: this.categoria.descripcion,
         activo: this.categoria.activo,
       })
@@ -162,6 +196,7 @@ export class CategoriaModalComponent implements OnInit, OnChanges {
     } else {
       this.categoriaForm.reset({
         nombre: "",
+        id_seccion: "",
         descripcion: "",
         activo: true,
       })

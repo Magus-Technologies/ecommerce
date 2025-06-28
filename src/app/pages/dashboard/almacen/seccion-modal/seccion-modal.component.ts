@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common"
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from "@angular/forms"
 import { AlmacenService, Seccion, SeccionCreate } from "../../../../services/almacen.service"
 
+
 @Component({
   selector: 'app-seccion-modal',
   imports: [CommonModule, ReactiveFormsModule],

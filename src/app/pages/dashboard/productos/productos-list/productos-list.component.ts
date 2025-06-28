@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ProductosService, Producto } from '../../../../services/productos.service';
 import { ProductoModalComponent } from '../../../../component/producto-modal/producto-modal.component';
+import { SeccionFilterService } from '../../../../services/seccion-filter.service';
+import { AlmacenService } from '../../../../services/almacen.service';
 
 @Component({
   selector: 'app-productos-list',
@@ -179,24 +181,41 @@ export class ProductosListComponent implements OnInit {
   isLoading = true;
   productoSeleccionado: Producto | null = null;
 
-  constructor(private productosService: ProductosService) {}
+  constructor(
+    private productosService: ProductosService,
+    private seccionFilterService: SeccionFilterService,
+    private almacenService: AlmacenService // 👈 AGREGA ESTO
+  ) {}
 
   ngOnInit(): void {
     this.cargarProductos();
+    this.seccionFilterService.seccionSeleccionada$.subscribe(seccionId => {
+    // ← AGREGAR ESTA LÍNEA
+    console.log('Cambio de sección en productos:', seccionId);
+    this.cargarProductos();
+});
   }
 
+  // Busca este método y reemplázalo:
   cargarProductos(): void {
-    this.isLoading = true;
-    this.productosService.obtenerProductos().subscribe({
+    this.isLoading = true
+    const seccionId = this.seccionFilterService.getSeccionSeleccionada();
+    
+    // ← MODIFICAR ESTA LÍNEA
+    console.log('Cargando productos con sección:', seccionId);
+    
+    this.almacenService.obtenerProductos(seccionId || undefined).subscribe({
       next: (productos) => {
-        this.productos = productos;
-        this.isLoading = false;
+        this.productos = productos
+        this.isLoading = false
+        // ← AGREGAR ESTA LÍNEA
+        console.log('Productos cargados:', productos.length);
       },
       error: (error) => {
-        console.error('Error al cargar productos:', error);
-        this.isLoading = false;
-      }
-    });
+        console.error("Error al cargar productos:", error)
+        this.isLoading = false
+      },
+    })
   }
 
   editarProducto(producto: Producto): void {
@@ -234,9 +253,17 @@ export class ProductosListComponent implements OnInit {
     });
   }
 
+  // Busca este método y reemplázalo:
   onProductoGuardado(): void {
-    this.cargarProductos();
-    this.productoSeleccionado = null;
+    this.cargarProductos()
+    this.productoSeleccionado = null
+    
+    // ← AGREGAR ESTAS LÍNEAS
+    // Actualizar totales en el componente padre
+    const almacenComponent = document.querySelector('app-almacen') as any
+    if (almacenComponent && almacenComponent.onDatosActualizados) {
+      almacenComponent.onDatosActualizados()
+    }
   }
 
   onModalCerrado(): void {
