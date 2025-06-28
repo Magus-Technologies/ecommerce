@@ -277,6 +277,12 @@ export const routes: Routes = [
         canActivate: [authGuard, permissionGuard],
         data: { permission: 'clientes.show' }
       },
+      {
+        path: 'pedidos', // ✅ CORRECTO
+        loadComponent: () => import('./component/pedidos/pedidos-list/pedidos-list.component').then(m => m.PedidosListComponent),
+        canActivate: [authGuard, permissionGuard],
+        data: { permission: 'pedidos.ver' }
+      }
     ],
   },
   {

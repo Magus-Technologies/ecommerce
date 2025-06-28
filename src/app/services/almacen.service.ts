@@ -20,6 +20,7 @@ export interface Categoria {
 
 export interface CategoriaCreate {
   nombre: string
+  id_seccion: number // ← AGREGAR ESTA LÍNE
   descripcion?: string
   imagen?: File
   activo: boolean
@@ -142,12 +143,13 @@ export class AlmacenService {
   constructor(private http: HttpClient) {}
 
   // ==================== MÉTODOS PARA CATEGORÍAS ====================
-
- obtenerCategorias(seccionId?: number): Observable<Categoria[]> {
+  // Busca el método obtenerCategorias y reemplázalo:
+  obtenerCategorias(seccionId?: number | null): Observable<Categoria[]> {
     let params = new HttpParams();
-    if (seccionId) {
+    if (seccionId !== null && seccionId !== undefined && seccionId !== 0) {
       params = params.set('seccion', seccionId.toString());
     }
+    console.log('Llamando API categorías con params:', params.toString());
     return this.http.get<Categoria[]>(`${this.apiUrl}/categorias`, { params });
   }
 
@@ -164,6 +166,7 @@ export class AlmacenService {
     const formData = new FormData()
 
     formData.append("nombre", categoria.nombre)
+    formData.append("id_seccion", categoria.id_seccion.toString()) // ← AGREGAR ESTA LÍNEA
     formData.append("activo", categoria.activo ? "1" : "0")
 
     if (categoria.descripcion) {
@@ -180,6 +183,7 @@ export class AlmacenService {
   actualizarCategoria(id: number, categoria: Partial<CategoriaCreate>): Observable<any> {
     const formData = new FormData()
 
+    // En el método actualizarCategoria(), busca donde se procesan las claves y asegúrate de que id_seccion se maneje correctamente:
     Object.keys(categoria).forEach((key) => {
       const value = (categoria as any)[key]
       if (value !== null && value !== undefined) {
@@ -211,11 +215,13 @@ export class AlmacenService {
 
   // ==================== MÉTODOS PARA MARCAS ====================
 
-  obtenerMarcas(seccionId?: number): Observable<MarcaProducto[]> {
+  // Busca el método obtenerMarcas y reemplázalo:
+  obtenerMarcas(seccionId?: number | null): Observable<MarcaProducto[]> {
     let params = new HttpParams();
-    if (seccionId) {
+    if (seccionId !== null && seccionId !== undefined && seccionId !== 0) {
       params = params.set('seccion', seccionId.toString());
     }
+    console.log('Llamando API marcas con params:', params.toString());
     return this.http.get<MarcaProducto[]>(`${this.apiUrl}/marcas`, { params });
   }
 
@@ -286,11 +292,13 @@ export class AlmacenService {
 
   // ==================== MÉTODOS PARA PRODUCTOS ====================
 
-  obtenerProductos(seccionId?: number): Observable<Producto[]> {
+ // Busca el método obtenerProductos y reemplázalo:
+  obtenerProductos(seccionId?: number | null): Observable<Producto[]> {
     let params = new HttpParams();
-    if (seccionId) {
+    if (seccionId !== null && seccionId !== undefined && seccionId !== 0) {
       params = params.set('seccion', seccionId.toString());
     }
+    console.log('Llamando API productos con params:', params.toString());
     return this.http.get<Producto[]>(`${this.apiUrl}/productos`, { params }).pipe(
       map(productos => productos.map(producto => ({
         ...producto,

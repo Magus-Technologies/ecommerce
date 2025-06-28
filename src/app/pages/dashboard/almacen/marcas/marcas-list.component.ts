@@ -4,6 +4,7 @@ import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
 import { AlmacenService, MarcaProducto } from "../../../../services/almacen.service"
 import { SeccionFilterService } from '../../../../services/seccion-filter.service';
+import { PermissionsService } from '../../../../services/permissions.service';
 import { MarcaModalComponent } from "./marca-modal.component"
 import Swal from "sweetalert2"
 
@@ -18,6 +19,7 @@ import Swal from "sweetalert2"
         <p class="text-gray-500 mb-0">Administra las marcas de productos</p>
       </div>
       <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
+              *ngIf="permissionsService.canCreateMarcas()"
               data-bs-toggle="modal" 
               data-bs-target="#modalCrearMarca">
         <i class="ph ph-plus me-8"></i>
@@ -99,6 +101,7 @@ import Swal from "sweetalert2"
                     <!-- Toggle Estado -->
                     <button class="btn w-32 h-32 rounded-6 flex-center transition-2"
                             [class]="marca.activo ? 'bg-warning-50 hover-bg-warning-100 text-warning-600' : 'bg-success-50 hover-bg-success-100 text-success-600'"
+                            *ngIf="permissionsService.canEditMarcas()"
                             [title]="marca.activo ? 'Desactivar' : 'Activar'"
                             (click)="toggleEstado(marca)">
                       <i class="ph text-sm" 
@@ -107,6 +110,7 @@ import Swal from "sweetalert2"
 
                     <!-- Editar -->
                     <button class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
+                            *ngIf="permissionsService.canEditMarcas()"
                             title="Editar"
                             (click)="editarMarca(marca)">
                       <i class="ph ph-pencil text-sm"></i>
@@ -114,6 +118,7 @@ import Swal from "sweetalert2"
 
                     <!-- Eliminar -->
                     <button class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
+                            *ngIf="permissionsService.canDeleteMarcas()"
                             title="Eliminar"
                             (click)="eliminarMarca(marca)">
                       <i class="ph ph-trash text-sm"></i>
@@ -130,6 +135,7 @@ import Swal from "sweetalert2"
             <h6 class="text-heading fw-semibold mb-8">No hay marcas</h6>
             <p class="text-gray-500 mb-16">Aún no has creado ninguna marca</p>
             <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
+                    *ngIf="permissionsService.canCreateMarcas()"
                     data-bs-toggle="modal" 
                     data-bs-target="#modalCrearMarca">
               <i class="ph ph-plus me-8"></i>
@@ -168,7 +174,8 @@ export class MarcasListComponent implements OnInit {
 
   constructor(
     private almacenService: AlmacenService,
-    private seccionFilterService: SeccionFilterService
+    private seccionFilterService: SeccionFilterService,
+    public permissionsService: PermissionsService
   ) {}
 
   ngOnInit(): void {
@@ -180,14 +187,20 @@ export class MarcasListComponent implements OnInit {
     });
   }
 
+  // Busca este método y reemplázalo:
   cargarMarcas(): void {
     this.isLoading = true
     const seccionId = this.seccionFilterService.getSeccionSeleccionada();
+    
+    // ← MODIFICAR ESTA LÍNEA
+    console.log('Cargando marcas con sección:', seccionId);
     
     this.almacenService.obtenerMarcas(seccionId || undefined).subscribe({
       next: (marcas) => {
         this.marcas = marcas
         this.isLoading = false
+        // ← AGREGAR ESTA LÍNEA
+        console.log('Marcas cargadas:', marcas.length);
       },
       error: (error) => {
         console.error("Error al cargar marcas:", error)
@@ -267,9 +280,17 @@ export class MarcasListComponent implements OnInit {
       })
   }
 
+  // Busca este método y reemplázalo:
   onMarcaGuardada(): void {
     this.cargarMarcas()
     this.marcaSeleccionada = null
+    
+    // ← AGREGAR ESTAS LÍNEAS
+    // Actualizar totales en el componente padre
+    const almacenComponent = document.querySelector('app-almacen') as any
+    if (almacenComponent && almacenComponent.onDatosActualizados) {
+      almacenComponent.onDatosActualizados()
+    }
   }
 
   onModalCerrado(): void {

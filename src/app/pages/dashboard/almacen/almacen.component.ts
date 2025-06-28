@@ -5,6 +5,7 @@ import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { AlmacenService, Seccion } from '../../../services/almacen.service';
 import { SeccionesGestionModalComponent } from ".//secciones-gestion-modal/secciones-gestion-modal.component"
 import { SeccionFilterService } from '../../../services/seccion-filter.service';
+import { PermissionsService } from '../../../services/permissions.service';
 import { FormsModule } from '@angular/forms'
 import { filter } from 'rxjs/operators';
 
@@ -32,20 +33,22 @@ import { filter } from 'rxjs/operators';
           <div class="row align-items-center">
             <div class="col-md-6">
               <label class="form-label text-heading fw-medium mb-8">Filtrar por Sección</label>
-              <select class="form-select" [(ngModel)]="seccionSeleccionada" (change)="onSeccionChange(seccionSeleccionada)">
-                <option [value]="null">Todas las secciones</option>
+              <!-- Reemplázalo por: -->
+              <select class="form-select" [(ngModel)]="seccionSeleccionada" (change)="onSeccionChange($event)">
+                <option value="">Todas las secciones</option>
                 <option *ngFor="let seccion of secciones" [value]="seccion.id">
                   {{ seccion.nombre }} ({{ seccion.categorias_count || 0 }} categorías)
                 </option>
               </select>
             </div>
             <div class="col-md-6 text-end">
-              <button class="btn bg-success-600 hover-bg-success-700 text-white px-16 py-8 rounded-8"
-                      (click)="abrirModalSeccion()"
-                      [disabled]="secciones.length >= 3">
-                <i class="ph ph-plus me-8"></i>
-                Agregar Sección
-                <span *ngIf="secciones.length >= 3" class="text-xs d-block">(Máximo 3 secciones)</span>
+              <!-- Reemplázalo por: -->
+              <button class="btn px-16 py-8 rounded-8"
+                      [class]="secciones.length >= 3 ? 'bg-gray-400 text-white' : 'bg-success-600 hover-bg-success-700 text-white'"
+                      *ngIf="permissionsService.canViewSecciones()"
+                      (click)="abrirModalSeccion()">
+                <i class="ph me-8" [class]="secciones.length >= 3 ? 'ph-gear' : 'ph-plus'"></i>
+                {{ secciones.length >= 3 ? 'Gestionar Secciones' : 'Agregar Sección' }}
               </button>
             </div>
           </div>
@@ -136,7 +139,8 @@ export class AlmacenComponent implements OnInit {
   constructor(
     private almacenService: AlmacenService, 
     private router: Router,
-    private seccionFilterService: SeccionFilterService
+    private seccionFilterService: SeccionFilterService,
+    public permissionsService: PermissionsService
   ) {}
 
   ngOnInit(): void {
@@ -144,6 +148,11 @@ export class AlmacenComponent implements OnInit {
     this.cargarSecciones();
     this.detectActiveTab();
 
+    // ← AGREGAR ESTAS LÍNEAS
+    // Inicializar con "Todas las secciones"
+    this.seccionSeleccionada = null;
+    this.seccionFilterService.setSeccionSeleccionada(null);
+    
     // Escuchar cambios de ruta para actualizar la pestaña activa
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
@@ -152,9 +161,9 @@ export class AlmacenComponent implements OnInit {
       });
   }
 
-  private cargarTotales(): void {
+  public cargarTotales(): void {
     const seccionId = this.seccionFilterService.getSeccionSeleccionada();
-    
+      
     // Cargar total de productos
     this.almacenService.obtenerProductos(seccionId || undefined).subscribe({
       next: (productos) => {
@@ -216,9 +225,15 @@ export class AlmacenComponent implements OnInit {
     });
   }
 
- onSeccionChange(seccionId: number | null): void {
-    this.seccionSeleccionada = seccionId;
-    this.seccionFilterService.setSeccionSeleccionada(seccionId);
+ // Busca este método y reemplázalo:
+  onSeccionChange(event: any): void {
+    const value = event.target ? event.target.value : event;
+    this.seccionSeleccionada = value === '' || value === 'null' ? null : Number(value);
+    
+    console.log('Sección seleccionada:', this.seccionSeleccionada);
+    
+    this.seccionFilterService.setSeccionSeleccionada(this.seccionSeleccionada);
+    this.cargarTotales();
   }
 
   abrirModalSeccion(): void {
@@ -231,5 +246,9 @@ export class AlmacenComponent implements OnInit {
 
   onSeccionesActualizadas(): void {
     this.cargarSecciones()
+  }
+
+  onDatosActualizados(): void {
+    this.cargarTotales()
   }
 }

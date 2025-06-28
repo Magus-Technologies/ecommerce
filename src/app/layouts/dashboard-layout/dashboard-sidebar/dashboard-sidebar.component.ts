@@ -33,6 +33,8 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit {
   puedeVerClientes = false;
   puedeVerOfertas = false; // ✅ NUEVO
   puedeVerCupones = false; // ✅ NUEVO
+  // Agrega esta línea después de puedeVerClientes = false;
+  puedeVerPedidos = false;
 
   isDesktop = false;
   private permisosSub: any;
@@ -54,6 +56,22 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit {
         this.checkPermissions();
       }
     );
+    this.puedeVerUsuarios = this.permissionsService.hasPermission('usuarios.ver');
+    this.puedeVerBanners = this.permissionsService.hasPermission('banners.ver');
+    this.puedeVerBanners_promocionales = this.permissionsService.hasPermission('banners_promocionales.ver');
+    this.puedeVerClientes = this.permissionsService.hasPermission('clientes.ver');
+    this.puedeVerPedidos = this.permissionsService.hasPermission('pedidos.ver');
+    
+    this.checkScreenSize();
+
+    // 🔁 Suscribirse a los cambios de permisos en tiempo real
+    this.permisosSub = this.permissionsService.permissions$.subscribe(perms => {
+      this.puedeVerUsuarios = perms.includes('usuarios.ver');
+      this.puedeVerBanners = perms.includes('banners.ver');
+      this.puedeVerBanners_promocionales = perms.includes('banners_promocionales.ver');
+      this.puedeVerClientes = perms.includes('clientes.ver');
+      this.puedeVerPedidos = perms.includes('pedidos.ver');
+    });
   }
 
   ngOnDestroy(): void {
@@ -71,6 +89,9 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit {
       this.permissionsService.hasPermission('clientes.ver');
     this.puedeVerOfertas = this.permissionsService.hasPermission('ofertas.ver'); // ✅ NUEVO
     this.puedeVerCupones = this.permissionsService.hasPermission('cupones.ver'); // ✅ NUEVO
+    this.puedeVerBanners_promocionales = this.permissionsService.hasPermission('banners_promocionales.ver');
+    this.puedeVerClientes = this.permissionsService.hasPermission('clientes.ver');
+    this.puedeVerPedidos = this.permissionsService.hasPermission('pedidos.ver');
   }
 
   ngAfterViewInit(): void {

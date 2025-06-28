@@ -2,6 +2,7 @@ import { Component, OnInit, Output, EventEmitter } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { AlmacenService, Seccion } from "../../../../services/almacen.service"
 import { SeccionModalComponent } from "../seccion-modal/seccion-modal.component"
+import { PermissionsService } from '../../../../services/permissions.service';
 import Swal from "sweetalert2"
 
 @Component({
@@ -78,6 +79,7 @@ import Swal from "sweetalert2"
                       <div class="d-flex justify-content-center gap-6">
                         <!-- Editar -->
                         <button class="btn bg-main-50 hover-bg-main-100 text-main-600 w-28 h-28 rounded-6 flex-center transition-2"
+                                *ngIf="seccion && canEdit"
                                 title="Editar"
                                 (click)="editarSeccion(seccion)">
                           <i class="ph ph-pencil text-xs"></i>
@@ -85,6 +87,7 @@ import Swal from "sweetalert2"
 
                         <!-- Eliminar -->
                         <button class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-28 h-28 rounded-6 flex-center transition-2"
+                                *ngIf="seccion && canDelete"       
                                 title="Eliminar"
                                 [disabled]="(seccion.categorias_count || 0) > 0"
                                 (click)="eliminarSeccion(seccion)">
@@ -128,11 +131,21 @@ export class SeccionesGestionModalComponent implements OnInit {
   secciones: Seccion[] = []
   isLoading = true
   seccionSeleccionada: Seccion | null = null
+  // Nuevas propiedades para permisos
+  canEdit = false
+  canDelete = false
 
-  constructor(private almacenService: AlmacenService) {}
+
+  constructor(
+    private almacenService: AlmacenService,
+    public permissionsService: PermissionsService
+  ) {}
 
   ngOnInit(): void {
     this.cargarSecciones()
+    // Verificar permisos
+    this.canEdit = this.permissionsService.canEditSecciones()
+    this.canDelete = this.permissionsService.canDeleteSecciones()
   }
 
   cargarSecciones(): void {
