@@ -25,14 +25,16 @@ export interface Oferta {
 export interface ProductoOferta {
   id: number;
   nombre: string;
-  precio_original: number;
-  precio_oferta: number;
+  precio_original: number | string;
+  precio_oferta: number | string;
   descuento_porcentaje: number;
   stock_oferta?: number;
   vendidos_oferta: number;
   imagen_url?: string;
   fecha_fin_oferta: string;
   es_flash_sale: boolean;
+  categoria?: string; // ✅ Agregada esta propiedad opcional
+  marca?: string; // ✅ Agregada esta propiedad opcional
 }
 
 export interface Cupon {
