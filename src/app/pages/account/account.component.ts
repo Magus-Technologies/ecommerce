@@ -130,7 +130,7 @@ export class AccountComponent implements OnInit {
   }
 
   loginWithGoogle(): void {
-    window.location.href = `${environment.apiUrl}/auth/google`;
+    window.location.href = `${environment.baseUrl}/auth/google`;
   }
 
   // Getters para facilitar el acceso a los campos del formulario en el template

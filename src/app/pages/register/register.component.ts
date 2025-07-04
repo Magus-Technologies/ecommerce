@@ -411,7 +411,7 @@ export class RegisterComponent implements OnInit {
 
  
   loginWithGoogle(): void {
-    window.location.href = `${environment.apiUrl}/auth/google`;
+    window.location.href = `${environment.baseUrl}/auth/google`;
 
   }
 
