@@ -188,13 +188,21 @@ import Swal from 'sweetalert2';
                         </div>
 
                         <div class="col-md-4 mb-16">
-                          <label class="form-label text-heading fw-medium mb-8">Prioridad</label>
+                          <label class="form-label text-heading fw-medium mb-8">
+                            Prioridad
+                            <i class="ph ph-info-circle text-info-600 ms-2" 
+                               title="La prioridad determina el orden de aparición. Mayor número = mayor prioridad. Ej: Prioridad 5 aparece antes que prioridad 1"></i>
+                          </label>
                           <input type="number" 
                                  class="form-control px-16 py-12 border rounded-8"
                                  [(ngModel)]="formData.prioridad"
                                  name="prioridad"
                                  min="0"
                                  placeholder="0">
+                          <small class="text-muted">
+                            <strong>Orden de visualización:</strong> Mayor número = mayor prioridad. 
+                            Ej: Prioridad 5 se muestra antes que prioridad 1.
+                          </small>
                         </div>
 
                         <div class="col-12 mb-16">
@@ -223,7 +231,10 @@ import Swal from 'sweetalert2';
                       
                       <!-- Imagen principal -->
                       <div class="mb-20">
-                        <label class="form-label text-heading fw-medium mb-8">Imagen principal</label>
+                        <label class="form-label text-heading fw-medium mb-8">
+                          Imagen principal
+                          <small class="text-muted d-block">Dimensiones recomendadas: 400x300px</small>
+                        </label>
                         <div class="upload-area border-2 border-dashed border-gray-200 rounded-8 p-16 text-center"
                              [class.border-main-600]="imagenPreview">
                           
@@ -261,7 +272,10 @@ import Swal from 'sweetalert2';
 
                       <!-- Banner -->
                       <div>
-                        <label class="form-label text-heading fw-medium mb-8">Banner</label>
+                        <label class="form-label text-heading fw-medium mb-8">
+                          Banner (Flash Sales)
+                          <small class="text-muted d-block">Dimensiones recomendadas: 828x268px</small>
+                        </label>
                         <div class="upload-area border-2 border-dashed border-gray-200 rounded-8 p-16 text-center"
                              [class.border-main-600]="bannerPreview">
                           
@@ -317,7 +331,7 @@ import Swal from 'sweetalert2';
                           <label class="form-check-label text-heading fw-medium" for="mostrar_countdown">
                             Mostrar countdown
                           </label>
-                          <small class="text-gray-500 d-block">Muestra temporizador de cuenta regresiva</small>
+                          <small class="text-gray-500 d-block">Muestra temporizador de cuenta regresiva en Flash Sales</small>
                         </div>
 
                         <div class="form-check">
@@ -329,7 +343,7 @@ import Swal from 'sweetalert2';
                           <label class="form-check-label text-heading fw-medium" for="mostrar_en_slider">
                             Mostrar en slider
                           </label>
-                          <small class="text-gray-500 d-block">Aparece en el slider principal</small>
+                          <small class="text-gray-500 d-block">Aparece en el slider principal del home</small>
                         </div>
 
                         <div class="form-check">
@@ -341,7 +355,7 @@ import Swal from 'sweetalert2';
                           <label class="form-check-label text-heading fw-medium" for="mostrar_en_banner">
                             Mostrar en banner
                           </label>
-                          <small class="text-gray-500 d-block">Aparece en sección de banners</small>
+                          <small class="text-gray-500 d-block">Aparece en sección de banners promocionales</small>
                         </div>
 
                         <div class="form-check">
@@ -353,7 +367,7 @@ import Swal from 'sweetalert2';
                           <label class="form-check-label text-heading fw-medium" for="activo">
                             Oferta activa
                           </label>
-                          <small class="text-gray-500 d-block">Solo las ofertas activas se muestran</small>
+                          <small class="text-gray-500 d-block">Solo las ofertas activas se muestran públicamente</small>
                         </div>
                       </div>
                     </div>

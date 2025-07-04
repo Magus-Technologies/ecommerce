@@ -249,14 +249,17 @@ export class ChatbotComponent implements OnInit, OnDestroy {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
-   scrollToBottom() {
-    setTimeout(() => {
+    scrollToBottom() {
+  setTimeout(() => {
+    // Verificar si estamos en el browser antes de acceder al DOM
+    if (typeof document !== 'undefined') {
       const chatMessages = document.querySelector('.chat-messages');
       if (chatMessages) {
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
-    }, 100);
-  }
+    }
+  }, 100);
+}
 
   onKeyPress(event: KeyboardEvent) {
     if (event.key === 'Enter' && !event.shiftKey) {

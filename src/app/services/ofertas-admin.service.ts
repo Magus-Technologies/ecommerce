@@ -1,6 +1,6 @@
 // src/app/services/ofertas-admin.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -58,6 +58,32 @@ export interface TipoOferta {
   descripcion?: string;
   icono?: string;
   activo: boolean;
+}
+
+export interface ProductoDisponible {
+  id: number;
+  nombre: string;
+  codigo: string;
+  precio_venta: number;
+  stock: number;
+  imagen_url?: string;
+  categoria?: { nombre: string };
+  marca?: { nombre: string };
+}
+
+export interface ProductoEnOferta {
+  id: number;
+  producto_id: number;
+  nombre: string;
+  codigo: string;
+  precio_original: number;
+  precio_oferta: number;
+  stock_original: number;
+  stock_oferta: number;
+  vendidos_oferta: number;
+  imagen_url?: string;
+  categoria?: string;
+  marca?: string;
 }
 
 @Injectable({
@@ -134,6 +160,54 @@ export class OfertasAdminService {
 
   eliminarOferta(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/ofertas/${id}`);
+  }
+
+  // ==================== GESTIÓN DE PRODUCTOS EN OFERTAS ====================
+
+  /**
+   * Obtener productos disponibles para agregar a ofertas
+   */
+  obtenerProductosDisponibles(search?: string, categoriaId?: number): Observable<any> {
+    let params = new HttpParams();
+    if (search) params = params.set('search', search);
+    if (categoriaId) params = params.set('categoria_id', categoriaId.toString());
+
+    return this.http.get<any>(`${this.apiUrl}/productos-disponibles`, { params });
+  }
+
+  /**
+   * Obtener productos de una oferta específica
+   */
+  obtenerProductosOferta(ofertaId: number): Observable<ProductoEnOferta[]> {
+    return this.http.get<ProductoEnOferta[]>(`${this.apiUrl}/ofertas/${ofertaId}/productos`);
+  }
+
+  /**
+   * Agregar producto a una oferta
+   */
+  agregarProductoOferta(ofertaId: number, productoId: number, datos: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/ofertas/${ofertaId}/productos`, {
+      producto_id: productoId,
+      precio_oferta: datos.precio_oferta,
+      stock_oferta: datos.stock_oferta
+    });
+  }
+
+  /**
+   * Actualizar producto en oferta
+   */
+  actualizarProductoOferta(ofertaId: number, productoOfertaId: number, datos: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/ofertas/${ofertaId}/productos/${productoOfertaId}`, {
+      precio_oferta: datos.precio_oferta,
+      stock_oferta: datos.stock_oferta
+    });
+  }
+
+  /**
+   * Eliminar producto de oferta
+   */
+  eliminarProductoOferta(ofertaId: number, productoOfertaId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/ofertas/${ofertaId}/productos/${productoOfertaId}`);
   }
 
   // ==================== CUPONES ====================

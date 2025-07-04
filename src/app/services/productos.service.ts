@@ -62,6 +62,19 @@ export interface ProductoPublico {
   is_on_sale: boolean;
   discount_percentage: number;
 }
+
+// ✅ NUEVA INTERFAZ PARA AUTOCOMPLETADO
+export interface ProductoSugerencia {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  categoria: string;
+  categoria_id: number;
+  imagen_url?: string;
+  url: string;
+}
+
 export interface ProductosPublicosResponse {
   productos: ProductoPublico[];
   pagination: {
@@ -99,6 +112,12 @@ export class ProductosService {
   private baseUrl = environment.apiUrl.replace('/api', ''); // http://localhost:8000 en environment 
 
   constructor(private http: HttpClient) {}
+
+  // ✅ NUEVO MÉTODO PARA BUSCAR PRODUCTOS (AUTOCOMPLETADO)
+  buscarProductos(termino: string): Observable<ProductoSugerencia[]> {
+    const params = new HttpParams().set('q', termino);
+    return this.http.get<ProductoSugerencia[]>(`${this.apiUrl}/productos/buscar`, { params });
+  }
 
   // Productos
   obtenerProductos(): Observable<Producto[]> {
