@@ -7,6 +7,8 @@ import { BreadcrumbComponent } from '../../component/breadcrumb/breadcrumb.compo
 import { ShippingComponent } from '../../component/shipping/shipping.component';
 import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute } from '@angular/router';
+  import { environment } from '../../../environments/environment';
+
 
 @Component({
   selector: 'app-account',
@@ -128,7 +130,7 @@ export class AccountComponent implements OnInit {
   }
 
   loginWithGoogle(): void {
-    window.location.href = 'http://localhost:8000/auth/google';
+    window.location.href = `${environment.apiUrl}/auth/google`;
   }
 
   // Getters para facilitar el acceso a los campos del formulario en el template

@@ -19,7 +19,7 @@ import {
   Provincia,
   Distrito,
 } from '../../services/ubigeo.service';
-
+import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-register',
   standalone: true,
@@ -411,7 +411,8 @@ export class RegisterComponent implements OnInit {
 
  
   loginWithGoogle(): void {
-    window.location.href = 'http://localhost:8000/auth/google';
+    window.location.href = `${environment.apiUrl}/auth/google`;
+
   }
 
   // Getters para facilitar el acceso a los campos del formulario
