@@ -197,4 +197,43 @@ checkDocumento(numeroDocumento: string): Observable<{exists: boolean, message: s
     numero_documento: numeroDocumento
   });
 }
+
+/**
+ * Procesar login con Google
+ */
+processGoogleAuth(token: string, userData: string): void {
+  if (!this.isBrowser) return;
+  
+  try {
+    // Guardar token
+    localStorage.setItem(this.tokenKey, token);
+    
+    // Parsear datos de usuario
+    const googleUserData = JSON.parse(decodeURIComponent(userData));
+    
+    // Crear objeto de usuario compatible con el sistema existente
+    const user: User = {
+      id: googleUserData.id,
+      name: googleUserData.nombre_completo || (googleUserData.nombres + ' ' + googleUserData.apellidos),
+      email: googleUserData.email,
+      tipo_usuario: 'cliente',
+      roles: googleUserData.roles || [],
+      permissions: googleUserData.permissions || []
+    };
+    
+    // Guardar usuario
+    localStorage.setItem(this.userKey, JSON.stringify(user));
+    
+    // Actualizar estado
+    this.currentUserSubject.next(user);
+    
+    console.log('Google auth procesado exitosamente:', user);
+  } catch (error) {
+    console.error('Error procesando Google auth:', error);
+    this.clearSession();
+    throw error;
+  }
+}
+
+
 }

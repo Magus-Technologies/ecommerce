@@ -6,6 +6,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { BreadcrumbComponent } from '../../component/breadcrumb/breadcrumb.component';
 import { ShippingComponent } from '../../component/shipping/shipping.component';
 import { AuthService } from '../../services/auth.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-account',
@@ -29,7 +30,8 @@ export class AccountComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute, 
   ) {}
 
   ngOnInit(): void {
@@ -39,6 +41,15 @@ export class AccountComponent implements OnInit {
     if (this.authService.isLoggedIn()) {
       this.router.navigate(['/']);
     }
+
+    // Verificar si hay errores de Google auth
+    this.route.queryParams.subscribe((params: any) => {
+      if (params['error'] === 'auth_processing_failed') {
+        this.loginError = 'Error procesando la autenticación con Google. Inténtalo de nuevo.';
+      } else if (params['error'] === 'google_auth_failed') {
+        this.loginError = 'Error en la autenticación con Google. Inténtalo de nuevo.';
+      }
+    });
   }
 
   initForms(): void {
@@ -117,8 +128,7 @@ export class AccountComponent implements OnInit {
   }
 
   loginWithGoogle(): void {
-    console.log('Login con Google clickeado');
-    // Implementar Google Auth más adelante
+    window.location.href = 'http://localhost:8000/auth/google';
   }
 
   // Getters para facilitar el acceso a los campos del formulario en el template
