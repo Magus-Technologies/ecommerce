@@ -25,9 +25,13 @@ interface CategoriaConImagen extends CategoriaPublica {
 })
 export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
 
-  // ✅ PROPIEDADES PARA MANEJAR INTERVALOS
+  // ✅ CONFIGURACIÓN DE DEBUG - CAMBIAR A false PARA PRODUCCIÓN
+  private readonly debugMode = false; // Cambiar a true solo para debugging
+  
+  // ✅ PROPIEDADES PARA MANEJAR INTERVALOS OPTIMIZADAS
   private countdownIntervals: { [key: string]: any } = {};
   private isBrowser: boolean;
+  private lastUpdateTimes: { [key: string]: number } = {}; // Para throttling
 
   slides = [
     { img: "http://placehold.it/350x150/000000" },
@@ -60,19 +64,19 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   };
 
   breakpoint(e: any) {
-    console.log('breakpoint');
+    if (this.debugMode) console.log('breakpoint');
   }
 
   afterChange(e: any) {
-    console.log('afterChange');
+    if (this.debugMode) console.log('afterChange');
   }
 
   beforeChange(e: any) {
-    console.log('beforeChange');
+    if (this.debugMode) console.log('beforeChange');
   }
 
   slickInit(e: any) {
-    console.log('slick initialized');
+    if (this.debugMode) console.log('slick initialized');
   }
 
   bannersDinamicos: Banner[] = [];
@@ -407,14 +411,25 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // ✅ NUEVO: Limpiar intervalos al destruir el componente
+  // ✅ MEJORADO: Limpiar intervalos al destruir el componente
   ngOnDestroy(): void {
     if (this.isBrowser) {
-      Object.values(this.countdownIntervals).forEach(interval => {
-        if (interval) {
-          clearInterval(interval);
-        }
-      });
+      this.limpiarTodosLosIntervalos();
+    }
+  }
+
+  // ✅ NUEVO: Método para limpiar todos los intervalos
+  private limpiarTodosLosIntervalos(): void {
+    Object.values(this.countdownIntervals).forEach(interval => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    });
+    this.countdownIntervals = {};
+    this.lastUpdateTimes = {};
+    
+    if (this.debugMode) {
+      console.log('🧹 Todos los intervalos de countdown limpiados');
     }
   }
 
@@ -510,7 +525,9 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isLoadingOfertas = true;
     this.ofertasService.obtenerOfertasPublicas().subscribe({
       next: (ofertas) => {
-        console.log('✅ Ofertas cargadas:', ofertas);
+        if (this.debugMode) {
+          console.log('✅ Ofertas cargadas:', ofertas);
+        }
         this.ofertasActivas = ofertas;
         this.isLoadingOfertas = false;
         this.cdr.detectChanges();
@@ -530,7 +547,9 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   cargarFlashSales(): void {
     this.ofertasService.obtenerFlashSales().subscribe({
       next: (flashSales) => {
-        console.log('✅ Flash Sales cargadas:', flashSales);
+        if (this.debugMode) {
+          console.log('✅ Flash Sales cargadas:', flashSales);
+        }
         this.flashSalesActivas = flashSales;
         this.cdr.detectChanges();
         
@@ -548,7 +567,9 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   cargarProductosEnOferta(): void {
     this.ofertasService.obtenerProductosEnOferta().subscribe({
       next: (productos) => {
-        console.log('✅ Productos en oferta cargados:', productos);
+        if (this.debugMode) {
+          console.log('✅ Productos en oferta cargados:', productos);
+        }
         this.productosEnOferta = productos;
         this.cdr.detectChanges();
         
@@ -584,28 +605,31 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     ];
   }
 
-  // ✅ MEJORADA: Inicializar todos los countdowns
+  // ✅ MEJORADA: Inicializar todos los countdowns con optimizaciones
   inicializarCountdowns(): void {
     if (!this.isBrowser) {
-      console.log('🚫 No estamos en el navegador, saltando countdowns');
+      if (this.debugMode) {
+        console.log('🚫 No estamos en el navegador, saltando countdowns');
+      }
       return;
     }
 
-    console.log('🕒 Inicializando countdowns...');
-    console.log('Flash Sales:', this.flashSalesActivas);
-    console.log('Productos en oferta:', this.productosEnOferta);
+    if (this.debugMode) {
+      console.log('🕒 Inicializando countdowns...');
+      console.log('Flash Sales:', this.flashSalesActivas);
+      console.log('Productos en oferta:', this.productosEnOferta);
+    }
     
     // ✅ LIMPIAR INTERVALOS ANTERIORES
-    Object.values(this.countdownIntervals).forEach(interval => {
-      if (interval) clearInterval(interval);
-    });
-    this.countdownIntervals = {};
+    this.limpiarTodosLosIntervalos();
     
     // Countdown para Flash Sales
     this.flashSalesActivas.forEach(sale => {
       if (sale.fecha_fin) {
         const countdownId = `countdown-flash-${sale.id}`;
-        console.log(`🔄 Inicializando countdown para flash sale ${sale.id}:`, sale.fecha_fin);
+        if (this.debugMode) {
+          console.log(`🔄 Inicializando countdown para flash sale ${sale.id}:`, sale.fecha_fin);
+        }
         this.inicializarCountdown(countdownId, sale.fecha_fin);
       }
     });
@@ -614,7 +638,9 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.productosEnOferta.forEach(producto => {
       if (producto.es_flash_sale && producto.fecha_fin_oferta) {
         const countdownId = `countdown-producto-${producto.id}`;
-        console.log(`🔄 Inicializando countdown para producto ${producto.id}:`, producto.fecha_fin_oferta);
+        if (this.debugMode) {
+          console.log(`🔄 Inicializando countdown para producto ${producto.id}:`, producto.fecha_fin_oferta);
+        }
         this.inicializarCountdown(countdownId, producto.fecha_fin_oferta);
       }
     });
@@ -627,7 +653,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.inicializarCountdown('countdown26', fechaFutura.toISOString());
   }
 
-  // ✅ MEJORADA: Inicializar countdown individual
+  // ✅ MEJORADA: Inicializar countdown individual con optimizaciones
   inicializarCountdown(elementId: string, fechaFin: string): void {
     if (!this.isBrowser) {
       return;
@@ -652,11 +678,15 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
 
     waitForElement(elementId).then((element) => {
       if (!element) {
-        console.warn(`⚠️ Elemento countdown no encontrado después de esperar: ${elementId}`);
+        if (this.debugMode) {
+          console.warn(`⚠️ Elemento countdown no encontrado después de esperar: ${elementId}`);
+        }
         return;
       }
 
-      console.log(`🕒 Inicializando countdown para ${elementId} hasta ${fechaFin}`);
+      if (this.debugMode) {
+        console.log(`🕒 Inicializando countdown para ${elementId} hasta ${fechaFin}`);
+      }
 
       // Limpiar intervalo anterior si existe
       if (this.countdownIntervals[elementId]) {
@@ -676,19 +706,33 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         // ✅ VERIFICAR QUE LA FECHA SEA FUTURA
         const now = new Date().getTime();
         if (endDate <= now) {
-          console.warn(`⚠️ La fecha de fin ya pasó para ${elementId}: ${fechaFin}`);
+          if (this.debugMode) {
+            console.warn(`⚠️ La fecha de fin ya pasó para ${elementId}: ${fechaFin}`);
+          }
           // Establecer una fecha futura por defecto
           endDate = now + (24 * 60 * 60 * 1000); // 24 horas en el futuro
         }
         
       } catch (error) {
-        console.error(`❌ Error al parsear fecha para countdown ${elementId}: ${fechaFin}`, error);
+        if (this.debugMode) {
+          console.error(`❌ Error al parsear fecha para countdown ${elementId}: ${fechaFin}`, error);
+        }
         // Fecha por defecto: 24 horas en el futuro
         endDate = new Date().getTime() + (24 * 60 * 60 * 1000);
       }
 
+      // ✅ INICIALIZAR TIEMPO DE ÚLTIMA ACTUALIZACIÓN PARA THROTTLING
+      this.lastUpdateTimes[elementId] = 0;
+
       const updateCountdown = () => {
         const now = new Date().getTime();
+        
+        // ✅ THROTTLING: Solo actualizar cada 1000ms para evitar spam
+        if (now - this.lastUpdateTimes[elementId] < 950) {
+          return;
+        }
+        this.lastUpdateTimes[elementId] = now;
+
         const timeLeft = endDate - now;
 
         if (timeLeft > 0) {
@@ -708,7 +752,10 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
           if (minutesElement) minutesElement.textContent = minutes.toString().padStart(2, '0');
           if (secondsElement) secondsElement.textContent = seconds.toString().padStart(2, '0');
 
-          console.log(`⏰ ${elementId}: ${days}d ${hours}h ${minutes}m ${seconds}s`);
+          // ✅ SOLO MOSTRAR LOGS EN MODO DEBUG
+          if (this.debugMode) {
+            console.log(`⏰ ${elementId}: ${days}d ${hours}h ${minutes}m ${seconds}s`);
+          }
         } else {
           // Tiempo expirado
           const daysElement = element.querySelector('.days');
@@ -725,16 +772,19 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
           if (this.countdownIntervals[elementId]) {
             clearInterval(this.countdownIntervals[elementId]);
             delete this.countdownIntervals[elementId];
+            delete this.lastUpdateTimes[elementId];
           }
 
-          console.log(`⏰ ${elementId}: EXPIRADO`);
+          if (this.debugMode) {
+            console.log(`⏰ ${elementId}: EXPIRADO`);
+          }
         }
       };
 
       // Ejecutar inmediatamente
       updateCountdown();
 
-      // Configurar intervalo para actualizar cada segundo
+      // ✅ CONFIGURAR INTERVALO OPTIMIZADO (cada 1000ms en lugar de menos)
       this.countdownIntervals[elementId] = setInterval(updateCountdown, 1000);
     });
   }
