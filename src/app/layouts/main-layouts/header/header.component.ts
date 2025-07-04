@@ -7,8 +7,9 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Select2, Select2Data } from 'ng-select2-component';
 import { UserProfileComponent } from '../../../component/user-profile/user-profile.component';
 import { CategoriasPublicasService, CategoriaPublica } from '../../../services/categorias-publicas.service';
+import { ProductosService, ProductoSugerencia } from '../../../services/productos.service';
 import { CartService } from '../../../services/cart.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -30,10 +31,17 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   isActiveProgress: boolean = false;
   private pathLength!: number;
   private destroy$ = new Subject<void>();
+  private searchSubject = new Subject<string>();
 
   activeIndex: any | null = null;
   windowWidth: number = 0;
   cartItemCount: number = 0;
+
+  // ✅ NUEVAS PROPIEDADES PARA AUTOCOMPLETADO
+  searchSuggestions: ProductoSugerencia[] = [];
+  showSuggestions: boolean = false;
+  isLoadingSuggestions: boolean = false;
+  selectedSuggestionIndex: number = -1;
 
   setupPath() {
     if (!this.progressPathRef?.nativeElement) {
@@ -48,7 +56,6 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     path.style.transition = path.style.webkitTransition = 'stroke-dashoffset 10ms linear';
   }
 
-  // @HostListener('window:scroll')
   @HostListener('window:scroll', [])
   @HostListener('window:resize', [])
   onScroll() {
@@ -124,6 +131,7 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     @Inject(PLATFORM_ID) private platformId: any,
     private router: Router,
     private categoriasPublicasService: CategoriasPublicasService,
+    private productosService: ProductosService,
     private cartService: CartService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -142,11 +150,153 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe(summary => {
         this.cartItemCount = summary.cantidad_items;
       });
+
+    // ✅ NUEVO: Configurar búsqueda con autocompletado
+    this.setupSearchSubscription();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // ✅ NUEVO: Configurar suscripción de búsqueda con debounce
+  private setupSearchSubscription(): void {
+    this.searchSubject
+      .pipe(
+        debounceTime(300), // Esperar 300ms después de que el usuario deje de escribir
+        distinctUntilChanged(), // Solo emitir si el valor cambió
+        takeUntil(this.destroy$)
+      )
+      .subscribe(searchTerm => {
+        this.buscarProductos(searchTerm);
+      });
+  }
+
+  // ✅ NUEVO: Método para buscar productos
+  private buscarProductos(termino: string): void {
+    if (!termino.trim() || termino.length < 2) {
+      this.hideSuggestions();
+      return;
+    }
+
+    this.isLoadingSuggestions = true;
+    this.productosService.buscarProductos(termino)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (sugerencias) => {
+          this.searchSuggestions = sugerencias;
+          this.showSuggestions = sugerencias.length > 0;
+          this.isLoadingSuggestions = false;
+          this.selectedSuggestionIndex = -1;
+        },
+        error: (error) => {
+          console.error('Error al buscar productos:', error);
+          this.isLoadingSuggestions = false;
+          this.hideSuggestions();
+        }
+      });
+  }
+
+  // ✅ NUEVO: Ocultar sugerencias
+  private hideSuggestions(): void {
+    this.showSuggestions = false;
+    this.searchSuggestions = [];
+    this.selectedSuggestionIndex = -1;
+  }
+
+  // ✅ NUEVO: Método para manejar cambios en el input de búsqueda
+  onSearchTermChange(): void {
+    this.searchSubject.next(this.searchTerm);
+  }
+
+  // ✅ NUEVO: Método para manejar teclas en el input
+  onSearchKeyPress(event: KeyboardEvent): void {
+    if (!this.showSuggestions) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        this.onSearch();
+      }
+      return;
+    }
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        this.selectedSuggestionIndex = Math.min(
+          this.selectedSuggestionIndex + 1,
+          this.searchSuggestions.length - 1
+        );
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.selectedSuggestionIndex = Math.max(this.selectedSuggestionIndex - 1, -1);
+        break;
+      case 'Enter':
+        event.preventDefault();
+        if (this.selectedSuggestionIndex >= 0) {
+          this.selectSuggestion(this.searchSuggestions[this.selectedSuggestionIndex]);
+        } else {
+          this.onSearch();
+        }
+        break;
+      case 'Escape':
+        this.hideSuggestions();
+        break;
+    }
+  }
+
+  // ✅ NUEVO: Seleccionar una sugerencia
+  selectSuggestion(producto: ProductoSugerencia): void {
+    this.searchTerm = producto.nombre;
+    this.hideSuggestions();
+    // Navegar al detalle del producto
+    this.router.navigate(['/product-details', producto.id]);
+  }
+
+  // ✅ MODIFICADO: Método onSearch para búsqueda tradicional
+  onSearch(): void {
+    if (this.searchTerm.trim()) {
+      this.hideSuggestions();
+      const queryParams: any = {
+        search: this.searchTerm.trim()
+      };
+
+      // Agregar categoría si está seleccionada
+      if (this.selectedCategory && this.selectedCategory !== '') {
+        queryParams.categoria = this.selectedCategory;
+      }
+
+      // Navegar a la página de la tienda con los parámetros de búsqueda
+      this.router.navigate(['/shop'], { 
+        queryParams,
+        queryParamsHandling: 'merge'
+      });
+    }
+  }
+
+  // ✅ NUEVO: Método para manejar cambios en la categoría
+  onCategoryChange(): void {
+    // Si hay un término de búsqueda, realizar búsqueda inmediatamente
+    if (this.searchTerm.trim()) {
+      this.onSearch();
+    }
+  }
+
+  // ✅ NUEVO: Manejar clics fuera del buscador
+  @HostListener('document:click', ['$event'])
+  onOutsideClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    
+    // Ocultar dropdown de categorías
+    if (!target.closest('.category-dropdown-wrapper')) {
+      this.categoryDropdownVisible = false;
+    }
+
+    // Ocultar sugerencias de búsqueda
+    if (!target.closest('.search-form__wrapper')) {
+      this.hideSuggestions();
+    }
   }
   
   cargarCategoriasPublicas(): void {
@@ -194,23 +344,9 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  onSearch() {
-    console.log('Search term:', this.searchTerm);
-    console.log('Selected category:', this.selectedCategory);
-    // Add your search logic here
-  }
-
   toggleCategoryDropdown() {
     this.isActive = !this.isActive;
     this.categoryDropdownVisible = !this.categoryDropdownVisible;
-  }
-
-  @HostListener('document:click', ['$event'])
-  onOutsideClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.category-dropdown-wrapper')) {
-      this.categoryDropdownVisible = false;
-    }
   }
 
   isRouteActive(route: string): boolean {
