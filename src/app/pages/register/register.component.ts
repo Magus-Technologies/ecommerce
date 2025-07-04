@@ -409,9 +409,9 @@ export class RegisterComponent implements OnInit {
     this.showRegisterPassword = !this.showRegisterPassword;
   }
 
+ 
   loginWithGoogle(): void {
-    console.log('Login con Google clickeado');
-    // Implementar Google Auth más adelante
+    window.location.href = 'http://localhost:8000/auth/google';
   }
 
   // Getters para facilitar el acceso a los campos del formulario
