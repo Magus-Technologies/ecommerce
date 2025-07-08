@@ -8,7 +8,7 @@ import { environment } from "../../environments/environment"
 export interface Categoria {
   id: number
   nombre: string
-  id_seccion?: number; // ← AGREGAR
+  id_seccion?: number;
   seccion?: Seccion;
   descripcion?: string
   imagen?: string
@@ -20,7 +20,7 @@ export interface Categoria {
 
 export interface CategoriaCreate {
   nombre: string
-  id_seccion: number // ← AGREGAR ESTA LÍNE
+  id_seccion: number
   descripcion?: string
   imagen?: File
   activo: boolean
@@ -143,7 +143,6 @@ export class AlmacenService {
   constructor(private http: HttpClient) {}
 
   // ==================== MÉTODOS PARA CATEGORÍAS ====================
-  // Busca el método obtenerCategorias y reemplázalo:
   obtenerCategorias(seccionId?: number | null): Observable<Categoria[]> {
     let params = new HttpParams();
     if (seccionId !== null && seccionId !== undefined && seccionId !== 0) {
@@ -166,7 +165,7 @@ export class AlmacenService {
     const formData = new FormData()
 
     formData.append("nombre", categoria.nombre)
-    formData.append("id_seccion", categoria.id_seccion.toString()) // ← AGREGAR ESTA LÍNEA
+    formData.append("id_seccion", categoria.id_seccion.toString())
     formData.append("activo", categoria.activo ? "1" : "0")
 
     if (categoria.descripcion) {
@@ -183,7 +182,6 @@ export class AlmacenService {
   actualizarCategoria(id: number, categoria: Partial<CategoriaCreate>): Observable<any> {
     const formData = new FormData()
 
-    // En el método actualizarCategoria(), busca donde se procesan las claves y asegúrate de que id_seccion se maneje correctamente:
     Object.keys(categoria).forEach((key) => {
       const value = (categoria as any)[key]
       if (value !== null && value !== undefined) {
@@ -215,7 +213,6 @@ export class AlmacenService {
 
   // ==================== MÉTODOS PARA MARCAS ====================
 
-  // Busca el método obtenerMarcas y reemplázalo:
   obtenerMarcas(seccionId?: number | null): Observable<MarcaProducto[]> {
     let params = new HttpParams();
     if (seccionId !== null && seccionId !== undefined && seccionId !== 0) {
@@ -292,7 +289,6 @@ export class AlmacenService {
 
   // ==================== MÉTODOS PARA PRODUCTOS ====================
 
- // Busca el método obtenerProductos y reemplázalo:
   obtenerProductos(seccionId?: number | null): Observable<Producto[]> {
     let params = new HttpParams();
     if (seccionId !== null && seccionId !== undefined && seccionId !== 0) {
@@ -396,44 +392,60 @@ export class AlmacenService {
   }
 
   obtenerMarcasPublicas(): Observable<MarcaProducto[]> {
-  return this.http.get<MarcaProducto[]>(`${this.apiUrl}/marcas/publicas`).pipe(
-    map((marcas) =>
-      marcas.map((marca) => ({
-        ...marca,
-        imagen_url: marca.imagen ? `${this.baseUrl}/storage/marcas_productos/${marca.imagen}` : undefined,
-      })),
-    ),
-  )
-}
+    return this.http.get<MarcaProducto[]>(`${this.apiUrl}/marcas/publicas`).pipe(
+      map((marcas) =>
+        marcas.map((marca) => ({
+          ...marca,
+          imagen_url: marca.imagen ? `${this.baseUrl}/storage/marcas_productos/${marca.imagen}` : undefined,
+        })),
+      ),
+    )
+  }
 
-// Métodos para secciones
-obtenerSecciones(): Observable<Seccion[]> {
-  return this.http.get<Seccion[]>(`${this.apiUrl}/secciones`);
-}
+  // Métodos para secciones
+  obtenerSecciones(): Observable<Seccion[]> {
+    return this.http.get<Seccion[]>(`${this.apiUrl}/secciones`);
+  }
 
-crearSeccion(seccion: SeccionCreate): Observable<any> {
-  return this.http.post<any>(`${this.apiUrl}/secciones`, seccion);
-}
+  crearSeccion(seccion: SeccionCreate): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/secciones`, seccion);
+  }
 
-actualizarSeccion(id: number, seccion: SeccionCreate): Observable<any> {
-  return this.http.put<any>(`${this.apiUrl}/secciones/${id}`, seccion);
-}
+  actualizarSeccion(id: number, seccion: SeccionCreate): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/secciones/${id}`, seccion);
+  }
 
-eliminarSeccion(id: number): Observable<any> {
-  return this.http.delete<any>(`${this.apiUrl}/secciones/${id}`);
-}
+  eliminarSeccion(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/secciones/${id}`);
+  }
 
-migrarCategoria(categoriaId: number, nuevaSeccionId: number): Observable<any> {
-  return this.http.patch<any>(`${this.apiUrl}/categorias/${categoriaId}/migrar-seccion`, {
-    nueva_seccion_id: nuevaSeccionId
-  });
-}
+  migrarCategoria(categoriaId: number, nuevaSeccionId: number): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/categorias/${categoriaId}/migrar-seccion`, {
+      nueva_seccion_id: nuevaSeccionId
+    });
+  }
 
-// Método para obtener categorías por sección
-obtenerCategoriasPorSeccion(seccionId?: number): Observable<Categoria[]> {
-  const url = seccionId 
-    ? `${this.apiUrl}/categorias?seccion=${seccionId}`
-    : `${this.apiUrl}/categorias`;
-  return this.http.get<Categoria[]>(url);
-}
+  // Método para obtener categorías por sección
+  obtenerCategoriasPorSeccion(seccionId?: number): Observable<Categoria[]> {
+    const url = seccionId 
+      ? `${this.apiUrl}/categorias?seccion=${seccionId}`
+      : `${this.apiUrl}/categorias`;
+    return this.http.get<Categoria[]>(url);
+  }
+
+  validarCupon(codigo: string, total: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/cupones/validar`, { codigo, total });
+  }
+
+  // ✅ NUEVO MÉTODO: Obtener productos recomendados
+  obtenerProductosRecomendados(limite: number = 12): Observable<ProductoPublico[]> {
+    let params = new HttpParams();
+    params = params.set('limite', limite.toString());
+    params = params.set('recomendados', 'true'); // Flag para indicar que queremos productos recomendados
+    
+    return this.http.get<ProductosPublicosResponse>(`${this.apiUrl}/productos-publicos`, { params })
+      .pipe(
+        map(response => response.productos)
+      );
+  }
 }

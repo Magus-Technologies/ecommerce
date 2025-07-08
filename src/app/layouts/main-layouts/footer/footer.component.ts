@@ -2,58 +2,74 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-footer',
-  imports: [RouterLink, CommonModule],
+  imports: [RouterLink, CommonModule, FormsModule],
   templateUrl: './footer.component.html',
   styleUrl: './footer.component.scss'
 })
 export class FooterComponent {
+  emailSuscripcion = '';
+
+  contactInfo = {
+    description: 'Escríbenos a: info@magustechnology.com',
+    email: 'info@magustechnology.com',
+    schedule: 'Llámanos de Lunes a Viernes de 9:00 am a 6:00 p.m'
+  };
+
+  socialLinks = [
+    { icon: 'ph-fill ph-tiktok-logo', url: 'https://www.tiktok.com' },
+    { icon: 'ph-fill ph-instagram-logo', url: 'https://www.instagram.com' },
+    { icon: 'ph-fill ph-facebook-logo', url: 'https://www.facebook.com' },
+    { icon: 'ph-fill ph-youtube-logo', url: 'https://www.youtube.com' }
+  ];
+
   footerSections = [
     {
-      title: 'Information',
+      title: 'Contáctanos',
       links: [
-        { label: 'Become a Vendor', route: ['shop'] },
-        { label: 'Affiliate Program', route: ['shop'] },
-        { label: 'Privacy Policy', route: ['privacy-policy'] },
-        { label: 'Our Suppliers', route: ['suppliers'] },
-        { label: 'Extended Plan', route: ['plans'] },
-        { label: 'Community', route: ['community'] }
+        { label: 'Productos de Amazon', route: ['shop'] },
+        { label: 'Productos de China', route: ['shop'] },
+        { label: 'Productos para cocina', route: ['shop'] },
+        { label: 'Productos rankeados', route: ['shop'] }
       ]
     },
     {
-      title: 'Customer Support',
+      title: 'Populares',
       links: [
-        { label: 'Help Center', route: ['help'] },
-        { label: 'Contact Us', route: ['contact'] },
-        { label: 'Report Abuse', route: ['report-abuse'] },
-        { label: 'Submit and Dispute', route: ['dispute'] },
-        { label: 'Policies & Rules', route: ['policies'] },
-        { label: 'Online Shopping', route: ['shop'] }
+        { label: 'Productos de Amazon', route: ['shop'] },
+        { label: 'Productos de China', route: ['shop'] },
+        { label: 'Productos para cocina', route: ['shop'] },
+        { label: 'Productos rankeados', route: ['shop'] }
       ]
     },
     {
-      title: 'My Account',
+      title: 'Área legal',
       links: [
-        { label: 'My Account', route: ['account'] },
-        { label: 'Order History', route: ['orders'] },
-        { label: 'Shopping Cart', route: ['cart'] },
-        { label: 'Compare', route: ['compare'] },
-        { label: 'Help Ticket', route: ['help-ticket'] },
-        { label: 'Wishlist', route: ['wishlist'] }
-      ]
-    },
-    {
-      title: 'Daily Groceries',
-      links: [
-        { label: 'Dairy & Eggs', route: ['groceries/dairy'] },
-        { label: 'Meat & Seafood', route: ['groceries/meat'] },
-        { label: 'Breakfast Food', route: ['groceries/breakfast'] },
-        { label: 'Household Supplies', route: ['groceries/household'] },
-        { label: 'Bread & Bakery', route: ['groceries/bakery'] },
-        { label: 'Pantry Staples', route: ['groceries/pantry'] }
+        { label: 'Política de privacidad y cookies', route: ['privacy-policy'] },
+        { label: 'Términos y condiciones', route: ['terms'] },
+        { label: 'Política de devoluciones y rembolsos', route: ['returns'] },
+        { label: 'Preguntas frecuentes', route: ['faq'] }
       ]
     }
   ];
+
+  paymentMethods = [
+    { name: 'Visa', image: '/assets/images/payment/visa.png' },
+    { name: 'Mastercard', image: '/assets/images/payment/mastercard.png' },
+    { name: 'American Express', image: '/assets/images/payment/amex.png' },
+    { name: 'Yape', image: '/assets/images/payment/yape.png' },
+    { name: 'Plin', image: '/assets/images/payment/plin.png' }
+  ];
+
+  suscribirse(): void {
+    if (this.emailSuscripcion.trim()) {
+      console.log('Suscribiendo email:', this.emailSuscripcion);
+      // Aquí implementarías la lógica de suscripción
+      this.emailSuscripcion = '';
+      // Mostrar mensaje de éxito
+    }
+  }
 }

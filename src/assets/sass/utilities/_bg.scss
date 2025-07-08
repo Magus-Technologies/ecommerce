@@ -70,6 +70,10 @@
   }
 }
 
+.bg-azul-oscuro {
+  background-color: var(--azul-acero-oscuro-500) !important;
+}
+
 .gradient-shadow {
   position: relative;
   &::before, &::after {
