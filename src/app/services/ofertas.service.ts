@@ -19,6 +19,7 @@ export interface Oferta {
   texto_boton: string;
   enlace_url: string;
   mostrar_countdown: boolean;
+  es_oferta_principal?: boolean;
   productos?: ProductoOferta[];
 }
 
@@ -30,11 +31,18 @@ export interface ProductoOferta {
   descuento_porcentaje: number;
   stock_oferta?: number;
   vendidos_oferta: number;
+  stock_disponible?: number;
   imagen_url?: string;
   fecha_fin_oferta: string;
   es_flash_sale: boolean;
-  categoria?: string; // ✅ Agregada esta propiedad opcional
-  marca?: string; // ✅ Agregada esta propiedad opcional
+  categoria?: string;
+  marca?: string;
+}
+
+export interface OfertaPrincipalResponse {
+  oferta_principal: Oferta | null;
+  productos: ProductoOferta[];
+  mensaje?: string;
 }
 
 export interface Cupon {
@@ -64,6 +72,11 @@ export class OfertasService {
 
   obtenerProductosEnOferta(): Observable<ProductoOferta[]> {
     return this.http.get<ProductoOferta[]>(`${this.apiUrl}/ofertas/productos`);
+  }
+
+  // ✅ NUEVO MÉTODO: Obtener oferta principal del día
+  obtenerOfertaPrincipalDelDia(): Observable<OfertaPrincipalResponse> {
+    return this.http.get<OfertaPrincipalResponse>(`${this.apiUrl}/ofertas/principal-del-dia`);
   }
 
   validarCupon(codigo: string, total: number): Observable<any> {

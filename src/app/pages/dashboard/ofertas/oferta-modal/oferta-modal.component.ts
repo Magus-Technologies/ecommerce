@@ -322,6 +322,23 @@ import Swal from 'sweetalert2';
                       </h6>
                       
                       <div class="d-flex flex-column gap-12">
+                        <!-- ✅ NUEVO CHECKBOX: Oferta principal del día -->
+                        <div class="form-check">
+                          <input class="form-check-input" 
+                                 type="checkbox" 
+                                 [(ngModel)]="formData.es_oferta_principal"
+                                 name="es_oferta_principal"
+                                 id="es_oferta_principal">
+                          <label class="form-check-label text-heading fw-medium" for="es_oferta_principal">
+                            <i class="ph ph-star text-warning-600 me-4"></i>
+                            Oferta principal del día
+                          </label>
+                          <small class="text-gray-500 d-block">
+                            <strong>¡IMPORTANTE!</strong> Solo una oferta puede ser principal a la vez. 
+                            Esta oferta se mostrará en la sección especial "Ofertas del día" del home.
+                          </small>
+                        </div>
+
                         <div class="form-check">
                           <input class="form-check-input" 
                                  type="checkbox" 
@@ -482,6 +499,7 @@ export class OfertaModalComponent implements OnInit, OnChanges {
       mostrar_countdown: false,
       mostrar_en_slider: false,
       mostrar_en_banner: false,
+      es_oferta_principal: false, // ✅ NUEVO CAMPO
       prioridad: 0
     };
   }

@@ -6,15 +6,32 @@ import { SlickCarouselModule } from 'ngx-slick-carousel';
 import { RouterLink } from '@angular/router';
 import { CategoriaPublica, CategoriasPublicasService } from '../../services/categorias-publicas.service';
 import { BannersService, Banner, BannerPromocional } from '../../services/banner.service';
-import { AlmacenService, MarcaProducto } from '../../services/almacen.service';
+import { AlmacenService, MarcaProducto, ProductoPublico } from '../../services/almacen.service';
 import { CartService } from '../../services/cart.service';
 import Swal from 'sweetalert2';
-import { OfertasService, Oferta, ProductoOferta, Cupon } from '../../services/ofertas.service';
+import { OfertasService, Oferta, ProductoOferta, Cupon, OfertaPrincipalResponse } from '../../services/ofertas.service';
 import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 
 interface CategoriaConImagen extends CategoriaPublica {
   img: string;
   title: string;
+}
+
+// ✅ NUEVA INTERFAZ PARA LAS MARCAS EN EL SLIDER
+interface BrandSlide {
+  class: string;
+  dataAos: string;
+  dataAosDuration: number;
+  imgSrc: string;
+  imgAlt: string;
+}
+
+interface BrandSlideGroup {
+  carouselConfig: {
+    class: string;
+    configBinding: string;
+  };
+  slides: BrandSlide[];
 }
 
 @Component({
@@ -33,31 +50,26 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   private isBrowser: boolean;
   private lastUpdateTimes: { [key: string]: number } = {}; // Para throttling
 
-  slides = [
-    { img: "http://placehold.it/350x150/000000" },
-    { img: "http://placehold.it/350x150/111111" },
-    { img: "http://placehold.it/350x150/333333" },
-    { img: "http://placehold.it/350x150/666666" }
-  ];
 
   slideConfig = {
     slidesToShow: 1, 
     slidesToScroll: 1, 
     arrows: true,
     autoplay: true,          
-    autoplaySpeed: 4000,      
-    speed: 800,           
+    autoplaySpeed: 5000,      
+    speed: 600,           
     dots: false,
     infinite: true,           
     pauseOnHover: true, 
     fade: false, 
-    cssEase:'ease-in-out',
+    cssEase: 'ease-in-out',
     responsive: [
       {
         breakpoint: 768,
         settings: {
           arrows: true,
           autoplay: true,
+          autoplaySpeed: 4000,
         }
       }
     ]
@@ -162,6 +174,14 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   productosEnOferta: ProductoOferta[] = [];
   cuponesActivos: Cupon[] = [];
   isLoadingOfertas = false;
+
+  // ✅ NUEVA PROPIEDAD: Oferta principal del día
+  ofertaPrincipalDelDia: OfertaPrincipalResponse | null = null;
+  isLoadingOfertaPrincipal = false;
+
+  // ✅ NUEVAS PROPIEDADES PARA PRODUCTOS RECOMENDADOS DINÁMICOS
+  productosRecomendadosDinamicos: ProductoPublico[] = [];
+  isLoadingProductosRecomendados = false;
 
   cargarBannersPromocionales(): void {
     this.isLoadingPromotionalBanners = true;
@@ -399,6 +419,8 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cargarFlashSales();
     this.cargarProductosEnOferta();
     this.cargarCuponesActivos();
+    this.cargarOfertaPrincipalDelDia(); // ✅ NUEVA FUNCIÓN
+    this.cargarProductosRecomendados(); // ✅ NUEVA FUNCIÓN
   }
 
   // ✅ MEJORADO: Inicializar countdowns después de que la vista se cargue
@@ -584,6 +606,32 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  // ✅ NUEVA FUNCIÓN: Cargar oferta principal del día
+  cargarOfertaPrincipalDelDia(): void {
+    this.isLoadingOfertaPrincipal = true;
+    this.ofertasService.obtenerOfertaPrincipalDelDia().subscribe({
+      next: (response) => {
+        if (this.debugMode) {
+          console.log('✅ Oferta principal del día cargada:', response);
+        }
+        this.ofertaPrincipalDelDia = response;
+        this.isLoadingOfertaPrincipal = false;
+        this.cdr.detectChanges();
+        
+        // ✅ INICIALIZAR COUNTDOWN PARA LA OFERTA PRINCIPAL
+        if (this.isBrowser && response.oferta_principal?.fecha_fin) {
+          setTimeout(() => {
+            this.inicializarCountdown('countdown-oferta-principal', response.oferta_principal!.fecha_fin);
+          }, 1000);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar oferta principal del día:', error);
+        this.isLoadingOfertaPrincipal = false;
+      }
+    });
+  }
+
   cargarCuponesActivos(): void {
     this.cuponesActivos = [
       {
@@ -605,6 +653,26 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     ];
   }
 
+  // ✅ NUEVA FUNCIÓN: Cargar productos recomendados dinámicos
+  cargarProductosRecomendados(): void {
+    this.isLoadingProductosRecomendados = true;
+    this.almacenService.obtenerProductosRecomendados(12).subscribe({
+      next: (productos) => {
+        if (this.debugMode) {
+          console.log('✅ Productos recomendados cargados:', productos);
+        }
+        this.productosRecomendadosDinamicos = productos;
+        this.isLoadingProductosRecomendados = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al cargar productos recomendados:', error);
+        this.isLoadingProductosRecomendados = false;
+        // En caso de error, mantener los productos estáticos como fallback
+      }
+    });
+  }
+
   // ✅ MEJORADA: Inicializar todos los countdowns con optimizaciones
   inicializarCountdowns(): void {
     if (!this.isBrowser) {
@@ -618,6 +686,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       console.log('🕒 Inicializando countdowns...');
       console.log('Flash Sales:', this.flashSalesActivas);
       console.log('Productos en oferta:', this.productosEnOferta);
+      console.log('Oferta principal:', this.ofertaPrincipalDelDia);
     }
     
     // ✅ LIMPIAR INTERVALOS ANTERIORES
@@ -644,6 +713,11 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         this.inicializarCountdown(countdownId, producto.fecha_fin_oferta);
       }
     });
+
+    // ✅ COUNTDOWN PARA OFERTA PRINCIPAL DEL DÍA
+    if (this.ofertaPrincipalDelDia?.oferta_principal?.fecha_fin) {
+      this.inicializarCountdown('countdown-oferta-principal', this.ofertaPrincipalDelDia.oferta_principal.fecha_fin);
+    }
 
     // ✅ COUNTDOWN ESTÁTICOS CON FECHAS FUTURAS VÁLIDAS
     const fechaFutura = new Date();
@@ -828,55 +902,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     img.src = 'assets/images/thumbs/feature-img10.png';
   }
 
-  // venta flash
-  flashSales = [
-    {
-      title: 'Televisión inteligente X-Connect',
-      description: 'Tiempo restante hasta el final de la oferta.',
-      backgroundImage: 'assets/images/bg/flash-sale-bg1.png',
-      buttonClass: 'btn btn-main d-inline-flex align-items-center rounded-pill gap-8 mt-24',
-      countdownId: 'countdown1',
-      aosDuration: 600,
-      routerLink: ['shop'],
-      contentClass: 'ms-sm-auto',
-      countdownStyleClass: ''
-    },
-    {
-      title: 'Caja combinada de verduras',
-      description: 'Tiempo restante hasta el final de la oferta.',
-      backgroundImage: 'assets/images/bg/flash-sale-bg2.png',
-      buttonClass: 'btn bg-success-600 hover-bg-success-700 d-inline-flex align-items-center rounded-pill gap-8 mt-24',
-      countdownId: 'countdown2',
-      aosDuration: 1000,
-      routerLink: ['shop'],
-      contentClass: '',
-      countdownStyleClass: 'bg-main-600 text-white'
-    }
-  ];
 
-  // offers
-  offers = [
-    {
-      bgImage: 'assets/images/bg/offer-bg-img1.png',
-      logo: 'assets/images/thumbs/offer-logo.png',
-      title: '$5 off your first order',
-      delivery: 'Delivery by 6:15am',
-      expire: 'Expire Aug 5',
-      expireClass: 'text-xs text-heading',
-      aosDuration: 600,
-      btnClass: 'mt-16 btn bg-success-600 hover-text-white hover-bg-success-700 text-white fw-medium d-inline-flex align-items-center rounded-pill gap-8'
-    },
-    {
-      bgImage: 'assets/images/bg/offer-bg-img2.png',
-      logo: 'assets/images/thumbs/offer-logo.png',
-      title: '$5 off your first order',
-      delivery: 'Delivery by 6:15am',
-      expire: 'Expire Aug 5',
-      expireClass: 'text-sm text-success-600',
-      aosDuration: 800,
-      btnClass: 'mt-16 btn bg-white hover-text-white hover-bg-main-800 text-heading fw-medium d-inline-flex align-items-center rounded-pill gap-8'
-    }
-  ];
 
   productSlides = [
     {
@@ -983,7 +1009,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   ];
 
-  // best  deal product
+  // producto de mejor oferta
   bestProduct = [
     {
       id: 1,
@@ -1044,87 +1070,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ];
 
-  // hot product
-  hotPoducts = [
-    {
-      name: "Hortalizas en floretes de brócoli de Taylor Farms",
-      image: "assets/images/thumbs/product-img26.png",
-      price: 14.99,
-      oldPrice: 28.99,
-      rating: 4.8,
-      reviews: "17k",
-      sold: 18,
-      fadeDuration: 200,
-      total: 35
-    },
-    {
-      name: "Hortalizas en floretes de brócoli de Taylor Farms",
-      image: "assets/images/thumbs/product-img27.png",
-      price: 14.99,
-      oldPrice: 28.99,
-      rating: 4.8,
-      reviews: "17k",
-      sold: 18,
-      fadeDuration: 400,
-      total: 35
-    },
-    {
-      name: "Hortalizas en floretes de brócoli de Taylor Farms",
-      image: "assets/images/thumbs/product-img28.png",
-      price: 14.99,
-      oldPrice: 28.99,
-      rating: 4.8,
-      reviews: "17k",
-      sold: 18,
-      fadeDuration: 600,
-      total: 35
-    },
-    {
-      name: "Hortalizas en floretes de brócoli de Taylor Farms",
-      image: "assets/images/thumbs/product-img29.png",
-      price: 14.99,
-      oldPrice: 28.99,
-      rating: 4.8,
-      reviews: "17k",
-      sold: 18,
-      fadeDuration: 800,
-      total: 35
-    },
-    {
-      name: "Hortalizas en floretes de brócoli de Taylor Farms",
-      image: "assets/images/thumbs/product-img30.png",
-      price: 14.99,
-      oldPrice: 28.99,
-      rating: 4.8,
-      reviews: "17k",
-      sold: 18,
-      fadeDuration: 800,
-      total: 35
-    },
-    {
-      name: "Hortalizas en floretes de brócoli de Taylor Farms",
-      image: "assets/images/thumbs/product-img13.png",
-      price: 14.99,
-      oldPrice: 28.99,
-      rating: 4.8,
-      reviews: "17k",
-      sold: 18,
-      fadeDuration: 800,
-      total: 35
-    },
-    {
-      name: "Hortalizas en floretes de brócoli de Taylor Farms",
-      image: "assets/images/thumbs/product-img3.png",
-      price: 14.99,
-      oldPrice: 28.99,
-      rating: 4.8,
-      reviews: "17k",
-      sold: 18,
-      fadeDuration: 800,
-      total: 35
-    }
 
-  ]
 
   hotDealsSlideConfig = {
     slidesToShow: 4,
@@ -1177,77 +1123,13 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     infinite: true,
   };
 
-  // brand slider
-  brandSlides = [{
+  // ✅ BRAND SLIDER CON TIPADO CORRECTO
+  brandSlides: BrandSlideGroup[] = [{
     "carouselConfig": {
       "class": "brand-slider arrow-style-two",
       "configBinding": "BrandSlideConfig"
     },
-    "slides": [
-      {
-        "class": "brand-item",
-        "dataAos": "zoom-in",
-        "dataAosDuration": 200,
-        "imgSrc": "assets/images/thumbs/brand-img1.png",
-        "imgAlt": ""
-      },
-      {
-        "class": "brand-item",
-        "dataAos": "zoom-in",
-        "dataAosDuration": 400,
-        "imgSrc": "assets/images/thumbs/brand-img2.png",
-        "imgAlt": ""
-      },
-      {
-        "class": "brand-item",
-        "dataAos": "zoom-in",
-        "dataAosDuration": 600,
-        "imgSrc": "assets/images/thumbs/brand-img3.png",
-        "imgAlt": ""
-      },
-      {
-        "class": "brand-item",
-        "dataAos": "zoom-in",
-        "dataAosDuration": 800,
-        "imgSrc": "assets/images/thumbs/brand-img4.png",
-        "imgAlt": ""
-      },
-      {
-        "class": "brand-item",
-        "dataAos": "zoom-in",
-        "dataAosDuration": 1000,
-        "imgSrc": "assets/images/thumbs/brand-img5.png",
-        "imgAlt": ""
-      },
-      {
-        "class": "brand-item",
-        "dataAos": "zoom-in",
-        "dataAosDuration": 1200,
-        "imgSrc": "assets/images/thumbs/brand-img6.png",
-        "imgAlt": ""
-      },
-      {
-        "class": "brand-item",
-        "dataAos": "zoom-in",
-        "dataAosDuration": 1400,
-        "imgSrc": "assets/images/thumbs/brand-img7.png",
-        "imgAlt": ""
-      },
-      {
-        "class": "brand-item",
-        "dataAos": "zoom-in",
-        "dataAosDuration": 1600,
-        "imgSrc": "assets/images/thumbs/brand-img8.png",
-        "imgAlt": ""
-      },
-      {
-        "class": "brand-item",
-        "dataAos": "zoom-in",
-        "dataAosDuration": 1800,
-        "imgSrc": "assets/images/thumbs/brand-img3.png",
-        "imgAlt": ""
-      }
-    ]
+    "slides": [] as BrandSlide[] // ✅ INICIALIZAR VACÍO CON TIPADO CORRECTO
   }];
 
   BrandSlideConfig = {

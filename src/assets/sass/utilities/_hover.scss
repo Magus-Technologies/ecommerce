@@ -6,6 +6,13 @@
     }
   }
 }
+.item-hover-white {
+  &:hover {
+    .item-hover__text {
+      color: rgb(188, 184, 184) !important;
+    }
+  }
+}
 .item-hover-two {
   &:hover {
     .item-hover__text {

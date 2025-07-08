@@ -86,7 +86,15 @@ import Swal from 'sweetalert2';
                           <i *ngIf="!oferta.imagen_url" class="ph ph-tag text-gray-400 text-xl"></i>
                         </div>
                         <div>
-                          <h6 class="text-heading fw-semibold mb-4">{{ oferta.titulo }}</h6>
+                          <div class="d-flex align-items-center gap-8">
+                            <h6 class="text-heading fw-semibold mb-4">{{ oferta.titulo }}</h6>
+                            <!-- ✅ INDICADOR DE OFERTA PRINCIPAL -->
+                            <span *ngIf="oferta.es_oferta_principal" 
+                                  class="badge bg-warning-50 text-warning-600 px-8 py-4 rounded-pill text-xs fw-bold"
+                                  title="Esta es la oferta principal del día">
+                              <i class="ph ph-star me-4"></i>PRINCIPAL
+                            </span>
+                          </div>
                           <p class="text-gray-500 text-sm mb-0">{{ oferta.subtitulo || 'Sin subtítulo' }}</p>
                         </div>
                       </div>
@@ -168,6 +176,14 @@ import Swal from 'sweetalert2';
                     <!-- Acciones -->
                     <td class="px-24 py-16 text-center">
                       <div class="d-flex justify-content-center gap-8">
+                        <!-- ✅ BOTÓN PARA MARCAR/DESMARCAR COMO PRINCIPAL -->
+                        <button class="btn w-32 h-32 rounded-6 flex-center transition-2"
+                                [class]="oferta.es_oferta_principal ? 'bg-warning-50 hover-bg-warning-100 text-warning-600' : 'bg-gray-50 hover-bg-gray-100 text-gray-600'"
+                                [title]="oferta.es_oferta_principal ? 'Quitar como oferta principal' : 'Marcar como oferta principal'"
+                                (click)="toggleOfertaPrincipal(oferta)">
+                          <i class="ph ph-star text-sm" [class.ph-fill]="oferta.es_oferta_principal"></i>
+                        </button>
+
                         <!-- Editar -->
                         <button class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
                                 title="Editar"
@@ -263,6 +279,48 @@ export class OfertasListComponent implements OnInit {
       const bootstrapModal = new (window as any).bootstrap.Modal(modal);
       bootstrapModal.show();
     }
+  }
+
+  // ✅ NUEVA FUNCIÓN: Toggle oferta principal
+  toggleOfertaPrincipal(oferta: OfertaAdmin): void {
+    const accion = oferta.es_oferta_principal ? 'quitar' : 'marcar';
+    const mensaje = oferta.es_oferta_principal 
+      ? '¿Quitar como oferta principal?' 
+      : '¿Marcar como oferta principal del día?';
+    
+    const textoConfirmacion = oferta.es_oferta_principal
+      ? 'Esta oferta ya no será la principal'
+      : 'Esta oferta se mostrará en la sección "Ofertas del día" y cualquier otra oferta principal será desmarcada automáticamente';
+
+    Swal.fire({
+      title: mensaje,
+      text: textoConfirmacion,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: oferta.es_oferta_principal ? '#dc3545' : '#28a745',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: oferta.es_oferta_principal ? 'Sí, quitar' : 'Sí, marcar como principal',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.ofertasAdminService.toggleOfertaPrincipal(oferta.id!).subscribe({
+          next: (response) => {
+            Swal.fire({
+              title: '¡Actualizado!',
+              text: response.message,
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false
+            });
+            this.cargarOfertas(); // Recargar para actualizar el estado
+          },
+          error: (error) => {
+            Swal.fire('Error', 'No se pudo actualizar la oferta principal.', 'error');
+            console.error('Error al toggle oferta principal:', error);
+          }
+        });
+      }
+    });
   }
 
   // ✅ NUEVA FUNCIÓN: Gestionar productos de una oferta

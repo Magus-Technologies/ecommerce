@@ -29,6 +29,7 @@ export interface OfertaAdmin {
   mostrar_countdown: boolean;
   mostrar_en_slider: boolean;
   mostrar_en_banner: boolean;
+  es_oferta_principal: boolean; // ✅ NUEVO CAMPO
   prioridad: number;
   created_at?: string;
   updated_at?: string;
@@ -119,6 +120,7 @@ export class OfertasAdminService {
     formData.append('mostrar_countdown', oferta.mostrar_countdown ? '1' : '0');
     formData.append('mostrar_en_slider', oferta.mostrar_en_slider ? '1' : '0');
     formData.append('mostrar_en_banner', oferta.mostrar_en_banner ? '1' : '0');
+    formData.append('es_oferta_principal', oferta.es_oferta_principal ? '1' : '0'); // ✅ NUEVO CAMPO
     formData.append('prioridad', oferta.prioridad.toString());
 
     // Campos opcionales
@@ -160,6 +162,11 @@ export class OfertasAdminService {
 
   eliminarOferta(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/ofertas/${id}`);
+  }
+
+  // ✅ NUEVO MÉTODO: Toggle oferta principal
+  toggleOfertaPrincipal(id: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/ofertas/${id}/toggle-principal`, {});
   }
 
   // ==================== GESTIÓN DE PRODUCTOS EN OFERTAS ====================

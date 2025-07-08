@@ -34,7 +34,7 @@
 </div>
 <!-- ==================== Scroll to Top End Here ==================== -->
 
-<!-- ==================== Search Box Start Here ==================== -->
+<!-- ==================== Cuadro de búsqueda Comience aquí==================== -->
 <form action="#" class="search-box">
   <button
     type="button"
@@ -70,7 +70,7 @@
   </button>
   <div class="mobile-menu__inner">
     <a [routerLink]="['/']" class="mobile-menu__logo">
-      <img src="assets/images/logo/logo2.png" alt="Logo" />
+      <img src="assets/images/logo/logo3.png" alt="Logo" />
     </a>
     <div class="mobile-menu__menu">
       <!-- Nav Menu Start -->
@@ -80,7 +80,7 @@
           routerLinkActive="activePage"
           (click)="toggleSubmenu('home')"
         >
-          <a href="javascript:void(0)" class="nav-menu__link text-heading-two"
+          <a href="javascript:void(0)" class="nav-menu__link text-gray-700"
             >Hogar</a
           >
           <ul
@@ -128,7 +128,7 @@
           routerLinkActive="activePage"
           (click)="toggleSubmenu('shop')"
         >
-          <a href="javascript:void(0)" class="nav-menu__link text-heading-two"
+          <a href="javascript:void(0)" class="nav-menu__link text-white"
             >Shop</a
           >
           <ul
@@ -182,7 +182,7 @@
             class="badge-notification bg-warning-600 text-white text-sm py-2 px-8 rounded-4"
             >New</span
           >
-          <a href="javascript:void(0)" class="nav-menu__link text-heading-two"
+          <a href="javascript:void(0)" class="nav-menu__link text-white"
             >Pages</a
           >
           <ul
@@ -263,7 +263,7 @@
             class="badge-notification bg-tertiary-600 text-white text-sm py-2 px-8 rounded-4"
             >New</span
           >
-          <a href="javascript:void(0)" class="nav-menu__link text-heading-two"
+          <a href="javascript:void(0)" class="nav-menu__link text-white"
             >Vendors</a
           >
           <ul
@@ -320,7 +320,7 @@
           class="on-hover-item nav-menu__item has-submenu"
           (click)="toggleSubmenu('blog')"
         >
-          <a href="javascript:void(0)" class="nav-menu__link text-heading-two"
+          <a href="javascript:void(0)" class="nav-menu__link text-white"
             >Blog</a
           >
           <ul
@@ -354,9 +354,8 @@
         <li
           class="nav-menu__item"
           [routerLinkActive]="'activePage'"
-          (click)="toggleSubmenu('contact')"
         >
-          <a [routerLink]="['contact']" class="nav-menu__link text-heading-two"
+          <a [routerLink]="['contact']" class="nav-menu__link text-white"
             >Contact Us</a
           >
         </li>
@@ -367,14 +366,14 @@
 </div>
 <!-- ==================== Mobile Menu End Here ==================== -->
 
-<!-- ======================= Middle Header Start ========================= -->
-<header class="header-middle border-bottom border-gray-100">
-  <div class="container container-lg">
-    <nav class="header-inner flex-between gap-8">
+<!-- ======================= Inicio del encabezado medio ========================= -->
+<header class="header-middle border-bottom border-gray-100 bg-azul-oscuro">
+  <div class="container container-lg ">
+    <nav class="header-inner flex-between gap-8 ">
       <!-- Logo Start -->
       <div class="logo">
         <a [routerLink]="['']" class="link">
-          <img src="assets/images/logo/logo2.png" alt="Logo" />
+          <img src="assets/images/logo/logo3.png" alt="Logo" />
         </a>
       </div>
       <!-- Logo End  -->
@@ -382,7 +381,7 @@
       <!-- form location Start -->
       <form
         action="#"
-        class="flex-align flex-wrap form-location-wrapper max-w-840 w-100"
+        class="flex-align flex-wrap form-location-wrapper max-w-840 w-100 "
       >
         <div
           class="search-category select-style-one d-flex select-border-end-0 search-form d-sm-flex d-none text-heading-two text-sm w-100"
@@ -390,7 +389,7 @@
           <!-- Select2 Category Dropdown -->
           <ng-container *ngIf="isBrowser">
             <ng-select2
-              class="js-example-basic-single border border-neutral-40 border-end-0"
+              class="js-example-basic-single border border-neutral-40 border-end-0 bg-white"
               [data]="categories"
               [(ngModel)]="selectedCategory"
               name="category"
@@ -402,12 +401,12 @@
 
           <!-- ✅ NUEVO: Search Input con autocompletado -->
           <div
-            class="search-form__wrapper position-relative border-half-start flex-grow-1"
+            class="search-form__wrapper position-relative flex-grow-1  bg-white "
           >
             <input
               type="text"
               name="searchTerm"
-              class="common-input border-neutral-40 py-18 ps-16 pe-76 rounded-0 rounded-end pe-44 placeholder-italic placeholder-text-sm border-start-0"
+              class="common-input py-18 ps-16 pe-76 pe-44 placeholder-italic placeholder-text-sm"
               placeholder="Buscar productos, categorías o marcas..."
               [(ngModel)]="searchTerm"
               (input)="onSearchTermChange()"
@@ -418,7 +417,7 @@
             <!-- ✅ NUEVO: Dropdown de sugerencias -->
             <div
               *ngIf="showSuggestions"
-              class="search-suggestions position-absolute w-100 bg-white border border-gray-200 rounded-bottom-4 shadow-lg z-1000"
+              class="search-suggestions position-absolute w-100"
               style="top: 100%; left: 0; max-height: 400px; overflow-y: auto;"
             >
               <!-- Loading state -->
@@ -483,7 +482,7 @@
             <button
               type="button"
               (click)="onSearch()"
-              class="w-64 h-44 bg-main-600 hover-bg-main-800 rounded-4 flex-center text-xl text-white position-absolute top-50 translate-middle-y inset-inline-end-0 me-6"
+              class="w-64 h-44 bg-danger-10 hover-bg-danger-20 flex-center text-xl text-white position-absolute top-50 translate-middle-y inset-inline-end-0 me-6 rounded-12"
             >
               <i class="ph ph-magnifying-glass"></i>
             </button>
@@ -493,14 +492,14 @@
       <!-- form location end -->
 
       <!-- Header Middle Right start -->
-      <div class="header-right flex-align flex-shrink-0">
+      <div class="header-right flex-align flex-shrink-0 ">
         <div class="flex-align gap-20">
           <button
             type="button"
             class="search-icon flex-align d-lg-none d-flex gap-4 item-hover"
           >
             <span
-              class="text-2xl text-gray-700 d-flex position-relative item-hover__text"
+              class="text-2xl d-flex position-relative item-hover__text text-white"
             >
               <i class="ph ph-magnifying-glass"></i>
             </span>
@@ -509,34 +508,34 @@
           <!-- Usuario Profile Component - Sin texto adicional -->
           <app-user-profile></app-user-profile>
 
-          <a [routerLink]="['wishlist']" class="flex-align gap-4 item-hover">
+          <a [routerLink]="['wishlist']" class="flex-align gap-4  item-hover-white">
             <span
-              class="text-xl text-gray-700 d-flex position-relative me-6 mt-6 item-hover__text"
+              class="text-xl d-flex position-relative me-6 mt-6 item-hover__text text-white"
             >
               <i class="ph ph-heart"></i>
               <span
-                class="w-16 h-16 flex-center rounded-circle bg-main-600 text-white text-xs position-absolute top-n6 end-n4"
+                class="w-16 h-16 flex-center rounded-circle bg-danger-10 text-white text-xs position-absolute top-n6 end-n4"
                 >0</span
               >
             </span>
             <span
-              class="text-md text-heading-three item-hover__text d-none d-lg-flex"
+              class="text-md item-hover__text d-none d-lg-flex text-white"
               >Lista de deseos</span
             >
           </a>
 
-          <a [routerLink]="['cart']" class="flex-align gap-4 item-hover">
+          <a [routerLink]="['cart']" class="flex-align gap-4  item-hover-white">
             <span
-              class="text-xl text-gray-700 d-flex position-relative me-6 mt-6 item-hover__text"
+              class="text-xl d-flex position-relative me-6 mt-6 item-hover__text text-white"
             >
               <i class="ph ph-shopping-cart-simple"></i>
               <span
-                class="w-16 h-16 flex-center rounded-circle bg-main-600 text-white text-xs position-absolute top-n6 end-n4"
+                class="w-16 h-16 flex-center rounded-circle bg-danger-10 text-white text-xs position-absolute top-n6 end-n4"
                 >{{ cartItemCount }}</span
               >
             </span>
             <span
-              class="text-md text-heading-three item-hover__text d-none d-lg-flex"
+              class="text-md item-hover__text d-none d-lg-flex text-white"
               >Carrito</span
             >
           </a>
@@ -630,7 +629,7 @@
             >
               <a
                 href="javascript:void(0)"
-                class="nav-menu__link text-heading-two"
+                class="nav-menu__link text-gray-700"
                 >Hogar</a
               >
               <ul
@@ -683,7 +682,7 @@
             >
               <a
                 href="javascript:void(0)"
-                class="nav-menu__link text-heading-two"
+                class="nav-menu__link text-gray-700"
                 >Tienda</a
               >
               <ul
@@ -742,7 +741,7 @@
               >
               <a
                 href="javascript:void(0)"
-                class="nav-menu__link text-heading-two"
+                class="nav-menu__link text-gray-700"
                 >Paginas</a
               >
               <ul
@@ -822,7 +821,7 @@
               >
               <a
                 href="javascript:void(0)"
-                class="nav-menu__link text-heading-two"
+                class="nav-menu__link text-gray-700"
                 >Vendedores</a
               >
               <ul
@@ -880,7 +879,7 @@
             >
               <a
                 href="javascript:void(0)"
-                class="nav-menu__link text-heading-two"
+                class="nav-menu__link text-gray-700"
               >
                 Blog
               </a>
@@ -916,7 +915,8 @@
               class="nav-menu__item"
               [class.activePage]="isRouteActive('/contact')"
             >
-              <a routerLink="/contact" class="nav-menu__link text-heading-two"
+              <a routerLink="/contact" class="nav-menu__link text-white"
+
                 >Contáctanos</a
               >
             </li>
@@ -940,8 +940,8 @@
               >¿Necesitas ayuda? ¡Llámanos!</span
             >
             <span
-              class="d-block fw-bold text-main-600 hover-text-decoration-underline"
-              >+(2) 871 382 023</span
+              class="d-block fw-bold text-danger-10 hover-text-decoration-underline"
+              >+ 999 999 999</span
             >
           </span>
         </a>
