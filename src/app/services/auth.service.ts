@@ -199,6 +199,53 @@ checkDocumento(numeroDocumento: string): Observable<{exists: boolean, message: s
 }
 
 /**
+ * Solicitar recuperación de contraseña
+ */
+forgotPassword(email: string): Observable<{status: string, message: string}> {
+  return this.http.post<{status: string, message: string}>(`${environment.apiUrl}/forgot-password`, {
+    email: email
+  }).pipe(
+    catchError((error: HttpErrorResponse) => {
+      console.log('Error en forgot password:', error);
+      return throwError(() => error);
+    })
+  );
+}
+
+/**
+ * Restablecer contraseña
+ */
+resetPassword(token: string, email: string, password: string, passwordConfirmation: string): Observable<{status: string, message: string}> {
+  return this.http.post<{status: string, message: string}>(`${environment.apiUrl}/reset-password`, {
+    token: token,
+    email: email,
+    password: password,
+    password_confirmation: passwordConfirmation
+  }).pipe(
+    catchError((error: HttpErrorResponse) => {
+      console.log('Error en reset password:', error);
+      return throwError(() => error);
+    })
+  );
+}
+
+/**
+ * Verificar token de recuperación
+ */
+verifyResetToken(token: string, email: string): Observable<{status: string, valid: boolean}> {
+  return this.http.post<{status: string, valid: boolean}>(`${environment.apiUrl}/verify-reset-token`, {
+    token: token,
+    email: email
+  }).pipe(
+    catchError((error: HttpErrorResponse) => {
+      console.log('Error en verify token:', error);
+      return throwError(() => error);
+    })
+  );
+}
+
+
+/**
  * Procesar login con Google
  */
 processGoogleAuth(token: string, userData: string): void {
