@@ -129,6 +129,16 @@ export const routes: Routes = [
           import("./pages/product-details-two/product-details-two.component").then((m) => m.ProductDetailsTwoComponent),
         title: "Product Details Two",
       },
+      {
+        path: "forgot-password",
+        loadComponent: () => import("./pages/forgot-password/forgot-password.component").then(m => m.ForgotPasswordComponent),
+        title: "Recuperar Contraseña",
+      },
+      {
+        path: "reset-password",
+        loadComponent: () => import("./pages/reset-password/reset-password.component").then(m => m.ResetPasswordComponent),
+        title: "Restablecer Contraseña",
+      },
     ],
   },
   // ✅ Lazy Loading para Dashboard
