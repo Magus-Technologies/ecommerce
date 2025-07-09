@@ -12,6 +12,7 @@ export const authGuard = () => {
   }
 
   // Redirigir al login
+  console.log('🚨 AUTH GUARD ACTIVADO - Redirigiendo a /account');
   router.navigate(['/account']);
-  return false;
+   return false;
 };

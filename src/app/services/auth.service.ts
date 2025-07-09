@@ -148,6 +148,7 @@ export class AuthService {
     }
     
     this.currentUserSubject.next(null);
+    console.log('🚨 CLEARESSION LLAMADO - Redirigiendo a /account');
     this.router.navigate(['/account']);
   }
 

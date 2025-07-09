@@ -139,6 +139,11 @@ export const routes: Routes = [
         loadComponent: () => import("./pages/reset-password/reset-password.component").then(m => m.ResetPasswordComponent),
         title: "Restablecer Contraseña",
       },
+      {
+        path: "privacy-policy",
+        loadComponent: () => import("./pages/privacy-policy/privacy-policy.component").then(m => m.PrivacyPolicyComponent),
+        title: "Política de Privacidad",
+      },
     ],
   },
   // ✅ Lazy Loading para Dashboard
@@ -292,7 +297,7 @@ export const routes: Routes = [
         loadComponent: () => import('./component/pedidos/pedidos-list/pedidos-list.component').then(m => m.PedidosListComponent),
         canActivate: [authGuard, permissionGuard],
         data: { permission: 'pedidos.ver' }
-      }
+      },
     ],
   },
   {

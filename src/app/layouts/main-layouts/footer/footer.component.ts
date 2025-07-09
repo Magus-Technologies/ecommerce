@@ -48,7 +48,7 @@ export class FooterComponent {
     {
       title: 'Área legal',
       links: [
-        { label: 'Política de privacidad y cookies', route: ['privacy-policy'] },
+        { label: 'Política de Privacidad', route: ['/privacy-policy'] },
         { label: 'Términos y condiciones', route: ['terms'] },
         { label: 'Política de devoluciones y rembolsos', route: ['returns'] },
         { label: 'Preguntas frecuentes', route: ['faq'] }

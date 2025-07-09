@@ -30,7 +30,10 @@ export const authInterceptor: HttpInterceptorFn = (
     catchError((error: HttpErrorResponse) => {
       // Si el error es 401 (Unauthorized), limpiar la sesión y redirigir al login
       if (error.status === 401) {
-        authService.logout();
+        // Solo limpiar sesión si el usuario estaba logueado
+        if (authService.isLoggedIn()) {
+          authService.logout();
+        }
       }
       return throwError(() => error);
     })
