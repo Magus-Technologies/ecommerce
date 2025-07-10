@@ -1,4 +1,5 @@
-/* ================= Slick Arrow & Dots css Start ================ */ 
+// src\assets\sass\layout\_slick.scss
+/* ================= Inicio de CSS con flechas y puntos elegantes ================ */ 
 .slick-initialized.slick-slider {
   .slick-track {
       display: flex;
@@ -15,8 +16,21 @@
       }
   }
 }
+/* ✅ OCULTAR TODOS LOS BOTONES AUTOMÁTICOS DE SLICK */
+.slick-prev,
+.slick-next {
+  display: none !important;
+}
 
-/* Slick Slider Arrow */
+/* ✅ SOLO MOSTRAR NUESTROS BOTONES PERSONALIZADOS */
+button[id*="prev"],
+button[id*="next"] {
+  display: flex !important;
+}
+
+
+
+/* Flecha deslizante elegante */
 .slick-arrow {
   width: 48px;
   height: 48px;
@@ -34,7 +48,7 @@
 }
 
 
-/* Arrow Style Two */
+/* Estilo de flecha dos */
 .arrow-center {
   position: relative;
   .slick-arrow {
@@ -63,7 +77,7 @@
   }
 }
 
-/* Dots Css Start */ 
+/* Inicio de Dots CSS*/ 
 .slick-dots {
     text-align: center;
     position: absolute;
@@ -94,5 +108,4 @@
         }
     }
 }
-/* Dots Css End */
-/* ================= Slick Arrow & Dots css Start ================ */ 
+/* ================= Inicio de End con flechas y puntos elegantes ================ */ 

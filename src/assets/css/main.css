@@ -7108,6 +7108,9 @@ input:focus-visible {
 .hover-bg-main-600:hover {
     background-color: var(--main-600) !important;
 }
+.hover-bg-azul-oscuro:hover {
+     background-color: var(--azul-acero-oscuro-500) !important;
+}
 
 .hover-bg-main-700:hover {
     background-color: var(--main-700) !important;

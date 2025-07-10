@@ -1,3 +1,4 @@
+// src\assets\sass\partials\home\_banner.scss
 /* ============================== Banner Css Start ========================== */
 .banner {
     margin-top: 32px;
@@ -44,6 +45,7 @@
             }
         }
     }
+ 
 }
 
 .banner-slider__inner {
@@ -144,5 +146,46 @@
         transition-delay: 1500ms; 
     }
 }
+/* ✅ OCULTAR BOTONES AUTOMÁTICOS DE SLICK */
+.slick-prev,
+.slick-next {
+    display: none !important;
+}
+
+/* ✅ MOSTRAR SOLO NUESTROS BOTONES PERSONALIZADOS */
+#banner-prev,
+#banner-next {
+    display: flex !important;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 48px;
+    height: 48px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* ✅ POSICIÓN DEL BOTÓN IZQUIERDO (MÁS A LA DERECHA) */
+#banner-prev {
+    left: 10px; /* Cambia este valor para mover más a la derecha */
+}
+
+/* ✅ POSICIÓN DEL BOTÓN DERECHO */
+#banner-next {
+    right: 10px;
+}
+
+/* ✅ RESPONSIVE PARA MÓVILES */
+@include sm-screen {
+    #banner-prev {
+        left: 20px;
+    }
+    #banner-next {
+        right: 20px;
+    }
+}
+
 /* Slider Animation Css End */
 /* ============================== Banner Css End ========================== */

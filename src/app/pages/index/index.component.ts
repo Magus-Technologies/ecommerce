@@ -1,7 +1,7 @@
 // src/app/pages/index/index.component.ts
-import { Component, OnInit, OnDestroy, AfterViewInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, Inject, PLATFORM_ID, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { SlickCarouselComponent } from 'ngx-slick-carousel';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { NgFor } from '@angular/common';
 import { SlickCarouselModule } from 'ngx-slick-carousel';
 import { RouterLink } from '@angular/router';
 import { CategoriaPublica, CategoriasPublicasService } from '../../services/categorias-publicas.service';
@@ -42,6 +42,9 @@ interface BrandSlideGroup {
 })
 export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
 
+  // ✅ REFERENCIA AL SLIDER
+  @ViewChild('slickModal', { static: false }) slickModal!: SlickCarouselComponent;
+
   // ✅ CONFIGURACIÓN DE DEBUG - CAMBIAR A false PARA PRODUCCIÓN
   private readonly debugMode = false; // Cambiar a true solo para debugging
   
@@ -50,11 +53,17 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   private isBrowser: boolean;
   private lastUpdateTimes: { [key: string]: number } = {}; // Para throttling
 
+  // ✅ NUEVAS PROPIEDADES PARA EL SISTEMA DE FILTRADO DINÁMICO
+  categoriasParaFiltro: CategoriaPublica[] = [];
+  categoriaSeleccionada: number | null = null;
+  productosFiltrados: ProductoPublico[] = [];
+  isLoadingProductosFiltrados = false;
+  todosLosProductos: ProductoPublico[] = []; // Cache de todos los productos
 
   slideConfig = {
     slidesToShow: 1, 
     slidesToScroll: 1, 
-    arrows: true,
+    arrows: false,  // ✅ CAMBIO: false en lugar de true
     autoplay: true,          
     autoplaySpeed: 5000,      
     speed: 600,           
@@ -67,7 +76,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       {
         breakpoint: 768,
         settings: {
-          arrows: true,
+          arrows: false,  // ✅ CAMBIO: false en lugar de true
           autoplay: true,
           autoplaySpeed: 4000,
         }
@@ -179,10 +188,6 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   ofertaPrincipalDelDia: OfertaPrincipalResponse | null = null;
   isLoadingOfertaPrincipal = false;
 
-  // ✅ NUEVAS PROPIEDADES PARA PRODUCTOS RECOMENDADOS DINÁMICOS
-  productosRecomendadosDinamicos: ProductoPublico[] = [];
-  isLoadingProductosRecomendados = false;
-
   cargarBannersPromocionales(): void {
     this.isLoadingPromotionalBanners = true;
     this.bannersService.obtenerBannersPromocionalesPublicos().subscribe({
@@ -290,7 +295,6 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       total: 35,
       stock: 15
     },
-
   ];
 
   productSlideConfig = {
@@ -393,7 +397,6 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       badgeClass: "bg-danger-600 px-8 py-4 text-sm text-white",
       stock: 60
     },
-    // ... más productos con stock
   ];
 
   // ✅ CONSTRUCTOR ACTUALIZADO CON PLATFORM_ID Y ChangeDetectorRef
@@ -420,7 +423,8 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cargarProductosEnOferta();
     this.cargarCuponesActivos();
     this.cargarOfertaPrincipalDelDia(); // ✅ NUEVA FUNCIÓN
-    this.cargarProductosRecomendados(); // ✅ NUEVA FUNCIÓN
+    this.cargarCategoriasParaFiltro(); // ✅ NUEVA FUNCIÓN
+    this.cargarTodosLosProductos(); // ✅ NUEVA FUNCIÓN
   }
 
   // ✅ MEJORADO: Inicializar countdowns después de que la vista se cargue
@@ -431,6 +435,52 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         this.inicializarCountdowns();
       }, 2000);
     }
+  }
+
+  // ✅ MÉTODOS PARA CONTROLAR EL SLIDER - VERSIÓN DEFINITIVA
+  anteriorSlide(): void {
+    if (this.isBrowser && this.slickModal) {
+      try {
+        this.slickModal.slickPrev();
+      } catch (error) {
+        console.warn('Error al ir al slide anterior:', error);
+      }
+    }
+  }
+
+  siguienteSlide(): void {
+    if (this.isBrowser && this.slickModal) {
+      try {
+        this.slickModal.slickNext();
+      } catch (error) {
+        console.warn('Error al ir al siguiente slide:', error);
+      }
+    }
+  }
+
+  // ✅ MÉTODO AUXILIAR PARA CONTROLAR EL SLIDER
+  private controlSlider(direction: 'prev' | 'next'): void {
+    const waitForSlider = (attempts: number = 0): void => {
+      if (attempts > 10) {
+        console.warn('Slider no se pudo inicializar después de 10 intentos');
+        return;
+      }
+
+      const slickElement = document.querySelector('ngx-slick-carousel.carousel .slick-slider') as any;
+      
+      if (slickElement && slickElement.slick) {
+        if (direction === 'prev') {
+          slickElement.slick('slickPrev');
+        } else {
+          slickElement.slick('slickNext');
+        }
+      } else {
+        // Esperar 200ms y volver a intentar
+        setTimeout(() => waitForSlider(attempts + 1), 200);
+      }
+    };
+
+    waitForSlider();
   }
 
   // ✅ MEJORADO: Limpiar intervalos al destruir el componente
@@ -471,6 +521,78 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         this.isLoadingCategorias = false;
       }
     });
+  }
+
+  // ✅ NUEVA FUNCIÓN: Cargar categorías para el filtro
+  cargarCategoriasParaFiltro(): void {
+    this.categoriasPublicasService.obtenerCategoriasPublicas().subscribe({
+      next: (categorias) => {
+        // Filtrar solo las categorías que tienen productos
+        this.categoriasParaFiltro = categorias.filter(cat => 
+          cat.productos_count && cat.productos_count > 0
+        );
+        
+        if (this.debugMode) {
+          console.log('✅ Categorías para filtro cargadas:', this.categoriasParaFiltro);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías para filtro:', error);
+        this.categoriasParaFiltro = [];
+      }
+    });
+  }
+
+  // ✅ NUEVA FUNCIÓN: Cargar todos los productos
+  cargarTodosLosProductos(): void {
+    this.isLoadingProductosFiltrados = true;
+    this.almacenService.obtenerProductosPublicos().subscribe({
+      next: (response) => {
+        this.todosLosProductos = response.productos;
+        this.productosFiltrados = [...this.todosLosProductos]; // Mostrar todos inicialmente
+        this.isLoadingProductosFiltrados = false;
+        
+        if (this.debugMode) {
+          console.log('✅ Todos los productos cargados:', this.todosLosProductos);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar productos:', error);
+        this.isLoadingProductosFiltrados = false;
+        this.todosLosProductos = [];
+        this.productosFiltrados = [];
+      }
+    });
+  }
+
+  // ✅ NUEVA FUNCIÓN: Filtrar productos por categoría
+  filtrarPorCategoria(categoriaId: number | null): void {
+    this.categoriaSeleccionada = categoriaId;
+    this.isLoadingProductosFiltrados = true;
+    
+    if (this.debugMode) {
+      console.log('🔍 Filtrando por categoría:', categoriaId);
+    }
+
+    // Simular un pequeño delay para mostrar el loading
+    setTimeout(() => {
+      if (categoriaId === null) {
+        // Mostrar todos los productos
+        this.productosFiltrados = [...this.todosLosProductos];
+      } else {
+        // Filtrar por categoría específica
+        this.productosFiltrados = this.todosLosProductos.filter(
+          producto => producto.categoria_id === categoriaId
+        );
+      }
+      
+      this.isLoadingProductosFiltrados = false;
+      this.cdr.detectChanges();
+      
+      if (this.debugMode) {
+        console.log('✅ Productos filtrados:', this.productosFiltrados.length);
+      }
+    }, 300);
   }
 
   cargarBannersDinamicos(): void {
@@ -651,26 +773,6 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         compra_minima: 50
       }
     ];
-  }
-
-  // ✅ NUEVA FUNCIÓN: Cargar productos recomendados dinámicos
-  cargarProductosRecomendados(): void {
-    this.isLoadingProductosRecomendados = true;
-    this.almacenService.obtenerProductosRecomendados(12).subscribe({
-      next: (productos) => {
-        if (this.debugMode) {
-          console.log('✅ Productos recomendados cargados:', productos);
-        }
-        this.productosRecomendadosDinamicos = productos;
-        this.isLoadingProductosRecomendados = false;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Error al cargar productos recomendados:', error);
-        this.isLoadingProductosRecomendados = false;
-        // En caso de error, mantener los productos estáticos como fallback
-      }
-    });
   }
 
   // ✅ MEJORADA: Inicializar todos los countdowns con optimizaciones
@@ -902,8 +1004,6 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     img.src = 'assets/images/thumbs/feature-img10.png';
   }
 
-
-
   productSlides = [
     {
       imgSrc: "assets/images/thumbs/short-product-img1.png",
@@ -1067,10 +1167,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       soldPercentage: 35,
       duration: 400
     },
-
   ];
-
-
 
   hotDealsSlideConfig = {
     slidesToShow: 4,
@@ -1190,5 +1287,4 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       },
     ]
   };
-
 }
