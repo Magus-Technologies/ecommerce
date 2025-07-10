@@ -52,6 +52,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   private countdownIntervals: { [key: string]: any } = {};
   private isBrowser: boolean;
   private lastUpdateTimes: { [key: string]: number } = {}; // Para throttling
+  private cuponesRefreshInterval: any;
 
   // ✅ NUEVAS PROPIEDADES PARA EL SISTEMA DE FILTRADO DINÁMICO
   categoriasParaFiltro: CategoriaPublica[] = [];
@@ -59,6 +60,9 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   productosFiltrados: ProductoPublico[] = [];
   isLoadingProductosFiltrados = false;
   todosLosProductos: ProductoPublico[] = []; // Cache de todos los productos
+  // ✅ NUEVA VARIABLE ESPECÍFICA PARA CUPONES
+  isLoadingCupones = false;
+
 
   slideConfig = {
     slidesToShow: 1, 
@@ -230,6 +234,13 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cargarOfertaPrincipalDelDia(); // ✅ NUEVA FUNCIÓN
     this.cargarCategoriasParaFiltro(); // ✅ NUEVA FUNCIÓN
     this.cargarTodosLosProductos(); // ✅ NUEVA FUNCIÓN
+
+    // NUEVA LÍNEA: Actualizar cupones cada 5 minutos
+    if (this.isBrowser) {
+      this.cuponesRefreshInterval = setInterval(() => {
+        this.cargarCuponesActivos();
+      }, 5 * 60 * 1000); // 5 minutos
+    }
   }
 
   // ✅ MEJORADO: Inicializar countdowns después de que la vista se cargue
@@ -292,6 +303,11 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnDestroy(): void {
     if (this.isBrowser) {
       this.limpiarTodosLosIntervalos();
+
+      // NUEVAS LÍNEAS: Limpiar interval de cupones
+      if (this.cuponesRefreshInterval) {
+        clearInterval(this.cuponesRefreshInterval);
+      }
     }
   }
 
@@ -560,25 +576,41 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   cargarCuponesActivos(): void {
-    this.cuponesActivos = [
-      {
-        id: 1,
-        codigo: 'BIENVENIDO20',
-        titulo: 'Bienvenido - 20% de descuento',
-        tipo_descuento: 'porcentaje',
-        valor_descuento: 20,
-        compra_minima: 100
+    this.isLoadingCupones = true;
+    this.ofertasService.obtenerCuponesActivos().subscribe({
+      next: (cupones) => {
+        console.log('✅ Cupones activos cargados desde backend:', cupones);
+        this.cuponesActivos = cupones;
+        this.isLoadingCupones = false;
+        this.cdr.detectChanges();
       },
-      {
-        id: 2,
-        codigo: 'ENVIOGRATIS',
-        titulo: 'Envío gratis',
-        tipo_descuento: 'cantidad_fija',
-        valor_descuento: 15,
-        compra_minima: 50
+      error: (error) => {
+        console.error('Error al cargar cupones activos:', error);
+        this.isLoadingCupones = false;
+        // Fallback: usar cupones estáticos si hay error
+        this.cuponesActivos = [
+          {
+            id: 1,
+            codigo: 'BIENVENIDO20',
+            titulo: 'Bienvenido - 20% de descuento',
+            tipo_descuento: 'porcentaje',
+            valor_descuento: 20,
+            compra_minima: 100
+          },
+          {
+            id: 2,
+            codigo: 'ENVIOGRATIS',
+            titulo: 'Envío gratis',
+            tipo_descuento: 'cantidad_fija',
+            valor_descuento: 15,
+            compra_minima: 50
+          }
+        ];
+        this.cdr.detectChanges();
       }
-    ];
+    });
   }
+
 
   // ✅ MEJORADA: Inicializar todos los countdowns con optimizaciones
   inicializarCountdowns(): void {

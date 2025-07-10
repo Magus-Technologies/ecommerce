@@ -2,6 +2,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface Oferta {
@@ -49,9 +51,18 @@ export interface Cupon {
   id: number;
   codigo: string;
   titulo: string;
+  descripcion?: string;
   tipo_descuento: 'porcentaje' | 'cantidad_fija';
   valor_descuento: number;
   compra_minima?: number;
+  fecha_inicio?: string;
+  fecha_fin?: string;
+  limite_uso?: number;
+  usos_actuales?: number;
+  solo_primera_compra?: boolean;
+  activo?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 @Injectable({
@@ -82,4 +93,18 @@ export class OfertasService {
   validarCupon(codigo: string, total: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/cupones/validar`, { codigo, total });
   }
+
+    /**
+     * Obtener cupones activos para la tienda
+     */
+    obtenerCuponesActivos(): Observable<Cupon[]> {
+      return this.http.get<Cupon[]>(`${this.apiUrl}/cupones/activos`)
+        .pipe(
+          catchError(error => {
+            console.error('Error al obtener cupones activos:', error);
+            return of([]); // Retornar array vacío en caso de error
+          })
+        );
+    }
+
 }
