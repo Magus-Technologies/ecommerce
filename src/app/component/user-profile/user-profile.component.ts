@@ -14,13 +14,13 @@ import { User } from '../../models/user.model';
     <div *ngIf="isLoggedIn" class="user-profile position-relative">
       <button 
         type="button" 
-        class="flex-align gap-4 item-hover-white btn border-0 bg-transparent p-0"
+        class="flex-align gap-4  item-hover-white btn border-0 bg-transparent p-0"
         (click)="toggleUserDropdown($event)"
       >
-        <span class="text-xl text-gray-700 d-flex position-relative item-hover__text">
+        <span class="text-xl text-white d-flex position-relative item-hover__text">
           <i class="ph ph-user"></i>
         </span>
-        <span class="text-md text-heading-three item-hover__text d-none d-lg-flex">
+        <span class="text-md text-white item-hover__text d-none d-lg-flex">
           {{ user?.name || 'Mi Perfil' }}
         </span>
         <span class="text-sm d-none d-lg-flex">

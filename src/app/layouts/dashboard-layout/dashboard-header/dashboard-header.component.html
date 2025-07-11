@@ -34,8 +34,7 @@
           <!-- Avatar -->
           <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
                style="width: 40px; height: 40px;">
-          {{ authService.getCurrentUser()?.roles?.[0] || 'Usuario' }}
-
+            {{ getAvatarInitials() }}
           </div>
           
           <!-- User Info (hidden on mobile) -->
