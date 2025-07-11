@@ -6,7 +6,7 @@
   top: 0;
   left: 0;
   z-index: 1050;
-  overflow-y: auto;
+  overflow-y: hidden;
   transition: all 0.3s ease;
 
   // Estado colapsado en desktop
@@ -72,22 +72,34 @@
     }
   }
 
-  // Scroll personalizado
-  &::-webkit-scrollbar {
-    width: 4px;
+  // Scroll personalizado y moderno
+  &::-webkit-scrollbar,
+  .sidebar-nav::-webkit-scrollbar {
+    width: 8px;
   }
 
-  &::-webkit-scrollbar-track {
+  &::-webkit-scrollbar-track,
+  .sidebar-nav::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
+  &::-webkit-scrollbar-thumb,
+  .sidebar-nav::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+    transition: background-color 0.3s ease;
   }
 
-  &::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+  &:hover::-webkit-scrollbar-thumb,
+  .sidebar-nav:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.4);
+  }
+
+  &::-webkit-scrollbar-thumb:hover,
+  .sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.5);
   }
 }
 

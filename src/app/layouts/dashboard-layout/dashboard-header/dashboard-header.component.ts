@@ -23,6 +23,28 @@ export class DashboardHeaderComponent implements OnInit {
 
   ngOnInit(): void {}
 
+  getAvatarInitials(): string {
+    const user = this.authService.getCurrentUser();
+    const role = user?.roles?.[0];
+
+    if (role === 'superadmin') {
+      return 'SA';
+    }
+
+    // Fallback to user name if available, otherwise role, otherwise 'US'
+    const name = user?.name || role || 'Usuario';
+
+    if (name) {
+      const words = name.split(' ');
+      if (words.length > 1) {
+        return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+      }
+      return name.substring(0, 2).toUpperCase();
+    }
+
+    return 'US'; // Default initials
+  }
+
   onToggleSidebar(): void {
     this.toggleSidebar.emit();
   }
