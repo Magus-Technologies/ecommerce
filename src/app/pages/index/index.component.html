@@ -420,10 +420,7 @@
               >
                 Sale {{ product.discount_percentage }}%
               </span>
-              <a
-                [routerLink]="['/product-details']"
-                class="product-card__thumb flex-center overflow-hidden"
-              >
+            <a [routerLink]="['/product-details', product.id]" class="product-card__thumb flex-center overflow-hidden">
                 <img
                   [src]="product.imagen_principal"
                   [alt]="product.nombre"

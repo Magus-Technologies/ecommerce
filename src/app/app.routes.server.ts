@@ -82,9 +82,10 @@ export const serverRoutes: ServerRoute[] = [
     path: 'vendor-two-details',
     renderMode: RenderMode.Prerender
   },
+  // ✅ CAMBIAR A SERVER RENDERING PARA RUTAS DINÁMICAS
   {
-    path: 'product-details',
-    renderMode: RenderMode.Prerender
+    path: 'product-details/:id',
+    renderMode: RenderMode.Server
   },
   {
     path: 'product-details-two',

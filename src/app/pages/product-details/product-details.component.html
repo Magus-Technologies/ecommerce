@@ -1,10 +1,33 @@
 <!-- src\app\pages\product-details\product-details.component.html -->
 <!-- ========================= Breadcrumb Start =============================== -->
-<app-breadcrumb title="Detalles de la tienda" subtitle="Lay`s Potato chips"></app-breadcrumb>
+<app-breadcrumb 
+  [title]="producto?.categoria?.nombre || 'Detalles del producto'" 
+  [subtitle]="producto?.nombre || 'Cargando...'">
+</app-breadcrumb>
 
 <!-- ========================= Breadcrumb End =============================== -->
 
-<section class="product-details py-80">
+<!-- ✅ LOADING STATE -->
+<div *ngIf="isLoading" class="container container-lg py-80">
+  <div class="text-center">
+    <div class="spinner-border text-main-600" role="status">
+      <span class="visually-hidden">Cargando producto...</span>
+    </div>
+    <p class="text-gray-500 mt-12">Cargando detalles del producto...</p>
+  </div>
+</div>
+
+<!-- ✅ ERROR STATE -->
+<div *ngIf="error && !isLoading" class="container container-lg py-80">
+  <div class="text-center">
+    <h4 class="text-danger mb-20">{{ error }}</h4>
+    <p class="text-gray-500 mb-20">Redirigiendo al inicio...</p>
+    <a [routerLink]="['/']" class="btn btn-main">Volver al inicio</a>
+  </div>
+</div>
+
+<!-- ✅ CONTENIDO PRINCIPAL -->
+<section class="product-details py-80" *ngIf="!isLoading && !error && producto">
     <div class="container container-lg">
         <div class="row gy-4">
             <div class="col-lg-9">
@@ -15,9 +38,9 @@
                             <!-- Thumb Slider -->
                             <ngx-slick-carousel class="product-details__thumb-slider border border-gray-100 rounded-16"
                                 [config]="productThumbSlider">
-                                <div ngxSlickItem *ngFor="let thumb of thumbs" class="slide">
+                                <div ngxSlickItem *ngFor="let imagen of imagenesProducto" class="slide">
                                     <div class="product-details__thumb flex-center h-100">
-                                        <img [src]="thumb" alt="">
+                                        <img [src]="imagen" [alt]="producto.nombre" (error)="onImageError($event)">
                                     </div>
                                 </div>
                             </ngx-slick-carousel>
@@ -26,10 +49,10 @@
                             <div class="mt-24">
                                 <ngx-slick-carousel class="product-details__images-slider"
                                     [config]="productImageSlider">
-                                    <div ngxSlickItem *ngFor="let image of images" class="slide">
+                                    <div ngxSlickItem *ngFor="let imagen of imagenesProducto" class="slide">
                                         <div
                                             class="max-w-120 max-h-120 h-100 flex-center border border-gray-100 rounded-16 p-8">
-                                            <img [src]="image" alt="">
+                                            <img [src]="imagen" [alt]="producto.nombre" (error)="onImageError($event)">
                                         </div>
                                     </div>
                                 </ngx-slick-carousel>
@@ -40,95 +63,114 @@
                     </div>
                     <div class="col-xl-6">
                         <div class="product-details__content">
-                            <h5 class="mb-12">Papas fritas Lay's con sabor a cebolla</h5>
+                            <h5 class="mb-12">{{ producto.nombre }}</h5>
                             <div class="flex-align flex-wrap gap-12">
                                 <div class="flex-align gap-12 flex-wrap">
                                     <div class="flex-align gap-8">
-                                        <span class="text-xs fw-medium text-warning-600 d-flex"><i
-                                                class="ph-fill ph-star"></i></span>
-                                        <span class="text-xs fw-medium text-warning-600 d-flex"><i
-                                                class="ph-fill ph-star"></i></span>
-                                        <span class="text-xs fw-medium text-warning-600 d-flex"><i
-                                                class="ph-fill ph-star"></i></span>
-                                        <span class="text-xs fw-medium text-warning-600 d-flex"><i
-                                                class="ph-fill ph-star"></i></span>
-                                        <span class="text-xs fw-medium text-warning-600 d-flex"><i
-                                                class="ph-fill ph-star"></i></span>
+                                        <span *ngFor="let star of getEstrellas()" 
+                                              class="text-xs fw-medium text-warning-600 d-flex">
+                                          <i class="ph-fill ph-star"></i>
+                                        </span>
                                     </div>
-                                    <span class="text-sm fw-medium text-neutral-600">4.7 Star Rating</span>
-                                    <span class="text-sm fw-medium text-gray-500">(21,671)</span>
+                                    <span class="text-sm fw-medium text-neutral-600">4.8 Star Rating</span>
+                                    <span class="text-sm fw-medium text-gray-500">({{ producto.reviews_count || 0 }})</span>
                                 </div>
                                 <span class="text-sm fw-medium text-gray-500">|</span>
-                                <span class="text-gray-900"> <span class="text-gray-400">SKU:</span>EB4DRP </span>
+                                <span class="text-gray-900"> 
+                                  <span class="text-gray-400">SKU:</span>{{ producto.codigo_producto }} 
+                                </span>
                             </div>
                             <span class="mt-32 pt-32 text-gray-700 border-top border-gray-100 d-block"></span>
-                            <p class="text-gray-700">Vivamus adipiscing nisl ut dolor dignissim semper. Nulla luctus
-                                malesuada tincidunt. Class aptent taciti sociosqu ad litora torquent</p>
+                            
+                            <!-- ✅ DESCRIPCIÓN DINÁMICA -->
+                            <p class="text-gray-700">
+                              {{ producto.descripcion || detalles?.descripcion_detallada || 'Descripción no disponible' }}
+                            </p>
+                            
                             <div class="mt-32 flex-align flex-wrap gap-32">
                                 <div class="flex-align gap-8">
-                                    <h4 class="mb-0">$25.00</h4>
-                                    <span class="text-md text-gray-500">$38.00</span>
+                                    <h4 class="mb-0">S/ {{ getPrecioActual() | number:'1.2-2' }}</h4>
+                                    <span *ngIf="tieneOferta()" class="text-md text-gray-500 text-decoration-line-through">
+                                      S/ {{ getPrecioOriginal() | number:'1.2-2' }}
+                                    </span>
                                 </div>
-                                <a href="#" class="btn btn-main rounded-pill">Order on What'sApp</a>
+                                <a href="#" class="btn btn-main rounded-pill">Ordenar por WhatsApp</a>
                             </div>
                             <span class="mt-32 pt-32 text-gray-700 border-top border-gray-100 d-block"></span>
 
-                            <div class="flex-align flex-wrap gap-16 bg-color-one rounded-8 py-16 px-24">
+                            <!-- ✅ OFERTA ESPECIAL SI EXISTE -->
+                            <div *ngIf="tieneOferta()" class="flex-align flex-wrap gap-16 bg-color-one rounded-8 py-16 px-24">
                                 <div class="flex-align gap-16">
-                                    <span class="text-main-600 text-sm">Special Offer:</span>
+                                    <span class="text-main-600 text-sm">Oferta Especial:</span>
                                 </div>
                                 <div class="countdown" id="countdown11">
                                     <ul class="countdown-list flex-align flex-wrap">
                                         <li
                                             class="countdown-list__item text-heading flex-align gap-4 text-xs fw-medium w-28 h-28 rounded-4 border border-main-600 p-0 flex-center">
-                                            <span class="days"></span>
+                                            <span class="days">0</span>
                                         </li>
                                         <li
                                             class="countdown-list__item text-heading flex-align gap-4 text-xs fw-medium w-28 h-28 rounded-4 border border-main-600 p-0 flex-center">
-                                            <span class="hours"></span>
+                                            <span class="hours">0</span>
                                         </li>
                                         <li
                                             class="countdown-list__item text-heading flex-align gap-4 text-xs fw-medium w-28 h-28 rounded-4 border border-main-600 p-0 flex-center">
-                                            <span class="minutes"></span>
+                                            <span class="minutes">0</span>
                                         </li>
                                         <li
                                             class="countdown-list__item text-heading flex-align gap-4 text-xs fw-medium w-28 h-28 rounded-4 border border-main-600 p-0 flex-center">
-                                            <span class="seconds"></span>
+                                            <span class="seconds">0</span>
                                         </li>
                                     </ul>
                                 </div>
-                                <span class="text-gray-900 text-xs">Remains untill the end of the offer</span>
+                                <span class="text-gray-900 text-xs">{{ getPorcentajeDescuento() }}% de descuento</span>
                             </div>
 
+                            <!-- ✅ STOCK DINÁMICO -->
                             <div class="mb-24">
                                 <div class="mt-32 flex-align gap-12 mb-16">
                                     <span
-                                        class="w-32 h-32 bg-white flex-center rounded-circle text-main-600 box-shadow-xl"><i
-                                            class="ph-fill ph-lightning"></i></span>
-                                    <h6 class="text-md mb-0 fw-bold text-gray-900">Products are almost sold out</h6>
+                                        class="w-32 h-32 bg-white flex-center rounded-circle text-main-600 box-shadow-xl">
+                                        <i class="ph-fill ph-lightning"></i>
+                                    </span>
+                                    <h6 class="text-md mb-0 fw-bold text-gray-900">
+                                      {{ producto.stock <= 10 ? 'Pocas unidades disponibles' : 'Producto disponible' }}
+                                    </h6>
                                 </div>
                                 <div class="progress w-100 bg-gray-100 rounded-pill h-8" role="progressbar"
-                                    aria-label="Basic example" aria-valuenow="32" aria-valuemin="0" aria-valuemax="100">
-                                    <div class="progress-bar bg-main-two-600 rounded-pill" style="width: 32%"></div>
+                                    aria-label="Stock disponible" 
+                                    [attr.aria-valuenow]="(producto.stock / (producto.stock + 50)) * 100" 
+                                    aria-valuemin="0" aria-valuemax="100">
+                                    <div class="progress-bar bg-main-two-600 rounded-pill" 
+                                         [style.width.%]="(producto.stock / (producto.stock + 50)) * 100"></div>
                                 </div>
-                                <span class="text-sm text-gray-700 mt-8">Available only:45</span>
+                                <span class="text-sm text-gray-700 mt-8">Disponible: {{ producto.stock }}</span>
                             </div>
 
-                            <span class="text-gray-900 d-block mb-8">Quantity:</span>
+                            <span class="text-gray-900 d-block mb-8">Cantidad:</span>
                             <div class="flex-between gap-16 flex-wrap">
                                 <div class="flex-align flex-wrap gap-16">
                                     <div class="border border-gray-100 rounded-pill py-9 px-16 flex-align">
                                         <button type="button"
-                                            class="quantity__minus p-4 text-gray-700 hover-text-main-600 flex-center"><i
-                                                class="ph ph-minus"></i></button>
+                                            class="quantity__minus p-4 text-gray-700 hover-text-main-600 flex-center"
+                                            (click)="disminuirCantidad()">
+                                            <i class="ph ph-minus"></i>
+                                        </button>
                                         <input type="number" class="quantity__input border-0 text-center w-32"
-                                            value="1">
+                                            [(ngModel)]="cantidad" [min]="1" [max]="producto.stock">
                                         <button type="button"
-                                            class="quantity__plus p-4 text-gray-700 hover-text-main-600 flex-center"><i
-                                                class="ph ph-plus"></i></button>
+                                            class="quantity__plus p-4 text-gray-700 hover-text-main-600 flex-center"
+                                            (click)="aumentarCantidad()">
+                                            <i class="ph ph-plus"></i>
+                                        </button>
                                     </div>
-                                    <a href="#" class="btn btn-main rounded-pill flex-align d-inline-flex gap-8 px-48">
-                                        <i class="ph ph-shopping-cart"></i> Add To Cart</a>
+                                    <button 
+                                        (click)="agregarAlCarrito()" 
+                                        class="btn btn-main rounded-pill flex-align d-inline-flex gap-8 px-48"
+                                        [disabled]="producto.stock <= 0">
+                                        <i class="ph ph-shopping-cart"></i> 
+                                        {{ producto.stock <= 0 ? 'Sin Stock' : 'Agregar al Carrito' }}
+                                    </button>
                                 </div>
 
                                 <div class="flex-align gap-12">
@@ -149,6 +191,7 @@
 
                             <span class="mt-32 pt-32 text-gray-700 border-top border-gray-100 d-block"></span>
 
+                            <!-- ✅ CUPONES DINÁMICOS SI EXISTEN -->
                             <div
                                 class="flex-between gap-16 p-12 border border-main-two-600 border-dashed rounded-8 mb-16">
                                 <div class="flex-align gap-12">
@@ -156,15 +199,17 @@
                                         class="w-18 h-18 flex-center border border-gray-900 text-xs rounded-circle hover-bg-gray-100">
                                         <i class="ph ph-plus"></i>
                                     </button>
-                                    <span class="text-gray-900 fw-medium text-xs">Mfr. coupon. $3.00 off 5</span>
+                                    <span class="text-gray-900 fw-medium text-xs">Cupón de descuento disponible</span>
                                 </div>
                                 <a [routerLink]="['cart']"
-                                    class="text-xs fw-semibold text-main-two-600 text-decoration-underline hover-text-main-two-700">View
-                                    Details</a>
+                                    class="text-xs fw-semibold text-main-two-600 text-decoration-underline hover-text-main-two-700">Ver
+                                    Detalles</a>
                             </div>
+                            
+                            <!-- ✅ INFORMACIÓN ADICIONAL -->
                             <ul class="list-inside ms-12">
-                                <li class="text-gray-900 text-sm mb-8">Buy 1, Get 1 FREE</li>
-                                <li class="text-gray-900 text-sm mb-0">Buy 1, Get 1 FREE</li>
+                                <li class="text-gray-900 text-sm mb-8">Envío gratis en compras mayores a S/ 100</li>
+                                <li class="text-gray-900 text-sm mb-0">Garantía de satisfacción</li>
                             </ul>
 
                         </div>
@@ -178,10 +223,10 @@
                             <div class="flex-align gap-8">
                                 <span class="w-44 h-44 bg-white rounded-circle flex-center text-2xl"><i
                                         class="ph ph-storefront"></i></span>
-                                <span class="text-white">by Marketpro</span>
+                                <span class="text-white">by {{ producto.marca?.nombre || 'Marketpro' }}</span>
                             </div>
-                            <a [routerLink]="['shop']" class="btn btn-white rounded-pill text-uppercase">View
-                                Store</a>
+                            <a [routerLink]="['shop']" class="btn btn-white rounded-pill text-uppercase">Ver
+                                Tienda</a>
                         </div>
                     </div>
                     <div class="p-24 bg-color-one d-flex align-items-start gap-24 border-bottom border-gray-100">
@@ -190,7 +235,7 @@
                             <i class="ph-fill ph-truck"></i>
                         </span>
                         <div class="">
-                            <h6 class="text-sm mb-8">Entrega Rapida</h6>
+                            <h6 class="text-sm mb-8">Entrega Rápida</h6>
                             <p class="text-gray-700">Envío ultrarrápido, garantizado.</p>
                         </div>
                     </div>
@@ -232,8 +277,7 @@
                         </span>
                         <div class="">
                             <h6 class="text-sm mb-8">Garantía</h6>
-                            <p class="text-gray-700">La Ley de Protección al Consumidor no prevé la devolución de
-                                este producto de calidad adecuada.</p>
+                            <p class="text-gray-700">{{ detalles?.garantia || 'La Ley de Protección al Consumidor no prevé la devolución de este producto de calidad adecuada.' }}</p>
                         </div>
                     </div>
                     <div class="p-24 bg-color-one d-flex align-items-start gap-24 border-bottom border-gray-100">
@@ -278,177 +322,47 @@
                             aria-labelledby="pills-description-tab" tabindex="0">
                             <div class="mb-40">
                                 <h6 class="mb-24">Descripción del producto</h6>
-                                <p>Dondequiera que haya celebraciones y buenos momentos, la marca LAY'S estará presente, como lo ha estado durante más de 75 años. Con sabores casi tan ricos como nuestra historia, tenemos un sabor a papas fritas o crujientes que te hará sonreír. </p>
-                                <p>Morbi ut sapien vitae odio accumsan gravida. Morbi vitae erat auctor, eleifend
-                                    nunc a, lobortis neque. Praesent aliquam dignissim viverra. Maecenas lacus odio,
-                                    feugiat eu nunc sit amet, maximus sagittis dolor. Vivamus nisi sapien, elementum
-                                    sit amet eros sit amet, ultricies cursus ipsum. Sed consequat luctus ligula.
-                                    Curabitur laoreet rhoncus blandit. Aenean vel diam ut arcu pharetra dignissim ut
-                                    sed leo. Vivamus faucibus, ipsum in vestibulum vulputate, lorem orci convallis
-                                    quam, sit amet consequat nulla felis pharetra lacus. Duis semper erat mauris,
-                                    sed egestas purus commodo vel.</p>
-                                <ul class="list-inside mt-32 ms-16">
-                                    <li class="text-gray-400 mb-4">Bolsa de 8.0 oz de papas fritas clásicas LAY'S</li>
-                                    <li class="text-gray-400 mb-4">Las papas fritas LAY'S son un gran refrigerio</li>
-                                    <li class="text-gray-400 mb-4">Incluye tres ingredientes: papas, aceite y
-                                        sal</li>
-                                    <li class="text-gray-400 mb-4">Producto sin gluten</li>
-                                </ul>
-                                <ul class="mt-32">
-                                    <li class="text-gray-400 mb-4">Hecho en EE. UU.</li>
-                                    <li class="text-gray-400 mb-4">Listo para comer.</li>
-                                </ul>
+                                <div [innerHTML]="detalles?.descripcion_detallada || 'Descripción no disponible'"></div>
                             </div>
-                            <div class="mb-40">
+                            
+                            <!-- ✅ ESPECIFICACIONES DINÁMICAS -->
+                            <div class="mb-40" *ngIf="getEspecificaciones().length > 0">
                                 <h6 class="mb-24">Especificaciones del producto</h6>
                                 <ul class="mt-32">
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
+                                    <li *ngFor="let spec of getEspecificaciones()" class="text-gray-400 mb-14 flex-align gap-14">
                                         <span
                                             class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
                                             <i class="ph ph-check"></i>
                                         </span>
                                         <span class="text-heading fw-medium">
-                                            Tipo de producto:
-                                            <span class="text-gray-500"> Papas fritas y salsas</span>
-                                        </span>
-                                    </li>
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
-                                        </span>
-                                        <span class="text-heading fw-medium">
-                                            Nombre del producto:
-                                            <span class="text-gray-500"> Papas fritas clásicas </span>
-                                        </span>
-                                    </li>
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
-                                        </span>
-                                        <span class="text-heading fw-medium">
-                                            Marca:
-                                            <span class="text-gray-500"> Lay's</span>
-                                        </span>
-                                    </li>
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
-                                        </span>
-                                        <span class="text-heading fw-medium">
-                                           Elegibles para FSA:
-                                            <span class="text-gray-500"> No</span>
-                                        </span>
-                                    </li>
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
-                                        </span>
-                                        <span class="text-heading fw-medium">
-                                            Tamaño/Cantidad:
-                                            <span class="text-gray-500"> 8.0oz</span>
-                                        </span>
-                                    </li>
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
-                                        </span>
-                                        <span class="text-heading fw-medium">
-                                           Código de artículo:
-                                            <span class="text-gray-500"> 331539</span>
-                                        </span>
-                                    </li>
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
-                                        </span>
-                                        <span class="text-heading fw-medium">
-                                            Ingredientes:
-                                            <span class="text-gray-500"> Papas, aceite vegetal y sal.</span>
+                                            {{ spec.nombre }}:
+                                            <span class="text-gray-500"> {{ spec.valor }}</span>
                                         </span>
                                     </li>
                                 </ul>
                             </div>
-                            <div class="mb-40">
-                                <h6 class="mb-24">Información nutricional</h6>
+
+                            <!-- ✅ CARACTERÍSTICAS TÉCNICAS DINÁMICAS -->
+                            <div class="mb-40" *ngIf="getCaracteristicasTecnicas().length > 0">
+                                <h6 class="mb-24">Características técnicas</h6>
                                 <ul class="mt-32">
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
+                                    <li *ngFor="let caracteristica of getCaracteristicasTecnicas()" class="text-gray-400 mb-14 flex-align gap-14">
                                         <span
                                             class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
                                             <i class="ph ph-check"></i>
                                         </span>
-                                        <span class="text-heading fw-medium"> Grasas Totales 10g 13%</span>
-                                    </li>
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
+                                        <span class="text-heading fw-medium">
+                                            {{ caracteristica.caracteristica }}:
+                                            <span class="text-gray-500"> {{ caracteristica.detalle }}</span>
                                         </span>
-                                        <span class="text-heading fw-medium"> Grasas Saturadas 1.5g 7%</span>
-                                    </li>
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
-                                        </span>
-                                        <span class="text-heading fw-medium"> Colesterol 0mg 0%</span>
-                                    </li>
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
-                                        </span>
-                                        <span class="text-heading fw-medium"> Sodio 170mg 7%</span>
-                                    </li>
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
-                                        </span>
-                                        <span class="text-heading fw-medium"> Potasio 350mg 6%</span>
                                     </li>
                                 </ul>
                             </div>
-                            <div class="mb-0">
-                                <h6 class="mb-24">Más detalles</h6>
-                                <ul class="mt-32">
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
-                                        </span>
-                                        <span class="text-gray-500"> La entresuela Lunarlon ofrece una
-                                            capacidad de respuesta ultra suave</span>
-                                    </li>
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
-                                        </span>
-                                        <span class="text-gray-500"> Unidad de talón Air-Sole encapsulada para una
-                                            amortiguación ligera</span>
-                                    </li>
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
-                                        </span>
-                                        <span class="text-gray-500"> Color mostrado: Ale Brown/Black/Goldtone/Ale
-                                            Brown</span>
-                                    </li>
-                                    <li class="text-gray-400 mb-14 flex-align gap-14">
-                                        <span
-                                            class="w-20 h-20 bg-main-50 text-main-600 text-xs flex-center rounded-circle">
-                                            <i class="ph ph-check"></i>
-                                        </span>
-                                        <span class="text-gray-500"> Style: 805899-202</span>
-                                    </li>
-                                </ul>
+
+                            <!-- ✅ INSTRUCCIONES DE USO -->
+                            <div class="mb-0" *ngIf="detalles?.instrucciones_uso">
+                                <h6 class="mb-24">Instrucciones de uso</h6>
+                                <p class="text-gray-700">{{ detalles.instrucciones_uso }}</p>
                             </div>
 
                         </div>
@@ -456,7 +370,7 @@
                             aria-labelledby="pills-reviews-tab" tabindex="0">
                             <div class="row g-4">
                                 <div class="col-lg-6">
-                                    <h6 class="mb-24">Product Description</h6>
+                                    <h6 class="mb-24">Reseñas del producto</h6>
                                     <div
                                         class="d-flex align-items-start gap-24 pb-44 border-bottom border-gray-100 mb-44">
                                         <img src="assets/images/thumbs/comment-img1.png" alt=""
@@ -464,7 +378,7 @@
                                         <div class="flex-grow-1">
                                             <div class="flex-between align-items-start gap-8 ">
                                                 <div class="">
-                                                    <h6 class="mb-12 text-md">Nicolas cage</h6>
+                                                    <h6 class="mb-12 text-md">Usuario Verificado</h6>
                                                     <div class="flex-align gap-8">
                                                         <span class="text-xs fw-medium text-warning-600 d-flex"><i
                                                                 class="ph-fill ph-star"></i></span>
@@ -478,62 +392,20 @@
                                                                 class="ph-fill ph-star"></i></span>
                                                     </div>
                                                 </div>
-                                                <span class="text-gray-800 text-xs">3 Days ago</span>
+                                                <span class="text-gray-800 text-xs">Hace 3 días</span>
                                             </div>
-                                            <h6 class="mb-14 text-md mt-24">Greate Product</h6>
-                                            <p class="text-gray-700">There are many variations of passages of Lorem
-                                                Ipsum available, but the majority have suffered alteration in some
-                                                form, by injected humour</p>
+                                            <h6 class="mb-14 text-md mt-24">Excelente Producto</h6>
+                                            <p class="text-gray-700">Muy buena calidad y llegó en perfecto estado. Lo recomiendo totalmente.</p>
 
                                             <div class="flex-align gap-20 mt-44">
                                                 <button class="flex-align gap-12 text-gray-700 hover-text-main-600">
                                                     <i class="ph-bold ph-thumbs-up"></i>
-                                                    Like
+                                                    Me gusta
                                                 </button>
                                                 <a href="#comment-form"
                                                     class="flex-align gap-12 text-gray-700 hover-text-main-600">
                                                     <i class="ph-bold ph-arrow-bend-up-left"></i>
-                                                    Replay
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex align-items-start gap-24">
-                                        <img src="assets/images/thumbs/comment-img1.png" alt=""
-                                            class="w-52 h-52 object-fit-cover rounded-circle flex-shrink-0">
-                                        <div class="flex-grow-1">
-                                            <div class="flex-between align-items-start gap-8 ">
-                                                <div class="">
-                                                    <h6 class="mb-12 text-md">Nicolas cage</h6>
-                                                    <div class="flex-align gap-8">
-                                                        <span class="text-xs fw-medium text-warning-600 d-flex"><i
-                                                                class="ph-fill ph-star"></i></span>
-                                                        <span class="text-xs fw-medium text-warning-600 d-flex"><i
-                                                                class="ph-fill ph-star"></i></span>
-                                                        <span class="text-xs fw-medium text-warning-600 d-flex"><i
-                                                                class="ph-fill ph-star"></i></span>
-                                                        <span class="text-xs fw-medium text-warning-600 d-flex"><i
-                                                                class="ph-fill ph-star"></i></span>
-                                                        <span class="text-xs fw-medium text-warning-600 d-flex"><i
-                                                                class="ph-fill ph-star"></i></span>
-                                                    </div>
-                                                </div>
-                                                <span class="text-gray-800 text-xs">3 Days ago</span>
-                                            </div>
-                                            <h6 class="mb-14 text-md mt-24">Greate Product</h6>
-                                            <p class="text-gray-700">There are many variations of passages of Lorem
-                                                Ipsum available, but the majority have suffered alteration in some
-                                                form, by injected humour</p>
-
-                                            <div class="flex-align gap-20 mt-44">
-                                                <button class="flex-align gap-12 text-gray-700 hover-text-main-600">
-                                                    <i class="ph-bold ph-thumbs-up"></i>
-                                                    Like
-                                                </button>
-                                                <a href="#comment-form"
-                                                    class="flex-align gap-12 text-gray-700 hover-text-main-600">
-                                                    <i class="ph-bold ph-arrow-bend-up-left"></i>
-                                                    Replay
+                                                    Responder
                                                 </a>
                                             </div>
                                         </div>
@@ -541,8 +413,8 @@
 
                                     <div class="mt-56">
                                         <div class="">
-                                            <h6 class="mb-24">Write a Review</h6>
-                                            <span class="text-heading mb-8">What is it like to Product?</span>
+                                            <h6 class="mb-24">Escribir una reseña</h6>
+                                            <span class="text-heading mb-8">¿Qué te parece el producto?</span>
                                             <div class="flex-align gap-8">
                                                 <span class="text-xs fw-medium text-warning-600 d-flex"><i
                                                         class="ph-fill ph-star"></i></span>
@@ -559,26 +431,24 @@
                                         <div class="mt-32">
                                             <form action="#">
                                                 <div class="mb-32">
-                                                    <label for="title" class="text-neutral-600 mb-8">Review
-                                                        Title</label>
+                                                    <label for="title" class="text-neutral-600 mb-8">Título de la reseña</label>
                                                     <input type="text" class="common-input rounded-8" id="title"
-                                                        placeholder="Great Products">
+                                                        placeholder="Excelente producto">
                                                 </div>
                                                 <div class="mb-32">
-                                                    <label for="desc" class="text-neutral-600 mb-8">Review
-                                                        Content</label>
+                                                    <label for="desc" class="text-neutral-600 mb-8">Contenido de la reseña</label>
                                                     <textarea class="common-input rounded-8"
-                                                        id="desc">It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.</textarea>
+                                                        id="desc">Escribe tu opinión sobre el producto...</textarea>
                                                 </div>
-                                                <button type="submit" class="btn btn-main rounded-pill mt-48">Submit
-                                                    Review</button>
+                                                <button type="submit" class="btn btn-main rounded-pill mt-48">Enviar
+                                                    Reseña</button>
                                             </form>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="ms-xxl-5">
-                                        <h6 class="mb-24">Customers Feedback</h6>
+                                        <h6 class="mb-24">Comentarios de clientes</h6>
                                         <div class="d-flex flex-wrap gap-44">
                                             <div
                                                 class="border border-gray-100 rounded-8 px-40 py-52 flex-center flex-column flex-shrink-0 text-center">
@@ -595,7 +465,7 @@
                                                     <span class="text-xs fw-medium text-warning-600 d-flex"><i
                                                             class="ph-fill ph-star"></i></span>
                                                 </div>
-                                                <span class="mt-16 text-gray-500">Average Product Rating</span>
+                                                <span class="mt-16 text-gray-500">Calificación promedio</span>
                                             </div>
                                             <div class="border border-gray-100 rounded-8 px-24 py-40 flex-grow-1">
                                                 <div class="flex-align gap-8 mb-20">
@@ -723,15 +593,15 @@
 </section>
 
 <!-- ========================== Similar Product Start ============================= -->
-<section class="new-arrival pb-80">
+<section class="new-arrival pb-80" *ngIf="productosRelacionados.length > 0">
     <div class="container container-lg">
         <div class="section-heading">
             <div class="flex-between flex-wrap gap-8">
-                <h5 class="mb-0">You Might Also Like</h5>
+                <h5 class="mb-0">También te puede interesar</h5>
                 <div class="flex-align gap-16">
                     <a [routerLink]="['shop']"
-                        class="text-sm fw-medium text-gray-700 hover-text-main-600 hover-text-decoration-underline">All
-                        Products</a>
+                        class="text-sm fw-medium text-gray-700 hover-text-main-600 hover-text-decoration-underline">Todos los
+                        Productos</a>
                     <div class="flex-align gap-8">
                         <button type="button" id="new-arrival-prev"
                             class="slick-prev slick-arrow flex-center rounded-circle border border-gray-100 hover-border-main-600 text-xl hover-bg-main-600 hover-text-white transition-1">
@@ -747,48 +617,51 @@
         </div>
 
         <ngx-slick-carousel #slickModal="slick-carousel" class="product-one-slider g-12" [config]="arrivalSlider">
-            <div ngxSlickItem *ngFor="let product of products" class="slide">
-                <div class="" [attr.data-aos]="'fade-up'" [attr.data-aos-duration]="product.fadeDuration">
+            <div ngxSlickItem *ngFor="let product of productosRelacionados" class="slide">
+                <div class="" [attr.data-aos]="'fade-up'" [attr.data-aos-duration]="200">
                     <div
                         class="product-card px-20 py-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2">
 
-                        <a [routerLink]="['cart']"
+                        <button
+                            (click)="agregarProductoRelacionado(product)"
                             class="product-card__cart btn bg-main-50 text-main-600 hover-bg-main-600 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 position-absolute inset-block-start-0 inset-inline-end-0 me-16 mt-16">
-                            Add <i class="ph ph-shopping-cart"></i>
-                        </a>
+                            Agregar <i class="ph ph-shopping-cart"></i>
+                        </button>
 
-                        <a [routerLink]="['product-details']" class="product-card__thumb flex-center overflow-hidden">
-                            <img [src]="product.image" [alt]="product.name">
+                        <a [routerLink]="['/product-details', product.id]" class="product-card__thumb flex-center overflow-hidden">
+                            <img [src]="product.imagen_url || product.imagen" [alt]="product.nombre" (error)="onImageError($event)">
                         </a>
 
                         <div class="product-card__content mt-12">
                             <div class="product-card__price mb-8 d-flex align-items-center gap-8">
-                                <span class="text-heading text-md fw-semibold">${{ product.price }} <span
-                                        class="text-gray-500 fw-normal">/Qty</span></span>
-                                <span class="text-gray-400 text-md fw-semibold text-decoration-line-through">${{
-                                    product.oldPrice }}</span>
+                                <span class="text-heading text-md fw-semibold">S/ {{ product.precio_venta | number:'1.2-2' }} 
+                                  <span class="text-gray-500 fw-normal">/Qty</span>
+                                </span>
+                                <span *ngIf="product.precio_oferta" class="text-gray-400 text-md fw-semibold text-decoration-line-through">
+                                  S/ {{ product.precio_oferta | number:'1.2-2' }}
+                                </span>
                             </div>
 
                             <div class="flex-align gap-6">
-                                <span class="text-xs fw-bold text-gray-600">{{ product.rating }}</span>
+                                <span class="text-xs fw-bold text-gray-600">4.8</span>
                                 <span class="text-15 fw-bold text-warning-600 d-flex"><i
                                         class="ph-fill ph-star"></i></span>
-                                <span class="text-xs fw-bold text-gray-600">({{ product.reviews }})</span>
+                                <span class="text-xs fw-bold text-gray-600">(17k)</span>
                             </div>
 
                             <h6 class="title text-lg fw-semibold mt-12 mb-20">
-                                <a [routerLink]="['product-details']" class="link text-line-2">{{ product.name }}</a>
+                                <a [routerLink]="['/product-details', product.id]" class="link text-line-2">{{ product.nombre }}</a>
                             </h6>
 
                             <div class="mt-12">
                                 <div class="progress w-100 bg-color-three rounded-pill h-4" role="progressbar"
-                                    [attr.aria-valuenow]="(product.sold / product.total) * 100" aria-valuemin="0"
+                                    [attr.aria-valuenow]="(product.stock / (product.stock + 50)) * 100" aria-valuemin="0"
                                     aria-valuemax="100">
                                     <div class="progress-bar bg-main-600 rounded-pill"
-                                        [style.width.%]="(product.sold / product.total) * 100"></div>
+                                        [style.width.%]="(product.stock / (product.stock + 50)) * 100"></div>
                                 </div>
                                 <span class="text-gray-900 text-xs fw-medium mt-8 d-block">
-                                    Sold: {{ product.sold }}/{{ product.total }}
+                                    Stock: {{ product.stock }}
                                 </span>
                             </div>
                         </div>
@@ -815,16 +688,14 @@
             <div class="row align-items-center">
                 <div class="col-xl-6">
                     <div class="">
-                        <h1 class="text-white mb-12" data-aos="fade-down" data-aos-duration="800">Don't Miss Out on
-                            Grocery Deals</h1>
-                        <p class="text-white h5 mb-0" data-aos="fade-up" data-aos-duration="800">SING UP FOR THE UPDATE
-                            NEWSLETTER</p>
+                        <h1 class="text-white mb-12" data-aos="fade-down" data-aos-duration="800">No te pierdas las ofertas</h1>
+                        <p class="text-white h5 mb-0" data-aos="fade-up" data-aos-duration="800">SUSCRÍBETE PARA RECIBIR ACTUALIZACIONES</p>
                         <form action="#" class="position-relative mt-40" data-aos="zoom-in" data-aos-duration="800">
                             <input type="email"
                                 class="form-control common-input rounded-pill text-white py-22 px-16 pe-144"
-                                placeholder="Your email address...">
+                                placeholder="Tu dirección de email...">
                             <button type="submit"
-                                class="btn btn-main-two rounded-pill position-absolute top-50 translate-middle-y inset-inline-end-0 me-10">Subscribe
+                                class="btn btn-main-two rounded-pill position-absolute top-50 translate-middle-y inset-inline-end-0 me-10">Suscribirse
                             </button>
                         </form>
                     </div>

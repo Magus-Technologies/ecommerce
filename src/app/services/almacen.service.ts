@@ -402,6 +402,19 @@ export class AlmacenService {
     )
   }
 
+  // ✅ NUEVO: Obtener producto público individual con detalles
+  obtenerProductoPublico(id: number): Observable<{
+    producto: any;
+    detalles: any;
+    productos_relacionados: any[];
+  }> {
+    return this.http.get<{
+      producto: any;
+      detalles: any;
+      productos_relacionados: any[];
+    }>(`${this.apiUrl}/productos-publicos/${id}`);
+  }
+
   // Métodos para secciones
   obtenerSecciones(): Observable<Seccion[]> {
     return this.http.get<Seccion[]>(`${this.apiUrl}/secciones`);
@@ -447,5 +460,19 @@ export class AlmacenService {
       .pipe(
         map(response => response.productos)
       );
+  }
+   
+  obtenerDetallesProducto(productoId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/productos/${productoId}/detalles`);
+  }
+
+  guardarDetallesProducto(productoId: number, formData: FormData): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/productos/${productoId}/detalles`, formData);
+  }
+
+  eliminarImagenDetalle(productoId: number, imagenIndex: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/productos/${productoId}/detalles/imagenes`, {
+      body: { imagen_index: imagenIndex }
+    });
   }
 }
