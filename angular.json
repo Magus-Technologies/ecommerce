@@ -22,7 +22,7 @@
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
-            "allowedCommonJsDependencies": ["aos", "jquery", "slick-carousel"],
+            "allowedCommonJsDependencies": ["aos", "jquery", "slick-carousel", "quill"],
             "inlineStyleLanguage": "scss",
             "assets": ["src/favicon.ico", "src/assets"],
             "styles": [
@@ -35,6 +35,8 @@
               "node_modules/aos/dist/aos.css",
               "node_modules/slick-carousel/slick/slick.css",
               "node_modules/slick-carousel/slick/slick-theme.css",
+              "node_modules/quill/dist/quill.snow.css",
+              "node_modules/quill/dist/quill.core.css",
               "src/assets/sass/main.scss",
               "node_modules/swiper/swiper-bundle.min.css"
             ],

@@ -4,6 +4,7 @@ import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
 import { AlmacenService, Producto } from "../../../../services/almacen.service"
 import { ProductoModalComponent } from "./producto-modal.component"
+import { ProductoDetallesModalComponent } from "./producto-detalles-modal.component"
 import { SeccionFilterService } from '../../../../services/seccion-filter.service';
 import { PermissionsService } from '../../../../services/permissions.service';
 import Swal from "sweetalert2"
@@ -12,7 +13,7 @@ import Swal from "sweetalert2"
 @Component({
   selector: "app-productos-list",
   standalone: true,
-  imports: [CommonModule, RouterModule, ProductoModalComponent],
+imports: [CommonModule, RouterModule, ProductoModalComponent, ProductoDetallesModalComponent],
   template: `
     <div class="d-flex justify-content-between align-items-center mb-24">
       <div>
@@ -131,6 +132,14 @@ import Swal from "sweetalert2"
                       <i class="ph text-sm" 
                          [class]="producto.activo ? 'ph-eye-slash' : 'ph-eye'"></i>
                     </button>
+                    <!-- Gestionar Detalles -->
+<button class="btn bg-info-50 hover-bg-info-100 text-info-600 w-32 h-32 rounded-6 flex-center transition-2"
+        *ngIf="permissionsService.canEditProductos()"
+        title="Gestionar Detalles"
+        (click)="gestionarDetalles(producto)">
+  <i class="ph ph-list-dashes text-sm"></i>
+</button>
+
 
                     <!-- Reemplázalo por: -->
                     <button class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
@@ -176,6 +185,14 @@ import Swal from "sweetalert2"
       (productoGuardado)="onProductoGuardado()"
       (modalCerrado)="onModalCerrado()">
     </app-producto-modal>
+
+    <!-- Modal para gestionar detalles del producto -->
+<app-producto-detalles-modal 
+  [producto]="productoSeleccionado"
+  (detallesGuardados)="onDetallesGuardados()"
+  (modalCerrado)="onModalCerrado()">
+</app-producto-detalles-modal>
+
   `,
   styles: [
     `
@@ -232,6 +249,15 @@ export class ProductosListComponent implements OnInit {
       bootstrapModal.show()
     }
   }
+  gestionarDetalles(producto: Producto): void {
+  this.productoSeleccionado = producto
+  const modal = document.getElementById("modalDetallesProducto")
+  if (modal) {
+    const bootstrapModal = new (window as any).bootstrap.Modal(modal)
+    bootstrapModal.show()
+  }
+}
+
 
   eliminarProducto(producto: Producto): void {
     Swal.fire({
@@ -299,6 +325,11 @@ export class ProductosListComponent implements OnInit {
     this.cargarProductos()
     this.productoSeleccionado = null
   }
+  onDetallesGuardados(): void {
+  this.cargarProductos()
+  this.productoSeleccionado = null
+}
+
 
   onModalCerrado(): void {
     this.productoSeleccionado = null
