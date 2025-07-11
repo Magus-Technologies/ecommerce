@@ -82,10 +82,8 @@
                             </div>
                             <span class="mt-32 pt-32 text-gray-700 border-top border-gray-100 d-block"></span>
                             
-                            <!-- ✅ DESCRIPCIÓN DINÁMICA -->
-                            <p class="text-gray-700">
-                              {{ producto.descripcion || detalles?.descripcion_detallada || 'Descripción no disponible' }}
-                            </p>
+                            <!-- ✅ DESCRIPCIÓN DINÁMICA (USANDO HTML SANITIZADO) -->
+                            <div [innerHTML]="safeDescripcionDetallada"></div>
                             
                             <div class="mt-32 flex-align flex-wrap gap-32">
                                 <div class="flex-align gap-8">
@@ -322,7 +320,7 @@
                             aria-labelledby="pills-description-tab" tabindex="0">
                             <div class="mb-40">
                                 <h6 class="mb-24">Descripción del producto</h6>
-                                <div [innerHTML]="detalles?.descripcion_detallada || 'Descripción no disponible'"></div>
+                                <div [innerHTML]="safeDescripcionDetallada"></div> <!-- ✅ Usa la nueva propiedad -->
                             </div>
                             
                             <!-- ✅ ESPECIFICACIONES DINÁMICAS -->
