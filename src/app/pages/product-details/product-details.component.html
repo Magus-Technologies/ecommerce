@@ -35,27 +35,65 @@
                     <div class="col-xl-6">
                         <div class="product-details__left">
 
-                            <!-- Thumb Slider -->
-                            <ngx-slick-carousel class="product-details__thumb-slider border border-gray-100 rounded-16"
-                                [config]="productThumbSlider">
-                                <div ngxSlickItem *ngFor="let imagen of imagenesProducto" class="slide">
-                                    <div class="product-details__thumb flex-center h-100">
-                                        <img [src]="imagen" [alt]="producto.nombre" (error)="onImageError($event)">
+                            <!-- ✅ NUEVO LAYOUT VERTICAL PARA IMÁGENES CON ZOOM DINÁMICO -->
+                            <div class="product-details__images-container" *ngIf="imagenesProducto.length > 0">
+                                <!-- Thumbnails verticales a la izquierda -->
+                                <div class="product-details__thumbnails" *ngIf="imagenesProducto.length > 1">
+                                    <div 
+                                        class="product-details__thumbnail"
+                                        [class.active]="imagen === imagenPrincipal"
+                                        *ngFor="let imagen of imagenesProducto; trackBy: trackByImageUrl"
+                                        (click)="cambiarImagenPrincipal(imagen)">
+                                        <img 
+                                            [src]="imagen" 
+                                            [alt]="producto.nombre"
+                                            (error)="onImageError($event)"
+                                            loading="lazy">
                                     </div>
                                 </div>
-                            </ngx-slick-carousel>
 
-                            <!-- Image Slider -->
-                            <div class="mt-24">
-                                <ngx-slick-carousel class="product-details__images-slider"
-                                    [config]="productImageSlider">
-                                    <div ngxSlickItem *ngFor="let imagen of imagenesProducto" class="slide">
-                                        <div
-                                            class="max-w-120 max-h-120 h-100 flex-center border border-gray-100 rounded-16 p-8">
-                                            <img [src]="imagen" [alt]="producto.nombre" (error)="onImageError($event)">
+                                <!-- Imagen principal con zoom dinámico -->
+                                <div class="product-details__main-image">
+                                    <div 
+                                        class="product-details__main-image-container border border-gray-100 rounded-16"
+                                        [class.zoom-active]="isZoomActive"
+                                        [class.mobile-zoom]="isMobileZoom"
+                                        (mouseenter)="onMouseEnterImage($event)"
+                                        (mouseleave)="onMouseLeaveImage($event)"
+                                        (mousemove)="onMouseMoveImage($event)"
+                                        (click)="toggleMobileZoom()"
+                                        #imageContainer>
+                                        
+                                        <!-- Indicador de zoom -->
+                                        <div class="zoom-indicator" [class.show]="isZoomActive || isMobileZoom">
+                                            {{ isMobileZoom ? 'Toca para alejar' : 'Zoom activo' }}
                                         </div>
+                                        
+                                        <img 
+                                            *ngIf="imagenPrincipal; else noImage"
+                                            [src]="imagenPrincipal" 
+                                            [alt]="producto.nombre"
+                                            (error)="onImageError($event)"
+                                            #zoomImage>
+                                        
+                                        <ng-template #noImage>
+                                            <div class="product-details__no-image">
+                                                <i class="ph ph-image" style="font-size: 3rem;"></i>
+                                                <span class="ms-3">Sin imagen disponible</span>
+                                            </div>
+                                        </ng-template>
                                     </div>
-                                </ngx-slick-carousel>
+                                </div>
+                            </div>
+
+                            <!-- ✅ FALLBACK: Si no hay imágenes, mostrar placeholder -->
+                            <div *ngIf="imagenesProducto.length === 0" class="product-details__main-image">
+                                <div class="product-details__main-image-container border border-gray-100 rounded-16">
+                                    <div class="product-details__no-image">
+                                        <i class="ph ph-image" style="font-size: 3rem;"></i>
+                                        <span class="ms-3">Sin imagen disponible</span>
+                                    </div>
+                                </div>
                             </div>
 
                         </div>
@@ -83,7 +121,7 @@
                             <span class="mt-32 pt-32 text-gray-700 border-top border-gray-100 d-block"></span>
                             
                             <!-- ✅ DESCRIPCIÓN DINÁMICA (USANDO HTML SANITIZADO) -->
-                            <div [innerHTML]="safeDescripcionDetallada"></div>
+                            <!-- <div [innerHTML]="safeDescripcionDetallada"></div> -->
                             
                             <div class="mt-32 flex-align flex-wrap gap-32">
                                 <div class="flex-align gap-8">
@@ -164,7 +202,7 @@
                                     </div>
                                     <button 
                                         (click)="agregarAlCarrito()" 
-                                        class="btn btn-main rounded-pill flex-align d-inline-flex gap-8 px-48"
+                                        class="btn bg-danger-20 rounded-pill flex-align d-inline-flex gap-8 px-48"
                                         [disabled]="producto.stock <= 0">
                                         <i class="ph ph-shopping-cart"></i> 
                                         {{ producto.stock <= 0 ? 'Sin Stock' : 'Agregar al Carrito' }}
@@ -215,81 +253,129 @@
                 </div>
             </div>
             <div class="col-lg-3">
-                <div class="product-details__sidebar border border-gray-100 rounded-16 overflow-hidden">
+                <div class="product-details__sidebar border border-gray-100 rounded-16 overflow-hidden bg-white">
+                    
+                    <!-- Envío gratis -->
+                    <div class="p-24 border-bottom border-gray-100">
+                        <div class="mb-16">
+                            <span class="text-warning-600 fw-semibold">Envío gratis </span>
+                            <span class="text-gray-900"> a todo el país</span>
+                        </div>
+                        <p class="text-gray-500 text-sm mb-12">Conocé los tiempos y las formas de envío.</p>
+                        <a href="#" class="text-warning-600 text-sm fw-medium text-decoration-underline">Ver formas de entrega</a>
+                    </div>
+
+                    <!-- Vendido por -->
+                    <div class="p-24 border-bottom border-gray-100">
+                        <div class="mb-8">
+                            <span class="text-gray-900">Vendido por </span>
+                            <span class="text-warning-600 fw-semibold">{{ producto.marca?.nombre || 'MAGUS' }}</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">+100 ventas</span>
+                    </div>
+
+                    <!-- Stock disponible -->
+                    <div class="p-24 border-bottom border-gray-100">
+                        <div class="d-flex align-items-center justify-content-between mb-12">
+                            <span class="text-gray-900 fw-semibold">Stock disponible</span>
+                            <img src="assets/images/thumbs/shalom.png" alt="Shalom" class="h-20">
+                        </div>
+                        <p class="text-gray-500 text-sm">Almacenado y enviado por</p>
+                    </div>
+
+                    <!-- Cantidad -->
+                    <div class="p-24 border-bottom border-gray-100">
+                        <div class="mb-16">
+                            <span class="text-gray-900 fw-semibold">Cantidad: </span>
+                            <span class="text-gray-900">{{ cantidad }} unidad</span>
+                            <span class="text-gray-500 text-sm"> ({{ producto.stock }} disponibles)</span>
+                        </div>
+                        
+                        <!-- Botones de acción -->
+                        <div class="d-grid gap-12">
+                            <button 
+                                (click)="comprarAhora()"
+                                class="btn bg-danger-10 rounded-pill py-12 fw-semibold"
+                                [disabled]="producto.stock <= 0">
+                                {{ producto.stock <= 0 ? 'Sin Stock' : 'Comprar ahora' }}
+                            </button>
+                            <button 
+                                (click)="agregarAlCarrito()" 
+                                class="btn bg-danger-30 text-danger-20 rounded-pill py-12 fw-semibold"
+                                [disabled]="producto.stock <= 0">
+                                {{ producto.stock <= 0 ? 'Sin Stock' : 'Agregar al carrito' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Características del servicio -->
                     <div class="p-24">
-                        <div class="flex-between bg-main-600 rounded-pill p-8">
-                            <div class="flex-align gap-8">
-                                <span class="w-44 h-44 bg-white rounded-circle flex-center text-2xl"><i
-                                        class="ph ph-storefront"></i></span>
-                                <span class="text-white">by {{ producto.marca?.nombre || 'Marketpro' }}</span>
+                        <!-- Devolución gratis -->
+                        <div class="d-flex align-items-start gap-12 mb-20">
+                            <i class="ph ph-arrow-u-up-left text-warning-600 text-xl mt-4"></i>
+                            <div>
+                                <span class="text-warning-600 fw-medium">Devolución gratis</span>
+                                <p class="text-gray-500 text-sm mb-0">Tienes 30 días desde que lo recibes</p>
                             </div>
-                            <a [routerLink]="['shop']" class="btn btn-white rounded-pill text-uppercase">Ver
-                                Tienda</a>
                         </div>
-                    </div>
-                    <div class="p-24 bg-color-one d-flex align-items-start gap-24 border-bottom border-gray-100">
-                        <span
-                            class="w-44 h-44 bg-white text-main-600 rounded-circle flex-center text-2xl flex-shrink-0">
-                            <i class="ph-fill ph-truck"></i>
-                        </span>
-                        <div class="">
-                            <h6 class="text-sm mb-8">Entrega Rápida</h6>
-                            <p class="text-gray-700">Envío ultrarrápido, garantizado.</p>
+
+                        <!-- Vendedor confiable -->
+                        <div class="d-flex align-items-start gap-12 mb-20">
+                            <i class="ph ph-trophy text-warning-600 text-xl mt-4"></i>
+                            <div>
+                                <span class="text-warning-600 fw-medium">Vendedor confiable</span>
+                                <p class="text-gray-500 text-sm mb-0">100% calificaciones positivas</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="p-24 bg-color-one d-flex align-items-start gap-24 border-bottom border-gray-100">
-                        <span
-                            class="w-44 h-44 bg-white text-main-600 rounded-circle flex-center text-2xl flex-shrink-0">
-                            <i class="ph-fill ph-arrow-u-up-left"></i>
-                        </span>
-                        <div class="">
-                            <h6 class="text-sm mb-8">Devoluciones gratuitas durante 90 días</h6>
-                            <p class="text-gray-700">Compra sin riesgos con devoluciones fáciles.</p>
+
+                        <!-- Compra protegida -->
+                        <div class="d-flex align-items-start gap-12 mb-20">
+                            <i class="ph ph-shield-check text-warning-600 text-xl mt-4"></i>
+                            <div>
+                                <span class="text-warning-600 fw-medium">Compra protegida</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="p-24 bg-color-one d-flex align-items-start gap-24 border-bottom border-gray-100">
-                        <span
-                            class="w-44 h-44 bg-white text-main-600 rounded-circle flex-center text-2xl flex-shrink-0">
-                            <i class="ph-fill ph-check-circle"></i>
-                        </span>
-                        <div class="">
-                            <h6 class="text-sm mb-8">Recogida disponible en la tienda</h6>
-                            <p class="text-gray-700">Generalmente listo en 24 horas</p>
-                        </div>
-                    </div>
-                    <div class="p-24 bg-color-one d-flex align-items-start gap-24 border-bottom border-gray-100">
-                        <span
-                            class="w-44 h-44 bg-white text-main-600 rounded-circle flex-center text-2xl flex-shrink-0">
-                            <i class="ph-fill ph-credit-card"></i>
-                        </span>
-                        <div class="">
-                            <h6 class="text-sm mb-8">Pago</h6>
-                            <p class="text-gray-700">Pago al recibir los productos, Pago con tarjeta en el
-                                departamento, Google Pay, Tarjeta en línea.</p>
-                        </div>
-                    </div>
-                    <div class="p-24 bg-color-one d-flex align-items-start gap-24 border-bottom border-gray-100">
-                        <span
-                            class="w-44 h-44 bg-white text-main-600 rounded-circle flex-center text-2xl flex-shrink-0">
-                            <i class="ph-fill ph-check-circle"></i>
-                        </span>
-                        <div class="">
-                            <h6 class="text-sm mb-8">Garantía</h6>
-                            <p class="text-gray-700">{{ detalles?.garantia || 'La Ley de Protección al Consumidor no prevé la devolución de este producto de calidad adecuada.' }}</p>
-                        </div>
-                    </div>
-                    <div class="p-24 bg-color-one d-flex align-items-start gap-24 border-bottom border-gray-100">
-                        <span
-                            class="w-44 h-44 bg-white text-main-600 rounded-circle flex-center text-2xl flex-shrink-0">
-                            <i class="ph-fill ph-package"></i>
-                        </span>
-                        <div class="">
-                            <h6 class="text-sm mb-8">Embalaje</h6>
-                            <p class="text-gray-700">Propuesta de valor de investigación y desarrollo interfaz gráfica
-                                del usuario inversor.</p>
+
+                        <!-- Garantía -->
+                        <div class="d-flex align-items-start gap-12">
+                            <i class="ph ph-clock text-gray-600 text-xl mt-4"></i>
+                            <div>
+                                <span class="text-gray-900 fw-medium">6 meses de garantía de fábrica.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Formas de pago -->
+                <div class="product-details__sidebar border border-gray-100 rounded-16 overflow-hidden bg-white mt-24">
+                    <div class="p-24">
+                        <h6 class="text-gray-900 fw-semibold mb-20">Formas de pago</h6>
+                        
+                        <!-- Tarjetas de crédito -->
+                        <div class="mb-20">
+                            <p class="text-gray-900 fw-medium mb-12">Tarjetas de crédito</p>
+                            <div class="d-flex align-items-center gap-8 flex-wrap">
+                                <img src="assets/images/payment/PaymentLogo.png" alt="Visa" class="border rounded">
+                                <img src="assets/images/payment/express.png" alt="American Express" class="border rounded">
+                                <img src="assets/images/payment/mc.png" alt="Mastercard" class="border rounded">
+                            </div>
+                        </div>
+
+                        <!-- Tarjetas de débito -->
+                        <div class="mb-20">
+                            <p class="text-gray-900 fw-medium mb-12">Tarjetas de débito</p>
+                            <div class="d-flex align-items-center gap-8 flex-wrap">
+                                <img src="assets/images/payment/visaa.png" alt="Visa Débito" class="border rounded">
+                                <img src="assets/images/payment/MAE.png" alt="Maestro" class="border rounded">
+                                <img src="assets/images/payment/MC2.png" alt="Mastercard Débito" class="border rounded">
+                            </div>
+                        </div>
+
+                        <a href="#" class="text-warning-600 text-sm fw-medium text-decoration-underline">Conocé otros medios de pago</a>
+                    </div>
+                </div>
+
+                
             </div>
         </div>
 
