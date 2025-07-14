@@ -1,16 +1,16 @@
 // src\app\pages\product-details\product-details.component.ts
-import { Component,  OnInit,  OnDestroy, Inject, PLATFORM_ID } from "@angular/core"
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from "@angular/core"
 import { CommonModule } from "@angular/common"
-import { RouterLink,  ActivatedRoute,  Router } from "@angular/router" // ✅ Eliminado 'type' de ActivatedRoute y Router
+import { RouterLink, ActivatedRoute, Router } from "@angular/router"
 import { FormsModule } from "@angular/forms"
 import { SlickCarouselModule } from "ngx-slick-carousel"
 import { BreadcrumbComponent } from "../../component/breadcrumb/breadcrumb.component"
 import { ShippingComponent } from "../../component/shipping/shipping.component"
-import  { AlmacenService } from "../../services/almacen.service"
-import  { CartService } from "../../services/cart.service"
+import { AlmacenService } from "../../services/almacen.service"
+import { CartService } from "../../services/cart.service"
 import Swal from "sweetalert2"
 import { environment } from "../../../environments/environment"
-import  { DomSanitizer, SafeHtml } from "@angular/platform-browser" // ✅ Importa DomSanitizer y SafeHtml
+import { DomSanitizer, SafeHtml } from "@angular/platform-browser"
 
 @Component({
   selector: "app-product-details",
@@ -20,6 +20,10 @@ import  { DomSanitizer, SafeHtml } from "@angular/platform-browser" // ✅ Impor
   styleUrl: "./product-details.component.scss",
 })
 export class ProductDetailsComponent implements OnInit, OnDestroy {
+  // ✅ ViewChild para acceder al elemento de la imagen
+  @ViewChild('zoomImage', { static: false }) zoomImage!: ElementRef<HTMLImageElement>
+  @ViewChild('imageContainer', { static: false }) imageContainer!: ElementRef<HTMLDivElement>
+
   // ✅ DATOS DINÁMICOS
   producto: any = null
   detalles: any = null
@@ -34,16 +38,24 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
   imagenesProducto: string[] = []
   imagenPrincipal = ""
 
+  // ✅ CONTROL DE ZOOM
+  isZoomActive = false
+  isMobileZoom = false
+  private isMobileDevice = false
+
   // ✅ DATOS PROCESADOS (para evitar re-procesamiento)
   especificacionesProcesadas: any[] = []
   caracteristicasProcesadas: any[] = []
 
   // ✅ PROPIEDAD PARA HTML SEGURO
-  safeDescripcionDetallada: SafeHtml = "" // ✅ Nueva propiedad para el HTML sanitizado
+  safeDescripcionDetallada: SafeHtml = ""
 
-  private platformId: any // Corregido el tipo de platformId
+  // ✅ ENVIRONMENT PARA EL TEMPLATE
+  environment = environment
 
-  // ✅ CONFIGURACIÓN DE SLIDERS
+  private platformId: any
+
+  // ✅ CONFIGURACIÓN DE SLIDERS (mantenida para compatibilidad)
   productThumbSlider = {
     slidesToShow: 1,
     slidesToScroll: 1,
@@ -128,14 +140,14 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
   }
 
   constructor(
-    @Inject(PLATFORM_ID) platformId: any,
     private route: ActivatedRoute,
     private router: Router,
     private almacenService: AlmacenService,
     private cartService: CartService,
-    private sanitizer: DomSanitizer, // ✅ Inyecta DomSanitizer
+    private sanitizer: DomSanitizer,
   ) {
-    this.platformId = platformId
+    // Detectar si es dispositivo móvil
+    this.isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   }
 
   ngOnInit(): void {
@@ -153,6 +165,7 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     // Limpiar recursos si es necesario
+    this.resetZoom()
   }
 
   // ✅ CARGAR PRODUCTO DINÁMICAMENTE
@@ -218,9 +231,9 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ CONFIGURAR IMÁGENES DEL PRODUCTO (sin imagen por defecto si no hay)
+  // ✅ CONFIGURAR IMÁGENES DEL PRODUCTO
   private configurarImagenes(): void {
-    this.imagenesProducto = [] // Reiniciar array de imágenes
+    this.imagenesProducto = []
     const baseUrl = environment.apiUrl.replace("/api", "")
 
     // Imagen principal del producto
@@ -248,11 +261,86 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Si no se encontró ninguna imagen, el array quedará vacío.
-    // No se añade una imagen por defecto aquí para evitar 404s si no existe.
+    // Establecer imagen principal
     this.imagenPrincipal = this.imagenesProducto.length > 0 ? this.imagenesProducto[0] : ""
 
     console.log("✅ Imágenes configuradas:", this.imagenesProducto.length)
+  }
+
+  // ✅ CAMBIAR IMAGEN PRINCIPAL
+  cambiarImagenPrincipal(nuevaImagen: string): void {
+    this.imagenPrincipal = nuevaImagen
+    this.resetZoom()
+  }
+
+  // ✅ FUNCIONES DE ZOOM DINÁMICO
+  onMouseEnterImage(event: MouseEvent): void {
+    if (this.isMobileDevice) return
+
+    this.isZoomActive = true
+    this.updateZoomPosition(event)
+  }
+
+  onMouseLeaveImage(event: MouseEvent): void {
+    if (this.isMobileDevice) return
+
+    this.isZoomActive = false
+    this.resetZoom()
+  }
+
+  onMouseMoveImage(event: MouseEvent): void {
+    if (this.isMobileDevice || !this.isZoomActive) return
+
+    this.updateZoomPosition(event)
+  }
+
+  // ✅ ZOOM PARA MÓVILES (TAP TO ZOOM)
+  toggleMobileZoom(): void {
+    if (!this.isMobileDevice) return
+
+    this.isMobileZoom = !this.isMobileZoom
+    
+    if (!this.isMobileZoom) {
+      this.resetZoom()
+    }
+  }
+
+  // ✅ ACTUALIZAR POSICIÓN DEL ZOOM
+  private updateZoomPosition(event: MouseEvent): void {
+    if (!this.imageContainer || !this.zoomImage) return
+
+    const container = this.imageContainer.nativeElement
+    const image = this.zoomImage.nativeElement
+
+    // Obtener las dimensiones del contenedor
+    const containerRect = container.getBoundingClientRect()
+    
+    // Calcular la posición relativa del mouse
+    const mouseX = event.clientX - containerRect.left
+    const mouseY = event.clientY - containerRect.top
+    
+    // Calcular los porcentajes de posición (0-100%)
+    const percentX = (mouseX / containerRect.width) * 100
+    const percentY = (mouseY / containerRect.height) * 100
+    
+    // Limitar los valores entre 0 y 100
+    const clampedX = Math.max(0, Math.min(100, percentX))
+    const clampedY = Math.max(0, Math.min(100, percentY))
+    
+    // Aplicar el transform-origin basado en la posición del mouse
+    image.style.transformOrigin = `${clampedX}% ${clampedY}%`
+  }
+
+  // ✅ RESETEAR ZOOM
+  private resetZoom(): void {
+    if (this.zoomImage) {
+      this.zoomImage.nativeElement.style.transformOrigin = 'center center'
+    }
+  }
+
+  // ✅ TRACK BY FUNCTION PARA OPTIMIZAR RENDIMIENTO
+  trackByImageUrl(index: number, imagen: string): string {
+    return imagen
   }
 
   // ✅ PROCESAR ESPECIFICACIONES DE FORMA SEGURA
@@ -410,13 +498,9 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ MANEJAR ERROR DE IMAGEN (ahora solo si la URL es inválida, no para un default.png)
+  // ✅ MANEJAR ERROR DE IMAGEN
   onImageError(event: any): void {
-    // Puedes dejar esto vacío o poner una imagen de fallback genérica si realmente la tienes
-    // Por ejemplo, si tienes una imagen de "no-image.png" en tus assets:
-    // event.target.src = 'assets/images/thumbs/no-image.png';
-    // O simplemente no hacer nada si prefieres que la imagen no se muestre
-    event.target.src = "" // Esto hará que la imagen no se muestre si falla
+    event.target.style.display = "none"
   }
 
   // ✅ OBTENER PORCENTAJE DE DESCUENTO
@@ -460,7 +544,7 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     return this.producto?.precio_oferta && this.producto.precio_oferta < this.producto.precio_venta
   }
 
-  // ✅ OBTENER DESCRIPCIÓN SEGURA (ahora no se usa directamente en el HTML con [innerHTML])
+  // ✅ OBTENER DESCRIPCIÓN SEGURA
   getDescripcion(): string {
     if (this.producto?.descripcion) {
       return this.producto.descripcion
