@@ -84,7 +84,7 @@
         <!-- Banners dinámicos -->
         <div ngxSlickItem *ngFor="let banner of bannersDinamicos" class="slide">
           <div class="banner-slider">
-            <div class="banner-slider__item" style="min-height: 400px">
+            <div class="banner-slider__item" style="min-height: 400px; margin-bottom: 0; padding-bottom: 0;">
               <div
                 class="banner-slider__inner flex-between position-relative px-40 py-60"
               >
@@ -206,11 +206,10 @@
   </div>
 </div>
 <!-- ============================ Banner Section End =============================== -->
-
 <!-- ============================ Inicio de la sección de funciones =============================== -->
-<div class="feature" id="featureSection">
-  <div class="container container-lg">
-    <div class="position-relative arrow-center gradient-shadow">
+<div class="feature" id="featureSection" style="padding-top: 30px; margin-top: -20px;">
+  <div class="container container-lg" style="padding-top: 0;">
+    <div class="position-relative arrow-center gradient-shadow" style="padding-top: 0; margin-top: 0;">
       <div class="flex-align">
         <button
           type="button"
@@ -227,7 +226,7 @@
           <i class="ph ph-caret-right"></i>
         </button>
       </div>
-
+           
       <ngx-slick-carousel
         class="feature-item-wrapper"
         #slickModal="slick-carousel"
@@ -237,17 +236,20 @@
           ngxSlickItem
           *ngFor="let item of featureItems"
           class="feature-item text-center"
+          style="padding-top: 0; margin-top: 0; transform: translate3d(0px, 10px, 0px); height: 235px;"
         >
-          <div class="feature-item__thumb rounded-circle">
+          <div class="feature-item__thumb rounded-circle" style="border: 2px solid white; background: linear-gradient(to top, #1c799b, white); padding: 4px; transition: all 0.3s ease; position: relative; overflow: hidden; width: 140px; height: 140px; margin: 0 auto; z-index: 10;" onmouseover="this.style.transform='scale(1.05)'; this.style.filter='brightness(1.1)'" onmouseout="this.style.transform='scale(1)'; this.style.filter='brightness(1)'">
             <a
               [routerLink]="['shop']"
               [queryParams]="{ categoria: item.id }"
               class="w-100 h-100 flex-center"
+              style="border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: white;"
             >
               <img
                 [src]="item.img"
                 [alt]="item.title"
                 (error)="onImageError($event)"
+                style="border: none; outline: none; box-shadow: none; margin: 0; padding: 0; display: block; width: 100%; height: 100%; object-fit: cover;"
               />
             </a>
           </div>
@@ -271,7 +273,6 @@
   </div>
 </div>
 <!-- ============================ Feature Section End =============================== -->
-
 <section class="promotional-banner pt-80">
   <div class="container container-lg">
     <!-- Loading state -->
@@ -1988,3 +1989,6 @@
 
 <!-- ✅ CHATBOT COMPONENT -->
 <app-chatbot></app-chatbot>
+
+<!-- ✅ WHATSAPP FLOAT COMPONENT -->
+<app-whatsapp-float></app-whatsapp-float>

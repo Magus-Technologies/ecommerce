@@ -172,6 +172,12 @@ export const routes: Routes = [
         data: { permission: "usuarios.ver" },
       },
       {
+          path: 'horarios',
+          loadComponent: () => import('./pages/dashboard/horarios/horarios.component').then(m => m.HorariosComponent),
+          canActivate: [permissionGuard],
+          data: { permission: 'horarios.ver' }
+      },
+      {
         path: "users/create",
         loadComponent: () =>
           import("./component/user-registration/user-registration.component").then((m) => m.UserRegistrationComponent),
