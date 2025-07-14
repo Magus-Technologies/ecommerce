@@ -11,6 +11,8 @@ import { CartService } from '../../services/cart.service';
 import Swal from 'sweetalert2';
 import { OfertasService, Oferta, ProductoOferta, Cupon, OfertaPrincipalResponse } from '../../services/ofertas.service';
 import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
+import { WhatsappFloatComponent } from '../../components/whatsapp-float/whatsapp-float.component';
+
 
 interface CategoriaConImagen extends CategoriaPublica {
   img: string;
@@ -36,7 +38,7 @@ interface BrandSlideGroup {
 
 @Component({
   selector: 'app-index',
-  imports: [CommonModule, SlickCarouselModule, RouterLink, ChatbotComponent],
+  imports: [CommonModule, SlickCarouselModule, RouterLink, ChatbotComponent, WhatsappFloatComponent],
   templateUrl: './index.component.html',
   styleUrl: './index.component.scss'
 })
