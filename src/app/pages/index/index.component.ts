@@ -948,65 +948,6 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   ];
 
-  // producto de mejor oferta
-  bestProduct = [
-    {
-      id: 1,
-      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
-      image: 'assets/images/thumbs/best-sell1.png',
-      originalPrice: 28.99,
-      discountedPrice: 14.99,
-      rating: 4.8,
-      reviewsCount: 17,
-      storeName: 'Lucky Supermarket',
-      soldCount: 18,
-      totalStock: 35,
-      soldPercentage: 35,
-      duration: 200
-    },
-    {
-      id: 2,
-      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
-      image: 'assets/images/thumbs/best-sell2.png',
-      originalPrice: 28.99,
-      discountedPrice: 14.99,
-      rating: 4.8,
-      reviewsCount: 17,
-      storeName: 'Lucky Supermarket',
-      soldCount: 18,
-      totalStock: 35,
-      soldPercentage: 35,
-      duration: 400
-    },
-    {
-      id: 3,
-      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
-      image: 'assets/images/thumbs/best-sell3.png',
-      originalPrice: 28.99,
-      discountedPrice: 14.99,
-      rating: 4.8,
-      reviewsCount: 17,
-      storeName: 'Lucky Supermarket',
-      soldCount: 18,
-      totalStock: 35,
-      soldPercentage: 35,
-      duration: 400
-    },
-    {
-      id: 4,
-      name: 'Hortalizas en floretes de brócoli de Taylor Farms',
-      image: 'assets/images/thumbs/best-sell4.png',
-      originalPrice: 28.99,
-      discountedPrice: 14.99,
-      rating: 4.8,
-      reviewsCount: 17,
-      storeName: 'Lucky Supermarket',
-      soldCount: 18,
-      totalStock: 35,
-      soldPercentage: 35,
-      duration: 400
-    },
-  ];
 
   hotDealsSlideConfig = {
     slidesToShow: 4,

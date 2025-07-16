@@ -9,8 +9,6 @@ import { PermissionsService } from '../../../services/permissions.service';
 import { FormsModule } from '@angular/forms'
 import { filter } from 'rxjs/operators';
 
-
-
 @Component({
   selector: 'app-almacen',
   standalone: true,
@@ -20,82 +18,82 @@ import { filter } from 'rxjs/operators';
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-24">
         <div>
-          <h4 class="text-heading fw-semibold mb-8">Gestión de Almacén</h4>
-          <p class="text-gray-500 mb-0">
-            Administra productos y categorías desde un solo lugar
-          </p>
+          <h4 class="text-heading-two fw-semibold mb-8">Gestión de Almacén</h4>
         </div>
       </div>
 
-      <!-- Selector de Sección -->
+      <!-- Navigation Tabs con Filtro Integrado -->
       <div class="card border-0 shadow-sm rounded-12 mb-24">
-        <div class="card-body p-24">
-          <div class="row align-items-center">
-            <div class="col-md-6">
-              <label class="form-label text-heading fw-medium mb-8">Filtrar por Sección</label>
-              <!-- Reemplázalo por: -->
-              <select class="form-select" [(ngModel)]="seccionSeleccionada" (change)="onSeccionChange($event)">
-                <option value="">Todas las secciones</option>
+        <div class="card-body p-0">
+          <div class="d-flex align-items-center justify-content-between">
+            <!-- Tabs de navegación -->
+            <nav class="nav nav-tabs border-0 flex-grow-1" id="almacenTabs" role="tablist">
+              <button
+                class="nav-link px-24 py-16 border-0 text-heading-two fw-medium"
+                [class.active]="activeTab === 'productos'"
+                (click)="navigateToTab('productos')"
+                type="button"
+              >
+                <i class="ph ph-package me-8"></i>
+                Productos
+                <span class="badge bg-main-50 text-main-600 ms-8">{{
+                  totalProductos
+                }}</span>
+              </button>
+              <button
+                class="nav-link px-24 py-16 border-0 text-heading-two fw-medium"
+                [class.active]="activeTab === 'categorias'"
+                (click)="navigateToTab('categorias')"
+                type="button"
+              >
+                <i class="ph ph-folder me-8"></i>
+                Categorías
+                <span class="badge bg-main-50 text-main-600 ms-8">{{
+                  totalCategorias
+                }}</span>
+              </button>
+              <button
+                class="nav-link px-24 py-16 border-0 text-heading-two fw-medium"
+                [class.active]="activeTab === 'marcas'"
+                (click)="navigateToTab('marcas')"
+                type="button"
+              >
+                <i class="ph ph-tag me-8"></i>
+                Marcas
+                <span class="badge bg-main-50 text-main-600 ms-8">{{
+                  totalMarcas
+                }}</span>
+              </button>
+            </nav>
+
+            <!-- Filtro de Sección -->
+            <div class="d-flex align-items-center px-24 py-16 gap-12">
+              <div class="d-flex align-items-center gap-8">
+                <i class="ph ph-funnel text-gray-600"></i>
+                <span class="text-sm text-gray-600">Filtrar por Sección</span>
+              </div>
+              <select 
+                class="form-select form-select-sm border-gray-300 rounded-8" 
+                style="min-width: 180px;"
+                [(ngModel)]="seccionSeleccionada" 
+                (change)="onSeccionChange($event)">
+                <option value="" disabled selected>Seleccionar</option>
+                <option value="todas">Todas las secciones</option>
                 <option *ngFor="let seccion of secciones" [value]="seccion.id">
-                  {{ seccion.nombre }} ({{ seccion.categorias_count || 0 }} categorías)
+                  {{ seccion.nombre }}
                 </option>
               </select>
-            </div>
-            <div class="col-md-6 text-end">
-              <!-- Reemplázalo por: -->
-              <button class="btn px-16 py-8 rounded-8"
-                      [class]="secciones.length >= 3 ? 'bg-gray-400 text-white' : 'bg-success-600 hover-bg-success-700 text-white'"
-                      *ngIf="permissionsService.canViewSecciones()"
-                      (click)="abrirModalSeccion()">
-                <i class="ph me-8" [class]="secciones.length >= 3 ? 'ph-gear' : 'ph-plus'"></i>
-                {{ secciones.length >= 3 ? 'Gestionar Secciones' : 'Agregar Sección' }}
+
+              <!-- Botón para agregar/gestionar secciones -->
+              <button 
+                class="btn btn-sm btn-outline-primary px-8 py-6 rounded-8 ms-8"
+                *ngIf="permissionsService.canViewSecciones()"
+                (click)="abrirModalSeccion()"
+                title="Agregar/Gestionar Secciones">
+                <i class="ph ph-plus"></i>
               </button>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Navigation Tabs -->
-      <div class="card border-0 shadow-sm rounded-12 mb-24">
-        <div class="card-body p-0">
-          <nav class="nav nav-tabs border-0" id="almacenTabs" role="tablist">
-            <button
-              class="nav-link px-24 py-16 border-0 text-heading fw-medium"
-              [class.active]="activeTab === 'productos'"
-              (click)="navigateToTab('productos')"
-              type="button"
-            >
-              <i class="ph ph-package me-8"></i>
-              Productos
-              <span class="badge bg-main-50 text-main-600 ms-8">{{
-                totalProductos
-              }}</span>
-            </button>
-            <button
-              class="nav-link px-24 py-16 border-0 text-heading fw-medium"
-              [class.active]="activeTab === 'categorias'"
-              (click)="navigateToTab('categorias')"
-              type="button"
-            >
-              <i class="ph ph-folder me-8"></i>
-              Categorías
-              <span class="badge bg-main-50 text-main-600 ms-8">{{
-                totalCategorias
-              }}</span>
-            </button>
-            <button
-              class="nav-link px-24 py-16 border-0 text-heading fw-medium"
-              [class.active]="activeTab === 'marcas'"
-              (click)="navigateToTab('marcas')"
-              type="button"
-            >
-              <i class="ph ph-tag me-8"></i>
-              Marcas
-              <span class="badge bg-main-50 text-main-600 ms-8">{{
-                totalMarcas
-              }}</span>
-            </button>
-          </nav>
         </div>
       </div>
 
@@ -125,6 +123,20 @@ import { filter } from 'rxjs/operators';
       .nav-tabs .nav-link:hover {
         background-color: var(--bs-gray-50);
       }
+      .form-select-sm {
+        font-size: 0.875rem;
+        padding: 0.375rem 0.75rem;
+      }
+      .gap-8 {
+        gap: 8px;
+      }
+      .gap-12 {
+        gap: 12px;
+      }
+      .btn-sm {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.875rem;
+      }
     `,
   ],
 })
@@ -134,7 +146,7 @@ export class AlmacenComponent implements OnInit {
   totalMarcas = 0;
   activeTab = 'productos';
   secciones: Seccion[] = [];
-  seccionSeleccionada: number | null = null;
+  seccionSeleccionada: string | null = null;
 
   constructor(
     private almacenService: AlmacenService, 
@@ -148,9 +160,8 @@ export class AlmacenComponent implements OnInit {
     this.cargarSecciones();
     this.detectActiveTab();
 
-    // ← AGREGAR ESTAS LÍNEAS
     // Inicializar con "Todas las secciones"
-    this.seccionSeleccionada = null;
+    this.seccionSeleccionada = "todas";
     this.seccionFilterService.setSeccionSeleccionada(null);
     
     // Escuchar cambios de ruta para actualizar la pestaña activa
@@ -225,14 +236,18 @@ export class AlmacenComponent implements OnInit {
     });
   }
 
- // Busca este método y reemplázalo:
   onSeccionChange(event: any): void {
     const value = event.target ? event.target.value : event;
-    this.seccionSeleccionada = value === '' || value === 'null' ? null : Number(value);
+    
+    if (value === 'todas' || value === '') {
+      this.seccionSeleccionada = 'todas';
+      this.seccionFilterService.setSeccionSeleccionada(null);
+    } else {
+      this.seccionSeleccionada = value;
+      this.seccionFilterService.setSeccionSeleccionada(Number(value));
+    }
     
     console.log('Sección seleccionada:', this.seccionSeleccionada);
-    
-    this.seccionFilterService.setSeccionSeleccionada(this.seccionSeleccionada);
     this.cargarTotales();
   }
 
