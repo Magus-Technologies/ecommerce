@@ -84,7 +84,10 @@
         <!-- Banners dinámicos -->
         <div ngxSlickItem *ngFor="let banner of bannersDinamicos" class="slide">
           <div class="banner-slider">
-            <div class="banner-slider__item" style="min-height: 400px; margin-bottom: 0; padding-bottom: 0;">
+            <div
+              class="banner-slider__item"
+              style="min-height: 400px; margin-bottom: 0; padding-bottom: 0"
+            >
               <div
                 class="banner-slider__inner flex-between position-relative px-40 py-60"
               >
@@ -207,9 +210,16 @@
 </div>
 <!-- ============================ Banner Section End =============================== -->
 <!-- ============================ Inicio de la sección de funciones =============================== -->
-<div class="feature" id="featureSection" style="padding-top: 30px; margin-top: -20px;">
-  <div class="container container-lg" style="padding-top: 0;">
-    <div class="position-relative arrow-center gradient-shadow" style="padding-top: 0; margin-top: 0;">
+<div
+  class="feature"
+  id="featureSection"
+  style="padding-top: 30px; margin-top: -20px"
+>
+  <div class="container container-lg" style="padding-top: 0">
+    <div
+      class="position-relative arrow-center gradient-shadow"
+      style="padding-top: 0; margin-top: 0"
+    >
       <div class="flex-align">
         <button
           type="button"
@@ -226,7 +236,7 @@
           <i class="ph ph-caret-right"></i>
         </button>
       </div>
-           
+
       <ngx-slick-carousel
         class="feature-item-wrapper"
         #slickModal="slick-carousel"
@@ -236,20 +246,58 @@
           ngxSlickItem
           *ngFor="let item of featureItems"
           class="feature-item text-center"
-          style="padding-top: 0; margin-top: 0; transform: translate3d(0px, 10px, 0px); height: 235px;"
+          style="
+            padding-top: 0;
+            margin-top: 0;
+            transform: translate3d(0px, 10px, 0px);
+            height: 235px;
+          "
         >
-          <div class="feature-item__thumb rounded-circle" style="border: 2px solid white; background: linear-gradient(to top, #1c799b, white); padding: 4px; transition: all 0.3s ease; position: relative; overflow: hidden; width: 140px; height: 140px; margin: 0 auto; z-index: 10;" onmouseover="this.style.transform='scale(1.05)'; this.style.filter='brightness(1.1)'" onmouseout="this.style.transform='scale(1)'; this.style.filter='brightness(1)'">
+          <div
+            class="feature-item__thumb rounded-circle"
+            style="
+              border: 2px solid white;
+              background: linear-gradient(to top, #1c799b, white);
+              padding: 4px;
+              transition: all 0.3s ease;
+              position: relative;
+              overflow: hidden;
+              width: 140px;
+              height: 140px;
+              margin: 0 auto;
+              z-index: 10;
+            "
+            onmouseover="this.style.transform='scale(1.05)'; this.style.filter='brightness(1.1)'"
+            onmouseout="this.style.transform='scale(1)'; this.style.filter='brightness(1)'"
+          >
             <a
               [routerLink]="['shop']"
               [queryParams]="{ categoria: item.id }"
               class="w-100 h-100 flex-center"
-              style="border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: white;"
+              style="
+                border-radius: 50%;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: white;
+              "
             >
               <img
                 [src]="item.img"
                 [alt]="item.title"
                 (error)="onImageError($event)"
-                style="border: none; outline: none; box-shadow: none; margin: 0; padding: 0; display: block; width: 100%; height: 100%; object-fit: cover;"
+                style="
+                  border: none;
+                  outline: none;
+                  box-shadow: none;
+                  margin: 0;
+                  padding: 0;
+                  display: block;
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                "
               />
             </a>
           </div>
@@ -421,7 +469,10 @@
               >
                 Sale {{ product.discount_percentage }}%
               </span>
-            <a [routerLink]="['/product-details', product.id]" class="product-card__thumb flex-center overflow-hidden">
+              <a
+                [routerLink]="['/product-details', product.id]"
+                class="product-card__thumb flex-center overflow-hidden"
+              >
                 <img
                   [src]="product.imagen_principal"
                   [alt]="product.nombre"
@@ -479,8 +530,6 @@
               </div>
             </div>
           </div>
-
-       
         </div>
 
         <!-- ✅ MENSAJE CUANDO NO HAY PRODUCTOS RECOMENDADOS -->
@@ -1129,12 +1178,9 @@
     <!-- Cupones dinámicos -->
     <div
       *ngIf="!isLoadingCupones && cuponesActivos && cuponesActivos.length > 0"
-      class="row gy-3"
+      class="row gy-4"
     >
-      <div
-        *ngFor="let cupon of cuponesActivos; let i = index"
-        class="col-md-6 col-lg-4"
-      >
+      <div *ngFor="let cupon of cuponesActivos; let i = index" class="col-12">
         <div
           class="border border-main-500 bg-main-50 border-dashed rounded-8 py-20 d-flex align-items-center justify-content-between px-20"
         >
@@ -1179,46 +1225,26 @@
       </div>
     </div>
 
-    <!-- Cupón estático por defecto -->
+    <!-- Mensaje cuando no hay cupones -->
     <div
       *ngIf="
         !isLoadingCupones && (!cuponesActivos || cuponesActivos.length === 0)
       "
-      class="border border-main-500 bg-main-50 border-dashed rounded-8 py-20 d-flex align-items-center justify-content-evenly"
+      class="text-center py-40"
     >
-      <p class="h6 text-main-600 fw-normal">
-        Súper descuento para tu
-        <a
-          href="javascript:void(0)"
-          class="fw-bold text-decoration-underline text-main-600 hover-text-decoration-none hover-text-primary-600"
-          >primera compra
-        </a>
-      </p>
-      <div class="position-relative">
-        <button
-          class="copy-coupon-btn px-32 py-10 text-white text-uppercase bg-main-600 rounded-pill border-0 hover-bg-main-800"
-          (click)="copiarCupon('FREE25BAC')"
-        >
-          FREE25BAC
-          <i class="ph ph-file-text text-lg line-height-1"></i>
-        </button>
-        <span
-          class="copy-text bg-main-600 text-white fw-normal position-absolute px-16 py-6 rounded-pill bottom-100 start-50 translate-middle-x min-w-max mb-8 text-xs"
-          id="copy-text-default"
-        ></span>
+      <div class="bg-gray-100 rounded-8 py-20 px-30">
+        <i class="ph ph-ticket text-4xl text-gray-400 mb-16"></i>
+        <h6 class="text-gray-500 mb-8">No hay cupones disponibles</h6>
+        <p class="text-gray-400 text-sm mb-0">
+          Mantente atento a nuestras próximas ofertas y descuentos especiales
+        </p>
       </div>
-      <p class="text-md text-main-600 fw-normal">
-        Utilice el código de descuento para obtener un
-        <span class="fw-bold text-main-600">20% </span>de descuento en cualquier
-        artículo.
-      </p>
     </div>
   </div>
 </div>
-<!-- Super Discount End -->
+<!-- SUPER CUPON DE DESCUENTO Discount End -->
 
-
-<!-- ========================== Short Product Section Start ============================== -->
+<!-- ========================== START productos, destacados,ofertas, mas vendidos ============================== -->
 <div class="short-product pt-110">
   <div class="container container-lg">
     <div class="row gy-4">
@@ -1669,320 +1695,6 @@
     </div>
   </div>
 </div>
-<!-- ========================== Short Product Section End ============================== -->
-
-<!-- ============================== Brand Section Start =============================== -->
-<!-- <div class="brand py-80 overflow-hidden">
-  <div class="container container-lg">
-    <div class="brand-inner p-24 rounded-16">
-      <div class="section-heading">
-        <div class="flex-between flex-wrap gap-8">
-          <h5 class="mb-0 wow fadeInLeft">Comprar por marcas</h5>
-          <div class="flex-align gap-16 wow fadeInRight">
-            <a
-              [routerLink]="['shop']"
-              class="text-sm fw-medium text-gray-700 hover-text-main-600 hover-text-decoration-underline"
-              >Ver todas las ofertas</a
-            >
-            <div class="flex-align gap-8">
-              <button
-                type="button"
-                id="brand-prev"
-                class="slick-prev slick-arrow flex-center rounded-circle border border-gray-100 hover-border-main-600 text-xl hover-bg-main-600 hover-text-white transition-1"
-              >
-                <i class="ph ph-caret-left"></i>
-              </button>
-              <button
-                type="button"
-                id="brand-next"
-                class="slick-next slick-arrow flex-center rounded-circle border border-gray-100 hover-border-main-600 text-xl hover-bg-main-600 hover-text-white transition-1"
-              >
-                <i class="ph ph-caret-right"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div *ngIf="isLoadingMarcas" class="text-center py-40">
-        <div class="spinner-border text-main-600" role="status">
-          <span class="visually-hidden">Cargando marcas...</span>
-        </div>
-        <p class="text-gray-500 mt-12 mb-0">Cargando marcas...</p>
-      </div>
-
-      <ngx-slick-carousel
-        *ngIf="!isLoadingMarcas && brandSlides[0].slides.length > 0"
-        [config]="BrandSlideConfig"
-        class="brand-slider arrow-style-two"
-      >
-        <div
-          ngxSlickItem
-          *ngFor="let slide of brandSlides[0].slides"
-          class="brand-item"
-          [attr.data-aos]="slide.dataAos"
-          [attr.data-aos-duration]="slide.dataAosDuration"
-        >
-          <img
-            [src]="slide.imgSrc"
-            [alt]="slide.imgAlt"
-            (error)="onImageError($event)"
-            class="img-fluid"
-          />
-        </div>
-      </ngx-slick-carousel>
-
-      <div
-        *ngIf="!isLoadingMarcas && brandSlides[0].slides.length === 0"
-        class="text-center py-40"
-      >
-        <h6 class="text-gray-500 mb-20">No hay marcas disponibles</h6>
-        <a [routerLink]="['shop']" class="btn btn-main">
-          Explorar Productos
-        </a>
-      </div>
-    </div>
-  </div>
-</div> -->
-<!-- ============================== Brand Section End =============================== -->
-
-<!-- ========================= best sells Start ================================ -->
-<!-- <section class="best sells pb-80">
-  <div class="container container-lg">
-    <div class="section-heading">
-      <div class="flex-between flex-wrap gap-8">
-        <h5 class="mb-0 wow fadeInLeft">Mejores ventas diarias</h5>
-      </div>
-    </div>
-
-    <div class="row g-12">
-      <div class="col-xxl-8">
-        <div class="row gy-4">
-          <div
-            *ngFor="let product of bestProduct"
-            class="col-md-6"
-            [attr.data-aos]="'fade-up'"
-            [attr.data-aos-duration]="product.duration"
-          >
-            <div
-              class="product-card style-two h-100 p-8 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 flex-align gap-16"
-            >
-              <div>
-                <span
-                  class="product-card__badge bg-danger-600 px-8 py-4 text-sm text-white"
-                  >Sale 50%
-                </span>
-                <a
-                  [routerLink]="['/product-details', product.id]"
-                  class="product-card__thumb flex-center overflow-hidden"
-                >
-                  <img [src]="product.image" alt="Product Image" />
-                </a>
-                <div class="countdown" [attr.id]="'countdown' + product.id">
-                  <ul class="countdown-list style-three flex-align flex-wrap">
-                    <li
-                      class="countdown-list__item text-heading flex-align gap-4 text-sm fw-medium"
-                    >
-                      <span class="days"></span>Days
-                    </li>
-                    <li
-                      class="countdown-list__item text-heading flex-align gap-4 text-sm fw-medium"
-                    >
-                      <span class="hours"></span>Hours
-                    </li>
-                    <li
-                      class="countdown-list__item text-heading flex-align gap-4 text-sm fw-medium"
-                    >
-                      <span class="minutes"></span>Min
-                    </li>
-                    <li
-                      class="countdown-list__item text-heading flex-align gap-4 text-sm fw-medium"
-                    >
-                      <span class="seconds"></span>Sec
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div class="product-card__content">
-                <div class="product-card__price mb-16">
-                  <span
-                    class="text-gray-400 text-md fw-semibold text-decoration-line-through"
-                    >{{ product.originalPrice | currency }}</span
-                  >
-                  <span class="text-heading text-md fw-semibold"
-                    >{{ product.discountedPrice | currency }}
-                    <span class="text-gray-500 fw-normal">/Qty</span></span
-                  >
-                </div>
-                <div class="flex-align gap-6">
-                  <span class="text-xs fw-bold text-gray-600">{{
-                    product.rating
-                  }}</span>
-                  <span class="text-15 fw-bold text-warning-600 d-flex"
-                    ><i class="ph-fill ph-star"></i
-                  ></span>
-                  <span class="text-xs fw-bold text-gray-600"
-                    >({{ product.reviewsCount }}k)</span
-                  >
-                </div>
-                <h6 class="title text-lg fw-semibold mt-12 mb-8">
-                  <a
-                    [routerLink]="['/product-details', product.id]"
-                    class="link text-line-2"
-                    >{{ product.name }}</a
-                  >
-                </h6>
-                <div class="flex-align gap-4">
-                  <span class="text-main-600 text-md d-flex"
-                    ><i class="ph-fill ph-storefront"></i
-                  ></span>
-                  <span class="text-gray-500 text-xs"
-                    >By {{ product.storeName }}</span
-                  >
-                </div>
-                <div class="mt-12">
-                  <div
-                    class="progress w-100 bg-color-three rounded-pill h-4"
-                    role="progressbar"
-                    aria-label="Basic example"
-                    aria-valuenow="35"
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                  >
-                    <div
-                      class="progress-bar bg-main-600 rounded-pill"
-                      [style.width.%]="product.soldPercentage"
-                    ></div>
-                  </div>
-                  <span class="text-gray-900 text-xs fw-medium mt-8"
-                    >Sold: {{ product.soldCount }}/{{
-                      product.totalStock
-                    }}</span
-                  >
-                </div>
-                <a
-                  [routerLink]="['/cart']"
-                  class="product-card__cart btn bg-main-50 text-main-600 hover-bg-main-600 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-24 w-100 justify-content-center"
-                >
-                  Add To Cart <i class="ph ph-shopping-cart"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-xxl-4" data-aos="zoom-in" data-aos-duration="600">
-        <div
-          class="position-relative rounded-16 bg-light-purple overflow-hidden p-28 z-1 h-100"
-        >
-          <div class="">
-            <img
-              src="assets/images/bg/special-snacks.png"
-              alt=""
-              class="position-absolute inset-block-start-0 inset-inline-start-0 z-n1 w-100 h-100 cover-img"
-            />
-          </div>
-          <div class="py-xl-4">
-            <div
-              class="offer-card__logo mb-16 w-80 h-80 flex-center bg-white rounded-circle"
-            >
-              <img src="assets/images/thumbs/offer-logo.png" alt="" />
-            </div>
-            <h5 class="mb-8">S/ 5 de descuento en tu primera orden</h5>
-            <div class="flex-align gap-8">
-              <span class="text-sm fw-medium text-heading"
-                >Entrega a las 6:15am</span
-              >
-              <span class="text-xs text-heading">Expira 5 Ago</span>
-            </div>
-            <a
-              [routerLink]="['shop']"
-              class="mt-16 btn bg-success-600 hover-text-white hover-bg-success-700 text-white fw-medium d-inline-flex align-items-center rounded-pill gap-8"
-              tabindex="0"
-            >
-              Compra ahora
-              <span class="icon text-xl d-flex"
-                ><i class="ph ph-arrow-right"></i
-              ></span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section> -->
-<!-- ========================= best sells End ================================ -->
-
-<!-- ================================ Newsletter new section Start ================================== -->
-<!-- <section class="newsletter-new">
-  <div class="container container-lg">
-    <div
-      class="py-20 px-80-px bg-neutral-100 rounded-12 d-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap gap-32"
-    >
-      <div class="max-w-700">
-        <h3 class="mb-30">
-          Quédate en casa y compra tus productos diarios en nuestra tienda.
-        </h3>
-        <form action="#" class="d-flex gap-8 flex-wrap flex-sm-nowrap">
-          <input
-            type="text"
-            class="form-control bg-white px-20 shadow-none py-16 rounded placeholder-text-14 flex-grow-1"
-            placeholder="Enter your mail"
-          />
-          <button
-            type="submit"
-            class="btn py-20 px-32 bg-success-600 flex-shrink-0 hover-bg-success-700 flex-grow-1"
-          >
-            Suscríbete ahora
-          </button>
-        </form>
-        <p class="text-heading text-sm mt-20 fw-medium">
-          I agree that my submitted data is being collected and stored.
-        </p>
-      </div>
-      <div class="d-lg-block d-none">
-        <img src="assets/images/thumbs/newsletter-img.png" alt="Thumbnail" />
-      </div>
-    </div>
-  </div>
-</section> -->
-<!-- ================================ Newsletter new section End ================================== -->
-<!-- ================================ Newsletter section Start ================================== -->
-<section class="newsletter-new pt-80">
-  <div class="container container-lg">
-    <div
-      class="py-20 px-80-px bg-neutral-100 rounded-12 d-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap gap-32"
-    >
-      <div class="max-w-700">
-        <h3 class="mb-30">
-          Quédate en casa y compra tus productos diarios en nuestra tienda.
-        </h3>
-        <form action="#" class="d-flex gap-8 flex-wrap flex-sm-nowrap">
-          <input
-            type="text"
-            class="form-control bg-white px-20 shadow-none py-16 rounded placeholder-text-14 flex-grow-1"
-            placeholder="Ingresa tu email"
-          />
-          <button
-            type="submit"
-            class="btn py-20 px-32 bg-success-600 flex-shrink-0 hover-bg-success-700 flex-grow-1"
-          >
-            Suscríbete ahora
-          </button>
-        </form>
-        <p class="text-heading text-sm mt-20 fw-medium">
-          Acepto que mis datos sean recopilados y almacenados.
-        </p>
-      </div>
-      <div class="d-lg-block d-none">
-        <img src="assets/images/thumbs/newsletter-img.png" alt="Newsletter" />
-      </div>
-    </div>
-  </div>
-</section>
-<!-- ================================ Newsletter section End ================================== -->
-
 
 <!-- ✅ CHATBOT COMPONENT -->
 <app-chatbot></app-chatbot>
