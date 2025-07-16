@@ -172,22 +172,46 @@
               </td>
               <td *ngFor="let dia of diasSemana" style="min-width: 120px; padding: 8px; vertical-align: top;">
                 <div class="horarios-dia" style="display: flex; flex-direction: column; gap: 4px;">
-                  <div 
-                    *ngFor="let horario of obtenerHorariosDia(usuario, dia.key)" 
-                    class="mb-1"
-                    style="margin-bottom: 6px;"
+                  <div
+                    *ngFor="let horario of obtenerHorariosDia(usuario, dia.key)"
+                    class="mb-1 horario-bloque-container"
+                    style="margin-bottom: 6px; position: relative; display: flex; align-items: center; gap: 4px;"
+                    (mouseenter)="mostrarAccionesHorario($event)"
+                    (mouseleave)="ocultarAccionesHorario($event)"
                     >
-                    <small 
-                        class="badge"
-                        [class.badge-vendedor]="!horario.es_descanso"
-                        [class.badge-default]="horario.es_descanso"
-                        style="opacity: 1 !important; font-weight: 500 !important; color: #2c3e50 !important; background-color: #e3f2fd !important; border: 1px solid #90caf9 !important; font-size: 0.75rem !important;"
-                        [style.background-color]="horario.es_descanso ? '#fff3e0 !important' : '#e8f5e8 !important'"
-                        [style.border-color]="horario.es_descanso ? '#ffb74d !important' : '#4caf50 !important'"
-                        [style.color]="horario.es_descanso ? '#f57c00 !important' : '#2e7d32 !important'"
-                        >
+                    <small
+                      class="badge"
+                      [class.badge-vendedor]="!horario.es_descanso"
+                      [class.badge-default]="horario.es_descanso"
+                      style="opacity: 1 !important; font-weight: 500 !important; color: #2c3e50 !important; background-color: #e3f2fd !important; border: 1px solid #90caf9 !important; font-size: 0.75rem !important; flex: 1;"
+                      [style.background-color]="horario.es_descanso ? '#fff3e0 !important' : '#e8f5e8 !important'"
+                      [style.border-color]="horario.es_descanso ? '#ffb74d !important' : '#4caf50 !important'"
+                      [style.color]="horario.es_descanso ? '#f57c00 !important' : '#2e7d32 !important'"
+                      >
                       {{ horario.es_descanso ? 'Descanso' : horario.hora_inicio + ' - ' + horario.hora_fin }}
                     </small>
+                    
+                    <!-- Botones de acción para cada horario -->
+                    <div class="horario-actions" style="display: flex; gap: 2px; opacity: 0; transition: opacity 0.2s;">
+                      <button
+                        *ngIf="puedeEditarHorarios"
+                        class="btn btn-sm btn-outline-primary"
+                        (click)="editarHorario(horario)"
+                        title="Editar horario"
+                        style="padding: 2px 6px; font-size: 10px; border-radius: 3px; background-color: #007bff; border-color: #007bff; color: white; display: flex; align-items: center; justify-content: center;"
+                      >
+                        <i class="ph ph-pencil-simple" style="font-size: 10px; color: white;"></i>
+                      </button>
+                      <button
+                        *ngIf="puedeEliminarHorarios"
+                        class="btn btn-sm btn-outline-danger"
+                        (click)="eliminarHorario(horario)"
+                        title="Eliminar horario"
+                        style="padding: 2px 6px; font-size: 10px; border-radius: 3px; background-color: #dc3545; border-color: #dc3545; color: white; display: flex; align-items: center; justify-content: center;"
+                      >
+                        <i class="ph ph-trash" style="font-size: 10px; color: white;"></i>
+                      </button>
+                    </div>
                   </div>
                   <div *ngIf="obtenerHorariosDia(usuario, dia.key).length === 0">
                     <span class="text-gray-400 text-xs">-</span>
@@ -437,7 +461,7 @@
               <div class="row mb-3">
                 <div class="col-md-6">
                   <label class="form-label" style="font-weight: 500; color: #495057;">Plantilla</label>
-                  <select class="form-select" (change)="aplicarPlantilla($event)" style="border-color: #ced4da; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                  <select class="form-select" [(ngModel)]="plantillaSeleccionada" (change)="aplicarPlantilla($event)" style="border-color: #ced4da; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                     <option value="">Personalizado</option>
                     <option value="full_time">Tiempo Completo (8:00-17:00)</option>
                     <option value="medio_tiempo">Medio Tiempo (8:00-12:00)</option>
