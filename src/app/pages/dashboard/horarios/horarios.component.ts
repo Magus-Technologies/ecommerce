@@ -52,8 +52,6 @@ export class HorariosComponent implements OnInit {
   usuariosSeleccionados: number[] = [];
   todosSeleccionados = false;
   horarioMasivoForm: FormGroup;
-  accionMasiva = 'agregar';
-  plantillaSeleccionada = ''; // ← AGREGAR ESTA LÍNEA
 
   // Constantes
   diasSemana = [
@@ -80,8 +78,11 @@ export class HorariosComponent implements OnInit {
       fecha_especial: [''],
       comentarios: ['']
     });
-    // Agregar después del horarioForm
-    this.horarioMasivoForm = this.fb.group({});
+        // Agregar después del horarioForm
+    this.horarioMasivoForm = this.fb.group({
+      plantilla: ['personalizado'],
+      accion: ['agregar']
+    });
     this.diasSemana.forEach(dia => {
       this.horarioMasivoForm.addControl(dia.key + '_activo', this.fb.control(false));
       this.horarioMasivoForm.addControl(dia.key + '_inicio', this.fb.control(''));
@@ -140,6 +141,13 @@ export class HorariosComponent implements OnInit {
     // Filtro por usuario
     if (this.filtroUsuario) {
       usuarios = usuarios.filter(u => u.id.toString() === this.filtroUsuario);
+    }
+
+    // Filtro por rol - AGREGAR ESTE BLOQUE
+    if (this.filtroRol) {
+      usuarios = usuarios.filter(u => {
+        return u.roles && u.roles.some(role => role.name === this.filtroRol);
+      });
     }
 
     // Filtro por estado de disponibilidad
@@ -554,12 +562,17 @@ private generarDatosExcel(): any[] {
     this.mostrarModalMasivo = true;
     this.usuariosSeleccionados = [];
     this.todosSeleccionados = false;
-    this.plantillaSeleccionada = ''; // ← Resetear a "Personalizado"
     
-    // Resetear formulario
+    // Resetear formulario completo
     this.horarioMasivoForm.reset();
     
-    // Resetear todos los controles a false/vacío
+    // Setear valores por defecto
+    this.horarioMasivoForm.patchValue({
+      plantilla: 'personalizado',
+      accion: 'agregar'
+    });
+    
+    // Resetear todos los controles de días
     this.diasSemana.forEach(dia => {
       this.horarioMasivoForm.patchValue({
         [dia.key + '_activo']: false,
@@ -570,23 +583,31 @@ private generarDatosExcel(): any[] {
     });
   }
 
-cerrarModalMasivo(): void {
-  this.mostrarModalMasivo = false;
-  this.plantillaSeleccionada = ''; // ← Resetear plantilla
-  this.horarioMasivoForm.reset();
-  this.usuariosSeleccionados = [];
-  this.todosSeleccionados = false;
-  
-  // Resetear todos los controles
-  this.diasSemana.forEach(dia => {
+
+  cerrarModalMasivo(): void {
+    this.mostrarModalMasivo = false;
+    this.horarioMasivoForm.reset();
+    this.usuariosSeleccionados = [];
+    this.todosSeleccionados = false;
+    
+    // Setear valores por defecto
     this.horarioMasivoForm.patchValue({
-      [dia.key + '_activo']: false,
-      [dia.key + '_inicio']: '',
-      [dia.key + '_fin']: '',
-      [dia.key + '_descanso']: false
+      plantilla: 'personalizado',
+      accion: 'agregar'
     });
-  });
-}
+    
+    // Resetear todos los controles de días
+    this.diasSemana.forEach(dia => {
+      this.horarioMasivoForm.patchValue({
+        [dia.key + '_activo']: false,
+        [dia.key + '_inicio']: '',
+        [dia.key + '_fin']: '',
+        [dia.key + '_descanso']: false
+      });
+    });
+  }
+
+
 
 toggleTodosUsuarios(event: any): void {
   this.todosSeleccionados = event.target.checked;
@@ -609,8 +630,21 @@ toggleUsuario(userId: number, event: any): void {
 aplicarPlantilla(event: any): void {
   const plantilla = event.target.value;
   
-  // Resetear formulario
-  this.horarioMasivoForm.reset();
+  // Resetear solo los controles de días (no toda la forma)
+  this.diasSemana.forEach(dia => {
+    this.horarioMasivoForm.patchValue({
+      [dia.key + '_activo']: false,
+      [dia.key + '_inicio']: '',
+      [dia.key + '_fin']: '',
+      [dia.key + '_descanso']: false
+    });
+  });
+  
+  // Mantener los valores de plantilla y acción
+  this.horarioMasivoForm.patchValue({ 
+    plantilla: plantilla,
+    accion: this.horarioMasivoForm.get('accion')?.value || 'agregar'
+  });
   
   if (plantilla === 'full_time') {
     ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'].forEach(dia => {
@@ -642,45 +676,96 @@ aplicarPlantilla(event: any): void {
   }
 }
 
+
 aplicarHorariosMasivos(): void {
+  console.log('=== INICIANDO GESTIÓN MASIVA ===');
+  console.log('Usuarios seleccionados:', this.usuariosSeleccionados);
+  const accionMasiva = this.horarioMasivoForm.get('accion')?.value || 'agregar';
+  console.log('Acción:', accionMasiva);
+
+  
   if (this.usuariosSeleccionados.length === 0) {
     Swal.fire('Error', 'Selecciona al menos un usuario', 'error');
     return;
   }
 
   // Verificar que al menos un día esté activo
-  const diasActivos = this.diasSemana.some(dia => 
+  const diasActivos = this.diasSemana.filter(dia => 
     this.horarioMasivoForm.get(dia.key + '_activo')?.value
   );
 
-  if (!diasActivos) {
+  console.log('Días activos:', diasActivos.map(d => d.label));
+
+  if (diasActivos.length === 0) {
     Swal.fire('Error', 'Selecciona al menos un día para aplicar horarios', 'error');
     return;
   }
 
+  // Validar horarios completos para días activos
+  const erroresValidacion: string[] = [];
+  diasActivos.forEach(dia => {
+    const horaInicio = this.horarioMasivoForm.get(dia.key + '_inicio')?.value;
+    const horaFin = this.horarioMasivoForm.get(dia.key + '_fin')?.value;
+    const esDescanso = this.horarioMasivoForm.get(dia.key + '_descanso')?.value;
+    
+    console.log(`${dia.label}: inicio=${horaInicio}, fin=${horaFin}, descanso=${esDescanso}`);
+    
+    if (!esDescanso && (!horaInicio || !horaFin)) {
+      erroresValidacion.push(`${dia.label}: Debe especificar hora de inicio y fin`);
+    }
+  });
+
+  if (erroresValidacion.length > 0) {
+    console.log('Errores de validación:', erroresValidacion);
+    Swal.fire('Error de validación', erroresValidacion.join('<br>'), 'error');
+    return;
+  }
+
+  console.log('Iniciando procesamiento de usuarios...');
   this.isSubmitting = true;
-  let horariosCreados = 0;
+  
+  // ... resto del código igual
+
+  let usuariosProcesados = 0;
   let errores = 0;
+  let mensajesError: string[] = [];
 
   const promesas = this.usuariosSeleccionados.map(userId => {
     return this.procesarUsuarioMasivo(userId);
   });
 
   Promise.all(promesas).then(resultados => {
-    horariosCreados = resultados.filter(r => r.success).length;
-    errores = resultados.filter(r => !r.success).length;
+    resultados.forEach(resultado => {
+      if (resultado.success) {
+        usuariosProcesados++;
+      } else {
+        errores++;
+        if (resultado.mensaje) {
+          mensajesError.push(resultado.mensaje);
+        }
+      }
+    });
     
     this.isSubmitting = false;
     this.cerrarModalMasivo();
-    this.cargarHorarios();
+
+    // Agregar un pequeño delay antes de recargar para asegurar que la BD se actualice
+    setTimeout(() => {
+      this.cargarHorarios();
+    }, 500);
+    
+    let mensajeHtml = `<p>✅ Usuarios procesados: ${usuariosProcesados}</p>`;
+    if (errores > 0) {
+      mensajeHtml += `<p>❌ Errores: ${errores}</p>`;
+      if (mensajesError.length > 0) {
+        mensajeHtml += `<hr><small>${mensajesError.slice(0, 5).join('<br>')}</small>`;
+      }
+    }
     
     Swal.fire({
       title: '¡Proceso completado!',
-      html: `
-        <p>✅ Usuarios procesados: ${horariosCreados}</p>
-        ${errores > 0 ? `<p>❌ Errores: ${errores}</p>` : ''}
-      `,
-      icon: horariosCreados > 0 ? 'success' : 'warning'
+      html: mensajeHtml,
+      icon: usuariosProcesados > 0 ? 'success' : 'warning'
     });
   }).catch(error => {
     console.error('Error en gestión masiva:', error);
@@ -689,70 +774,153 @@ aplicarHorariosMasivos(): void {
   });
 }
 
-private procesarUsuarioMasivo(userId: number): Promise<{success: boolean}> {
-  return new Promise(async (resolve) => {
-    try {
-      // Si es "reemplazar", primero eliminar horarios existentes
-      if (this.accionMasiva === 'reemplazar') {
-        const diasActivos = this.diasSemana
-          .filter(dia => this.horarioMasivoForm.get(dia.key + '_activo')?.value)
-          .map(dia => dia.key);
-        
-        if (diasActivos.length > 0) {
-          await this.horariosService.eliminarHorariosUsuario(userId, diasActivos).toPromise();
+private procesarUsuarioMasivo(userId: number): Promise<{success: boolean, mensaje?: string}> {
+        return new Promise(async (resolve) => {
+          try {
+            const usuario = this.todosLosUsuarios.find(u => u.id === userId);
+            const nombreUsuario = usuario ? usuario.name : `Usuario ${userId}`;
+
+            const accionMasiva = this.horarioMasivoForm.get('accion')?.value || 'agregar';
+            console.log(`=== PROCESANDO ${nombreUsuario} - Acción: ${accionMasiva} ===`);
+
+            if (accionMasiva === 'reemplazar') {
+
+            const diasActivos = this.diasSemana
+              .filter(dia => this.horarioMasivoForm.get(dia.key + '_activo')?.value)
+              .map(dia => dia.key);
+            
+            console.log(`Eliminando horarios existentes para días: ${diasActivos.join(', ')}`);
+            console.log(`URL del servicio: ${this.horariosService['apiUrl']}/eliminar-usuario`);
+            
+            if (diasActivos.length > 0) {
+              try {
+            const resultado = await this.horariosService.eliminarHorariosUsuario(userId, diasActivos).toPromise();
+            console.log('Respuesta de eliminación:', resultado);
+          } catch (error: unknown) {
+          console.error(`Error eliminando horarios de ${nombreUsuario}:`, error);
+
+          if (typeof error === 'object' && error !== null) {
+            const errObj = error as { error?: any; message?: string };
+            console.error('Detalles del error de eliminación:', errObj.error || errObj.message);
+            resolve({
+              success: false,
+              mensaje: `Error eliminando horarios de ${nombreUsuario}: ${errObj.error?.error || errObj.message || error}`
+            });
+          } else {
+            // En caso sea string u otro tipo
+            console.error('Error desconocido:', error);
+            resolve({
+              success: false,
+              mensaje: `Error eliminando horarios de ${nombreUsuario}: ${String(error)}`
+            });
+          }
+        }
+
         }
       }
-
       const promesasHorarios: Promise<any>[] = [];
 
-      this.diasSemana.forEach(dia => {
+      for (const dia of this.diasSemana) {
         const activo = this.horarioMasivoForm.get(dia.key + '_activo')?.value;
         
         if (activo) {
           const horaInicio = this.horarioMasivoForm.get(dia.key + '_inicio')?.value;
           const horaFin = this.horarioMasivoForm.get(dia.key + '_fin')?.value;
-          
-          // Validar que las horas estén completas
-          if (!horaInicio || !horaFin) {
-            console.warn(`Horario incompleto para ${dia.label} del usuario ${userId}`);
-            return;
+          const esDescanso = this.horarioMasivoForm.get(dia.key + '_descanso')?.value || false;
+
+          console.log(`${dia.label}: ${horaInicio}-${horaFin}, Descanso: ${esDescanso}`);
+
+          // Validar que las horas estén completas para horarios no de descanso
+          if (!esDescanso && (!horaInicio || !horaFin)) {
+            console.warn(`Horario incompleto para ${dia.label} del usuario ${nombreUsuario}`);
+            continue;
           }
 
           const horarioData = {
             user_id: userId,
             dia_semana: dia.key,
-            hora_inicio: horaInicio,
-            hora_fin: horaFin,
-            es_descanso: this.horarioMasivoForm.get(dia.key + '_descanso')?.value || false,
+            hora_inicio: esDescanso ? '00:00' : horaInicio,
+            hora_fin: esDescanso ? '23:59' : horaFin,
+            es_descanso: esDescanso,
             fecha_especial: undefined,
-            comentarios: 'Creado por gestión masiva',
+            comentarios: `Creado por gestión masiva - ${accionMasiva}`,
             activo: true
           };
 
+          console.log('Datos del horario a crear:', horarioData);
+
           const promesa = this.horariosService.crearHorario(horarioData).toPromise()
+            .then(response => {
+              console.log(`✅ Horario creado para ${nombreUsuario} - ${dia.label}:`, response);
+              return response;
+            })
+            // Reemplázala por:
             .catch(error => {
-              console.error(`Error creando horario para usuario ${userId}, día ${dia.key}:`, error);
-              throw error;
+              console.error(`❌ Error creando horario para ${nombreUsuario}, día ${dia.key}:`, error);
+              console.error('Detalles del error:', error.error || error.message || error);
+              throw new Error(`${dia.label}: ${error.error?.error || error.message || 'Error desconocido'}`);
             });
             
           promesasHorarios.push(promesa);
         }
-      });
+      }
 
       if (promesasHorarios.length === 0) {
+        console.log(`No hay horarios para crear para ${nombreUsuario}`);
         resolve({success: true});
         return;
       }
 
+      console.log(`Creando ${promesasHorarios.length} horarios para ${nombreUsuario}...`);
       await Promise.all(promesasHorarios);
+      console.log(`✅ ${nombreUsuario} procesado correctamente`);
       resolve({success: true});
 
     } catch (error) {
       console.error('Error en procesarUsuarioMasivo:', error);
-      resolve({success: false});
+      const usuario = this.todosLosUsuarios.find(u => u.id === userId);
+      const nombreUsuario = usuario ? usuario.name : `Usuario ${userId}`;
+      resolve({success: false, mensaje: `Error procesando ${nombreUsuario}: ${error}`});
     }
   });
 }
+
+
+
+private verificarSolapamientoHorarios(inicio1: string, fin1: string, inicio2: string, fin2: string): boolean {
+  // Convertir horas a minutos para facilitar comparación
+  const toMinutes = (tiempo: string): number => {
+    const [horas, minutos] = tiempo.split(':').map(Number);
+    return horas * 60 + minutos;
+  };
+
+  let inicioMinutos1 = toMinutes(inicio1);
+  let finMinutos1 = toMinutes(fin1);
+  let inicioMinutos2 = toMinutes(inicio2);
+  let finMinutos2 = toMinutes(fin2);
+
+  // Manejar turnos noche (que cruzan medianoche)
+  if (finMinutos1 < inicioMinutos1) { // Turno 1 cruza medianoche
+    finMinutos1 += 24 * 60; // Agregar 24 horas
+  }
+  
+  if (finMinutos2 < inicioMinutos2) { // Turno 2 cruza medianoche
+    finMinutos2 += 24 * 60; // Agregar 24 horas
+  }
+
+  // Verificar solapamiento estándar
+  const solapamiento = (inicioMinutos1 < finMinutos2 && finMinutos1 > inicioMinutos2);
+  
+  // Verificar solapamiento con turnos que cruzan medianoche
+  const solapamientoNoche = (
+    (inicioMinutos1 < finMinutos2 - 24 * 60 && finMinutos1 > inicioMinutos2) || // Turno 2 cruza, comparar con día anterior
+    (inicioMinutos1 < finMinutos2 && finMinutos1 > inicioMinutos2 + 24 * 60)    // Turno 1 cruza, comparar con día siguiente
+  );
+
+  return solapamiento || solapamientoNoche;
+}
+
+
 
 // Función para editar un horario específico
 editarHorario(horario: Horario): void {
@@ -828,4 +996,29 @@ ocultarAccionesHorario(event: MouseEvent): void {
     acciones.style.opacity = '0';
   }
 }
+
+private esHorarioValido(horaInicio: string, horaFin: string): boolean {
+  // Validar formato básico
+  if (!horaInicio || !horaFin) return false;
+  
+  // Para turno noche (ej: 18:00 a 02:00), la hora fin puede ser menor que la hora inicio
+  // Esto es válido y representa un turno que cruza medianoche
+  return true;
+}
+
+private hayTurnoNoche(horaInicio: string, horaFin: string): boolean {
+  // Convertir a minutos para comparar correctamente
+  const toMinutes = (tiempo: string): number => {
+    const [horas, minutos] = tiempo.split(':').map(Number);
+    return horas * 60 + minutos;
+  };
+  
+  const inicioMinutos = toMinutes(horaInicio);
+  const finMinutos = toMinutes(horaFin);
+  
+  // Detectar si es un turno noche (hora fin menor que hora inicio)
+  return finMinutos < inicioMinutos;
+}
+
+
 }

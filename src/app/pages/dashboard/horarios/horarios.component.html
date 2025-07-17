@@ -461,8 +461,8 @@
               <div class="row mb-3">
                 <div class="col-md-6">
                   <label class="form-label" style="font-weight: 500; color: #495057;">Plantilla</label>
-                  <select class="form-select" [(ngModel)]="plantillaSeleccionada" (change)="aplicarPlantilla($event)" style="border-color: #ced4da; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <option value="">Personalizado</option>
+                  <select class="form-select" formControlName="plantilla" (change)="aplicarPlantilla($event)" style="border-color: #ced4da; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <option value="personalizado">Personalizado</option>
                     <option value="full_time">Tiempo Completo (8:00-17:00)</option>
                     <option value="medio_tiempo">Medio Tiempo (8:00-12:00)</option>
                     <option value="noche">Turno Noche (18:00-02:00)</option>
@@ -470,7 +470,7 @@
                 </div>
                 <div class="col-md-6">
                   <label class="form-label" style="font-weight: 500; color: #495057;">Acción</label>
-                  <select class="form-select" [(ngModel)]="accionMasiva" style="border-color: #ced4da; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                  <select class="form-select" formControlName="accion" style="border-color: #ced4da; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                     <option value="agregar">Agregar horarios</option>
                     <option value="reemplazar">Reemplazar horarios existentes</option>
                   </select>
