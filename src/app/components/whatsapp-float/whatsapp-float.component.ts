@@ -114,11 +114,6 @@ export class WhatsappFloatComponent implements OnInit, OnDestroy {
     return numero;
   }
 
-  onImageError(event: any): void {
-    const img = event.target as HTMLImageElement;
-    img.src = '/assets/images/avatar/default-avatar.png';
-  }
-
   // Agregar al final de tu clase WhatsappFloatComponent, antes del último }
 
   obtenerUrlAvatarAsesor(usuario: any): string {
@@ -134,6 +129,19 @@ export class WhatsappFloatComponent implements OnInit, OnDestroy {
     if (usuario?.avatar) {
       return `${environment.baseUrl}${usuario.avatar}`;
     }
-    return '/assets/images/avatar/default-avatar.png';
+    return ''; // Retornar vacío cuando no hay avatar
+  }
+
+  // Nuevo método para verificar si debe mostrar la inicial
+  mostrarInicialAsesor(usuario: any): boolean {
+    return !this.obtenerUrlAvatarAsesor(usuario);
+  }
+
+  // Nuevo método para obtener la inicial del nombre
+  obtenerInicialAsesor(usuario: any): string {
+    if (usuario?.name) {
+      return usuario.name.charAt(0).toUpperCase();
+    }
+    return 'A'; // Inicial por defecto
   }
 }

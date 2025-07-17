@@ -81,7 +81,22 @@ export class HorariosService {
   }
 
   obtenerAsesorDisponibles(): Observable<{ asesores_disponibles: AsesorDisponible[] }> {
-    return this.http.get<{ asesores_disponibles: AsesorDisponible[] }>(`${environment.apiUrl}/asesores/disponibles`);
+    // Configurar headers para que la petición sea pública (sin autenticación)
+    const options = {
+      withCredentials: false, // No enviar cookies de autenticación
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    return this.http.get<{ asesores_disponibles: AsesorDisponible[] }>(`${environment.apiUrl}/asesores/disponibles`, options);
+  }
+
+  eliminarHorariosUsuario(userId: number, dias: string[]): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/eliminar-usuario`, {
+      user_id: userId,
+      dias: dias
+    });
   }
 
 }
