@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { AlmacenService, Producto } from '../../../../services/almacen.service';
+import { AlmacenService } from '../../../../services/almacen.service';
+import { Producto } from '../../../../types/almacen.types';
 import { ProductoModalComponent } from './producto-modal.component';
 import { ProductoDetallesModalComponent } from './producto-detalles-modal.component';
 import { SeccionFilterService } from '../../../../services/seccion-filter.service';

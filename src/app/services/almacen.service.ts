@@ -3,135 +3,19 @@ import { Injectable } from "@angular/core"
 import { HttpClient, HttpParams } from "@angular/common/http"
 import { Observable, map } from "rxjs"
 import { environment } from "../../environments/environment"
-
-// Interfaces para Categorías
-export interface Categoria {
-  id: number
-  nombre: string
-  id_seccion?: number;
-  seccion?: Seccion;
-  descripcion?: string
-  imagen?: string
-  imagen_url?: string
-  activo: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface CategoriaCreate {
-  nombre: string
-  id_seccion: number
-  descripcion?: string
-  imagen?: File
-  activo: boolean
-}
-
-// Interfaces para Marcas
-export interface MarcaProducto {
-  id: number
-  nombre: string
-  descripcion?: string
-  imagen?: string
-  imagen_url?: string
-  activo: boolean
-  productos_count?: number
-  created_at: string
-  updated_at: string
-}
-
-export interface MarcaProductoCreate {
-  nombre: string
-  descripcion?: string
-  imagen?: File
-  activo: boolean
-}
-
-// Interfaces para Productos
-export interface Producto {
-  id: number
-  nombre: string
-  descripcion?: string
-  codigo_producto: string
-  categoria_id: number
-  marca_id?: number
-  categoria?: Categoria
-  marca?: MarcaProducto
-  precio_compra: number
-  precio_venta: number
-  stock: number
-  stock_minimo: number
-  imagen?: string
-  imagen_url?: string
-  activo: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface ProductoCreate {
-  nombre: string
-  descripcion?: string
-  codigo_producto: string
-  categoria_id: number
-  marca_id?: number
-  precio_compra: number
-  precio_venta: number
-  stock: number
-  stock_minimo: number
-  imagen?: File
-  activo: boolean
-}
-
-// Interfaces para productos públicos
-export interface ProductoPublico {
-  id: number
-  nombre: string
-  descripcion: string
-  precio: number
-  precio_oferta?: number
-  stock: number
-  imagen_principal: string
-  categoria: string
-  categoria_id: number
-  marca?: string
-  marca_id?: number
-  rating: number
-  total_reviews: string
-  reviews_count: number
-  sold_count: number
-  total_stock: number
-  is_on_sale: boolean
-  discount_percentage: number
-}
-
-export interface ProductosPublicosResponse {
-  productos: ProductoPublico[]
-  pagination: {
-    current_page: number
-    last_page: number
-    per_page: number
-    total: number
-  }
-}
-
-export interface CategoriaParaSidebar {
-  id: number
-  nombre: string
-  productos_count: number
-}
-
-export interface Seccion {
-  id: number;
-  nombre: string;
-  descripcion?: string;
-  categorias_count?: number;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface SeccionCreate {
-  nombre: string;
-  descripcion?: string;
-}
+import {
+  Categoria,
+  CategoriaCreate,
+  MarcaProducto,
+  MarcaProductoCreate,
+  Producto,
+  ProductoCreate,
+  ProductoPublico,
+  ProductosPublicosResponse,
+  CategoriaParaSidebar,
+  Seccion,
+  SeccionCreate
+} from '../types/almacen.types';
 
 @Injectable({
   providedIn: "root",
@@ -148,7 +32,7 @@ export class AlmacenService {
     if (seccionId !== null && seccionId !== undefined && seccionId !== 0) {
       params = params.set('seccion', seccionId.toString());
     }
-    console.log('Llamando API categorías con params:', params.toString());
+    // console.log('Llamando API categorías con params:', params.toString());
     return this.http.get<Categoria[]>(`${this.apiUrl}/categorias`, { params });
   }
 
@@ -438,13 +322,7 @@ export class AlmacenService {
     });
   }
 
-  // Método para obtener categorías por sección
-  obtenerCategoriasPorSeccion(seccionId?: number): Observable<Categoria[]> {
-    const url = seccionId 
-      ? `${this.apiUrl}/categorias?seccion=${seccionId}`
-      : `${this.apiUrl}/categorias`;
-    return this.http.get<Categoria[]>(url);
-  }
+
 
   validarCupon(codigo: string, total: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/cupones/validar`, { codigo, total });

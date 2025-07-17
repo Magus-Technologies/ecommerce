@@ -2,7 +2,8 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from "@angular/forms"
-import { AlmacenService, Producto, ProductoCreate, Categoria, MarcaProducto } from "../../../../services/almacen.service"
+import { AlmacenService } from "../../../../services/almacen.service"
+import {Producto, ProductoCreate, Categoria, MarcaProducto} from "../../../../types/almacen.types"
 
 @Component({
   selector: "app-producto-modal",
