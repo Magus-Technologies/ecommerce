@@ -81,7 +81,7 @@
           (click)="toggleSubmenu('home')"
         >
           <a href="javascript:void(0)" class="nav-menu__link text-gray-700"
-            >Hogar</a
+            >INICIO</a
           >
           <ul
             class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
@@ -92,10 +92,10 @@
               routerLinkActive="activePage"
             >
               <a
-                [routerLink]="['/']"
+                [routerLink]="['/ofertas']"
                 class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
               >
-                Home Grocery
+                Ofertas
               </a>
             </li>
             <li
@@ -103,13 +103,13 @@
               routerLinkActive="activePage"
             >
               <a
-                [routerLink]="['/index-two']"
+                [routerLink]="['/remates']"
                 class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
               >
-                Home Electronics
+                Remates
               </a>
             </li>
-            <li
+            <!-- <li
               class="common-dropdown__item nav-submenu__item"
               routerLinkActive="activePage"
             >
@@ -119,7 +119,7 @@
               >
                 Home Fashion
               </a>
-            </li>
+            </li> -->
           </ul>
         </li>
 
@@ -128,8 +128,8 @@
           routerLinkActive="activePage"
           (click)="toggleSubmenu('shop')"
         >
-          <a href="javascript:void(0)" class="nav-menu__link text-white"
-            >Shop</a
+          <a href="javascript:void(0)" class="nav-menu__link text-gray-70"
+            >Computadoras</a
           >
           <ul
             class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
@@ -179,11 +179,11 @@
           [routerLinkActiveOptions]="{ exact: true }"
         >
           <span
-            class="badge-notification bg-warning-600 text-white text-sm py-2 px-8 rounded-4"
-            >New</span
+            class="badge-notification bg-danger-20 text-white text-sm py-2 px-5 rounded-4"
+            >Nuevo</span
           >
-          <a href="javascript:void(0)" class="nav-menu__link text-white"
-            >Pages</a
+          <a href="javascript:void(0)" class="nav-menu__link text-main-600"
+            >Laptos</a
           >
           <ul
             class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
@@ -316,47 +316,16 @@
             </li>
           </ul>
         </li>
-        <li
-          class="on-hover-item nav-menu__item has-submenu"
-          (click)="toggleSubmenu('blog')"
-        >
-          <a href="javascript:void(0)" class="nav-menu__link text-white"
-            >Blog</a
+        <!-- Delivery -->
+        <li class="nav-menu__item" [routerLinkActive]="'activePage'">
+          <a [routerLink]="['delivery']" class="nav-menu__link text-gray-700"
+            >Delivery</a
           >
-          <ul
-            class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
-            [style.display]="activeIndex === 'blog' ? 'block' : 'none'"
-          >
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              [routerLinkActive]="'activePage'"
-            >
-              <a
-                [routerLink]="['blog']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Blog</a
-              >
-            </li>
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              [routerLinkActive]="'activePage'"
-            >
-              <a
-                [routerLink]="['blog-details']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Blog Details</a
-              >
-            </li>
-          </ul>
         </li>
-        <li
-          class="nav-menu__item"
-          [routerLinkActive]="'activePage'"
-        >
-          <a [routerLink]="['contact']" class="nav-menu__link text-white"
-            >Contact Us</a
+        <!-- contactanos -->
+        <li class="nav-menu__item" [routerLinkActive]="'activePage'">
+          <a [routerLink]="['contact']" class="nav-menu__link text-gray-700"
+            >Contactanos</a
           >
         </li>
       </ul>
@@ -368,8 +337,8 @@
 
 <!-- ======================= Inicio del encabezado medio ========================= -->
 <header class="header-middle border-bottom border-gray-100 bg-azul-oscuro">
-  <div class="container container-lg ">
-    <nav class="header-inner flex-between gap-8 ">
+  <div class="container container-lg">
+    <nav class="header-inner flex-between gap-8">
       <!-- Logo Start -->
       <div class="logo">
         <a [routerLink]="['']" class="link">
@@ -381,7 +350,7 @@
       <!-- form location Start -->
       <form
         action="#"
-        class="flex-align flex-wrap form-location-wrapper max-w-840 w-100 "
+        class="flex-align flex-wrap form-location-wrapper max-w-840 w-100"
       >
         <div
           class="search-category select-style-one d-flex select-border-end-0 search-form d-sm-flex d-none text-heading-two text-sm w-100"
@@ -401,7 +370,7 @@
 
           <!-- ✅ NUEVO: Search Input con autocompletado -->
           <div
-            class="search-form__wrapper position-relative flex-grow-1  bg-white "
+            class="search-form__wrapper position-relative flex-grow-1 bg-white"
           >
             <input
               type="text"
@@ -418,7 +387,7 @@
             <div
               *ngIf="showSuggestions"
               class="search-suggestions position-absolute w-100"
-              style="top: 100%; left: 0; max-height: 400px; overflow-y: auto;"
+              style="top: 100%; left: 0; max-height: 400px; overflow-y: auto"
             >
               <!-- Loading state -->
               <div
@@ -440,10 +409,13 @@
                 <!-- Imagen del producto -->
                 <div class="suggestion-image me-3 flex-shrink-0">
                   <img
-                    [src]="producto.imagen_url || '/assets/images/placeholder-product.jpg'"
+                    [src]="
+                      producto.imagen_url ||
+                      '/assets/images/placeholder-product.jpg'
+                    "
                     [alt]="producto.nombre"
                     class="w-12 h-12 object-cover rounded"
-                    style="width: 48px; height: 48px;"
+                    style="width: 48px; height: 48px"
                   />
                 </div>
 
@@ -459,7 +431,7 @@
 
                 <!-- Precio -->
                 <div class="suggestion-price text-success fw-bold me-2">
-                  ${{ producto.precio | number:'1.2-2' }}
+                  ${{ producto.precio | number : "1.2-2" }}
                 </div>
 
                 <!-- Icono -->
@@ -492,7 +464,7 @@
       <!-- form location end -->
 
       <!-- Header Middle Right start -->
-      <div class="header-right flex-align flex-shrink-0 ">
+      <div class="header-right flex-align flex-shrink-0">
         <div class="flex-align gap-20">
           <button
             type="button"
@@ -508,7 +480,10 @@
           <!-- Usuario Profile Component - Sin texto adicional -->
           <app-user-profile></app-user-profile>
 
-          <a [routerLink]="['wishlist']" class="flex-align gap-4  item-hover-white">
+          <a
+            [routerLink]="['wishlist']"
+            class="flex-align gap-4 item-hover-white"
+          >
             <span
               class="text-xl d-flex position-relative me-6 mt-6 item-hover__text text-white"
             >
@@ -518,13 +493,12 @@
                 >0</span
               >
             </span>
-            <span
-              class="text-md item-hover__text d-none d-lg-flex text-white"
+            <span class="text-md item-hover__text d-none d-lg-flex text-white"
               >Lista de deseos</span
             >
           </a>
 
-          <a [routerLink]="['cart']" class="flex-align gap-4  item-hover-white">
+          <a [routerLink]="['cart']" class="flex-align gap-4 item-hover-white">
             <span
               class="text-xl d-flex position-relative me-6 mt-6 item-hover__text text-white"
             >
@@ -534,8 +508,7 @@
                 >{{ cartItemCount }}</span
               >
             </span>
-            <span
-              class="text-md item-hover__text d-none d-lg-flex text-white"
+            <span class="text-md item-hover__text d-none d-lg-flex text-white"
               >Carrito</span
             >
           </a>
@@ -627,25 +600,12 @@
                 isParentActive(['/', '/index-two', '/index-three'])
               "
             >
-              <a
-                href="javascript:void(0)"
-                class="nav-menu__link text-gray-700"
+              <a href="javascript:void(0)" class="nav-menu__link text-gray-700"
                 >Hogar</a
               >
               <ul
                 class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
               >
-                <li
-                  class="common-dropdown__item nav-submenu__item"
-                  [class.activePage]="isRouteActive('/')"
-                >
-                  <a
-                    [routerLink]="['']"
-                    class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-                  >
-                    Abarrotes caseros</a
-                  >
-                </li>
                 <li
                   class="common-dropdown__item nav-submenu__item"
                   [class.activePage]="isRouteActive('/index-two')"
@@ -654,7 +614,7 @@
                     [routerLink]="['index-two']"
                     class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
                   >
-                    Electrónica para el hogar</a
+                    Ofertas</a
                   >
                 </li>
                 <li
@@ -665,10 +625,26 @@
                     [routerLink]="['index-three']"
                     class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
                   >
-                    Moda para el hogar</a
+                    Remates</a
                   >
                 </li>
               </ul>
+            </li>
+            <li
+              class="nav-menu__item"
+              [class.activePage]="isRouteActive('/index-two')"
+            >
+              <a routerLink="/index-two" class="nav-menu__link text-gray-700"
+                >Computadoras</a
+              >
+            </li>
+            <li
+              class="nav-menu__item"
+              [class.activePage]="isRouteActive('/index-laptop')"
+            >
+              <a routerLink="/index-laptop" class="nav-menu__link text-gray-700"
+                >laptos</a
+              >
             </li>
             <li
               class="on-hover-item nav-menu__item has-submenu"
@@ -680,9 +656,7 @@
                 ])
               "
             >
-              <a
-                href="javascript:void(0)"
-                class="nav-menu__link text-gray-700"
+              <a href="javascript:void(0)" class="nav-menu__link text-gray-700"
                 >Tienda</a
               >
               <ul
@@ -739,9 +713,7 @@
                 class="badge-notification bg-warning-600 text-white text-sm py-2 px-8 rounded-4"
                 >New</span
               >
-              <a
-                href="javascript:void(0)"
-                class="nav-menu__link text-gray-700"
+              <a href="javascript:void(0)" class="nav-menu__link text-gray-700"
                 >Paginas</a
               >
               <ul
@@ -819,9 +791,7 @@
                 class="badge-notification bg-tertiary-600 text-white text-sm py-2 px-8 rounded-4"
                 >New</span
               >
-              <a
-                href="javascript:void(0)"
-                class="nav-menu__link text-gray-700"
+              <a href="javascript:void(0)" class="nav-menu__link text-gray-700"
                 >Vendedores</a
               >
               <ul
@@ -877,10 +847,7 @@
               class="on-hover-item nav-menu__item has-submenu"
               [class.activePage]="isParentActive(['/blog', '/blog-details'])"
             >
-              <a
-                href="javascript:void(0)"
-                class="nav-menu__link text-gray-700"
-              >
+              <a href="javascript:void(0)" class="nav-menu__link text-gray-700">
                 Blog
               </a>
               <ul
@@ -916,7 +883,6 @@
               [class.activePage]="isRouteActive('/contact')"
             >
               <a routerLink="/contact" class="nav-menu__link text-gray-700"
-
                 >Contáctanos</a
               >
             </li>

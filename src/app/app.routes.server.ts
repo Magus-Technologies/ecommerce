@@ -67,6 +67,10 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Prerender
   },
   {
+    path: 'index-laptop',
+    renderMode: RenderMode.Prerender
+  },
+  {
     path: 'vendor-two',
     renderMode: RenderMode.Prerender
   },

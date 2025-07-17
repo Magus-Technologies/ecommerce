@@ -2,7 +2,8 @@
 import { Component, OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
-import { AlmacenService, Categoria } from "../../../../services/almacen.service"
+import { AlmacenService } from "../../../../services/almacen.service"
+import { Categoria } from "../../../../types/almacen.types"
 import { CategoriaModalComponent } from "./categoria-modal.component"
 import { MigrarCategoriaModalComponent } from "../migrar-categoria-modal/migrar-categoria-modal.component"
 import { SeccionFilterService } from '../../../../services/seccion-filter.service';

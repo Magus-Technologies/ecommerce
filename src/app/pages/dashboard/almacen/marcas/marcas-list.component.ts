@@ -2,7 +2,8 @@
 import { Component, OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
-import { AlmacenService, MarcaProducto } from "../../../../services/almacen.service"
+import { AlmacenService } from "../../../../services/almacen.service"
+import { MarcaProducto } from "../../../../types/almacen.types"
 import { SeccionFilterService } from '../../../../services/seccion-filter.service';
 import { PermissionsService } from '../../../../services/permissions.service';
 import { MarcaModalComponent } from "./marca-modal.component"

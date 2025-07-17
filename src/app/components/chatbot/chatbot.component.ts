@@ -4,7 +4,8 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { CategoriasPublicasService, CategoriaPublica } from '../../services/categorias-publicas.service';
-import { AlmacenService, MarcaProducto, ProductoPublico, ProductosPublicosResponse } from '../../services/almacen.service';
+import { AlmacenService } from '../../services/almacen.service';
+import { MarcaProducto, ProductoPublico, ProductosPublicosResponse } from '../../types/almacen.types';
 import { OfertasService, ProductoOferta } from '../../services/ofertas.service';
 import { Subject, takeUntil } from 'rxjs';
 

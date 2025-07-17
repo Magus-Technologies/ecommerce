@@ -2,7 +2,8 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from "@angular/forms"
-import { AlmacenService, MarcaProducto, MarcaProductoCreate } from "../../../../services/almacen.service"
+import { AlmacenService } from "../../../../services/almacen.service"
+import {  MarcaProducto } from "../../../../types/almacen.types"
 
 @Component({
   selector: "app-marca-modal",

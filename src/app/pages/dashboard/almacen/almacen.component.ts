@@ -2,7 +2,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
-import { AlmacenService, Seccion } from '../../../services/almacen.service';
+import { AlmacenService } from '../../../services/almacen.service';
+import { Seccion } from '../../../types/almacen.types';
 import { SeccionesGestionModalComponent } from ".//secciones-gestion-modal/secciones-gestion-modal.component"
 import { SeccionFilterService } from '../../../services/seccion-filter.service';
 import { PermissionsService } from '../../../services/permissions.service';
@@ -86,7 +87,7 @@ import { filter } from 'rxjs/operators';
 
               <!-- Botón para agregar/gestionar secciones -->
               <button 
-                class="btn btn-sm btn-outline-primary px-8 py-6 rounded-8 ms-8"
+                class="btn btn-sm bg-main-600 px-8 py-6 rounded-8 ms-8"
                 *ngIf="permissionsService.canViewSecciones()"
                 (click)="abrirModalSeccion()"
                 title="Agregar/Gestionar Secciones">

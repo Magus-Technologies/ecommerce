@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { Router } from '@angular/router';
 import { VentasService } from '../../../services/ventas.service';
-import { AlmacenService, Producto } from '../../../services/almacen.service';
+import { AlmacenService } from '../../../services/almacen.service';
+import { Producto } from '../../../types/almacen.types';
 import Swal from 'sweetalert2';
 
 @Component({

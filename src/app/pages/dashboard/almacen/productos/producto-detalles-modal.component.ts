@@ -2,8 +2,8 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from "@angu
 import { CommonModule } from "@angular/common"
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from "@angular/forms"
 import { QuillModule } from 'ngx-quill'
-
-import { AlmacenService, Producto } from "../../../../services/almacen.service"
+import { AlmacenService } from "../../../../services/almacen.service"
+import { Producto } from "../../../../types/almacen.types"
 
 @Component({
   selector: "app-producto-detalles-modal",

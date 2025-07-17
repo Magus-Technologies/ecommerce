@@ -1,6 +1,7 @@
 import { Component, OnInit, Output, EventEmitter } from "@angular/core"
 import { CommonModule } from "@angular/common"
-import { AlmacenService, Seccion } from "../../../../services/almacen.service"
+import { AlmacenService } from "../../../../services/almacen.service"
+import { Seccion } from "../../../../types/almacen.types"
 import { SeccionModalComponent } from "../seccion-modal/seccion-modal.component"
 import { PermissionsService } from '../../../../services/permissions.service';
 import Swal from "sweetalert2"

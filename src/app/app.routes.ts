@@ -16,6 +16,7 @@ import { AccountComponent } from './pages/account/account.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { IndexTwoComponent } from './pages/index-two/index-two.component';
 import { IndexThreeComponent } from './pages/index-three/index-three.component';
+import { IndexLaptopComponent } from './pages/index-laptop/index-laptop.component';
 import { authGuard } from './guards/auth.guard';
 import { permissionGuard } from './guards/permission.guard';
 import { VentasComponent } from './pages/dashboard/ventas/ventas.component';
@@ -87,6 +88,11 @@ export const routes: Routes = [
         path: 'index-three',
         component: IndexThreeComponent,
         title: 'Index Three',
+      },
+      {
+        path: 'index-laptop',
+        component: IndexLaptopComponent,
+        title: 'Index Laptop',
       },
       // ✅ Lazy Loading para Shop
       {
