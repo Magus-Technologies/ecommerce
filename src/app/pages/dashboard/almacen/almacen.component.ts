@@ -4,16 +4,21 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { AlmacenService } from '../../../services/almacen.service';
 import { Seccion } from '../../../types/almacen.types';
-import { SeccionesGestionModalComponent } from ".//secciones-gestion-modal/secciones-gestion-modal.component"
+import { SeccionesGestionModalComponent } from './/secciones-gestion-modal/secciones-gestion-modal.component';
 import { SeccionFilterService } from '../../../services/seccion-filter.service';
 import { PermissionsService } from '../../../services/permissions.service';
-import { FormsModule } from '@angular/forms'
+import { FormsModule } from '@angular/forms';
 import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-almacen',
   standalone: true,
-  imports: [CommonModule, RouterModule, SeccionesGestionModalComponent, FormsModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    SeccionesGestionModalComponent,
+    FormsModule,
+  ],
   template: `
     <div class="container-fluid">
       <!-- Header -->
@@ -28,7 +33,11 @@ import { filter } from 'rxjs/operators';
         <div class="card-body p-0">
           <div class="d-flex align-items-center justify-content-between">
             <!-- Tabs de navegación -->
-            <nav class="nav nav-tabs border-0 flex-grow-1" id="almacenTabs" role="tablist">
+            <nav
+              class="nav nav-tabs border-0 flex-grow-1"
+              id="almacenTabs"
+              role="tablist"
+            >
               <button
                 class="nav-link px-24 py-16 border-0 text-heading-two fw-medium"
                 [class.active]="activeTab === 'productos'"
@@ -73,24 +82,25 @@ import { filter } from 'rxjs/operators';
                 <i class="ph ph-funnel text-gray-600"></i>
                 <span class="text-sm text-gray-600">Filtrar por Sección</span>
               </div>
-              <select 
-                class="form-select form-select-sm border-gray-300 rounded-8" 
+              <select
+                class="form-select form-select-sm border-gray-300 rounded-8"
                 style="min-width: 180px;"
-                [(ngModel)]="seccionSeleccionada" 
-                (change)="onSeccionChange($event)">
-                <option value="" disabled selected>Seleccionar</option>
+                [(ngModel)]="seccionSeleccionada"
+                (change)="onSeccionChange($event)"
+              >
+                <option value="" disabled>Seleccionar</option>
                 <option value="todas">Todas las secciones</option>
                 <option *ngFor="let seccion of secciones" [value]="seccion.id">
                   {{ seccion.nombre }}
                 </option>
               </select>
-
               <!-- Botón para agregar/gestionar secciones -->
-              <button 
+              <button
                 class="btn btn-sm bg-main-600 px-8 py-6 rounded-8 ms-8"
                 *ngIf="permissionsService.canViewSecciones()"
                 (click)="abrirModalSeccion()"
-                title="Agregar/Gestionar Secciones">
+                title="Agregar/Gestionar Secciones"
+              >
                 <i class="ph ph-plus"></i>
               </button>
             </div>
@@ -105,8 +115,9 @@ import { filter } from 'rxjs/operators';
     </div>
 
     <!-- Modal de gestión de secciones -->
-    <app-secciones-gestion-modal 
-      (seccionesActualizadas)="onSeccionesActualizadas()">
+    <app-secciones-gestion-modal
+      (seccionesActualizadas)="onSeccionesActualizadas()"
+    >
     </app-secciones-gestion-modal>
   `,
   styles: [
@@ -150,7 +161,7 @@ export class AlmacenComponent implements OnInit {
   seccionSeleccionada: string | null = null;
 
   constructor(
-    private almacenService: AlmacenService, 
+    private almacenService: AlmacenService,
     private router: Router,
     private seccionFilterService: SeccionFilterService,
     public permissionsService: PermissionsService
@@ -161,10 +172,10 @@ export class AlmacenComponent implements OnInit {
     this.cargarSecciones();
     this.detectActiveTab();
 
-    // Inicializar con "Todas las secciones"
-    this.seccionSeleccionada = "todas";
-    this.seccionFilterService.setSeccionSeleccionada(null);
-    
+    // ✅ MODIFICADO: Inicializar con Sección 1 por defecto
+    this.seccionSeleccionada = '1';
+    this.seccionFilterService.setSeccionSeleccionada(1);
+
     // Escuchar cambios de ruta para actualizar la pestaña activa
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
@@ -172,10 +183,9 @@ export class AlmacenComponent implements OnInit {
         this.detectActiveTab();
       });
   }
-
   public cargarTotales(): void {
     const seccionId = this.seccionFilterService.getSeccionSeleccionada();
-      
+
     // Cargar total de productos
     this.almacenService.obtenerProductos(seccionId || undefined).subscribe({
       next: (productos) => {
@@ -239,7 +249,7 @@ export class AlmacenComponent implements OnInit {
 
   onSeccionChange(event: any): void {
     const value = event.target ? event.target.value : event;
-    
+
     if (value === 'todas' || value === '') {
       this.seccionSeleccionada = 'todas';
       this.seccionFilterService.setSeccionSeleccionada(null);
@@ -247,24 +257,24 @@ export class AlmacenComponent implements OnInit {
       this.seccionSeleccionada = value;
       this.seccionFilterService.setSeccionSeleccionada(Number(value));
     }
-    
+
     console.log('Sección seleccionada:', this.seccionSeleccionada);
     this.cargarTotales();
   }
 
   abrirModalSeccion(): void {
-    const modal = document.getElementById("modalGestionSecciones")
+    const modal = document.getElementById('modalGestionSecciones');
     if (modal) {
-      const bootstrapModal = new (window as any).bootstrap.Modal(modal)
-      bootstrapModal.show()
+      const bootstrapModal = new (window as any).bootstrap.Modal(modal);
+      bootstrapModal.show();
     }
   }
 
   onSeccionesActualizadas(): void {
-    this.cargarSecciones()
+    this.cargarSecciones();
   }
 
   onDatosActualizados(): void {
-    this.cargarTotales()
+    this.cargarTotales();
   }
 }

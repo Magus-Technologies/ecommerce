@@ -58,6 +58,7 @@ export interface Producto {
   imagen?: string
   imagen_url?: string
   activo: boolean
+  destacado: boolean
   created_at: string
   updated_at: string
 }
@@ -74,6 +75,7 @@ export interface ProductoCreate {
   stock_minimo: number
   imagen?: File
   activo: boolean
+  destacado: boolean
 }
 
 // Interfaces para productos públicos
