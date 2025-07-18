@@ -1,19 +1,40 @@
 // src/app/pages/index/index.component.ts
-import { Component, OnInit, OnDestroy, AfterViewInit, Inject, PLATFORM_ID, ChangeDetectorRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  AfterViewInit,
+  Inject,
+  PLATFORM_ID,
+  ChangeDetectorRef,
+  ViewChild,
+} from '@angular/core';
 import { SlickCarouselComponent } from 'ngx-slick-carousel';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { SlickCarouselModule } from 'ngx-slick-carousel';
 import { RouterLink } from '@angular/router';
-import { CategoriaPublica, CategoriasPublicasService } from '../../services/categorias-publicas.service';
-import { BannersService, Banner, BannerPromocional } from '../../services/banner.service';
+import {
+  CategoriaPublica,
+  CategoriasPublicasService,
+} from '../../services/categorias-publicas.service';
+import {
+  BannersService,
+  Banner,
+  BannerPromocional,
+} from '../../services/banner.service';
 import { AlmacenService } from '../../services/almacen.service';
 import { MarcaProducto, ProductoPublico } from '../../types/almacen.types';
 import { CartService } from '../../services/cart.service';
 import Swal from 'sweetalert2';
-import { OfertasService, Oferta, ProductoOferta, Cupon, OfertaPrincipalResponse } from '../../services/ofertas.service';
+import {
+  OfertasService,
+  Oferta,
+  ProductoOferta,
+  Cupon,
+  OfertaPrincipalResponse,
+} from '../../services/ofertas.service';
 import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 import { WhatsappFloatComponent } from '../../components/whatsapp-float/whatsapp-float.component';
-
 
 interface CategoriaConImagen extends CategoriaPublica {
   img: string;
@@ -39,18 +60,24 @@ interface BrandSlideGroup {
 
 @Component({
   selector: 'app-index',
-  imports: [CommonModule, SlickCarouselModule, RouterLink, ChatbotComponent, WhatsappFloatComponent],
+  imports: [
+    CommonModule,
+    SlickCarouselModule,
+    RouterLink,
+    ChatbotComponent,
+    WhatsappFloatComponent,
+  ],
   templateUrl: './index.component.html',
-  styleUrl: './index.component.scss'
+  styleUrl: './index.component.scss',
 })
 export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
-
   // ✅ REFERENCIA AL SLIDER
-  @ViewChild('slickModal', { static: false }) slickModal!: SlickCarouselComponent;
+  @ViewChild('slickModal', { static: false })
+  slickModal!: SlickCarouselComponent;
 
   // ✅ CONFIGURACIÓN DE DEBUG - CAMBIAR A false PARA PRODUCCIÓN
   private readonly debugMode = false; // Cambiar a true solo para debugging
-  
+
   // ✅ PROPIEDADES PARA MANEJAR INTERVALOS OPTIMIZADAS
   private countdownIntervals: { [key: string]: any } = {};
   private isBrowser: boolean;
@@ -65,30 +92,31 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   todosLosProductos: ProductoPublico[] = []; // Cache de todos los productos
   // ✅ NUEVA VARIABLE ESPECÍFICA PARA CUPONES
   isLoadingCupones = false;
-
+  productosDestacados: ProductoPublico[] = [];
+  isLoadingProductosDestacados = false;
 
   slideConfig = {
-    slidesToShow: 1, 
-    slidesToScroll: 1, 
-    arrows: false,  // ✅ CAMBIO: false en lugar de true
-    autoplay: true,          
-    autoplaySpeed: 5000,      
-    speed: 600,           
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: false, // ✅ CAMBIO: false en lugar de true
+    autoplay: true,
+    autoplaySpeed: 5000,
+    speed: 600,
     dots: false,
-    infinite: true,           
-    pauseOnHover: true, 
-    fade: false, 
+    infinite: true,
+    pauseOnHover: true,
+    fade: false,
     cssEase: 'ease-in-out',
     responsive: [
       {
         breakpoint: 768,
         settings: {
-          arrows: false,  // ✅ CAMBIO: false en lugar de true
+          arrows: false, // ✅ CAMBIO: false en lugar de true
           autoplay: true,
           autoplaySpeed: 4000,
-        }
-      }
-    ]
+        },
+      },
+    ],
   };
 
   breakpoint(e: any) {
@@ -134,51 +162,51 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         breakpoint: 1699,
         settings: {
           slidesToShow: 9,
-        }
+        },
       },
       {
         breakpoint: 1599,
         settings: {
           slidesToShow: 8,
-        }
+        },
       },
       {
         breakpoint: 1399,
         settings: {
           slidesToShow: 6,
-        }
+        },
       },
       {
         breakpoint: 992,
         settings: {
           slidesToShow: 5,
-        }
+        },
       },
       {
         breakpoint: 768,
         settings: {
           slidesToShow: 4,
-        }
+        },
       },
       {
         breakpoint: 575,
         settings: {
           slidesToShow: 3,
-        }
+        },
       },
       {
         breakpoint: 424,
         settings: {
           slidesToShow: 2,
-        }
+        },
       },
       {
         breakpoint: 359,
         settings: {
           slidesToShow: 1,
-        }
+        },
       },
-    ]
+    ],
   };
 
   promotionalBanners: BannerPromocional[] = [];
@@ -206,10 +234,9 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         console.error('Error al cargar banners promocionales:', error);
         this.isLoadingPromotionalBanners = false;
         this.promotionalBanners = [];
-      }
+      },
     });
   }
-  
 
   // ✅ CONSTRUCTOR ACTUALIZADO CON PLATFORM_ID Y ChangeDetectorRef
   constructor(
@@ -220,7 +247,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     private cartService: CartService,
     private ofertasService: OfertasService,
     private cdr: ChangeDetectorRef
-  ) { 
+  ) {
     // ✅ VERIFICAR SI ESTAMOS EN EL NAVEGADOR
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -237,6 +264,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cargarOfertaPrincipalDelDia(); // ✅ NUEVA FUNCIÓN
     this.cargarCategoriasParaFiltro(); // ✅ NUEVA FUNCIÓN
     this.cargarTodosLosProductos(); // ✅ NUEVA FUNCIÓN
+    this.cargarProductosDestacados();
 
     // NUEVA LÍNEA: Actualizar cupones cada 5 minutos
     if (this.isBrowser) {
@@ -285,8 +313,10 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         return;
       }
 
-      const slickElement = document.querySelector('ngx-slick-carousel.carousel .slick-slider') as any;
-      
+      const slickElement = document.querySelector(
+        'ngx-slick-carousel.carousel .slick-slider'
+      ) as any;
+
       if (slickElement && slickElement.slick) {
         if (direction === 'prev') {
           slickElement.slick('slickPrev');
@@ -316,14 +346,14 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ✅ NUEVO: Método para limpiar todos los intervalos
   private limpiarTodosLosIntervalos(): void {
-    Object.values(this.countdownIntervals).forEach(interval => {
+    Object.values(this.countdownIntervals).forEach((interval) => {
       if (interval) {
         clearInterval(interval);
       }
     });
     this.countdownIntervals = {};
     this.lastUpdateTimes = {};
-    
+
     if (this.debugMode) {
       console.log('🧹 Todos los intervalos de countdown limpiados');
     }
@@ -333,17 +363,17 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isLoadingCategorias = true;
     this.categoriasPublicasService.obtenerCategoriasPublicas().subscribe({
       next: (categorias) => {
-        this.featureItems = categorias.map(cat => ({
+        this.featureItems = categorias.map((cat) => ({
           ...cat,
           img: cat.imagen_url || 'assets/images/thumbs/feature-img10.png',
-          title: cat.nombre
+          title: cat.nombre,
         })) as CategoriaConImagen[];
         this.isLoadingCategorias = false;
       },
       error: (error) => {
         console.error('Error al cargar categorías públicas:', error);
         this.isLoadingCategorias = false;
-      }
+      },
     });
   }
 
@@ -352,18 +382,21 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.categoriasPublicasService.obtenerCategoriasPublicas().subscribe({
       next: (categorias) => {
         // Filtrar solo las categorías que tienen productos
-        this.categoriasParaFiltro = categorias.filter(cat => 
-          cat.productos_count && cat.productos_count > 0
+        this.categoriasParaFiltro = categorias.filter(
+          (cat) => cat.productos_count && cat.productos_count > 0
         );
-        
+
         if (this.debugMode) {
-          console.log('✅ Categorías para filtro cargadas:', this.categoriasParaFiltro);
+          console.log(
+            '✅ Categorías para filtro cargadas:',
+            this.categoriasParaFiltro
+          );
         }
       },
       error: (error) => {
         console.error('Error al cargar categorías para filtro:', error);
         this.categoriasParaFiltro = [];
-      }
+      },
     });
   }
 
@@ -375,9 +408,12 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         this.todosLosProductos = response.productos;
         this.productosFiltrados = [...this.todosLosProductos]; // Mostrar todos inicialmente
         this.isLoadingProductosFiltrados = false;
-        
+
         if (this.debugMode) {
-          console.log('✅ Todos los productos cargados:', this.todosLosProductos);
+          console.log(
+            '✅ Todos los productos cargados:',
+            this.todosLosProductos
+          );
         }
       },
       error: (error) => {
@@ -385,7 +421,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         this.isLoadingProductosFiltrados = false;
         this.todosLosProductos = [];
         this.productosFiltrados = [];
-      }
+      },
     });
   }
 
@@ -393,7 +429,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   filtrarPorCategoria(categoriaId: number | null): void {
     this.categoriaSeleccionada = categoriaId;
     this.isLoadingProductosFiltrados = true;
-    
+
     if (this.debugMode) {
       console.log('🔍 Filtrando por categoría:', categoriaId);
     }
@@ -406,13 +442,13 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       } else {
         // Filtrar por categoría específica
         this.productosFiltrados = this.todosLosProductos.filter(
-          producto => producto.categoria_id === categoriaId
+          (producto) => producto.categoria_id === categoriaId
         );
       }
-      
+
       this.isLoadingProductosFiltrados = false;
       this.cdr.detectChanges();
-      
+
       if (this.debugMode) {
         console.log('✅ Productos filtrados:', this.productosFiltrados.length);
       }
@@ -430,27 +466,27 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         console.error('Error al cargar banners:', error);
         this.isLoadingBanners = false;
         this.bannersDinamicos = [];
-      }
+      },
     });
   }
-  
+
   cargarMarcasDinamicas(): void {
     this.isLoadingMarcas = true;
     this.almacenService.obtenerMarcasPublicas().subscribe({
       next: (marcas) => {
         this.brandSlides[0].slides = marcas.map((marca, index) => ({
-          class: "brand-item",
-          dataAos: "zoom-in",
-          dataAosDuration: 200 + (index * 200),
+          class: 'brand-item',
+          dataAos: 'zoom-in',
+          dataAosDuration: 200 + index * 200,
           imgSrc: marca.imagen_url || 'assets/images/thumbs/brand-default.png',
-          imgAlt: marca.nombre
+          imgAlt: marca.nombre,
         }));
         this.isLoadingMarcas = false;
       },
       error: (error) => {
         console.error('Error al cargar marcas:', error);
         this.isLoadingMarcas = false;
-      }
+      },
     });
   }
 
@@ -460,31 +496,33 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         title: 'Sin stock',
         text: 'Este producto no tiene stock disponible',
         icon: 'warning',
-        confirmButtonColor: '#dc3545'
+        confirmButtonColor: '#dc3545',
       });
       return;
     }
 
     const success = this.cartService.addToCart(product, 1);
-    
+
     if (success) {
       Swal.fire({
         title: '¡Producto agregado!',
-        text: `${product.name || product.title || product.nombre} ha sido agregado a tu carrito`,
+        text: `${
+          product.name || product.title || product.nombre
+        } ha sido agregado a tu carrito`,
         icon: 'success',
         timer: 2000,
         showConfirmButton: false,
         toast: true,
         position: 'top-end',
         background: '#f8f9fa',
-        color: '#333'
+        color: '#333',
       });
     } else {
       Swal.fire({
         title: 'Error',
         text: 'No se pudo agregar el producto al carrito. Revisa el stock disponible.',
         icon: 'error',
-        confirmButtonColor: '#dc3545'
+        confirmButtonColor: '#dc3545',
       });
     }
   }
@@ -499,7 +537,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         this.ofertasActivas = ofertas;
         this.isLoadingOfertas = false;
         this.cdr.detectChanges();
-        
+
         // ✅ INICIALIZAR COUNTDOWNS DESPUÉS DE CARGAR DATOS
         if (this.isBrowser) {
           setTimeout(() => this.inicializarCountdowns(), 1000);
@@ -508,7 +546,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       error: (error) => {
         console.error('Error al cargar ofertas:', error);
         this.isLoadingOfertas = false;
-      }
+      },
     });
   }
 
@@ -520,7 +558,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         }
         this.flashSalesActivas = flashSales;
         this.cdr.detectChanges();
-        
+
         // ✅ INICIALIZAR COUNTDOWNS DESPUÉS DE CARGAR DATOS
         if (this.isBrowser) {
           setTimeout(() => this.inicializarCountdowns(), 1000);
@@ -528,7 +566,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       },
       error: (error) => {
         console.error('Error al cargar flash sales:', error);
-      }
+      },
     });
   }
 
@@ -540,7 +578,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         }
         this.productosEnOferta = productos;
         this.cdr.detectChanges();
-        
+
         // ✅ INICIALIZAR COUNTDOWNS DESPUÉS DE CARGAR DATOS
         if (this.isBrowser) {
           setTimeout(() => this.inicializarCountdowns(), 1000);
@@ -548,7 +586,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       },
       error: (error) => {
         console.error('Error al cargar productos en oferta:', error);
-      }
+      },
     });
   }
 
@@ -563,18 +601,21 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         this.ofertaPrincipalDelDia = response;
         this.isLoadingOfertaPrincipal = false;
         this.cdr.detectChanges();
-        
+
         // ✅ INICIALIZAR COUNTDOWN PARA LA OFERTA PRINCIPAL
         if (this.isBrowser && response.oferta_principal?.fecha_fin) {
           setTimeout(() => {
-            this.inicializarCountdown('countdown-oferta-principal', response.oferta_principal!.fecha_fin);
+            this.inicializarCountdown(
+              'countdown-oferta-principal',
+              response.oferta_principal!.fecha_fin
+            );
           }, 1000);
         }
       },
       error: (error) => {
         console.error('Error al cargar oferta principal del día:', error);
         this.isLoadingOfertaPrincipal = false;
-      }
+      },
     });
   }
 
@@ -598,7 +639,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
             titulo: 'Bienvenido - 20% de descuento',
             tipo_descuento: 'porcentaje',
             valor_descuento: 20,
-            compra_minima: 100
+            compra_minima: 100,
           },
           {
             id: 2,
@@ -606,14 +647,13 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
             titulo: 'Envío gratis',
             tipo_descuento: 'cantidad_fija',
             valor_descuento: 15,
-            compra_minima: 50
-          }
+            compra_minima: 50,
+          },
         ];
         this.cdr.detectChanges();
-      }
+      },
     });
   }
-
 
   // ✅ MEJORADA: Inicializar todos los countdowns con optimizaciones
   inicializarCountdowns(): void {
@@ -630,27 +670,33 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       console.log('Productos en oferta:', this.productosEnOferta);
       console.log('Oferta principal:', this.ofertaPrincipalDelDia);
     }
-    
+
     // ✅ LIMPIAR INTERVALOS ANTERIORES
     this.limpiarTodosLosIntervalos();
-    
+
     // Countdown para Flash Sales
-    this.flashSalesActivas.forEach(sale => {
+    this.flashSalesActivas.forEach((sale) => {
       if (sale.fecha_fin) {
         const countdownId = `countdown-flash-${sale.id}`;
         if (this.debugMode) {
-          console.log(`🔄 Inicializando countdown para flash sale ${sale.id}:`, sale.fecha_fin);
+          console.log(
+            `🔄 Inicializando countdown para flash sale ${sale.id}:`,
+            sale.fecha_fin
+          );
         }
         this.inicializarCountdown(countdownId, sale.fecha_fin);
       }
     });
 
     // Countdown para productos en oferta que son flash sales
-    this.productosEnOferta.forEach(producto => {
+    this.productosEnOferta.forEach((producto) => {
       if (producto.es_flash_sale && producto.fecha_fin_oferta) {
         const countdownId = `countdown-producto-${producto.id}`;
         if (this.debugMode) {
-          console.log(`🔄 Inicializando countdown para producto ${producto.id}:`, producto.fecha_fin_oferta);
+          console.log(
+            `🔄 Inicializando countdown para producto ${producto.id}:`,
+            producto.fecha_fin_oferta
+          );
         }
         this.inicializarCountdown(countdownId, producto.fecha_fin_oferta);
       }
@@ -658,13 +704,16 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // ✅ COUNTDOWN PARA OFERTA PRINCIPAL DEL DÍA
     if (this.ofertaPrincipalDelDia?.oferta_principal?.fecha_fin) {
-      this.inicializarCountdown('countdown-oferta-principal', this.ofertaPrincipalDelDia.oferta_principal.fecha_fin);
+      this.inicializarCountdown(
+        'countdown-oferta-principal',
+        this.ofertaPrincipalDelDia.oferta_principal.fecha_fin
+      );
     }
 
     // ✅ COUNTDOWN ESTÁTICOS CON FECHAS FUTURAS VÁLIDAS
     const fechaFutura = new Date();
     fechaFutura.setDate(fechaFutura.getDate() + 30); // 30 días en el futuro
-    
+
     this.inicializarCountdown('countdown4', fechaFutura.toISOString());
     this.inicializarCountdown('countdown26', fechaFutura.toISOString());
   }
@@ -676,7 +725,10 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     // ✅ ESPERAR A QUE EL ELEMENTO ESTÉ EN EL DOM
-    const waitForElement = (selector: string, maxAttempts: number = 10): Promise<HTMLElement | null> => {
+    const waitForElement = (
+      selector: string,
+      maxAttempts: number = 10
+    ): Promise<HTMLElement | null> => {
       return new Promise((resolve) => {
         let attempts = 0;
         const checkElement = () => {
@@ -695,13 +747,17 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     waitForElement(elementId).then((element) => {
       if (!element) {
         if (this.debugMode) {
-          console.warn(`⚠️ Elemento countdown no encontrado después de esperar: ${elementId}`);
+          console.warn(
+            `⚠️ Elemento countdown no encontrado después de esperar: ${elementId}`
+          );
         }
         return;
       }
 
       if (this.debugMode) {
-        console.log(`🕒 Inicializando countdown para ${elementId} hasta ${fechaFin}`);
+        console.log(
+          `🕒 Inicializando countdown para ${elementId} hasta ${fechaFin}`
+        );
       }
 
       // Limpiar intervalo anterior si existe
@@ -713,28 +769,32 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       let endDate: number;
       try {
         endDate = new Date(fechaFin).getTime();
-        
+
         // Verificar si la fecha es válida
         if (isNaN(endDate)) {
           throw new Error('Fecha inválida');
         }
-        
+
         // ✅ VERIFICAR QUE LA FECHA SEA FUTURA
         const now = new Date().getTime();
         if (endDate <= now) {
           if (this.debugMode) {
-            console.warn(`⚠️ La fecha de fin ya pasó para ${elementId}: ${fechaFin}`);
+            console.warn(
+              `⚠️ La fecha de fin ya pasó para ${elementId}: ${fechaFin}`
+            );
           }
           // Establecer una fecha futura por defecto
-          endDate = now + (24 * 60 * 60 * 1000); // 24 horas en el futuro
+          endDate = now + 24 * 60 * 60 * 1000; // 24 horas en el futuro
         }
-        
       } catch (error) {
         if (this.debugMode) {
-          console.error(`❌ Error al parsear fecha para countdown ${elementId}: ${fechaFin}`, error);
+          console.error(
+            `❌ Error al parsear fecha para countdown ${elementId}: ${fechaFin}`,
+            error
+          );
         }
         // Fecha por defecto: 24 horas en el futuro
-        endDate = new Date().getTime() + (24 * 60 * 60 * 1000);
+        endDate = new Date().getTime() + 24 * 60 * 60 * 1000;
       }
 
       // ✅ INICIALIZAR TIEMPO DE ÚLTIMA ACTUALIZACIÓN PARA THROTTLING
@@ -742,7 +802,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
 
       const updateCountdown = () => {
         const now = new Date().getTime();
-        
+
         // ✅ THROTTLING: Solo actualizar cada 1000ms para evitar spam
         if (now - this.lastUpdateTimes[elementId] < 950) {
           return;
@@ -753,24 +813,42 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
 
         if (timeLeft > 0) {
           const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+          const hours = Math.floor(
+            (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+          );
+          const minutes = Math.floor(
+            (timeLeft % (1000 * 60 * 60)) / (1000 * 60)
+          );
           const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
           // ✅ BUSCAR ELEMENTOS CON MÚLTIPLES SELECTORES
-          const daysElement = element.querySelector('.days') || element.querySelector('[class*="days"]');
-          const hoursElement = element.querySelector('.hours') || element.querySelector('[class*="hours"]');
-          const minutesElement = element.querySelector('.minutes') || element.querySelector('[class*="minutes"]');
-          const secondsElement = element.querySelector('.seconds') || element.querySelector('[class*="seconds"]');
+          const daysElement =
+            element.querySelector('.days') ||
+            element.querySelector('[class*="days"]');
+          const hoursElement =
+            element.querySelector('.hours') ||
+            element.querySelector('[class*="hours"]');
+          const minutesElement =
+            element.querySelector('.minutes') ||
+            element.querySelector('[class*="minutes"]');
+          const secondsElement =
+            element.querySelector('.seconds') ||
+            element.querySelector('[class*="seconds"]');
 
-          if (daysElement) daysElement.textContent = days.toString().padStart(2, '0');
-          if (hoursElement) hoursElement.textContent = hours.toString().padStart(2, '0');
-          if (minutesElement) minutesElement.textContent = minutes.toString().padStart(2, '0');
-          if (secondsElement) secondsElement.textContent = seconds.toString().padStart(2, '0');
+          if (daysElement)
+            daysElement.textContent = days.toString().padStart(2, '0');
+          if (hoursElement)
+            hoursElement.textContent = hours.toString().padStart(2, '0');
+          if (minutesElement)
+            minutesElement.textContent = minutes.toString().padStart(2, '0');
+          if (secondsElement)
+            secondsElement.textContent = seconds.toString().padStart(2, '0');
 
           // ✅ SOLO MOSTRAR LOGS EN MODO DEBUG
           if (this.debugMode) {
-            console.log(`⏰ ${elementId}: ${days}d ${hours}h ${minutes}m ${seconds}s`);
+            console.log(
+              `⏰ ${elementId}: ${days}d ${hours}h ${minutes}m ${seconds}s`
+            );
           }
         } else {
           // Tiempo expirado
@@ -808,35 +886,38 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   copiarCupon(codigo: string): void {
     if (!this.isBrowser) return;
 
-    navigator.clipboard.writeText(codigo).then(() => {
-      Swal.fire({
-        title: '¡Cupón copiado!',
-        text: `El código "${codigo}" ha sido copiado al portapapeles`,
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false,
-        toast: true,
-        position: 'top-end'
+    navigator.clipboard
+      .writeText(codigo)
+      .then(() => {
+        Swal.fire({
+          title: '¡Cupón copiado!',
+          text: `El código "${codigo}" ha sido copiado al portapapeles`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
+        });
+      })
+      .catch(() => {
+        // Fallback para navegadores que no soportan clipboard
+        const textArea = document.createElement('textarea');
+        textArea.value = codigo;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        Swal.fire({
+          title: '¡Cupón copiado!',
+          text: `El código "${codigo}" ha sido copiado`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
+        });
       });
-    }).catch(() => {
-      // Fallback para navegadores que no soportan clipboard
-      const textArea = document.createElement('textarea');
-      textArea.value = codigo;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      
-      Swal.fire({
-        title: '¡Cupón copiado!',
-        text: `El código "${codigo}" ha sido copiado`,
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false,
-        toast: true,
-        position: 'top-end'
-      });
-    });
   }
 
   onImageError(event: any): void {
@@ -844,111 +925,40 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     img.src = 'assets/images/thumbs/feature-img10.png';
   }
 
-  productSlides = [
-    {
-      imgSrc: "assets/images/thumbs/short-product-img1.png",
-      alt: "Product 1",
-      rating: 4.8,
-      ratingCount: "17k",
-      title: "Hortalizas en floretes de brócoli de Taylor Farms",
-      price: "$1500.00"
-    },
-    {
-      imgSrc: "assets/images/thumbs/short-product-img2.png",
-      alt: "Product 2",
-      rating: 4.8,
-      ratingCount: "17k",
-      title: "Hortalizas en floretes de brócoli de Taylor Farms",
-      price: "$1500.00"
-    },
-    {
-      imgSrc: "assets/images/thumbs/short-product-img3.png",
-      alt: "Product 3",
-      rating: 4.8,
-      ratingCount: "17k",
-      title: "Hortalizas en floretes de brócoli de Taylor Farms",
-      price: "$1500.00"
-    },
-    {
-      imgSrc: "assets/images/thumbs/short-product-img4.png",
-      alt: "Product 4",
-      rating: 4.8,
-      ratingCount: "17k",
-      title: "Hortalizas en floretes de brócoli de Taylor Farms",
-      price: "$1500.00"
-    }
-  ];
-
   topProductSlides = [
     {
-      imgSrc: "assets/images/thumbs/short-product-img5.png",
-      alt: "Product 1",
+      imgSrc: 'assets/images/thumbs/short-product-img5.png',
+      alt: 'Product 1',
       rating: 4.8,
-      ratingCount: "17k",
-      title: "Hortalizas en floretes de brócoli de Taylor Farms",
-      price: "$1500.00"
+      ratingCount: '17k',
+      title: 'Hortalizas en floretes de brócoli de Taylor Farms',
+      price: '$1500.00',
     },
     {
-      imgSrc: "assets/images/thumbs/short-product-img6.png",
-      alt: "Product 2",
+      imgSrc: 'assets/images/thumbs/short-product-img6.png',
+      alt: 'Product 2',
       rating: 4.8,
-      ratingCount: "17k",
-      title: "Hortalizas en floretes de brócoli de Taylor Farms",
-      price: "$1500.00"
+      ratingCount: '17k',
+      title: 'Hortalizas en floretes de brócoli de Taylor Farms',
+      price: '$1500.00',
     },
     {
-      imgSrc: "assets/images/thumbs/short-product-img7.png",
-      alt: "Product 3",
+      imgSrc: 'assets/images/thumbs/short-product-img7.png',
+      alt: 'Product 3',
       rating: 4.8,
-      ratingCount: "17k",
-      title: "Hortalizas en floretes de brócoli de Taylor Farms",
-      price: "$1500.00"
+      ratingCount: '17k',
+      title: 'Hortalizas en floretes de brócoli de Taylor Farms',
+      price: '$1500.00',
     },
     {
-      imgSrc: "assets/images/thumbs/short-product-img8.png",
-      alt: "Product 4",
+      imgSrc: 'assets/images/thumbs/short-product-img8.png',
+      alt: 'Product 4',
       rating: 4.8,
-      ratingCount: "17k",
-      title: "Hortalizas en floretes de brócoli de Taylor Farms",
-      price: "$1500.00"
-    }
+      ratingCount: '17k',
+      title: 'Hortalizas en floretes de brócoli de Taylor Farms',
+      price: '$1500.00',
+    },
   ];
-
-  onProductSlides = [
-    {
-      imgSrc: "assets/images/thumbs/short-product-img5.png",
-      alt: "Product 1",
-      rating: 4.8,
-      ratingCount: "17k",
-      title: "Hortalizas en floretes de brócoli de Taylor Farms",
-      price: "$1500.00"
-    },
-    {
-      imgSrc: "assets/images/thumbs/short-product-img6.png",
-      alt: "Product 2",
-      rating: 4.8,
-      ratingCount: "17k",
-      title: "Hortalizas en floretes de brócoli de Taylor Farms",
-      price: "$1500.00"
-    },
-    {
-      imgSrc: "assets/images/thumbs/short-product-img7.png",
-      alt: "Product 3",
-      rating: 4.8,
-      ratingCount: "17k",
-      title: "Hortalizas en floretes de brócoli de Taylor Farms",
-      price: "$1500.00"
-    },
-    {
-      imgSrc: "assets/images/thumbs/short-product-img8.png",
-      alt: "Product 4",
-      rating: 4.8,
-      ratingCount: "17k",
-      title: "Hortalizas en floretes de brócoli de Taylor Farms",
-      price: "$1500.00"
-    }
-  ];
-
 
   hotDealsSlideConfig = {
     slidesToShow: 4,
@@ -969,23 +979,23 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         settings: {
           slidesToShow: 3,
           arrows: false,
-        }
+        },
       },
       {
         breakpoint: 1199,
         settings: {
           slidesToShow: 2,
           arrows: false,
-        }
+        },
       },
       {
         breakpoint: 575,
         settings: {
           slidesToShow: 1,
           arrows: false,
-        }
+        },
       },
-    ]
+    ],
   };
 
   sortProductSlideConfig = {
@@ -1002,13 +1012,15 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   };
 
   // ✅ BRAND SLIDER CON TIPADO CORRECTO
-  brandSlides: BrandSlideGroup[] = [{
-    "carouselConfig": {
-      "class": "brand-slider arrow-style-two",
-      "configBinding": "BrandSlideConfig"
+  brandSlides: BrandSlideGroup[] = [
+    {
+      carouselConfig: {
+        class: 'brand-slider arrow-style-two',
+        configBinding: 'BrandSlideConfig',
+      },
+      slides: [] as BrandSlide[], // ✅ INICIALIZAR VACÍO CON TIPADO CORRECTO
     },
-    "slides": [] as BrandSlide[] // ✅ INICIALIZAR VACÍO CON TIPADO CORRECTO
-  }];
+  ];
 
   BrandSlideConfig = {
     slidesToShow: 8,
@@ -1029,43 +1041,73 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         settings: {
           slidesToShow: 7,
           arrows: false,
-        }
+        },
       },
       {
         breakpoint: 1399,
         settings: {
           slidesToShow: 6,
           arrows: false,
-        }
+        },
       },
       {
         breakpoint: 992,
         settings: {
           slidesToShow: 5,
           arrows: false,
-        }
+        },
       },
       {
         breakpoint: 575,
         settings: {
           slidesToShow: 4,
           arrows: false,
-        }
+        },
       },
       {
         breakpoint: 424,
         settings: {
           slidesToShow: 3,
           arrows: false,
-        }
+        },
       },
       {
         breakpoint: 359,
         settings: {
           slidesToShow: 2,
           arrows: false,
+        },
+      },
+    ],
+  };
+  cargarProductosDestacados(): void {
+    this.isLoadingProductosDestacados = true;
+    this.almacenService.obtenerProductosDestacados().subscribe({
+      next: (productos) => {
+        this.productosDestacados = productos.map((producto: any) => ({
+          ...producto,
+          precio: producto.precio_venta ?? 0,
+          imagen_principal: producto.imagen_url ?? '',
+          rating: producto.rating ?? 0,
+          total_reviews: producto.total_reviews ?? 0,
+          descripcion: producto.descripcion ?? '',
+          categoria_id: producto.categoria_id ?? null,
+          stock: producto.stock ?? 0,
+          nombre: producto.nombre ?? '',
+          marca_id: producto.marca_id ?? null,
+        })) as ProductoPublico[];
+
+        this.isLoadingProductosDestacados = false;
+
+        if (this.debugMode) {
+          console.log('✅ Productos destacados cargados:', productos);
         }
       },
-    ]
-  };
+      error: (error) => {
+        console.error('Error al cargar productos destacados:', error);
+        this.isLoadingProductosDestacados = false;
+        this.productosDestacados = [];
+      },
+    });
+  }
 }

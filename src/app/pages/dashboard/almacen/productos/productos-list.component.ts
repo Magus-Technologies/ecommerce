@@ -213,6 +213,16 @@ import {
                     [class.ph-eye]="!row.activo"
                   ></i>
                 </button>
+                <button
+  class="btn action-btn star-btn"
+  *ngIf="permissionsService.canEditProductos()"
+  [class.star-active]="row.destacado"
+  [class.star-inactive]="!row.destacado"
+  [title]="row.destacado ? 'Quitar destacado' : 'Marcar como destacado'"
+  (click)="toggleDestacado(row)"
+>
+  <i class="ph ph-star" [class.ph-fill]="row.destacado"></i>
+</button>
 
                 <!-- Gestionar Detalles -->
                 <button
@@ -513,6 +523,32 @@ import {
         transform: translateY(-1px);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
+        /* Estilos para el botón de estrella */
+.star-btn.star-active {
+  background-color: #fff3cd !important;
+  color: #856404 !important;
+}
+
+.star-btn.star-inactive {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+}
+
+.star-btn:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.star-btn.star-active:hover {
+  background-color: #ffecb5 !important;
+  color: #664d03 !important;
+}
+
+.star-btn.star-inactive:hover {
+  background-color: #e9ecef !important;
+  color: #495057 !important;
+}
+
 
       /* Footer */
       ::ng-deep .productos-table .datatable-footer {
@@ -569,6 +605,7 @@ import {
         .action-buttons {
           gap: 2px !important;
         }
+        
       }
     `,
   ],
@@ -735,4 +772,16 @@ export class ProductosListComponent implements OnInit {
       placeholder.style.display = 'block';
     }
   }
+  toggleDestacado(producto: Producto): void {
+  this.almacenService
+    .toggleDestacadoProducto(producto.id, !producto.destacado)
+    .subscribe({
+      next: () => {
+        this.cargarProductos();
+      },
+      error: (error) => {
+        console.error('Error al actualizar estado destacado:', error);
+      },
+    });
+}
 }

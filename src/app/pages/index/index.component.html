@@ -1263,91 +1263,202 @@
               Productos destacados
             </h6>
           </div>
-          <div class="short-product-list arrow-style-two max-h-unset">
+
+          <!-- ✅ ESTADO DE CARGA -->
+          <div *ngIf="isLoadingProductosDestacados" class="text-center py-40">
+            <div class="spinner-border text-main-600" role="status">
+              <span class="visually-hidden"
+                >Cargando productos destacados...</span
+              >
+            </div>
+            <p class="text-gray-500 mt-12 mb-0 text-sm">
+              Cargando productos destacados...
+            </p>
+          </div>
+
+          <!-- ✅ PRODUCTOS DESTACADOS DINÁMICOS -->
+          <div
+            *ngIf="
+              !isLoadingProductosDestacados && productosDestacados.length > 0
+            "
+            class="short-product-list arrow-style-two max-h-unset"
+          >
             <ngx-slick-carousel
               #slickModal="slick-carousel"
               class="short-product-list arrow-style-two max-h-unset"
               [config]="sortProductSlideConfig"
             >
+              <!-- ✅ PRIMER SLIDE CON PRODUCTOS DESTACADOS -->
               <div ngxSlickItem class="d-flex flex-column gap-44">
                 <div
-                  *ngFor="let product of productSlides"
+                  *ngFor="let product of productosDestacados.slice(0, 4)"
                   class="flex-align gap-16"
                 >
                   <div
                     class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
                   >
-                    <a [routerLink]="['/product-details']" class="link">
-                      <img [src]="product.imgSrc" [alt]="product.alt" />
+                    <a
+                      [routerLink]="['/product-details', product.id]"
+                      class="link"
+                    >
+                      <img
+                        [src]="
+                          product.imagen_principal ||
+                          'assets/images/thumbs/short-product-img1.png'
+                        "
+                        [alt]="product.nombre"
+                        (error)="onImageError($event)"
+                        style="
+                          width: 100%;
+                          height: 100%;
+                          object-fit: cover;
+                          border-radius: 8px;
+                        "
+                      />
                     </a>
                   </div>
                   <div class="product-card__content mt-12">
                     <div class="flex-align gap-6">
                       <span class="text-xs fw-bold text-gray-500">{{
-                        product.rating
+                        product.rating || 4.8
                       }}</span>
                       <span class="text-15 fw-bold text-warning-600 d-flex">
                         <i class="ph-fill ph-star"></i>
                       </span>
                       <span class="text-xs fw-bold text-gray-500"
-                        >({{ product.ratingCount }})</span
+                        >({{
+                          product.reviews_count ||
+                            product.total_reviews ||
+                            "17k"
+                        }})</span
                       >
                     </div>
                     <h6 class="title text-lg fw-semibold mt-8 mb-8">
                       <a
-                        [routerLink]="['/product-details']"
+                        [routerLink]="['/product-details', product.id]"
                         class="link text-line-1"
-                        >{{ product.title }}</a
+                        [title]="product.nombre"
+                        >{{ product.nombre }}</a
                       >
                     </h6>
                     <div class="product-card__price flex-align gap-8">
-                      <span class="text-heading text-md fw-semibold d-block">{{
-                        product.price
-                      }}</span>
+                      <span class="text-heading text-md fw-semibold d-block">
+                        S/ {{ product.precio | number : "1.2-2" }}
+                      </span>
+                      <span
+                        *ngIf="
+                          product.precio_oferta &&
+                          product.precio_oferta < product.precio
+                        "
+                        class="text-gray-400 text-sm fw-normal text-decoration-line-through"
+                      >
+                        S/ {{ product.precio_oferta | number : "1.2-2" }}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
-              <div ngxSlickItem class="d-flex flex-column gap-44">
+
+              <!-- ✅ SEGUNDO SLIDE SI HAY MÁS DE 4 PRODUCTOS -->
+              <div
+                ngxSlickItem
+                *ngIf="productosDestacados.length > 4"
+                class="d-flex flex-column gap-44"
+              >
                 <div
-                  *ngFor="let product of productSlides"
+                  *ngFor="let product of productosDestacados.slice(4, 8)"
                   class="flex-align gap-16"
                 >
                   <div
                     class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
                   >
-                    <a [routerLink]="['/product-details']" class="link">
-                      <img [src]="product.imgSrc" [alt]="product.alt" />
+                    <a
+                      [routerLink]="['/product-details', product.id]"
+                      class="link"
+                    >
+                      <img
+                        [src]="
+                          product.imagen_principal ||
+                          'assets/images/thumbs/short-product-img1.png'
+                        "
+                        [alt]="product.nombre"
+                        (error)="onImageError($event)"
+                        style="
+                          width: 100%;
+                          height: 100%;
+                          object-fit: cover;
+                          border-radius: 8px;
+                        "
+                      />
                     </a>
                   </div>
                   <div class="product-card__content mt-12">
                     <div class="flex-align gap-6">
                       <span class="text-xs fw-bold text-gray-500">{{
-                        product.rating
+                        product.rating || 4.8
                       }}</span>
                       <span class="text-15 fw-bold text-warning-600 d-flex">
                         <i class="ph-fill ph-star"></i>
                       </span>
                       <span class="text-xs fw-bold text-gray-500"
-                        >({{ product.ratingCount }})</span
+                        >({{
+                          product.reviews_count ||
+                            product.total_reviews ||
+                            "17k"
+                        }})</span
                       >
                     </div>
                     <h6 class="title text-lg fw-semibold mt-8 mb-8">
                       <a
-                        [routerLink]="['/product-details']"
+                        [routerLink]="['/product-details', product.id]"
                         class="link text-line-1"
-                        >{{ product.title }}</a
+                        [title]="product.nombre"
+                        >{{ product.nombre }}</a
                       >
                     </h6>
                     <div class="product-card__price flex-align gap-8">
-                      <span class="text-heading text-md fw-semibold d-block">{{
-                        product.price
-                      }}</span>
+                      <span class="text-heading text-md fw-semibold d-block">
+                        S/ {{ product.precio | number : "1.2-2" }}
+                      </span>
+                      <span
+                        *ngIf="
+                          product.precio_oferta &&
+                          product.precio_oferta < product.precio
+                        "
+                        class="text-gray-400 text-sm fw-normal text-decoration-line-through"
+                      >
+                        S/ {{ product.precio_oferta | number : "1.2-2" }}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
             </ngx-slick-carousel>
+          </div>
+
+          <!-- ✅ MENSAJE CUANDO NO HAY PRODUCTOS DESTACADOS -->
+          <div
+            *ngIf="
+              !isLoadingProductosDestacados && productosDestacados.length === 0
+            "
+            class="text-center py-40"
+          >
+            <div class="bg-gray-50 rounded-12 py-30 px-20">
+              <i class="ph ph-star text-4xl text-gray-300 mb-16"></i>
+              <h6 class="text-gray-500 mb-8 fw-semibold">
+                No hay productos destacados
+              </h6>
+              <p class="text-gray-400 text-sm mb-16">
+                Aún no se han marcado productos como destacados
+              </p>
+              <a
+                [routerLink]="['shop']"
+                class="btn btn-sm bg-main-600 text-white px-16 py-8 rounded-8"
+              >
+                <i class="ph ph-storefront me-8"></i>
+                Ver todos los productos
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -1471,107 +1582,59 @@
               Productos en oferta
             </h6>
           </div>
-          <div class="short-product-list arrow-style-two max-h-unset">
-            <!-- ✅ AQUÍ TAMBIÉN PODRÍAN IR PRODUCTOS EN OFERTA DINÁMICOS -->
-            <div
-              *ngIf="productosEnOferta.length > 0"
-              class="d-flex flex-column gap-44"
-            >
-              <div
-                *ngFor="let producto of productosEnOferta.slice(0, 4)"
-                class="flex-align gap-16"
-              >
-                <div
-                  class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
-                >
-                  <a [routerLink]="['product-details']" class="link">
-                    <img
-                      [src]="
-                        producto.imagen_url ||
-                        'assets/images/thumbs/short-product-img9.png'
-                      "
-                      [alt]="producto.nombre"
-                      (error)="onImageError($event)"
-                    />
-                  </a>
-                </div>
-                <div class="product-card__content mt-12">
-                  <div class="flex-align gap-6">
-                    <span class="text-xs fw-bold text-gray-500">4.8</span>
-                    <span class="text-15 fw-bold text-warning-600 d-flex"
-                      ><i class="ph-fill ph-star"></i
-                    ></span>
-                    <span class="text-xs fw-bold text-gray-500">(17k)</span>
-                  </div>
-                  <h6 class="title text-lg fw-semibold mt-8 mb-8">
-                    <a
-                      [routerLink]="['product-details']"
-                      class="link text-line-1"
-                      >{{ producto.nombre }}</a
-                    >
-                  </h6>
-                  <div class="product-card__price flex-align gap-8">
-                    <span class="text-heading text-md fw-semibold d-block"
-                      >S/ {{ producto.precio_oferta | number : "1.2-2" }}</span
-                    >
-                    <span class="text-gray-400 text-md fw-semibold d-block"
-                      >S/
-                      {{ producto.precio_original | number : "1.2-2" }}</span
-                    >
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div class="short-product-list arrow-style-two max-h-unset">
+  <!-- ✅ PRODUCTOS EN OFERTA DINÁMICOS -->
+  <div *ngIf="productosEnOferta.length > 0" class="d-flex flex-column gap-44">
+    <div *ngFor="let producto of productosEnOferta.slice(0, 4)" class="flex-align gap-16">
+      <div class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0">
+        <a [routerLink]="['product-details']" class="link">
+          <img
+            [src]="producto.imagen_url || 'assets/images/thumbs/short-product-img9.png'"
+            [alt]="producto.nombre"
+            (error)="onImageError($event)"
+            style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"
+          />
+        </a>
+      </div>
+      <div class="product-card__content mt-12">
+        <div class="flex-align gap-6">
+          <span class="text-xs fw-bold text-gray-500">4.8</span>
+          <span class="text-15 fw-bold text-warning-600 d-flex">
+            <i class="ph-fill ph-star"></i>
+          </span>
+          <span class="text-xs fw-bold text-gray-500">(17k)</span>
+        </div>
+        <h6 class="title text-lg fw-semibold mt-8 mb-8">
+          <a [routerLink]="['product-details']" class="link text-line-1">{{ producto.nombre }}</a>
+        </h6>
+        <div class="product-card__price flex-align gap-8">
+          <span class="text-heading text-md fw-semibold d-block">
+            S/ {{ producto.precio_oferta | number : "1.2-2" }}
+          </span>
+          <span class="text-gray-400 text-md fw-semibold d-block text-decoration-line-through">
+            S/ {{ producto.precio_original | number : "1.2-2" }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-            <!-- Fallback si no hay productos en oferta -->
-            <ngx-slick-carousel
-              *ngIf="productosEnOferta.length === 0"
-              #slickModal="slick-carousel"
-              class="short-product-list arrow-style-two max-h-unset"
-              [config]="sortProductSlideConfig"
-            >
-              <div ngxSlickItem class="d-flex flex-column gap-44">
-                <div
-                  *ngFor="let product of onProductSlides"
-                  class="flex-align gap-16"
-                >
-                  <div
-                    class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
-                  >
-                    <a [routerLink]="['product-details']" class="link"
-                      ><img
-                        src="assets/images/thumbs/short-product-img9.png"
-                        alt=""
-                    /></a>
-                  </div>
-                  <div class="product-card__content mt-12">
-                    <div class="flex-align gap-6">
-                      <span class="text-xs fw-bold text-gray-500">4.8</span>
-                      <span class="text-15 fw-bold text-warning-600 d-flex"
-                        ><i class="ph-fill ph-star"></i
-                      ></span>
-                      <span class="text-xs fw-bold text-gray-500">(17k)</span>
-                    </div>
-                    <h6 class="title text-lg fw-semibold mt-8 mb-8">
-                      <a
-                        [routerLink]="['product-details']"
-                        class="link text-line-1"
-                        >Taylor Farms Broccoli Florets Vegetables</a
-                      >
-                    </h6>
-                    <div class="product-card__price flex-align gap-8">
-                      <span class="text-heading text-md fw-semibold d-block"
-                        >$1500.00</span
-                      >
-                      <span class="text-gray-400 text-md fw-semibold d-block"
-                        >$1500.00</span
-                      >
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ngx-slick-carousel>
-          </div>
+  <!-- ✅ MENSAJE CUANDO NO HAY PRODUCTOS EN OFERTA -->
+  <div *ngIf="productosEnOferta.length === 0" class="text-center py-40">
+    <div class="bg-gray-50 rounded-12 py-30 px-20">
+      <i class="ph ph-tag text-4xl text-gray-300 mb-16"></i>
+      <h6 class="text-gray-500 mb-8 fw-semibold">No hay productos en oferta</h6>
+      <p class="text-gray-400 text-sm mb-16">
+        Actualmente no tenemos productos con descuentos especiales
+      </p>
+      <a [routerLink]="['shop']" class="btn btn-sm bg-main-600 text-white px-16 py-8 rounded-8">
+        <i class="ph ph-storefront me-8"></i>
+        Ver todos los productos
+      </a>
+    </div>
+  </div>
+</div>
+
         </div>
       </div>
 

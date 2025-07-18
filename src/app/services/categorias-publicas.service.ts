@@ -1,6 +1,6 @@
-// src\app\services\categorias-publicas.service.ts
+// src/app/services/categorias-publicas.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -21,7 +21,19 @@ export class CategoriasPublicasService {
 
   constructor(private http: HttpClient) {}
 
-  obtenerCategoriasPublicas(): Observable<CategoriaPublica[]> {
-    return this.http.get<CategoriaPublica[]>(`${this.apiUrl}/categorias/publicas`);
+  // ✅ MÉTODO MODIFICADO: Ahora acepta parámetro de sección
+  obtenerCategoriasPublicas(seccionId?: number): Observable<CategoriaPublica[]> {
+    let params = new HttpParams();
+    
+    if (seccionId !== undefined && seccionId !== null) {
+      params = params.set('seccion', seccionId.toString());
+    }
+    
+    return this.http.get<CategoriaPublica[]>(`${this.apiUrl}/categorias/publicas`, { params });
+  }
+
+  // ✅ NUEVO MÉTODO: Específico para obtener categorías de la sección 1
+  obtenerCategoriasSeccion1(): Observable<CategoriaPublica[]> {
+    return this.obtenerCategoriasPublicas(1);
   }
 }
