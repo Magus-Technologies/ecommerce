@@ -65,7 +65,7 @@
                             </h2>
                             <a [routerLink]="['shop']"
                                 class="btn btn-main d-inline-flex align-items-center rounded-pill gap-8 mt-24 animate-left-right animation-delay-12">
-                                {{ banner.buttonText }}
+                                {{ banner.buttonText || 'Comprar ahora' }}
                                 <span class="icon text-xl d-flex"><i class="ph"
                                         [ngClass]="banner.buttonIcon"></i></span>
                             </a>

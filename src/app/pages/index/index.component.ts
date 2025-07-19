@@ -38,6 +38,7 @@ import {
 } from '../../services/ofertas.service';
 import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 import { WhatsappFloatComponent } from '../../components/whatsapp-float/whatsapp-float.component';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 interface CategoriaConImagen extends CategoriaPublica {
   img: string;
@@ -230,6 +231,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isLoadingPromotionalBanners = true;
     this.bannersService.obtenerBannersPromocionalesPublicos().subscribe({
       next: (banners) => {
+        console.log('Debug: Banners Promocionales recibidos:', banners); // <-- DEBUG
         this.promotionalBanners = banners;
         this.isLoadingPromotionalBanners = false;
       },
@@ -242,18 +244,18 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // ✅ CONSTRUCTOR ACTUALIZADO CON PLATFORM_ID Y ChangeDetectorRef
-constructor(
-  @Inject(PLATFORM_ID) private platformId: Object,
-  private categoriasPublicasService: CategoriasPublicasService,
-  private bannersService: BannersService,
-  private almacenService: AlmacenService,
-  private cartService: CartService,
-  private wishlistService: WishlistService,
-  private authService: AuthService,
-  private ofertasService: OfertasService,
-  private cdr: ChangeDetectorRef
-) {
-
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private categoriasPublicasService: CategoriasPublicasService,
+    private bannersService: BannersService,
+    private almacenService: AlmacenService,
+    private cartService: CartService,
+    private wishlistService: WishlistService,
+    private authService: AuthService,
+    private ofertasService: OfertasService,
+    private cdr: ChangeDetectorRef,
+    private sanitizer: DomSanitizer
+  ) {
     // ✅ VERIFICAR SI ESTAMOS EN EL NAVEGADOR
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -533,64 +535,67 @@ constructor(
     }
   }
   // ✅ NUEVO MÉTODO: Agregar a wishlist con verificación de autenticación
-agregarAWishlist(product: any): void {
-  // Verificar si el usuario está logueado
-  if (!this.authService.isLoggedIn()) {
-    Swal.fire({
-      title: 'Inicia sesión requerido',
-      text: 'Debes iniciar sesión para agregar productos a tu lista de deseos',
-      icon: 'info',
-      showCancelButton: true,
-      confirmButtonColor: '#198754',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Registrarse',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Redirigir a la página de registro
-        window.location.href = '/register';
-      }
-    });
-    return;
+  agregarAWishlist(product: any): void {
+    // Verificar si el usuario está logueado
+    if (!this.authService.isLoggedIn()) {
+      Swal.fire({
+        title: 'Inicia sesión requerido',
+        text: 'Debes iniciar sesión para agregar productos a tu lista de deseos',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Registrarse',
+        cancelButtonText: 'Cancelar',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Redirigir a la página de registro
+          window.location.href = '/register';
+        }
+      });
+      return;
+    }
+
+    // Usuario logueado: proceder con la wishlist
+    const isToggled = this.wishlistService.toggleWishlist(product);
+
+    if (isToggled) {
+      // Producto agregado
+      Swal.fire({
+        title: '¡Agregado a favoritos!',
+        text: `${
+          product.nombre || product.name || product.title
+        } ha sido agregado a tu lista de deseos`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end',
+        background: '#f8f9fa',
+        color: '#333',
+      });
+    } else {
+      // Producto removido
+      Swal.fire({
+        title: 'Removido de favoritos',
+        text: `${
+          product.nombre || product.name || product.title
+        } ha sido removido de tu lista de deseos`,
+        icon: 'info',
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end',
+        background: '#f8f9fa',
+        color: '#333',
+      });
+    }
   }
 
-  // Usuario logueado: proceder con la wishlist
-  const isToggled = this.wishlistService.toggleWishlist(product);
-  
-  if (isToggled) {
-    // Producto agregado
-    Swal.fire({
-      title: '¡Agregado a favoritos!',
-      text: `${product.nombre || product.name || product.title} ha sido agregado a tu lista de deseos`,
-      icon: 'success',
-      timer: 2000,
-      showConfirmButton: false,
-      toast: true,
-      position: 'top-end',
-      background: '#f8f9fa',
-      color: '#333',
-    });
-  } else {
-    // Producto removido
-    Swal.fire({
-      title: 'Removido de favoritos',
-      text: `${product.nombre || product.name || product.title} ha sido removido de tu lista de deseos`,
-      icon: 'info',
-      timer: 2000,
-      showConfirmButton: false,
-      toast: true,
-      position: 'top-end',
-      background: '#f8f9fa',
-      color: '#333',
-    });
+  // ✅ NUEVO MÉTODO: Verificar si un producto está en wishlist
+  isInWishlist(productoId: number): boolean {
+    return this.wishlistService.isInWishlist(productoId);
   }
-}
-
-// ✅ NUEVO MÉTODO: Verificar si un producto está en wishlist
-isInWishlist(productoId: number): boolean {
-  return this.wishlistService.isInWishlist(productoId);
-}
-
 
   cargarOfertasActivas(): void {
     this.isLoadingOfertas = true;
@@ -1174,5 +1179,20 @@ isInWishlist(productoId: number): boolean {
         this.productosDestacados = [];
       },
     });
+  }
+
+  getSafeUrl(url: string): SafeUrl {
+    if (!url) {
+      return this.sanitizer.bypassSecurityTrustUrl('javascript:void(0);');
+    }
+    let finalUrl = url;
+    if (
+      !finalUrl.startsWith('http://') &&
+      !finalUrl.startsWith('https://') &&
+      !finalUrl.startsWith('/')
+    ) {
+      finalUrl = 'http://' + finalUrl;
+    }
+    return this.sanitizer.bypassSecurityTrustUrl(finalUrl);
   }
 }
