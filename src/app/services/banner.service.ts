@@ -37,6 +37,7 @@ export interface BannerPromocional {
   id: number;
   titulo: string;
   precio?: number;
+  texto_boton: string;
   imagen_url?: string;
   enlace_url: string;
   orden: number;
@@ -49,6 +50,7 @@ export interface BannerPromocional {
 export interface BannerPromocionalCreate {
   titulo: string;
   precio?: number;
+  texto_boton: string;  // ← Nueva línea agregada
   imagen?: File;
   enlace_url: string;
   orden: number;
@@ -195,6 +197,7 @@ export class BannersService {
     
     if (bannerData.titulo) formData.append('titulo', bannerData.titulo);
     if (bannerData.precio) formData.append('precio', bannerData.precio.toString());
+    bannerData.texto_boton && formData.append('texto_boton', bannerData.texto_boton);
     if (bannerData.enlace_url) formData.append('enlace_url', bannerData.enlace_url);
     if (bannerData.orden !== undefined) formData.append('orden', bannerData.orden.toString());
     if (bannerData.animacion_delay !== undefined) formData.append('animacion_delay', bannerData.animacion_delay.toString());

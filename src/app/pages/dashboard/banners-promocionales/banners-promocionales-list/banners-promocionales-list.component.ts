@@ -60,6 +60,7 @@ import { Observable } from 'rxjs';
                   <th class="px-24 py-16 text-heading fw-semibold border-0">Imagen</th>
                   <th class="px-24 py-16 text-heading fw-semibold border-0">Título</th>
                   <th class="px-24 py-16 text-heading fw-semibold border-0">Precio</th>
+                  <th class="px-24 py-16 text-heading fw-semibold border-0">Texto Botón</th>
                   <th class="px-24 py-16 text-heading fw-semibold border-0">Enlace</th>
                   <th class="px-24 py-16 text-heading fw-semibold border-0">Orden</th>
                   <th class="px-24 py-16 text-heading fw-semibold border-0">Animación</th>
@@ -91,6 +92,13 @@ import { Observable } from 'rxjs';
                       S/ {{ banner.precio | number:'1.2-2' }}
                     </span>
                     <span class="text-gray-400" *ngIf="!banner.precio">Sin precio</span>
+                  </td>
+
+                  <!-- Texto Botón -->
+                  <td class="px-24 py-16">
+                    <span class="badge bg-info-50 text-info-600 px-8 py-4 rounded-6 text-sm">
+                      {{ banner.texto_boton }}
+                    </span>
                   </td>
 
                   <!-- Enlace -->

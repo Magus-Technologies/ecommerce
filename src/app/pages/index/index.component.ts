@@ -13,6 +13,7 @@ import Swal from 'sweetalert2';
 import { OfertasService, Oferta, ProductoOferta, Cupon, OfertaPrincipalResponse } from '../../services/ofertas.service';
 import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 import { WhatsappFloatComponent } from '../../components/whatsapp-float/whatsapp-float.component';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 
 interface CategoriaConImagen extends CategoriaPublica {
@@ -199,6 +200,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isLoadingPromotionalBanners = true;
     this.bannersService.obtenerBannersPromocionalesPublicos().subscribe({
       next: (banners) => {
+        console.log('Debug: Banners Promocionales recibidos:', banners); // <-- DEBUG
         this.promotionalBanners = banners;
         this.isLoadingPromotionalBanners = false;
       },
@@ -219,7 +221,8 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     private almacenService: AlmacenService,
     private cartService: CartService,
     private ofertasService: OfertasService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private sanitizer: DomSanitizer
   ) { 
     // ✅ VERIFICAR SI ESTAMOS EN EL NAVEGADOR
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -1068,4 +1071,15 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       },
     ]
   };
+
+  getSafeUrl(url: string): SafeUrl {
+    if (!url) {
+      return this.sanitizer.bypassSecurityTrustUrl('javascript:void(0);');
+    }
+    let finalUrl = url;
+    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('/')) {
+      finalUrl = 'http://' + finalUrl;
+    }
+    return this.sanitizer.bypassSecurityTrustUrl(finalUrl);
+  }
 }
