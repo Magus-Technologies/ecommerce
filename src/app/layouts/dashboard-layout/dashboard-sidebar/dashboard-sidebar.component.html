@@ -34,7 +34,7 @@
           <span *ngIf="!isCollapsed" class="fw-medium">Inicio</span>
         </a>
       </li>
-        <!-- ventas -->
+      <!-- ventas -->
       <li class="mb-8">
         <a
           routerLink="/dashboard/ventas"
@@ -45,7 +45,7 @@
           <span *ngIf="!isCollapsed" class="fw-medium">Ventas</span>
         </a>
       </li>
-        <!-- Almacen -->
+      <!-- Almacen -->
       <li class="mb-8">
         <a
           routerLink="/dashboard/almacen"
@@ -114,7 +114,9 @@
           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
         >
           <i class="ph ph-image text-xl flex-shrink-0"></i>
-          <span *ngIf="!isCollapsed" class="fw-medium">Banners Promocionales</span>
+          <span *ngIf="!isCollapsed" class="fw-medium"
+            >Banners Promocionales</span
+          >
         </a>
       </li>
 
@@ -143,23 +145,27 @@
         </a>
       </li>
 
-    <!-- Usuarios (solo con permiso usuarios.ver) -->
+      <!-- Usuarios (solo con permiso usuarios.ver) -->
       <li *ngIf="puedeVerUsuarios" class="mb-8">
-        <a routerLink="/dashboard/usuarios" 
-           routerLinkActive="active"
-           class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500">
+        <a
+          routerLink="/dashboard/usuarios"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
           <i class="ph ph-user-gear text-xl flex-shrink-0"></i>
           <span *ngIf="!isCollapsed" class="fw-medium">Usuarios</span>
         </a>
       </li>
 
       <!-- Permisos (gestión de roles) -->
-      <li *ngIf="esSuperadmin" class="mb-8"> 
-        <a routerLink="/dashboard/roles"  
-          routerLinkActive="active"  
-          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"> 
-          <i class="ph ph-shield-check text-xl flex-shrink-0"></i> 
-          <span *ngIf="!isCollapsed" class="fw-medium">Permisos</span> 
+      <li *ngIf="esSuperadmin" class="mb-8">
+        <a
+          routerLink="/dashboard/roles"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
+          <i class="ph ph-shield-check text-xl flex-shrink-0"></i>
+          <span *ngIf="!isCollapsed" class="fw-medium">Permisos</span>
         </a>
       </li>
 
@@ -189,6 +195,17 @@
         >
           <i class="ph ph-gear text-xl flex-shrink-0"></i>
           <span *ngIf="!isCollapsed" class="fw-medium">Configuración</span>
+        </a>
+      </li>
+      <!-- Información de Empresa -->
+      <li *ngIf="puedeVerEmpresaInfo" class="mb-8">
+        <a
+          routerLink="/dashboard/empresa-info"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
+          <i class="ph ph-building text-xl flex-shrink-0"></i>
+          <span *ngIf="!isCollapsed" class="fw-medium">Info Empresa</span>
         </a>
       </li>
 

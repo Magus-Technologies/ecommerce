@@ -134,10 +134,9 @@
                 <i class="ph ph-squares-four"></i>
               </button>
             </div>
-         
           </div>
         </div>
-   
+
         <!-- Contenedor de productos -->
         <div
           class="list-grid-wrapper"
@@ -176,15 +175,19 @@
               >
                 <a
                   [routerLink]="['/product-details', producto.id]"
-                  class="product-card__thumb flex-center rounded-8 bg-gray-50 position-relative"
+                  class="product-card__thumb d-block rounded-8 bg-gray-50 position-relative overflow-hidden"
+                  style="height: 200px"
                 >
-                  <img
-                    [src]="producto.imagen_principal"
-                    [alt]="producto.nombre"
-                    (error)="onImageError($event)"
-                    loading="lazy"
-                    class="product-image"
-                  />
+                 <img
+  [src]="producto.imagen_principal"
+  [alt]="producto.nombre"
+  (error)="onImageError($event)"
+  loading="lazy"
+  class="w-100 h-100 transition-2"
+  style="object-fit: contain; object-position: center;"
+/>
+
+
                   <span
                     *ngIf="producto.is_on_sale"
                     class="product-card__badge bg-danger-600 px-8 py-4 text-sm text-white position-absolute inset-inline-start-0 inset-block-start-0"
@@ -252,26 +255,31 @@
                     </span>
                   </div>
 
-                  <button
-                    (click)="addToCart(producto)"
-                    [disabled]="producto.stock <= 0"
-                    class="product-card__cart btn hover-bg-main-600 hover-text-white py-11 px-24 rounded-8 flex-center gap-8 fw-medium w-100"
-                    [ngClass]="{
-                      'bg-gray-50 text-heading': producto.stock > 0,
-                      'bg-gray-200 text-gray-500': producto.stock <= 0
-                    }"
-                  >
-                    <span *ngIf="producto.stock > 0">
-                      <i class="ph ph-shopping-cart me-8"></i>
-                      Agregar al carrito
-                    </span>
-                    <span *ngIf="producto.stock <= 0">
-                      <i class="ph ph-x-circle me-8"></i>
-                      Sin stock
-                    </span>
-                  </button>
-                </div>
+                   <!-- Botón de carrito que aparece solo en hover -->
+              <div class="product-card__overlay position-absolute w-100 h-100 top-0 start-0 d-flex align-items-end justify-content-center pb-3 opacity-0 transition-2">
+                <button
+                  (click)="addToCart(producto)"
+                  [disabled]="producto.stock <= 0"
+                  class="btn btn-main text-white py-11 px-24 rounded-8 flex-center gap-8 fw-medium"
+                  [ngClass]="{
+                    'btn-main': producto.stock > 0,
+                    'btn-secondary': producto.stock <= 0
+                  }"
+                >
+                  <span *ngIf="producto.stock > 0">
+                    <i class="ph ph-shopping-cart me-8"></i>
+                    Agregar al carrito
+                  </span>
+                  <span *ngIf="producto.stock <= 0">
+                    <i class="ph ph-x-circle me-8"></i>
+                    Sin stock
+                  </span>
+                </button>
               </div>
+            </div>
+                  </div>
+                </div>
+          
             </div>
 
             <!-- Paginación -->
