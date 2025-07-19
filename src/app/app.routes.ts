@@ -1,3 +1,4 @@
+// src\app\app.routes.ts
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './layouts/main-layouts/layout/layout.component';
 import { SecondlayoutComponent } from './layouts/alt-layouts/secondlayout/secondlayout.component';
@@ -174,6 +175,14 @@ export const routes: Routes = [
           ),
         title: 'Política de Privacidad',
       },
+      {
+        path: 'claimbook',
+        loadComponent: () =>
+          import('./pages/claimbook/claimbook.component').then(
+            (m) => m.ClaimbookComponent
+          ),
+        title: 'Libro de Reclamaciones',
+      },
     ],
   },
   // ✅ Lazy Loading para Dashboard
@@ -209,13 +218,16 @@ export const routes: Routes = [
         data: { permission: 'usuarios.ver' },
       },
       {
-          path: 'horarios',
-          loadComponent: () => import('./pages/dashboard/horarios/horarios.component').then(m => m.HorariosComponent),
-          canActivate: [permissionGuard],
-          data: { permission: 'horarios.ver' }
+        path: 'horarios',
+        loadComponent: () =>
+          import('./pages/dashboard/horarios/horarios.component').then(
+            (m) => m.HorariosComponent
+          ),
+        canActivate: [permissionGuard],
+        data: { permission: 'horarios.ver' },
       },
       {
-        path: "users/create",
+        path: 'users/create',
         loadComponent: () =>
           import(
             './component/user-registration/user-registration.component'

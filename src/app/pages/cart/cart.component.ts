@@ -226,20 +226,40 @@ export class CartComponent implements OnInit, OnDestroy {
     this.router.navigate(['/shop']);
   }
 
-  // Obtener subtotal de un item
-  getItemSubtotal(item: CartItem): number {
-    return item.precio * item.cantidad;
+// Obtener subtotal de un item
+getItemSubtotal(item: CartItem): number {
+  const precio = typeof item.precio === 'number' ? item.precio : parseFloat(String(item.precio || 0));
+  const cantidad = typeof item.cantidad === 'number' ? item.cantidad : parseInt(String(item.cantidad || 0));
+  
+  if (isNaN(precio) || isNaN(cantidad)) {
+    return 0;
   }
+  
+  return precio * cantidad;
+}
 
-  // Obtener total final con descuento
-  getTotalFinal(): number {
-    return Math.max(0, this.cartSummary.total - this.descuentoCupon);
-  }
+// Obtener total final con descuento
+getTotalFinal(): number {
+  const total = typeof this.cartSummary.total === 'number' ? this.cartSummary.total : 0;
+  const descuento = typeof this.descuentoCupon === 'number' ? this.descuentoCupon : 0;
+  
+  return Math.max(0, total - descuento);
+}
 
-  // Formatear precio
-  formatPrice(price: number): string {
-    return price.toFixed(2);
+
+// Formatear precio
+formatPrice(price: number | string | null | undefined): string {
+  // Convertir a número y validar
+  const numPrice = typeof price === 'number' ? price : parseFloat(String(price || 0));
+  
+  // Si no es un número válido, retornar 0.00
+  if (isNaN(numPrice)) {
+    return '0.00';
   }
+  
+  return numPrice.toFixed(2);
+}
+
 
   // Manejar error de imagen
   onImageError(event: any): void {

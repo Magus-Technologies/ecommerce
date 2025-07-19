@@ -461,8 +461,15 @@
               class="product-card h-100 p-12 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 group-item"
             >
               <button type="button" class="wishlist-btn-two">
-                <i class="ph-bold ph-heart"></i>
+                <i
+                  class="ph-bold"
+                  [class.ph-heart]="!isInWishlist(product.id)"
+                  [class.ph-heart-fill]="isInWishlist(product.id)"
+                  [class.text-danger-600]="isInWishlist(product.id)"
+                  (click)="agregarAWishlist(product)"
+                ></i>
               </button>
+
               <span
                 *ngIf="product.is_on_sale"
                 class="product-card__badge bg-danger-600 px-8 py-4 text-sm text-white"
@@ -600,9 +607,9 @@
           />
 
           <img
-            src="assets/images/thumbs/basket-img.png"
-            alt="Basket Thumb"
-            class="position-absolute inset-inline-end-0 inset-block-end-0"
+            [src]="ofertaPrincipalDelDia?.oferta_principal?.imagen_url || 'assets/images/thumbs/basket-img.png'"
+            alt="Imagen de la oferta"
+            class="position-absolute inset-inline-end-0 inset-block-end-0 h-100 object-fit-contain"
           />
 
           <!-- ✅ CONTENIDO DINÁMICO DE LA OFERTA PRINCIPAL CON VERIFICACIONES DE NULL -->
@@ -1582,59 +1589,88 @@
               Productos en oferta
             </h6>
           </div>
-      <div class="short-product-list arrow-style-two max-h-unset">
-  <!-- ✅ PRODUCTOS EN OFERTA DINÁMICOS -->
-  <div *ngIf="productosEnOferta.length > 0" class="d-flex flex-column gap-44">
-    <div *ngFor="let producto of productosEnOferta.slice(0, 4)" class="flex-align gap-16">
-      <div class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0">
-        <a [routerLink]="['product-details']" class="link">
-          <img
-            [src]="producto.imagen_url || 'assets/images/thumbs/short-product-img9.png'"
-            [alt]="producto.nombre"
-            (error)="onImageError($event)"
-            style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"
-          />
-        </a>
-      </div>
-      <div class="product-card__content mt-12">
-        <div class="flex-align gap-6">
-          <span class="text-xs fw-bold text-gray-500">4.8</span>
-          <span class="text-15 fw-bold text-warning-600 d-flex">
-            <i class="ph-fill ph-star"></i>
-          </span>
-          <span class="text-xs fw-bold text-gray-500">(17k)</span>
-        </div>
-        <h6 class="title text-lg fw-semibold mt-8 mb-8">
-          <a [routerLink]="['product-details']" class="link text-line-1">{{ producto.nombre }}</a>
-        </h6>
-        <div class="product-card__price flex-align gap-8">
-          <span class="text-heading text-md fw-semibold d-block">
-            S/ {{ producto.precio_oferta | number : "1.2-2" }}
-          </span>
-          <span class="text-gray-400 text-md fw-semibold d-block text-decoration-line-through">
-            S/ {{ producto.precio_original | number : "1.2-2" }}
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
+          <div class="short-product-list arrow-style-two max-h-unset">
+            <!-- ✅ PRODUCTOS EN OFERTA DINÁMICOS -->
+            <div
+              *ngIf="productosEnOferta.length > 0"
+              class="d-flex flex-column gap-44"
+            >
+              <div
+                *ngFor="let producto of productosEnOferta.slice(0, 4)"
+                class="flex-align gap-16"
+              >
+                <div
+                  class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
+                >
+                  <a [routerLink]="['product-details']" class="link">
+                    <img
+                      [src]="
+                        producto.imagen_url ||
+                        'assets/images/thumbs/short-product-img9.png'
+                      "
+                      [alt]="producto.nombre"
+                      (error)="onImageError($event)"
+                      style="
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        border-radius: 8px;
+                      "
+                    />
+                  </a>
+                </div>
+                <div class="product-card__content mt-12">
+                  <div class="flex-align gap-6">
+                    <span class="text-xs fw-bold text-gray-500">4.8</span>
+                    <span class="text-15 fw-bold text-warning-600 d-flex">
+                      <i class="ph-fill ph-star"></i>
+                    </span>
+                    <span class="text-xs fw-bold text-gray-500">(17k)</span>
+                  </div>
+                  <h6 class="title text-lg fw-semibold mt-8 mb-8">
+                    <a
+                      [routerLink]="['product-details']"
+                      class="link text-line-1"
+                      >{{ producto.nombre }}</a
+                    >
+                  </h6>
+                  <div class="product-card__price flex-align gap-8">
+                    <span class="text-heading text-md fw-semibold d-block">
+                      S/ {{ producto.precio_oferta | number : "1.2-2" }}
+                    </span>
+                    <span
+                      class="text-gray-400 text-md fw-semibold d-block text-decoration-line-through"
+                    >
+                      S/ {{ producto.precio_original | number : "1.2-2" }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-  <!-- ✅ MENSAJE CUANDO NO HAY PRODUCTOS EN OFERTA -->
-  <div *ngIf="productosEnOferta.length === 0" class="text-center py-40">
-    <div class="bg-gray-50 rounded-12 py-30 px-20">
-      <i class="ph ph-tag text-4xl text-gray-300 mb-16"></i>
-      <h6 class="text-gray-500 mb-8 fw-semibold">No hay productos en oferta</h6>
-      <p class="text-gray-400 text-sm mb-16">
-        Actualmente no tenemos productos con descuentos especiales
-      </p>
-      <a [routerLink]="['shop']" class="btn btn-sm bg-main-600 text-white px-16 py-8 rounded-8">
-        <i class="ph ph-storefront me-8"></i>
-        Ver todos los productos
-      </a>
-    </div>
-  </div>
-</div>
-
+            <!-- ✅ MENSAJE CUANDO NO HAY PRODUCTOS EN OFERTA -->
+            <div
+              *ngIf="productosEnOferta.length === 0"
+              class="text-center py-40"
+            >
+              <div class="bg-gray-50 rounded-12 py-30 px-20">
+                <i class="ph ph-tag text-4xl text-gray-300 mb-16"></i>
+                <h6 class="text-gray-500 mb-8 fw-semibold">
+                  No hay productos en oferta
+                </h6>
+                <p class="text-gray-400 text-sm mb-16">
+                  Actualmente no tenemos productos con descuentos especiales
+                </p>
+                <a
+                  [routerLink]="['shop']"
+                  class="btn btn-sm bg-main-600 text-white px-16 py-8 rounded-8"
+                >
+                  <i class="ph ph-storefront me-8"></i>
+                  Ver todos los productos
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

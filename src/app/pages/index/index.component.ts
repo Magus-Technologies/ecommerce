@@ -25,6 +25,9 @@ import {
 import { AlmacenService } from '../../services/almacen.service';
 import { MarcaProducto, ProductoPublico } from '../../types/almacen.types';
 import { CartService } from '../../services/cart.service';
+import { WishlistService } from '../../services/wishlist.service';
+import { AuthService } from '../../services/auth.service';
+
 import Swal from 'sweetalert2';
 import {
   OfertasService,
@@ -239,15 +242,18 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // ✅ CONSTRUCTOR ACTUALIZADO CON PLATFORM_ID Y ChangeDetectorRef
-  constructor(
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private categoriasPublicasService: CategoriasPublicasService,
-    private bannersService: BannersService,
-    private almacenService: AlmacenService,
-    private cartService: CartService,
-    private ofertasService: OfertasService,
-    private cdr: ChangeDetectorRef
-  ) {
+constructor(
+  @Inject(PLATFORM_ID) private platformId: Object,
+  private categoriasPublicasService: CategoriasPublicasService,
+  private bannersService: BannersService,
+  private almacenService: AlmacenService,
+  private cartService: CartService,
+  private wishlistService: WishlistService,
+  private authService: AuthService,
+  private ofertasService: OfertasService,
+  private cdr: ChangeDetectorRef
+) {
+
     // ✅ VERIFICAR SI ESTAMOS EN EL NAVEGADOR
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -526,6 +532,65 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       });
     }
   }
+  // ✅ NUEVO MÉTODO: Agregar a wishlist con verificación de autenticación
+agregarAWishlist(product: any): void {
+  // Verificar si el usuario está logueado
+  if (!this.authService.isLoggedIn()) {
+    Swal.fire({
+      title: 'Inicia sesión requerido',
+      text: 'Debes iniciar sesión para agregar productos a tu lista de deseos',
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonColor: '#198754',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Registrarse',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Redirigir a la página de registro
+        window.location.href = '/register';
+      }
+    });
+    return;
+  }
+
+  // Usuario logueado: proceder con la wishlist
+  const isToggled = this.wishlistService.toggleWishlist(product);
+  
+  if (isToggled) {
+    // Producto agregado
+    Swal.fire({
+      title: '¡Agregado a favoritos!',
+      text: `${product.nombre || product.name || product.title} ha sido agregado a tu lista de deseos`,
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top-end',
+      background: '#f8f9fa',
+      color: '#333',
+    });
+  } else {
+    // Producto removido
+    Swal.fire({
+      title: 'Removido de favoritos',
+      text: `${product.nombre || product.name || product.title} ha sido removido de tu lista de deseos`,
+      icon: 'info',
+      timer: 2000,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top-end',
+      background: '#f8f9fa',
+      color: '#333',
+    });
+  }
+}
+
+// ✅ NUEVO MÉTODO: Verificar si un producto está en wishlist
+isInWishlist(productoId: number): boolean {
+  return this.wishlistService.isInWishlist(productoId);
+}
+
 
   cargarOfertasActivas(): void {
     this.isLoadingOfertas = true;
