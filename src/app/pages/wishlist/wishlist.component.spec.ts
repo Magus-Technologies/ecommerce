@@ -1,3 +1,4 @@
+// src\app\pages\wishlist\wishlist.component.spec.ts
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { WishlistComponent } from './wishlist.component';
