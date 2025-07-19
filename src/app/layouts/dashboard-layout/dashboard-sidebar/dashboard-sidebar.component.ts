@@ -39,6 +39,8 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   puedeVerCupones = false;
   puedeVerPedidos = false;
   puedeVerHorarios = false;
+  puedeVerEmpresaInfo = false;
+
 
 
   isDesktop = false;
@@ -77,6 +79,8 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
     this.puedeVerCupones = this.permissionsService.hasPermission('cupones.ver');
     this.puedeVerPedidos = this.permissionsService.hasPermission('pedidos.ver');
     this.puedeVerHorarios = this.permissionsService.hasPermission('horarios.ver');
+    this.puedeVerEmpresaInfo = this.permissionsService.hasPermission('empresa_info.ver');
+
   }
 
   ngAfterViewInit(): void {

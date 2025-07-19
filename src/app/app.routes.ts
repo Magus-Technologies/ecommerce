@@ -379,6 +379,16 @@ export const routes: Routes = [
         canActivate: [authGuard, permissionGuard],
         data: { permission: 'pedidos.ver' },
       },
+      {
+        path: 'empresa-info',
+        loadComponent: () =>
+          import('./pages/dashboard/empresa-info/empresa-info.component').then(
+            (m) => m.EmpresaInfoComponent
+          ),
+        title: 'Información de Empresa',
+        canActivate: [permissionGuard],
+        data: { permission: 'empresa_info.ver' },
+      },
     ],
   },
   {

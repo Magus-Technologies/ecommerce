@@ -9,6 +9,7 @@ import { UserProfileComponent } from '../../../component/user-profile/user-profi
 import { CategoriasPublicasService, CategoriaPublica } from '../../../services/categorias-publicas.service';
 import { ProductosService, ProductoSugerencia } from '../../../services/productos.service';
 import { CartService } from '../../../services/cart.service';
+import { EmpresaInfoService } from '../../../services/empresa-info.service';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
@@ -36,7 +37,7 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   activeIndex: any | null = null;
   windowWidth: number = 0;
   cartItemCount: number = 0;
-
+  empresaInfo: any = null;
   // ✅ NUEVAS PROPIEDADES PARA AUTOCOMPLETADO
   searchSuggestions: ProductoSugerencia[] = [];
   showSuggestions: boolean = false;
@@ -132,7 +133,8 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     private router: Router,
     private categoriasPublicasService: CategoriasPublicasService,
     private productosService: ProductosService,
-    private cartService: CartService
+    private cartService: CartService,
+    private empresaInfoService: EmpresaInfoService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
@@ -153,7 +155,26 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // ✅ NUEVO: Configurar búsqueda con autocompletado
     this.setupSearchSubscription();
+     this.cargarInformacionEmpresa();
   }
+  // Agregar este nuevo método
+private cargarInformacionEmpresa(): void {
+  if (!this.isBrowser) return;
+  
+  this.empresaInfoService.obtenerEmpresaInfoPublica()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (info) => {
+        this.empresaInfo = info;
+      },
+      error: (error) => {
+        console.error('Error al cargar información de la empresa:', error);
+        // Mantener valores por defecto en caso de error
+        this.empresaInfo = null;
+      }
+    });
+}
+
 
   ngOnDestroy(): void {
     this.destroy$.next();

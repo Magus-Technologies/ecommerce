@@ -1,3 +1,4 @@
+// src\app\services\permissions.service.ts
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth.service';
 import { BehaviorSubject, Observable, map } from 'rxjs';
@@ -131,6 +132,15 @@ public permissions$: Observable<string[]> = this.permissionsSubject.asObservable
 
   canDeleteSecciones(): boolean {
     return this.hasPermission('secciones.delete');
+  }
+
+  // Métodos específicos para información de empresa
+  canViewEmpresaInfo(): boolean {
+    return this.hasPermission('empresa_info.ver');
+  }
+
+  canEditEmpresaInfo(): boolean {
+    return this.hasPermission('empresa_info.edit');
   }
 
 }
