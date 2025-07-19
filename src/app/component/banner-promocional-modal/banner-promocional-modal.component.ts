@@ -56,6 +56,19 @@ import { BannersService, BannerPromocional, BannerPromocionalCreate } from '../.
                     </div>
 
                     <div class="col-md-6 mb-16">
+                      <label class="form-label text-heading fw-medium mb-8">Texto del Botón *</label>
+                      <input type="text" 
+                            class="form-control px-16 py-12 border rounded-8"
+                            [class.is-invalid]="bannerForm.get('texto_boton')?.invalid && bannerForm.get('texto_boton')?.touched"
+                            formControlName="texto_boton"
+                            placeholder="Comprar ahora">
+                      <div class="invalid-feedback" 
+                          *ngIf="bannerForm.get('texto_boton')?.invalid && bannerForm.get('texto_boton')?.touched">
+                        El texto del botón es requerido
+                      </div>
+                    </div>
+
+                    <div class="col-md-6 mb-16">
                       <label class="form-label text-heading fw-medium mb-8">URL de Enlace *</label>
                       <input type="text" 
                              class="form-control px-16 py-12 border rounded-8"
@@ -205,6 +218,7 @@ export class BannerPromocionalModalComponent implements OnInit, OnChanges {
     this.bannerForm = this.fb.group({
       titulo: ['', [Validators.required, Validators.minLength(3)]],
       precio: [''],
+      texto_boton: ['Comprar ahora', [Validators.required]],
       enlace_url: ['/shop', [Validators.required]],
       orden: [1, [Validators.required, Validators.min(1), Validators.max(4)]],
       animacion_delay: [400, [Validators.min(0), Validators.max(3000)]],
@@ -220,6 +234,7 @@ export class BannerPromocionalModalComponent implements OnInit, OnChanges {
       this.bannerForm.patchValue({
         titulo: this.banner.titulo,
         precio: this.banner.precio,
+        texto_boton: this.banner.texto_boton,
         enlace_url: this.banner.enlace_url,
         orden: this.banner.orden,
         animacion_delay: this.banner.animacion_delay,
@@ -231,6 +246,7 @@ export class BannerPromocionalModalComponent implements OnInit, OnChanges {
       this.bannerForm.reset({
         titulo: '',
         precio: '',
+        texto_boton: 'Comprar ahora',  
         enlace_url: '/shop',
         orden: 1,
         animacion_delay: 400,

@@ -123,7 +123,7 @@
                       [routerLink]="[banner.enlace_url]"
                       class="btn btn-white text-main-700 d-inline-flex align-items-center rounded-pill gap-8 px-24 py-12 fw-semibold"
                     >
-                      {{ banner.texto_boton }}
+                      {{ banner.texto_boton || 'Comprar ahora' }}
                       <span class="icon text-xl d-flex">
                         <i class="ph ph-shopping-cart-simple"></i>
                       </span>
@@ -369,10 +369,10 @@
             </div>
 
             <a
-              [routerLink]="[banner.enlace_url]"
+              [href]="getSafeUrl(banner.enlace_url)"
               class="btn btn-main d-inline-flex align-items-center rounded-pill gap-8 mt-24"
             >
-              Compra ahora
+              {{ banner.texto_boton || 'Compra ahora' }}
               <span class="icon text-xl d-flex"
                 ><i class="ph ph-arrow-right"></i
               ></span>
