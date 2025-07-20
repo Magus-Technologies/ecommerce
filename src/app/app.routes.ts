@@ -80,6 +80,14 @@ export const routes: Routes = [
         component: RegisterComponent,
         title: 'Register',
       },
+            {
+        path: 'verify-email',
+        loadComponent: () =>
+          import('./pages/email-verification/email-verification.component').then(
+            (m) => m.EmailVerificationComponent
+          ),
+        title: 'Verificación de Email',
+      },
       {
         path: 'index-two',
         component: IndexTwoComponent,

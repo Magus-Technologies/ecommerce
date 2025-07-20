@@ -56,6 +56,16 @@ export class RegisterComponent implements OnInit {
   isLoadingProvincias = false;
   isLoadingDistritos = false;
 
+  // --- Propiedades para el Puzzle CAPTCHA ---
+  puzzleSolved = false;
+  puzzlePieces: any[] = [];
+  puzzleBoard: (any | null)[] = [null, null, null, null];
+  selectedPuzzleImage = '';
+  private puzzleImages: string[] = [];
+  private draggedPiece: any = null;
+  showPuzzle = false;
+  
+
   // Tipos de documento
   tiposDocumento: any[] = [
     { id: 1, nombre: 'DNI' },
@@ -84,6 +94,95 @@ export class RegisterComponent implements OnInit {
     if (this.authService.isLoggedIn()) {
       this.router.navigate(['/']);
     }
+    this.initializePuzzleImages();
+    this.setupPuzzle();
+  }
+
+  // --- Métodos para el Puzzle CAPTCHA ---
+
+  initializePuzzleImages(): void {
+    // **REEMPLAZA ESTAS URLS CON LAS 8 IMÁGENES QUE QUIERAS USAR**
+    this.puzzleImages = [
+      'https://img.freepik.com/fotos-premium/cerezos-flor-aldea-japonesa-paisaje-anime-manga-ilustracion_691560-7845.jpg',
+      'https://img.freepik.com/vector-premium/imagen-gatito_1138544-28699.jpg',
+      'https://static.vecteezy.com/system/resources/previews/011/194/544/non_2x/town-night-anime-background-photo.jpg',
+      'https://cafesabora.com/sites/default/files/taza-para-cafe_0.jpg',
+      'https://i.pinimg.com/originals/38/44/04/384404885abaa598f5a26fe8672c179d.jpg',
+      'https://i.pinimg.com/736x/2a/ec/c7/2aecc77f26354b5c12538ea63c1151c7.jpg',
+      'https://imgmedia.larepublica.pe/640x374/larepublica/original/2023/08/04/64ccfed7bc6c3c375112b8c9.webp',
+      'assets/images/puzzle/logo_puzzle.jpg',
+    ];
+    console.log('Puzzle images initialized:', this.puzzleImages);
+  }
+
+  setupPuzzle(): void {
+    this.puzzleSolved = false;
+    this.puzzleBoard = [null, null, null, null];
+    this.selectedPuzzleImage = this.puzzleImages[Math.floor(Math.random() * this.puzzleImages.length)];
+    console.log('Selected puzzle image:', this.selectedPuzzleImage);
+
+    const pieces = [];
+    for (let i = 0; i < 4; i++) {
+      pieces.push({
+        id: i,
+        style: {
+          'background-image': `url(${this.selectedPuzzleImage})`,
+          'background-position': `${(i % 2) * -150}px ${(Math.floor(i / 2)) * -150}px`,
+        }
+      });
+    }
+    this.puzzlePieces = this.shuffle(pieces);
+    console.log('Puzzle pieces generated:', this.puzzlePieces);
+  }
+
+  shuffle(array: any[]): any[] {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  onDragStart(piece: any): void {
+    this.draggedPiece = piece;
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault(); // Necesario para permitir el drop
+    const target = event.target as HTMLElement;
+    if (target.classList.contains('puzzle-placeholder')) {
+        target.classList.add('over');
+    }
+  }
+
+  onDragLeave(event: DragEvent): void {
+    const target = event.target as HTMLElement;
+    target.classList.remove('over');
+  }
+
+  onDrop(event: DragEvent, index: number): void {
+    event.preventDefault();
+    const target = event.target as HTMLElement;
+    target.classList.remove('over');
+
+    if (this.puzzleBoard[index] === null) { // Si el espacio está libre
+      // Mover la pieza del contenedor de piezas al tablero
+      this.puzzleBoard[index] = this.draggedPiece;
+      this.puzzlePieces = this.puzzlePieces.filter(p => p.id !== this.draggedPiece.id);
+      this.draggedPiece = null;
+      this.checkPuzzle();
+    }
+  }
+
+  checkPuzzle(): void {
+    const isSolved = this.puzzleBoard.every((piece, i) => piece && piece.id === i);
+    if (isSolved) {
+      this.puzzleSolved = true;
+      // Ocultar el puzzle después de un breve delay para mostrar el éxito
+      setTimeout(() => {
+        this.showPuzzle = false;
+      }, 2000);
+    }
   }
 
   initForms(): void {
@@ -104,6 +203,21 @@ export class RegisterComponent implements OnInit {
       distrito_id: [''],
       ubigeo: [''],
     });
+
+    // Nueva lógica: escuchar cambios en tipo de documento para mostrar/ocultar puzzle
+    this.registerForm.get('tipo_documento_id')?.valueChanges.subscribe(() => {
+      const numeroDocumento = this.registerForm.get('numero_documento')?.value;
+      const tipoDocumento = this.registerForm.get('tipo_documento_id')?.value;
+      
+      if (tipoDocumento && numeroDocumento && numeroDocumento.length >= 8) {
+        this.showPuzzle = true;
+        if (this.puzzlePieces.length === 0) {
+          this.setupPuzzle();
+        }
+      } else {
+        this.showPuzzle = false;
+      }
+    });
   }
 
   setupEmailValidation(): void {
@@ -120,17 +234,26 @@ export class RegisterComponent implements OnInit {
   }
 
   setupDocumentoValidation(): void {
-    this.registerForm
-      .get('numero_documento')
-      ?.valueChanges.pipe(debounceTime(800), distinctUntilChanged())
-      .subscribe((numeroDocumento) => {
-        if (numeroDocumento && numeroDocumento.length >= 8) {
-          this.checkDocumentoExists(numeroDocumento);
-        } else {
-          this.documentoStatus = 'idle';
+  this.registerForm
+    .get('numero_documento')
+    ?.valueChanges.pipe(debounceTime(800), distinctUntilChanged())
+    .subscribe((numeroDocumento) => {
+      if (numeroDocumento && numeroDocumento.length >= 8) {
+        this.checkDocumentoExists(numeroDocumento);
+        // Nueva lógica: mostrar puzzle cuando hay tipo de documento y número válido
+        const tipoDocumento = this.registerForm.get('tipo_documento_id')?.value;
+        if (tipoDocumento && numeroDocumento.length >= 8) {
+          this.showPuzzle = true;
+          if (this.puzzlePieces.length === 0) {
+            this.setupPuzzle();
+          }
         }
-      });
-  }
+      } else {
+        this.documentoStatus = 'idle';
+        this.showPuzzle = false; // Ocultar puzzle si el documento no es válido
+      }
+    });
+}
 
   checkEmailExists(email: string): void {
     this.emailStatus = 'checking';
@@ -335,6 +458,12 @@ export class RegisterComponent implements OnInit {
       return;
     }
 
+    // Nueva validación: verificar que el puzzle esté resuelto si se está mostrando
+    if (this.showPuzzle && !this.puzzleSolved) {
+      this.registerError = 'Debes completar el rompecabezas para continuar con el registro';
+      return;
+    }
+
     // Validar que las contraseñas coincidan
     if (
       this.registerForm.value.password !==
@@ -370,14 +499,15 @@ export class RegisterComponent implements OnInit {
       next: (response) => {
         this.isLoading = false;
         this.registerSuccess =
-          'Cuenta creada exitosamente. Ya puedes iniciar sesión.';
+          'Cuenta creada exitosamente. Revisa tu correo para verificar tu cuenta.';
         this.registerForm.reset();
 
-        // Redirigir al login después de 2 segundos
+        // Redirigir a verificación después de 2 segundos
         setTimeout(() => {
-          this.router.navigate(['/account']);
+          this.router.navigate(['/verify-email']);
         }, 2000);
       },
+
       error: (error) => {
         this.isLoading = false;
 
@@ -437,4 +567,80 @@ export class RegisterComponent implements OnInit {
   get registerPasswordConfirmation() {
     return this.registerForm.get('password_confirmation');
   }
+
+  // Nueva función para resetear el puzzle
+  resetPuzzle(): void {
+    this.puzzleSolved = false;
+    this.puzzleBoard = [null, null, null, null];
+    
+    // Recrear las piezas originales
+    const pieces = [];
+    for (let i = 0; i < 4; i++) {
+      pieces.push({
+        id: i,
+        style: {
+          'background-image': `url(${this.selectedPuzzleImage})`,
+          'background-position': `${(i % 2) * -150}px ${(Math.floor(i / 2)) * -150}px`,
+        }
+      });
+    }
+    this.puzzlePieces = this.shuffle(pieces);
+  }
+  
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -283,5 +283,69 @@ processGoogleAuth(token: string, userData: string): void {
   }
 }
 
+  /**
+   * Verificar email
+   */
+  verifyEmail(verificationData: {email: string, token: string}): Observable<{status: string, message: string}> {
+    return this.http.post<{status: string, message: string}>(`${environment.apiUrl}/verify-email`, verificationData)
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          console.log('Error en verify email:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Reenviar verificación de email
+   */
+  resendVerification(email: string): Observable<{status: string, message: string}> {
+    return this.http.post<{status: string, message: string}>(`${environment.apiUrl}/resend-verification`, {
+      email: email
+    }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        console.log('Error en resend verification:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Login para clientes (con verificación de email)
+   */
+  clientLogin(credentials: LoginRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${environment.apiUrl}/clientes/login`, credentials)
+      .pipe(
+        tap(response => {
+          if (response.status === 'success' && this.isBrowser) {
+            // Guardar token
+            localStorage.setItem(this.tokenKey, response.token);
+            
+            // Crear objeto de usuario
+            const user: User = {
+              id: response.user.id,
+              name: response.user.name || response.user.nombre_completo,
+              email: response.user.email,
+              tipo_usuario: response.tipo_usuario,
+              roles: Array.isArray(response.user.roles) ? response.user.roles : [],
+              permissions: Array.isArray(response.user.permissions) ? response.user.permissions : [],
+              email_verified_at: response.user.email_verified_at
+            };
+            
+            // Guardar usuario
+            localStorage.setItem(this.userKey, JSON.stringify(user));
+            this.currentUserSubject.next(user);
+
+            console.log('Login de cliente exitoso:', user);
+          }
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.log('Error HTTP en client login:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+  
+  
 
 }

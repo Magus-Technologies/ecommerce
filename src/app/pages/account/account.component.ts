@@ -36,23 +36,30 @@ export class AccountComponent implements OnInit {
     private route: ActivatedRoute, 
   ) {}
 
-  ngOnInit(): void {
-    this.initForms();
-    
-    // Si el usuario ya está logueado, redirigir a la página principal
-    if (this.authService.isLoggedIn()) {
-      this.router.navigate(['/']);
-    }
-
-    // Verificar si hay errores de Google auth
-    this.route.queryParams.subscribe((params: any) => {
-      if (params['error'] === 'auth_processing_failed') {
-        this.loginError = 'Error procesando la autenticación con Google. Inténtalo de nuevo.';
-      } else if (params['error'] === 'google_auth_failed') {
-        this.loginError = 'Error en la autenticación con Google. Inténtalo de nuevo.';
-      }
-    });
+ ngOnInit(): void {
+  this.initForms();
+       
+  // Si el usuario ya está logueado, redirigir a la página principal
+  if (this.authService.isLoggedIn()) {
+    this.router.navigate(['/']);
   }
+
+  // Verificar si hay mensajes de verificación exitosa y errores de Google auth
+  this.route.queryParams.subscribe((params: any) => {
+    if (params['verified'] === 'true') {
+      // Mostrar mensaje de éxito temporal
+      this.loginError = ''; // Limpiar errores
+      // Podrías agregar una propiedad successMessage si quieres separar éxito de error
+      setTimeout(() => {
+        // Limpiar mensaje después de 5 segundos
+      }, 5000);
+    } else if (params['error'] === 'auth_processing_failed') {
+      this.loginError = 'Error procesando la autenticación con Google. Inténtalo de nuevo.';
+    } else if (params['error'] === 'google_auth_failed') {
+      this.loginError = 'Error en la autenticación con Google. Inténtalo de nuevo.';
+    }
+  });
+}
 
   initForms(): void {
     // Formulario de login
@@ -98,12 +105,22 @@ export class AccountComponent implements OnInit {
           this.router.navigate(['/']); // E-commerce home
         }
       },
-      error: (error) => {
-        this.isLoading = false;
-        
-        if (error.status === 401) {
-          this.loginError = 'Las credenciales proporcionadas son incorrectas.';
-        } else if (error.status === 422) {
+            error: (error) => {
+          this.isLoading = false;
+          
+          if (error.status === 403 && error.error.requires_verification) {
+            // Redirigir a verificación si la cuenta no está verificada
+            this.router.navigate(['/verify-email'], {
+              queryParams: { email: credentials.email }
+            });
+            return;
+          }
+          
+          if (error.status === 401) {
+            this.loginError = 'Las credenciales proporcionadas son incorrectas.';
+          } else if (error.status === 403) {
+            this.loginError = error.error.message || 'Tu cuenta está desactivada.';
+          } else if (error.status === 422) {
           if (error.error && error.error.errors) {
             const errors = error.error.errors;
             if (errors.email && errors.email.length > 0) {

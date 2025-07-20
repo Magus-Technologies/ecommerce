@@ -1,12 +1,12 @@
 // src/app/models/user.model.ts
 export interface User {
   id: number;
-name?: string;
+  name?: string;
   email: string;
   roles: string[];
   permissions: string[];
    tipo_usuario?: 'admin' | 'cliente';
-  email_verified_at?: string;
+  email_verified_at?: string; 
   created_at?: string;
   updated_at?: string;
 }
@@ -35,6 +35,7 @@ export interface AuthResponse {
     email: string;
     roles: string[];
     permissions: string[];
+    email_verified_at?: string;
   };
   token: string;
 }
