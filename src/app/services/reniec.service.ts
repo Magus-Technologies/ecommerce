@@ -13,6 +13,8 @@ export interface ReniecResponse {
   codVerifica?: number; // コード
   codVerificaLetra?: string; // コード
   message?: string;
+  nombre?: string;  // Campo combinado que devuelve el backend
+  razonSocial?: string; 
 }
 
 

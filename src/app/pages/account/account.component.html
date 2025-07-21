@@ -4,6 +4,37 @@
 
 <!-- ========================= Breadcrumb End =============================== -->
 
+<!-- Mensajes flotantes -->
+<div style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+  <!-- Mensaje de éxito -->
+  <div *ngIf="showSuccessMessage" 
+       [class.show]="showSuccessMessage"
+       style="min-width: 300px; padding: 16px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); margin-bottom: 10px; background-color: #d4edda; border-left: 4px solid #28a745; color: #155724; opacity: 0; transform: translateX(100%); transition: all 0.3s ease-in-out;"
+       [style.opacity]="showSuccessMessage ? '1' : '0'"
+       [style.transform]="showSuccessMessage ? 'translateX(0)' : 'translateX(100%)'">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <i class="ph ph-check-circle" style="font-size: 20px; flex-shrink: 0;"></i>
+      <span style="font-size: 14px; font-weight: 500; line-height: 1.4;">{{ successMessage }}</span>
+    </div>
+  </div>
+  
+  <!-- Mensaje informativo -->
+  <div *ngIf="showInfoMessage" 
+       [class.show]="showInfoMessage"
+       style="min-width: 300px; padding: 16px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); margin-bottom: 10px; background-color: #d1ecf1; border-left: 4px solid #17a2b8; color: #0c5460; opacity: 0; transform: translateX(100%); transition: all 0.3s ease-in-out;"
+       [style.opacity]="showInfoMessage ? '1' : '0'"
+       [style.transform]="showInfoMessage ? 'translateX(0)' : 'translateX(100%)'">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <i class="ph ph-info" style="font-size: 20px; flex-shrink: 0;"></i>
+      <span style="font-size: 14px; font-weight: 500; line-height: 1.4;">{{ infoMessage }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- =============================== Account Section Start =========================== -->
+
+<!-- ========================= Breadcrumb End =============================== -->
+
 <!-- =============================== Account Section Start =========================== -->
 <section class="account py-80">
     <div class="container container-lg">

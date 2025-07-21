@@ -28,7 +28,10 @@ export class AccountComponent implements OnInit {
   loginError: string = '';
   isLoading: boolean = false;
   showPassword: boolean = false;
-
+  showSuccessMessage: boolean = false;
+  showInfoMessage: boolean = false;
+  successMessage: string = '';
+  infoMessage: string = '';
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
@@ -47,12 +50,11 @@ export class AccountComponent implements OnInit {
   // Verificar si hay mensajes de verificación exitosa y errores de Google auth
   this.route.queryParams.subscribe((params: any) => {
     if (params['verified'] === 'true') {
-      // Mostrar mensaje de éxito temporal
-      this.loginError = ''; // Limpiar errores
-      // Podrías agregar una propiedad successMessage si quieres separar éxito de error
-      setTimeout(() => {
-        // Limpiar mensaje después de 5 segundos
-      }, 5000);
+      this.showSuccessToast('¡Cuenta verificada exitosamente! Ya puedes iniciar sesión');
+      this.clearQueryParams();
+    } else if (params['already_verified'] === 'true') {
+      this.showInfoToast('Tu cuenta ya estaba verificada anteriormente');
+      this.clearQueryParams();
     } else if (params['error'] === 'auth_processing_failed') {
       this.loginError = 'Error procesando la autenticación con Google. Inténtalo de nuevo.';
     } else if (params['error'] === 'google_auth_failed') {
@@ -153,4 +155,31 @@ export class AccountComponent implements OnInit {
   // Getters para facilitar el acceso a los campos del formulario en el template
   get loginEmail() { return this.loginForm.get('email'); }
   get loginPassword() { return this.loginForm.get('password'); }
+
+// Nuevas funciones para mensajes flotantes
+  showSuccessToast(message: string): void {
+    this.successMessage = message;
+    this.showSuccessMessage = true;
+    setTimeout(() => {
+      this.showSuccessMessage = false;
+    }, 4000);
+  }
+
+  showInfoToast(message: string): void {
+    this.infoMessage = message;
+    this.showInfoMessage = true;
+    setTimeout(() => {
+      this.showInfoMessage = false;
+    }, 4000);
+  }
+
+  clearQueryParams(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {},
+      replaceUrl: true
+    });
+  }
+
+  // Getters para facilitar el acceso a los campos del formulario en el template
 }

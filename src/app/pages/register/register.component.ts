@@ -278,6 +278,11 @@ export class RegisterComponent implements OnInit {
         this.documentoStatus = response.exists ? 'taken' : 'available';
         if (response.exists) {
           this.registerForm.get('numero_documento')?.setErrors({ documentoTaken: true });
+          // NUEVO: Limpiar campos autocompletados si el documento está duplicado
+          this.registerForm.patchValue({
+            nombres: '',
+            apellidos: '',
+          });
         }
       },
       error: (error) => {
@@ -395,48 +400,91 @@ export class RegisterComponent implements OnInit {
     });
   }
 
+  // Antes de la modificación hay esta línea:
+  // consultarDni(numeroDocumento: string): void {
+
   consultarDni(numeroDocumento: string): void {
-    // Solo consultar si es DNI (tipo 1) y tiene 8 dígitos
-    if (
-      this.registerForm.get('tipo_documento_id')?.value === '1' &&
-      numeroDocumento &&
-      numeroDocumento.length === 8 &&
-      /^\d{8}$/.test(numeroDocumento)
-    ) {
+    // Solo consultar si es DNI (tipo 1) y tiene 8 dígitos, o RUC y tiene 11 dígitos
+    const tipoDocumento = this.registerForm.get('tipo_documento_id')?.value;
+    
+    if (numeroDocumento && (
+      (tipoDocumento === '1' && numeroDocumento.length === 8 && /^\d{8}$/.test(numeroDocumento)) ||
+      (tipoDocumento === '4' && numeroDocumento.length === 11 && /^\d{11}$/.test(numeroDocumento))
+    )) {
       this.isDniLoading = true;
       this.dniStatus = 'loading';
 
+      // NUEVO: Esperar a que ambas validaciones se completen
       this.reniecService.buscarPorDni(numeroDocumento).subscribe({
         next: (response) => {
           this.isDniLoading = false;
+          console.log('Respuesta completa del backend:', response);
 
-          if (
-            response.success &&
-            response.nombres &&
-            response.apellidoPaterno &&
-            response.apellidoMaterno
-          ) {
-            this.registerForm.patchValue({
-              nombres: response.nombres,
-              apellidos: `${response.apellidoPaterno} ${response.apellidoMaterno}`,
-            });
+          // MODIFICADO: Verificar el estado del documento antes de autocompletar
+          // Esperar un momento para que checkDocumentoExists termine si está en progreso
+          setTimeout(() => {
+            if (this.documentoStatus === 'taken') {
+              console.log('Documento ya registrado, no se autocompletarán los datos');
+              this.dniStatus = 'error';
+              return;
+            }
 
-            this.dniStatus = 'success';
-          } else {
-            this.dniStatus = 'error';
-            console.warn('DNI no encontrado o datos incompletos');
-          }
+            // Verificar si la respuesta contiene datos de RENIEC
+            if (response.success !== false && (response.nombre || response.nombres || response.razonSocial)) {
+              console.log('Datos encontrados:', {
+                nombre: response.nombre,
+                nombres: response.nombres,
+                apellidoPaterno: response.apellidoPaterno,
+                apellidoMaterno: response.apellidoMaterno,
+                razonSocial: response.razonSocial
+              });
+
+              // Para DNI (8 dígitos)
+              if (tipoDocumento === '1' && numeroDocumento.length === 8) {
+                if (response.nombres && response.apellidoPaterno && response.apellidoMaterno) {
+                  this.registerForm.patchValue({
+                    nombres: response.nombres,
+                    apellidos: `${response.apellidoPaterno} ${response.apellidoMaterno}`,
+                  });
+                } else if (response.nombre) {
+                  const partes = response.nombre.split(' ');
+                  const nombres = partes[0] || '';
+                  const apellidos = partes.slice(1).join(' ') || '';
+                  this.registerForm.patchValue({
+                    nombres: nombres,
+                    apellidos: apellidos,
+                  });
+                }
+              } 
+              // Para RUC (11 dígitos)
+              else if (tipoDocumento === '4' && numeroDocumento.length === 11) {
+                const razonSocial = response.razonSocial || response.nombre || '';
+                this.registerForm.patchValue({
+                  nombres: razonSocial,
+                  apellidos: '',
+                });
+              }
+              
+              this.dniStatus = 'success';
+            } else {
+              console.warn('No se encontraron datos válidos en la respuesta:', response);
+              this.dniStatus = 'error';
+            }
+          }, 100); // Pequeño delay para permitir que checkDocumentoExists termine
         },
         error: (error) => {
           this.isDniLoading = false;
           this.dniStatus = 'error';
-          console.error('Error consultando DNI:', error);
+          console.error('Error consultando documento:', error);
         },
       });
     } else {
       this.dniStatus = 'idle';
     }
   }
+
+  // Después de la modificación continúa:
+  // loadDocumentTypes(): void {
 
   loadDocumentTypes(): void {
     this.authService.getDocumentTypes().subscribe({
@@ -496,17 +544,29 @@ export class RegisterComponent implements OnInit {
     }
 
     this.authService.register(registerData).subscribe({
-      next: (response) => {
+      
+            next: (response) => {
         this.isLoading = false;
-        this.registerSuccess =
-          'Cuenta creada exitosamente. Revisa tu correo para verificar tu cuenta.';
+        
+        if (response.requires_verification) {
+          this.registerSuccess = 'Cuenta creada exitosamente. Revisa tu correo para verificar tu cuenta.';
+          // Redirigir a verificación después de 2 segundos
+          setTimeout(() => {
+            this.router.navigate(['/verify-email'], {
+              queryParams: { email: registerData.email }
+            });
+          }, 2000);
+        } else {
+          this.registerSuccess = 'Cuenta creada exitosamente. Ya puedes iniciar sesión.';
+          // Redirigir al login después de 2 segundos
+          setTimeout(() => {
+            this.router.navigate(['/account']);
+          }, 2000);
+        }
+        
         this.registerForm.reset();
-
-        // Redirigir a verificación después de 2 segundos
-        setTimeout(() => {
-          this.router.navigate(['/verify-email']);
-        }, 2000);
       },
+
 
       error: (error) => {
         this.isLoading = false;

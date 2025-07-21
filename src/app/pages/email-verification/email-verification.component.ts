@@ -45,15 +45,22 @@ export class EmailVerificationComponent implements OnInit {
 
   checkUrlParams(): void {
     this.route.queryParams.subscribe(params => {
-      if (params['token'] && params['email']) {
-        // Auto-llenar el formulario si vienen en la URL
+      if (params['email']) {
         this.verificationForm.patchValue({
-          email: params['email'],
-          token: params['token']
+          email: params['email']
         });
-        
-        // Verificar automáticamente
-        this.onVerify();
+      }
+      
+      if (params['verified'] === 'true') {
+        this.setMessage('¡Cuenta verificada exitosamente! Ya puedes iniciar sesión.', 'success');
+        setTimeout(() => {
+          this.router.navigate(['/account']);
+        }, 3000);
+      } else if (params['already_verified'] === 'true') {
+        this.setMessage('Tu cuenta ya está verificada. Puedes iniciar sesión.', 'info');
+        setTimeout(() => {
+          this.router.navigate(['/account']);
+        }, 3000);
       } else if (params['error']) {
         if (params['error'] === 'invalid_link') {
           this.setMessage('El enlace de verificación no es válido', 'error');
