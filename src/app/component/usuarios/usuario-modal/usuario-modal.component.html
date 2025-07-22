@@ -1,302 +1,315 @@
-<!-- Modal -->
-<div class="modal fade" [class.show]="isVisible" [style.display]="isVisible ? 'block' : 'none'" 
-     id="modalUsuario" tabindex="-1" *ngIf="isVisible">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content border-0 rounded-12">
-      <div class="modal-header border-0 pb-12">
-        <h5 class="modal-title text-heading fw-semibold d-flex align-items-center">
-          <i class="ph ph-user-circle me-8 text-main-600"></i>
-          {{ mode === 'edit' ? 'Editar Usuario' : 'Ver Usuario' }}
-        </h5>
-        <button type="button" class="btn-close" (click)="cerrarModal()"></button>
-      </div>
-      
-      <div class="modal-body p-20" *ngIf="!loading">
-        <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()">
-          <div class="row g-20">
-            
-            <!-- Columna Izquierda -->
-            <div class="col-lg-4">
-           <!-- Avatar -->
-<div class="border border-gray-100 rounded-8 p-16 mb-16 text-center">
-  <div class="mx-auto mb-12 overflow-hidden d-flex align-items-center justify-content-center rounded-circle"
-       style="width: 80px; height: 80px; min-width: 80px; min-height: 80px;"
-       [style.background-color]="getAvatarColor(usuarioForm.get('name')?.value || '')"
-       *ngIf="!previewUrl || removeAvatar">
-    <span class="text-white text-lg fw-bold">{{ getInitials(usuarioForm.get('name')?.value || '') }}</span>
-  </div>
-  
-  <img *ngIf="previewUrl && !removeAvatar" 
-       [src]="previewUrl" 
-       alt="Avatar"
-       style="width: 80px; height: 80px; min-width: 80px; min-height: 80px;"
-       class="rounded-circle mx-auto mb-12 object-fit-cover d-block">
-  
-  <div class="d-flex gap-6 justify-content-center" *ngIf="mode === 'edit'">
-    <input type="file" 
-           #fileInput 
-           (change)="onFileSelected($event)"
-           accept="image/*"
-           class="d-none">
-    <button type="button" 
-            class="btn bg-main-50 text-main-600 hover-bg-main-600 hover-text-white px-6 py-3 rounded-4 text-xs"
-            (click)="fileInput.click()">
-      <i class="ph ph-camera"></i>
-    </button>
-    <button type="button" 
-            class="btn bg-danger-50 text-danger-600 hover-bg-danger-600 hover-text-white px-6 py-3 rounded-4 text-xs"
-            (click)="onRemoveAvatar()"
-            *ngIf="previewUrl && !removeAvatar">
-      <i class="ph ph-trash"></i>
-    </button>
-  </div>
-</div>
+<div class="modal-overlay" *ngIf="isVisible" (click)="cerrarModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ mode === 'edit' ? 'Editar Usuario' : 'Ver Usuario' }}</h2>
+      <button class="btn-close" (click)="cerrarModal()">
+        
+      </button>
+    </div>
 
-              <!-- Información Básica -->
-              <div class="border border-gray-100 rounded-8 p-12">
-                <h6 class="text-heading fw-semibold mb-12 text-sm d-flex align-items-center">
-                  <i class="ph ph-info me-6 text-main-600"></i>
-                  Información Básica
-                </h6>
-                
-                <div class="mb-12">
-                  <label class="form-label text-heading fw-medium mb-4 text-xs">Usuario *</label>
-                  <input type="text" 
-                         class="form-control px-8 py-6 border rounded-6 text-sm"
-                         formControlName="name" 
-                         [readonly]="mode === 'view'">
-                </div>
+    <div class="modal-body" *ngIf="!loading">
+      <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()" class="card-body" [class.view-only]="mode === 'view'">
+        
+        <!-- Información básica -->
+        <div class="form-section">
+          <h3>Información Básica</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre de usuario</label>
+              <input 
+                type="text" 
+                formControlName="name" 
+                [readonly]="mode === 'view'"
+                class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input 
+                type="email" 
+                formControlName="email" 
+                [readonly]="mode === 'view'"
+                class="form-control">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Rol</label>
+              <select 
+                formControlName="role_id" 
+                [disabled]="mode === 'view'"
+                class="form-control">
+                <option value="">Seleccionar rol</option>
+                <option *ngFor="let rol of roles" [value]="rol.id">
+                  {{ rol.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-                <div class="mb-12">
-                  <label class="form-label text-heading fw-medium mb-4 text-xs">Email *</label>
-                  <input type="email" 
-                         class="form-control px-8 py-6 border rounded-6 text-sm"
-                         formControlName="email" 
-                         [readonly]="mode === 'view'">
-                </div>
-
-                <div class="mb-0">
-                  <label class="form-label text-heading fw-medium mb-4 text-xs">Rol *</label>
-                  <select class="form-select px-8 py-6 border rounded-6 text-sm" 
-                          formControlName="role_id" 
-                          [disabled]="mode === 'view'">
-                    <option value="">Seleccionar</option>
-                    <option *ngFor="let rol of roles" [value]="rol.id">{{ rol.name }}</option>
-                  </select>
+        <!-- Perfil -->
+        <div class="form-section" formGroupName="profile">
+          <h3>Perfil Personal</h3>
+          
+          <!-- Avatar -->
+          <div class="avatar-section">
+            <label>Foto de Perfil</label>
+            <div class="avatar-container">
+              <div class="avatar-preview">
+                <img 
+                  *ngIf="previewUrl && !removeAvatar" 
+                  [src]="previewUrl" 
+                  alt="Avatar">
+                <div 
+                  *ngIf="!previewUrl || removeAvatar" 
+                  class="avatar-placeholder"
+                  [style.background-color]="getAvatarColor(usuarioForm.get('name')?.value || '')">
+                  {{ getInitials(usuarioForm.get('name')?.value || '') }}
                 </div>
               </div>
-            </div>
-
-            <!-- Columna Central -->
-            <div class="col-lg-4" formGroupName="profile">
-              <div class="border border-gray-100 rounded-8 p-12">
-                <h6 class="text-heading fw-semibold mb-12 text-sm d-flex align-items-center">
-                  <i class="ph ph-user me-6 text-success-600"></i>
-                  Perfil Personal
-                </h6>
-                
-                <div class="row g-8">
-                  <div class="col-12 mb-8">
-                    <label class="form-label text-heading fw-medium mb-4 text-xs">Primer Nombre</label>
-                    <input type="text" 
-                           class="form-control px-8 py-6 border rounded-6 text-sm"
-                           formControlName="first_name" 
-                           [readonly]="mode === 'view'">
-                  </div>
-
-                  <div class="col-6 mb-8">
-                    <label class="form-label text-heading fw-medium mb-4 text-xs">Apellido P.</label>
-                    <input type="text" 
-                           class="form-control px-8 py-6 border rounded-6 text-sm"
-                           formControlName="last_name_father" 
-                           [readonly]="mode === 'view'">
-                  </div>
-
-                  <div class="col-6 mb-8">
-                    <label class="form-label text-heading fw-medium mb-4 text-xs">Apellido M.</label>
-                    <input type="text" 
-                           class="form-control px-8 py-6 border rounded-6 text-sm"
-                           formControlName="last_name_mother" 
-                           [readonly]="mode === 'view'">
-                  </div>
-
-                  <div class="col-12 mb-8">
-                    <label class="form-label text-heading fw-medium mb-4 text-xs">Teléfono</label>
-                    <input type="text" 
-                           class="form-control px-8 py-6 border rounded-6 text-sm"
-                           formControlName="phone" 
-                           [readonly]="mode === 'view'">
-                  </div>
-
-                  <div class="col-6 mb-8">
-                    <label class="form-label text-heading fw-medium mb-4 text-xs">Tipo Doc.</label>
-                    <select class="form-select px-8 py-6 border rounded-6 text-sm" 
-                            formControlName="document_type" 
-                            [disabled]="mode === 'view'">
-                      <option value="">Tipo</option>
-                      <option *ngFor="let tipo of tiposDocumento" [value]="tipo.id">{{ tipo.nombre }}</option>
-                    </select>
-                  </div>
-
-                  <div class="col-6 mb-8">
-                    <label class="form-label text-heading fw-medium mb-4 text-xs">Nº Documento</label>
-                    <input type="text" 
-                           class="form-control px-8 py-6 border rounded-6 text-sm"
-                           formControlName="document_number" 
-                           [readonly]="mode === 'view'">
-                  </div>
-
-                  <div class="col-6 mb-8">
-                    <label class="form-label text-heading fw-medium mb-4 text-xs">F. Nacimiento</label>
-                    <input type="date" 
-                           class="form-control px-8 py-6 border rounded-6 text-sm"
-                           formControlName="birth_date" 
-                           [readonly]="mode === 'view'">
-                  </div>
-
-                  <div class="col-6 mb-0">
-                    <label class="form-label text-heading fw-medium mb-4 text-xs">Género</label>
-                    <select class="form-select px-8 py-6 border rounded-6 text-sm" 
-                            formControlName="genero" 
-                            [disabled]="mode === 'view'">
-                      <option value="">Género</option>
-                      <option value="masculino">M</option>
-                      <option value="femenino">F</option>
-                      <option value="otro">Otro</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Columna Derecha - Direcciones -->
-            <div class="col-lg-4">
-              <div class="border border-gray-100 rounded-8 p-12">
-                <div class="d-flex justify-content-between align-items-center mb-12">
-                  <h6 class="text-heading fw-semibold mb-0 text-sm d-flex align-items-center">
-                    <i class="ph ph-map-pin me-6 text-warning-600"></i>
-                    Direcciones
-                  </h6>
-                  <button type="button" 
-                          class="btn btn-sm bg-main-50 text-main-600 hover-bg-main-600 hover-text-white px-6 py-2 rounded-4 text-xs"
-                          (click)="agregarDireccion()"
-                          *ngIf="mode === 'edit'">
-                    <i class="ph ph-plus"></i>
-                  </button>
-                </div>
-                
-                <div formArrayName="addresses" class="max-h-300 overflow-y-auto">
-                  <div *ngFor="let address of addressesArray.controls; let i = index" 
-                       [formGroupName]="i" 
-                       class="border border-gray-50 rounded-4 p-8 mb-8 bg-gray-25">
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-6">
-                      <span class="text-heading text-xs fw-medium">Dir. {{ i + 1 }}</span>
-                      <div class="d-flex gap-2" *ngIf="mode === 'edit'">
-                        <button type="button" 
-                                class="btn btn-xs px-4 py-1 rounded-3 text-xs"
-                                [ngClass]="address.get('is_default')?.value ? 'bg-success-600 text-white' : 'bg-gray-100 text-gray-600'"
-                                (click)="marcarComoPrincipal(i)">
-                          P
-                        </button>
-                        <button type="button" 
-                                class="btn btn-xs bg-danger-50 text-danger-600 px-4 py-1 rounded-3 text-xs"
-                                (click)="eliminarDireccion(i)"
-                                [disabled]="addressesArray.length <= 1">
-                          <i class="ph ph-trash"></i>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div class="row g-4">
-                      <div class="col-6">
-                        <input type="text" 
-                               class="form-control px-6 py-4 border rounded-3 text-xs"
-                               formControlName="label" 
-                               [readonly]="mode === 'view'"
-                               placeholder="Etiqueta">
-                      </div>
-
-                      <div class="col-6">
-                        <input type="text" 
-                               class="form-control px-6 py-4 border rounded-3 text-xs"
-                               formControlName="postal_code" 
-                               [readonly]="mode === 'view'"
-                               placeholder="C.P.">
-                      </div>
-
-                      <div class="col-12">
-                        <input type="text" 
-                               class="form-control px-6 py-4 border rounded-3 text-xs"
-                               formControlName="address_line" 
-                               [readonly]="mode === 'view'"
-                               placeholder="Dirección completa">
-                      </div>
-
-                      <div class="col-4">
-                        <select class="form-select px-6 py-4 border rounded-3 text-xs" 
-                                formControlName="department" 
-                                [disabled]="mode === 'view'"
-                                (change)="onDepartamentoChange($event, i)">
-                          <option value="">Dept.</option>
-                          <option *ngFor="let dept of departamentos" [value]="dept.id_ubigeo">{{ dept.nombre }}</option>
-                        </select>
-                      </div>
-
-                      <div class="col-4">
-                        <select class="form-select px-6 py-4 border rounded-3 text-xs" 
-                                formControlName="province" 
-                                [disabled]="mode === 'view'"
-                                (change)="onProvinciaChange($event, i)">
-                          <option value="">Prov.</option>
-                          <option *ngFor="let prov of getProvincesForAddress(i)" [value]="prov.id_ubigeo">{{ prov.nombre }}</option>
-                        </select>
-                      </div>
-
-                      <div class="col-4">
-                        <select class="form-select px-6 py-4 border rounded-3 text-xs" 
-                                formControlName="city" 
-                                [disabled]="mode === 'view'">
-                          <option value="">Dist.</option>
-                          <option *ngFor="let dist of getDistrictsForAddress(i)" [value]="dist.id_ubigeo">{{ dist.nombre }}</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div class="avatar-actions" *ngIf="mode === 'edit'">
+                <input 
+                  type="file" 
+                  #fileInput 
+                  (change)="onFileSelected($event)"
+                  accept="image/*"
+                  style="display: none;">
+                <button 
+                  type="button" 
+                  class="btn btn-sm btn-primary"
+                  (click)="fileInput.click()">
+                  Cambiar Foto
+                </button>
+                <button 
+                  type="button" 
+                  class="btn btn-sm btn-danger"
+                  (click)="onRemoveAvatar()"
+                  *ngIf="previewUrl && !removeAvatar">
+                  Eliminar
+                </button>
               </div>
             </div>
           </div>
-        </form>
-      </div>
 
-      <!-- Loading state -->
-      <div class="modal-body p-24 text-center" *ngIf="loading">
-        <div class="spinner-border text-main-600 mb-16" role="status">
-          <span class="visually-hidden">Cargando...</span>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Primer Nombre</label>
+              <input 
+                type="text" 
+                formControlName="first_name" 
+                [readonly]="mode === 'view'"
+                class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Apellido Paterno</label>
+              <input 
+                type="text" 
+                formControlName="last_name_father" 
+                [readonly]="mode === 'view'"
+                class="form-control">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Apellido Materno</label>
+              <input 
+                type="text" 
+                formControlName="last_name_mother" 
+                [readonly]="mode === 'view'"
+                class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input 
+                type="text" 
+                formControlName="phone" 
+                [readonly]="mode === 'view'"
+                class="form-control">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tipo de Documento</label>
+              <select 
+                formControlName="document_type" 
+                [disabled]="mode === 'view'"
+                class="form-control">
+                <option value="">Seleccionar tipo</option>
+                <option *ngFor="let tipo of tiposDocumento" [value]="tipo.id">
+                  {{ tipo.nombre }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Número de Documento</label>
+              <input 
+                type="text" 
+                formControlName="document_number" 
+                [readonly]="mode === 'view'"
+                class="form-control">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fecha de Nacimiento</label>
+              <input 
+                type="date" 
+                formControlName="birth_date" 
+                [readonly]="mode === 'view'"
+                class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Género</label>
+              <select 
+                formControlName="genero" 
+                [disabled]="mode === 'view'"
+                class="form-control">
+                <option value="">Seleccionar género</option>
+                <option value="masculino">Masculino</option>
+                <option value="femenino">Femenino</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <p class="text-gray-600 text-sm">Cargando...</p>
-      </div>
-      
-      <div class="modal-footer border-0 pt-0 pb-16">
-        <button type="button" 
-                class="btn bg-gray-100 hover-bg-gray-200 text-gray-600 px-16 py-8 rounded-8 text-sm"
-                (click)="cerrarModal()">
-          Cancelar
-        </button>
-        <button type="button" 
-                class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8 text-sm"
-                [disabled]="!usuarioForm.valid || loading"
-                (click)="onSubmit()"
-                *ngIf="mode === 'edit'">
-          <span *ngIf="loading" class="spinner-border spinner-border-sm me-8"></span>
-          <i *ngIf="!loading" class="ph ph-check me-8"></i>
-          {{ loading ? 'Guardando...' : 'Guardar' }}
-        </button>
-      </div>
+
+        <!-- Direcciones -->
+        <div class="form-section">
+          <h3>Direcciones</h3>
+          <div formArrayName="addresses">
+            <div 
+              *ngFor="let address of addressesArray.controls; let i = index" 
+              [formGroupName]="i" 
+              class="address-item">
+              
+              <div class="address-header">
+                <h4>Dirección {{ i + 1 }}</h4>
+                <div class="address-actions" *ngIf="mode === 'edit'">
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-success"
+                    (click)="marcarComoPrincipal(i)"
+                    [class.active]="address.get('is_default')?.value">
+                    {{ address.get('is_default')?.value ? 'Principal' : 'Marcar como Principal' }}
+                  </button>
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-danger"
+                    (click)="eliminarDireccion(i)"
+                    [disabled]="addressesArray.length <= 1">
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Etiqueta</label>
+                  <input 
+                    type="text" 
+                    formControlName="label" 
+                    [readonly]="mode === 'view'"
+                    placeholder="Ej: Casa, Oficina"
+                    class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>Detalle de Dirección</label>
+                  <input 
+                    type="text" 
+                    formControlName="address_line" 
+                    [readonly]="mode === 'view'"
+                    placeholder="Ej: Av. Los Libertadores 123, Casa 5"
+                    class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>Código Postal</label>
+                  <input 
+                    type="text" 
+                    formControlName="postal_code" 
+                    [readonly]="mode === 'view'"
+                    class="form-control">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Departamento</label>
+                  <select 
+                    formControlName="department" 
+                    [disabled]="mode === 'view'"
+                    (change)="onDepartamentoChange($event, i)"
+                    class="form-control">
+                    <option value="">Seleccionar departamento</option>
+                    <option *ngFor="let dept of departamentos" [value]="dept.id_ubigeo">
+                      {{ dept.nombre }}
+                    </option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Provincia</label>
+                  <select 
+                    formControlName="province" 
+                    [disabled]="mode === 'view'"
+                    (change)="onProvinciaChange($event, i)"
+                    class="form-control">
+                    <option value="">Seleccionar provincia</option>
+                    <option *ngFor="let prov of getProvincesForAddress(i)" [value]="prov.id_ubigeo">
+                      {{ prov.nombre }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Distrito</label>
+                 <select 
+                    formControlName="city" 
+                    [disabled]="mode === 'view'"
+                    class="form-control">
+                    <option value="">Seleccionar distrito</option>
+                    <option *ngFor="let dist of getDistrictsForAddress(i)" [value]="dist.id_ubigeo">
+                      {{ dist.nombre }}
+                    </option>
+                  </select>
+                </div>
+                <!-- resto del código -->
+                </div> <!-- cierre de .form-row -->
+  
+            </div> <!-- cierre de *ngFor -->
+          </div> <!-- cierre de formArrayName="addresses" -->
+
+          <button 
+            type="button" 
+            class="btn btn-outline-primary"
+            (click)="agregarDireccion()"
+            *ngIf="mode === 'edit'">
+            <i class="fas fa-plus"></i>
+            Agregar Dirección
+          </button>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cerrarModal()">
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="!usuarioForm.valid || loading"
+            *ngIf="mode === 'edit'">
+            {{ loading ? 'Guardando...' : 'Guardar Cambios' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-body loading-state" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Cargando...</p>
     </div>
   </div>
 </div>
-
-<!-- Backdrop -->
-<div class="modal-backdrop fade" [class.show]="isVisible" *ngIf="isVisible" (click)="cerrarModal()"></div>

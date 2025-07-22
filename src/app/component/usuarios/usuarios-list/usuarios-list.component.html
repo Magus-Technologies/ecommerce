@@ -1,199 +1,158 @@
-<!-- src/app/pages/usuarios-list/usuarios-list.component.html -->
-<div class="container container-lg py-40">
-  <!-- Header -->
-  <div class="row mb-40">
-    <div class="col-12">
-      <div class="flex-between flex-wrap gap-16">
-        <div class="section-heading">
-          <h1 class="text-heading text-4xl fw-bold mb-16">
-            <i class="ph ph-users me-16 text-main-600"></i>
-            Gestión de Usuarios
-          </h1>
-          <p class="text-gray-500 text-lg">Administra los usuarios de tu plataforma ecommerce</p>
-        </div>
-        <button 
-          *ngIf="canCreateUser$ | async"
-          class="btn bg-main-600 hover-bg-main-700 text-white px-24 py-12 rounded-pill flex-align gap-8"
-          (click)="onCrearUsuario()"
-          type="button">
-          <i class="ph ph-plus"></i>
-          Crear Usuario
-        </button>
+<p>Hola!</p>
+<div class="usuarios-container">
+  <!-- Header con título y botón crear -->
+  <div class="usuarios-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="page-title">
+          <i class="fas fa-users"></i>
+          Gestión de Usuarios
+        </h1>
+        <p class="page-subtitle">Administra los usuarios de tu plataforma ecommerce</p>
       </div>
+      <button 
+        *ngIf="canCreateUser$ | async"
+        class="btn btn-create"
+        (click)="onCrearUsuario()"
+        type="button" style="background: #2563eb">
+        <i class="fas fa-plus"></i>
+        Crear Usuario
+      </button>
     </div>
   </div>
 
-  <!-- Stats Cards -->
-  <div class="row g-20 mb-40">
-    <div class="col-xl-4 col-lg-4 col-md-6">
-      <div class="product-card h-100 p-24 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 bg-main-50">
-        <div class="flex-align gap-16">
-          <div class="w-60 h-60 bg-main-600 rounded-circle flex-center">
-            <i class="ph ph-users text-2xl text-white"></i>
-          </div>
-          <div class="flex-grow-1">
-            <h3 class="text-heading text-2xl fw-bold mb-4">{{ usuarios.length }}</h3>
-            <p class="text-gray-600 text-sm mb-0">Total Usuarios</p>
-          </div>
-        </div>
+  <!-- Estadísticas rápidas -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon blue">
+        <i class="fas fa-users" style="color: white;"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ usuarios.length }}</h3>
+        <p>Total Usuarios</p>
       </div>
     </div>
-
-    <div class="col-xl-4 col-lg-4 col-md-6">
-      <div class="product-card h-100 p-24 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 bg-success-50">
-        <div class="flex-align gap-16">
-          <div class="w-60 h-60 bg-success-600 rounded-circle flex-center">
-            <i class="ph ph-check-circle text-2xl text-white"></i>
-          </div>
-          <div class="flex-grow-1">
-            <h3 class="text-heading text-2xl fw-bold mb-4">{{ getUsuariosActivos() }}</h3>
-            <p class="text-gray-600 text-sm mb-0">Habilitados</p>
-          </div>
-        </div>
+    <div class="stat-card">
+      <div class="stat-icon green">
+        <i class="fas fa-user-check" style="color: white;"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ getUsuariosActivos() }}</h3>
+        <p>Habilitados</p>
       </div>
     </div>
-
-    <div class="col-xl-4 col-lg-4 col-md-6">
-      <div class="product-card h-100 p-24 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 bg-danger-50">
-        <div class="flex-align gap-16">
-          <div class="w-60 h-60 bg-danger-600 rounded-circle flex-center">
-            <i class="ph ph-x-circle text-2xl text-white"></i>
-          </div>
-          <div class="flex-grow-1">
-            <h3 class="text-heading text-2xl fw-bold mb-4">{{ getUsuariosAdministradores() }}</h3>
-            <p class="text-gray-600 text-sm mb-0">Deshabilitados</p>
-          </div>
-        </div>
+    <div class="stat-card">
+      <div class="stat-icon orange">
+        <i class="fas fa-crown" style="color: white;"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ getUsuariosAdministradores() }}</h3>
+        <p>Deshabilitados</p>
       </div>
     </div>
   </div>
 
   <!-- Tabla de usuarios -->
-  <div class="row">
-    <div class="col-12">
-      <div class="product-card p-24 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2">
-        <div class="flex-between mb-24">
-          <div class="flex-align gap-12">
-            <i class="ph ph-list text-2xl text-main-600"></i>
-            <h2 class="text-heading text-lg fw-semibold mb-0">Lista de Usuarios</h2>
-          </div>
-          <div class="flex-align gap-16">
-            <div class="position-relative">
-              <input type="text" 
-                     class="form-control px-40 py-12 border rounded-pill bg-gray-50"
-                     placeholder="Buscar usuarios..."
-                     style="min-width: 280px;">
-              <i class="ph ph-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-16 text-gray-500"></i>
-            </div>
-          </div>
-        </div>
-        
-        <div class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr class="border-bottom border-gray-100">
-                <th class="text-gray-700 text-sm fw-semibold py-16">Usuario</th>
-                <th class="text-gray-700 text-sm fw-semibold py-16">Email</th>
-                <th class="text-gray-700 text-sm fw-semibold py-16">Rol</th>
-                <th class="text-gray-700 text-sm fw-semibold py-16">Estado</th>
-                <th class="text-gray-700 text-sm fw-semibold py-16">Fecha Registro</th>
-                <th class="text-gray-700 text-sm fw-semibold py-16">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let usuario of usuarios; trackBy: trackByUserId" 
-                  class="border-bottom border-gray-50 hover-bg-gray-50 transition-1">
-                <!-- Usuario con avatar -->
-                <td class="py-16">
-                  <div class="flex-align gap-12">
-                    <div class="w-48 h-48 rounded-circle flex-center overflow-hidden flex-shrink-0"
-                         [style.background-color]="getAvatarDisplay(usuario).color"
-                         *ngIf="getAvatarDisplay(usuario).type === 'initial'">
-                      <span class="text-white text-sm fw-semibold">{{ getAvatarDisplay(usuario).value }}</span>
-                    </div>
-                    <img class="w-48 h-48 rounded-circle object-fit-cover flex-shrink-0" 
-                         [src]="getAvatarDisplay(usuario).value" 
-                         [alt]="usuario.nombre"
-                         *ngIf="getAvatarDisplay(usuario).type === 'image'">
-                    <div class="flex-grow-1">
-                      <h6 class="text-heading text-sm fw-semibold mb-4">{{ usuario.nombre }}</h6>
-                      <span class="text-gray-500 text-xs">ID: {{ usuario.id }}</span>
-                    </div>
-                  </div>
-                </td>
-                
-                <!-- Email -->
-                <td class="py-16">
-                  <span class="text-gray-700 text-sm">{{ usuario.email }}</span>
-                </td>
-                
-                <!-- Rol -->
-                <td class="py-16">
-                  <span class="px-12 py-4 rounded-pill text-xs fw-semibold" [ngClass]="getRolClass(usuario.rol)">
-                    {{ usuario.rol }}
-                  </span>
-                </td>
-                
-                <!-- Estado -->
-                <td class="py-16">
-                  <div class="flex-align gap-8">
-                    <i class="ph text-sm" [ngClass]="usuario.estado === 'habilitado' ? 'ph-check-circle text-success-600' : 'ph-x-circle text-danger-600'"></i>
-                    <span class="text-sm" [ngClass]="usuario.estado === 'habilitado' ? 'text-success-600' : 'text-danger-600'">
-                      {{ usuario.estado === 'habilitado' ? 'Habilitado' : 'Deshabilitado' }}
-                    </span>
-                  </div>
-                </td>
-                
-                <!-- Fecha -->
-                <td class="py-16">
-                  <span class="text-gray-700 text-sm">{{ usuario.fechaCreacion | date:'dd/MM/yyyy' }}</span>
-                </td>
-                
-                <!-- Acciones -->
-                <td class="py-16">
-                  <div class="flex-align gap-8">
-                    <button 
-                      class="w-32 h-32 flex-center rounded-6 bg-info-50 text-info-600 hover-bg-info-600 hover-text-white transition-1"
-                      (click)="onVerUsuario(usuario)"
-                      title="Ver usuario"
-                      *ngIf="canShowUser$ | async">
-                      <i class="ph ph-eye text-sm"></i>
-                    </button>
-                    <button 
-                      class="w-32 h-32 flex-center rounded-6 bg-warning-50 text-warning-600 hover-bg-warning-600 hover-text-white transition-1"
-                      (click)="onEditarUsuario(usuario)"
-                      title="Editar usuario"
-                      *ngIf="canEditUser()">
-                      <i class="ph ph-pencil text-sm"></i>
-                    </button>
-                    <button 
-                      class="w-32 h-32 flex-center rounded-6 bg-danger-50 text-danger-600 hover-bg-danger-600 hover-text-white transition-1"
-                      (click)="onEliminarUsuario(usuario)"
-                      title="Eliminar usuario"
-                      *ngIf="canDeleteUser()">
-                      <i class="ph ph-trash text-sm"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Mensaje cuando no hay usuarios -->
-        <div *ngIf="usuarios.length === 0" class="text-center py-80">
-          <div class="w-80 h-80 bg-gray-100 rounded-circle flex-center mx-auto mb-24">
-            <i class="ph ph-users text-4xl text-gray-400"></i>
-          </div>
-          <h3 class="text-heading text-xl fw-semibold mb-12">No hay usuarios registrados</h3>
-          <p class="text-gray-500 mb-24">Comienza creando tu primer usuario</p>
-          <button class="btn bg-main-600 hover-bg-main-700 text-white px-24 py-12 rounded-pill flex-align gap-8 mx-auto" 
-                  (click)="onCrearUsuario()">
-            <i class="ph ph-plus"></i>
-            Crear Usuario
-          </button>
+  <div class="table-container">
+    <div class="table-header">
+      <h2 class="table-title">Lista de Usuarios</h2>
+      <div class="table-actions">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Buscar usuarios...">
         </div>
       </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="usuarios-table">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Fecha Registro</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let usuario of usuarios; trackBy: trackByUserId" class="table-row">
+            <td class="user-cell">
+              <div class="user-info">
+                <div class="user-avatar" 
+                    [style.background-color]="getAvatarDisplay(usuario).color"
+                    *ngIf="getAvatarDisplay(usuario).type === 'initial'">
+                  {{ getAvatarDisplay(usuario).value }}
+                </div>
+                <img class="user-avatar-img" 
+                    [src]="getAvatarDisplay(usuario).value" 
+                    [alt]="usuario.nombre"
+                    *ngIf="getAvatarDisplay(usuario).type === 'image'">
+                <div class="user-details">
+                  <span class="user-name">{{ usuario.nombre }}</span>
+                  <span class="user-id">ID: {{ usuario.id }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="email-cell">
+              <span class="email">{{ usuario.email }}</span>
+            </td>
+            <td class="rol-cell">
+              <span class="badge" [ngClass]="getRolClass(usuario.rol)">
+                {{ usuario.rol }}
+              </span>
+            </td>
+            <td class="estado-cell">
+            <span class="badge" [ngClass]="getEstadoClass(usuario.estado)">
+              <i class="fas" [ngClass]="usuario.estado === 'habilitado' ? 'fa-check-circle' : 'fa-times-circle'"></i>
+              {{ usuario.estado === 'habilitado' ? 'Habilitado' : 'Deshabilitado' }}
+            </span>
+          </td>
+            <td class="fecha-cell">
+              <span class="fecha">{{ usuario.fechaCreacion | date:'dd/MM/yyyy' }}</span>
+            </td>
+            <td class="actions-cell">
+              <div class="action-buttons">
+                <button 
+                  class="btn-action btn-view"
+                  (click)="onVerUsuario(usuario)"
+                  title="Ver usuario"
+                  *ngIf="canShowUser$ | async">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button 
+                  class="btn-action btn-edit"
+                  (click)="onEditarUsuario(usuario)"
+                  title="Editar usuario"
+                  *ngIf="canEditUser()">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button 
+                  class="btn-action btn-delete"
+                  (click)="onEliminarUsuario(usuario)"
+                  title="Eliminar usuario"
+                  *ngIf="canDeleteUser()">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mensaje cuando no hay usuarios -->
+    <div *ngIf="usuarios.length === 0" class="empty-state">
+      <div class="empty-icon">
+        <i class="fas fa-users"></i>
+      </div>
+      <h3>No hay usuarios registrados</h3>
+      <p>Comienza creando tu primer usuario</p>
+      <button class="btn btn-create" (click)="onCrearUsuario()">
+        <i class="fas fa-plus"></i>
+        Crear Usuario
+      </button>
     </div>
   </div>
 </div>
@@ -208,11 +167,7 @@
 </app-usuario-modal>
 
 <!-- Loading state -->
-<div *ngIf="loading" class="position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex align-items-center justify-content-center" style="z-index: 9999;">
-  <div class="text-center">
-    <div class="spinner-border text-main-600 mb-16" role="status">
-      <span class="visually-hidden">Cargando...</span>
-    </div>
-    <p class="text-gray-600">Cargando usuarios...</p>
-  </div>
+<div *ngIf="loading" class="loading-overlay">
+  <div class="spinner"></div>
+  <p>Cargando usuarios...</p>
 </div>
