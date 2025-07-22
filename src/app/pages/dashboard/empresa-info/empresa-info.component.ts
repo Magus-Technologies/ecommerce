@@ -529,7 +529,7 @@ export class EmpresaInfoComponent implements OnInit {
           console.log('Información de empresa guardada exitosamente:', response);
           Swal.fire({
             title: '¡Éxito!',
-            text: this.empresaInfo 
+            text: this.empresaInfo
               ? 'Información de empresa actualizada exitosamente.'
               : 'Información de empresa creada exitosamente.',
             icon: 'success',
@@ -540,6 +540,7 @@ export class EmpresaInfoComponent implements OnInit {
             },
           });
           this.cargarEmpresaInfo();
+          this.isSubmitting = false; // Restablecer el estado del botón
         },
         error: (error) => {
           console.error('Error al guardar información de empresa:', error);
