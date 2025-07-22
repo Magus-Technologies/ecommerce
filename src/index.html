@@ -10,10 +10,137 @@
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/css/phosphor.css">
   <link href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/css/icons.min.css" rel="stylesheet">
 
+  <!-- Estilos del loader de carga inicial -->
+  <style>
+    #initial-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease-out;
+    }
+
+    #initial-loader.fade-out {
+      opacity: 0;
+    }
+
+    .loader-gif {
+      width: 120px;
+      height: 120px;
+      max-width: 20vw;
+      max-height: 20vw;
+      object-fit: contain;
+    }
+
+    .loader-text {
+      margin-top: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
+      color: #666;
+      text-align: center;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .loader-gif {
+        width: 100px;
+        height: 100px;
+        object-fit: contain;
+      }
+      
+      .loader-text {
+        font-size: 14px;
+        margin-top: 15px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .loader-gif {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+      }
+      
+      .loader-text {
+        font-size: 12px;
+        margin-top: 10px;
+      }
+    }
+  </style>
 </head>
 
 <body>
+
+  <!-- Loader de carga inicial -->
+  <div id="initial-loader">
+    <video class="loader-gif" autoplay muted loop playsinline>
+      <source src="assets/images/logo/Logo_loader.mp4" type="video/mp4">
+      <!-- Fallback para navegadores que no soporten el video -->
+      Tu navegador no soporta video HTML5.
+    </video>
+    <div class="loader-text">Cargando Marketpro...</div>
+  </div>
+
   <app-root></app-root>
+
+  <!-- Script para remover el loader cuando Angular termine de cargar -->
+  <script>
+    let startTime = Date.now(); // Tiempo de inicio del loader
+    let angularReady = false;
+    let minimumTimeReached = false;
+
+    // Función para remover el loader
+    function removeInitialLoader() {
+      const loader = document.getElementById('initial-loader');
+      if (loader) {
+        loader.classList.add('fade-out');
+        setTimeout(() => {
+          loader.remove();
+        }, 500);
+      }
+    }
+
+    // Verificar si se puede remover el loader (ambas condiciones cumplidas)
+    function checkRemoveLoader() {
+      if (angularReady && minimumTimeReached) {
+        removeInitialLoader();
+      }
+    }
+
+    // Timer para el tiempo mínimo de 3 segundos
+    setTimeout(() => {
+      minimumTimeReached = true;
+      checkRemoveLoader();
+    }, 3000);
+
+    // Escuchar cuando Angular termine de cargar
+    document.addEventListener('DOMContentLoaded', function() {
+      // Verificar periódicamente si Angular está listo
+      const checkAngularReady = setInterval(() => {
+        const appRoot = document.querySelector('app-root');
+        if (appRoot && appRoot.children.length > 0) {
+          angularReady = true;
+          checkRemoveLoader();
+          clearInterval(checkAngularReady);
+        }
+      }, 100);
+
+      // Failsafe: remover el loader después de máximo 15 segundos
+      setTimeout(() => {
+        angularReady = true;
+        minimumTimeReached = true;
+        removeInitialLoader();
+        clearInterval(checkAngularReady);
+      }, 15000); // Aumentado a 15 segundos por el mínimo de 3
+    });
+  </script>
 </body>
 
 </html>
