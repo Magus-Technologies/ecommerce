@@ -7,8 +7,8 @@ import { CategoriasPublicasService } from '../../services/categorias-publicas.se
 import { MarcaProducto, ProductoPublico } from '../../types/almacen.types';
 import { AlmacenService } from '../../services/almacen.service';
 import { ProductosService } from '../../services/productos.service';
-import { CartService } from "../../services/cart.service"
-
+import { CartService } from '../../services/cart.service';
+import { IndexTwoService } from '../../services/index-two.service'; 
 interface CategoriaTemplate {
   id: number;
   name: string;
@@ -19,6 +19,12 @@ interface CategoriaTemplate {
   badge: string;
   badgeClass: string;
   productos_count?: number;
+}
+interface ProductoSeleccionado {
+  categoria_id: number;
+  categoria_nombre: string;
+  producto: ProductoPublico;
+  cantidad: number;
 }
 
 @Component({
@@ -38,7 +44,13 @@ export class IndexTwoComponent implements OnInit {
   productosLoading = false;
   categoriaSeleccionada?: number;
   marcaSeleccionada?: number;
-
+  // ✅ NUEVAS PROPIEDADES para el modo "Arma tu PC"
+  modoArmadoPC = false; // Controla si estamos en modo armado de PC
+  categoriaArmadoSeleccionada?: number; // Categoría seleccionada en modo armado
+  productosArmado: ProductoPublico[] = []; // Productos para armado de PC
+  productosArmadoLoading = false;
+  productosSeleccionados: ProductoSeleccionado[] = []; // Productos seleccionados para la cotización
+  totalCotizacion = 0; // Total de la cotización
   // ✅ NUEVO: Propiedades para paginación
   currentPage = 1;
   totalPages = 1;
@@ -54,6 +66,7 @@ export class IndexTwoComponent implements OnInit {
     private route: ActivatedRoute, // ✅ NUEVO
     private router: Router, // ✅ NUEVO
     private cartService: CartService,
+    private indexTwoService: IndexTwoService,
   ) {}
 
   ngOnInit(): void {
@@ -61,13 +74,20 @@ export class IndexTwoComponent implements OnInit {
 
     // ✅ NUEVO: Suscribirse a cambios en los query parameters
     this.route.queryParams.subscribe((params) => {
-      this.categoriaSeleccionada = params['categoria']
-        ? +params['categoria']
-        : undefined;
-      this.marcaSeleccionada = params['marca'] ? +params['marca'] : undefined;
-      this.currentPage = params['page'] ? +params['page'] : 1; // Leer la página de la URL
-      this.cargarProductos(); // Cargar productos cada vez que cambian los parámetros
+      // ✅ MODIFICADO: Solo cargar productos si no estamos en modo armado
+      if (!this.modoArmadoPC) {
+        this.categoriaSeleccionada = params['categoria']
+          ? +params['categoria']
+          : undefined;
+        this.marcaSeleccionada = params['marca'] ? +params['marca'] : undefined;
+        this.currentPage = params['page'] ? +params['page'] : 1;
+        this.cargarProductos();
+      }
     });
+    // ✅ NUEVO: Suscribirse al evento del header
+  this.indexTwoService.activarModoArmado$.subscribe(() => {
+    this.activarModoArmadoPC();
+  });
   }
 
   // ✅ NUEVO MÉTODO: Cargar categorías de la sección 1
@@ -205,24 +225,182 @@ export class IndexTwoComponent implements OnInit {
   // Si no tienes CartService en este componente, puedes omitir o adaptarlo.
   // Para que funcione, necesitarías importar CartService y añadirlo al constructor.
   // Por simplicidad, lo dejo comentado si no lo tienes configurado aquí.
-  
-addToCart(producto: ProductoPublico): void {
-  if (producto.stock <= 0) {
-    // Swal.fire (o tu sistema de notificaciones)
-    console.warn('Este producto no tiene stock disponible');
-    return;
+
+  addToCart(producto: ProductoPublico): void {
+    if (producto.stock <= 0) {
+      // Swal.fire (o tu sistema de notificaciones)
+      console.warn('Este producto no tiene stock disponible');
+      return;
+    }
+
+    const success = this.cartService.addToCart(producto, 1); // Asumiendo que CartService está inyectado
+
+    if (success) {
+      console.log(`${producto.nombre} ha sido agregado a tu carrito`);
+      // Notificación de éxito
+    } else {
+      console.error(
+        'No se pudo agregar el producto al carrito. Revisa el stock disponible.'
+      );
+      // Notificación de error
+    }
+  }
+  // ✅ NUEVO MÉTODO: Activar modo armado de PC
+activarModoArmadoPC(): void {
+  this.modoArmadoPC = true;
+  this.productosSeleccionados = [];
+  this.totalCotizacion = 0;
+  this.categoriaArmadoSeleccionada = undefined;
+  this.productosArmado = [];
+}
+
+// ✅ NUEVO MÉTODO: Desactivar modo armado de PC
+desactivarModoArmadoPC(): void {
+  this.modoArmadoPC = false;
+  this.categoriaArmadoSeleccionada = undefined;
+  this.productosArmado = [];
+  this.productosSeleccionados = [];
+  this.totalCotizacion = 0;
+  // Recargar productos normales
+  this.cargarProductos();
+}
+
+// ✅ NUEVO MÉTODO: Seleccionar categoría en modo armado
+seleccionarCategoriaArmado(categoriaId: number): void {
+  this.categoriaArmadoSeleccionada = categoriaId;
+  this.cargarProductosParaArmado(categoriaId);
+}
+
+// ✅ NUEVO MÉTODO: Cargar productos para armado de PC
+cargarProductosParaArmado(categoriaId: number): void {
+  this.productosArmadoLoading = true;
+
+  const filtros = {
+    categoria: categoriaId,
+    page: 1
+  };
+
+  this.productosService.obtenerProductosPublicos(filtros).subscribe({
+    next: (response) => {
+      this.productosArmado = response.productos;
+      this.productosArmadoLoading = false;
+    },
+    error: (error) => {
+      console.error('Error al cargar productos para armado:', error);
+      this.productosArmadoLoading = false;
+      this.productosArmado = [];
+    },
+  });
+}
+
+// ✅ NUEVO MÉTODO: Seleccionar/deseleccionar producto para armado
+toggleProductoArmado(producto: ProductoPublico, event: any): void {
+  const isChecked = event.target.checked;
+  const categoriaInfo = this.categories.find(cat => cat.id === this.categoriaArmadoSeleccionada);
+
+  if (isChecked) {
+    // Verificar si ya hay un producto de esta categoría seleccionado
+    const existeEnCategoria = this.productosSeleccionados.find(
+      p => p.categoria_id === this.categoriaArmadoSeleccionada
+    );
+
+    if (existeEnCategoria) {
+      // Reemplazar el producto existente de esta categoría
+      const index = this.productosSeleccionados.findIndex(
+        p => p.categoria_id === this.categoriaArmadoSeleccionada
+      );
+      this.productosSeleccionados[index] = {
+        categoria_id: this.categoriaArmadoSeleccionada!,
+        categoria_nombre: categoriaInfo?.nombre || '',
+        producto: producto,
+        cantidad: 1
+      };
+    } else {
+      // Agregar nuevo producto
+      this.productosSeleccionados.push({
+        categoria_id: this.categoriaArmadoSeleccionada!,
+        categoria_nombre: categoriaInfo?.nombre || '',
+        producto: producto,
+        cantidad: 1
+      });
+    }
+  } else {
+    // Remover producto
+    this.productosSeleccionados = this.productosSeleccionados.filter(
+      p => p.producto.id !== producto.id
+    );
   }
 
-  const success = this.cartService.addToCart(producto, 1); // Asumiendo que CartService está inyectado
+  this.calcularTotalCotizacion();
+}
 
-  if (success) {
-    console.log(`${producto.nombre} ha sido agregado a tu carrito`);
-    // Notificación de éxito
-  } else {
-    console.error('No se pudo agregar el producto al carrito. Revisa el stock disponible.');
-    // Notificación de error
+// ✅ NUEVO MÉTODO: Verificar si un producto está seleccionado
+isProductoSeleccionado(producto: ProductoPublico): boolean {
+  return this.productosSeleccionados.some(p => p.producto.id === producto.id);
+}
+
+// ✅ NUEVO MÉTODO: Calcular total de cotización
+calcularTotalCotizacion(): void {
+  this.totalCotizacion = this.productosSeleccionados.reduce((total, item) => {
+    const precio = item.producto.precio_oferta || item.producto.precio;
+    return total + (precio * item.cantidad);
+  }, 0);
+}
+
+// ✅ NUEVO MÉTODO: Contar productos seleccionados por categoría
+getProductosSeleccionadosPorCategoria(categoriaId: number): number {
+  return this.productosSeleccionados.filter(p => p.categoria_id === categoriaId).length;
+}
+
+// ✅ NUEVO MÉTODO: Cambiar cantidad de producto seleccionado
+cambiarCantidadProducto(productoId: number, nuevaCantidad: number): void {
+  const producto = this.productosSeleccionados.find(p => p.producto.id === productoId);
+  if (producto && nuevaCantidad > 0) {
+    producto.cantidad = nuevaCantidad;
+    this.calcularTotalCotizacion();
   }
 }
 
+// ✅ NUEVO MÉTODO: Remover producto de la selección
+removerProductoSeleccionado(productoId: number): void {
+  this.productosSeleccionados = this.productosSeleccionados.filter(
+    p => p.producto.id !== productoId
+  );
+  this.calcularTotalCotizacion();
+}
 
+// ✅ NUEVO MÉTODO: Agregar todos los productos seleccionados al carrito
+agregarTodoAlCarrito(): void {
+  if (this.productosSeleccionados.length === 0) {
+    console.warn('No hay productos seleccionados');
+    return;
+  }
+
+  let productosAgregados = 0;
+  this.productosSeleccionados.forEach(item => {
+    const success = this.cartService.addToCart(item.producto, item.cantidad);
+    if (success) {
+      productosAgregados++;
+    }
+  });
+
+  if (productosAgregados > 0) {
+    console.log(`${productosAgregados} productos agregados al carrito`);
+  }
+}
+
+// ✅ NUEVO MÉTODO: Enviar cotización
+enviarCotizacion(): void {
+  if (this.productosSeleccionados.length === 0) {
+    console.warn('No hay productos seleccionados para cotizar');
+    return;
+  }
+
+  console.log('Enviando cotización:', {
+    productos: this.productosSeleccionados,
+    total: this.totalCotizacion
+  });
+  
+  alert(`Cotización generada por S/ ${this.totalCotizacion.toFixed(2)}`);
+}
 }

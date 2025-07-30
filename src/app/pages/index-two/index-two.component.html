@@ -20,11 +20,26 @@
             </a>
           </div>
 
-          <!-- ✅ NUEVO: Título de Categorías -->
-          <div class="px-16 py-12 border-bottom border-neutral-50">
-            <h6 class="mb-0 text-gray-800 fw-semibold">Categorías</h6>
-          </div>
 
+
+       <!-- ✅ TÍTULO: Cambia según el modo -->
+<div class="px-16 py-12 border-bottom border-neutral-50">
+  <div class="d-flex justify-content-between align-items-center">
+ <h6 class="mb-0 text-gray-800 fw-semibold">
+  Categorías
+</h6>
+    <!-- ✅ NUEVO: Botón volver solo en modo armado -->
+    <a
+      *ngIf="modoArmadoPC"
+      (click)="desactivarModoArmadoPC()"
+      class="text-gray-600 fw-semibold text-decoration-underline hover-text-gray-800 d-inline-flex align-items-center gap-8 text-sm"
+      style="cursor: pointer;"
+    >
+      <i class="ph ph-arrow-left text-xs"></i>
+      Volver
+    </a>
+  </div>
+</div>
           <ul class="responsive-dropdown__list scroll-sm p-0 overflow-y-auto">
             <!-- ✅ NUEVO: Mensaje de carga para categorías -->
             <li *ngIf="categoriesLoading" class="px-16 py-8">
@@ -44,19 +59,29 @@
               *ngFor="let category of categories"
               class="has-submenus-submenu border-bottom border-neutral-50"
             >
-              <a
-                href="javascript:void(0)"
-                (mouseenter)="cargarMarcasPorCategoria(category.id)"
-                (click)="seleccionarCategoria(category.id)"
-                class="text-gray-500 text-15 py-14 px-16 flex-align gap-8 rounded-0 fw-semibold text-sm"
-              >
-                <span>{{ category.name }}</span>
-                <span class="icon text-md d-flex ms-auto">
-                  <i class="ph ph-caret-right"></i>
-                </span>
-              </a>
+            <a
+  href="javascript:void(0)"
+  (mouseenter)="!modoArmadoPC && cargarMarcasPorCategoria(category.id)"
+  (click)="modoArmadoPC ? seleccionarCategoriaArmado(category.id) : seleccionarCategoria(category.id)"
+  class="text-gray-500 text-15 py-14 px-16 flex-align gap-8 rounded-0 fw-semibold text-sm"
+  [ngClass]="{
+    'bg-main-50 text-main-600': modoArmadoPC && categoriaArmadoSeleccionada === category.id
+  }"
+>
+  <span>{{ category.name }}</span>
+  <span *ngIf="!modoArmadoPC" class="icon text-md d-flex ms-auto">
+    <i class="ph ph-caret-right"></i>
+  </span>
+  <!-- ✅ NUEVO: Indicador de productos seleccionados en modo armado -->
+  <span 
+    *ngIf="modoArmadoPC && getProductosSeleccionadosPorCategoria(category.id) > 0"
+    class="badge bg-main-600 text-white ms-auto"
+  >
+    {{ getProductosSeleccionadosPorCategoria(category.id) }}
+  </span>
+</a>
 
-              <div class="submenus-submenu py-16">
+          <div *ngIf="!modoArmadoPC" class="submenus-submenu py-16">
                 <div
                   class="d-flex align-items-center justify-content-between px-16"
                 >
@@ -113,223 +138,378 @@
         </div>
       </div>
       <!-- ✅ NUEVO: Contenedor principal para los productos -->
-      <div class="flex-grow-1 ms-20">
-        <!-- Top Start (similar a shop.component.html) -->
-        <div class="flex-between gap-16 flex-wrap mb-40">
-          <span class="text-gray-900">
-            Mostrando {{ productos.length }} de {{ totalProductos }} resultados
-          </span>
-          <div class="position-relative flex-align gap-16 flex-wrap">
-            <!-- List/Grid Toggle (opcional, puedes quitarlo si solo quieres grid) -->
-            <div class="list-grid-btns flex-align gap-16">
-              <button
-                type="button"
-                class="w-44 h-44 flex-center border rounded-6 text-2xl grid-btn"
-                [ngClass]="{
-                  'border-gray-100 text-gray-700': listview !== 'grid',
-                  'border-main-600 text-white bg-main-600': listview === 'grid'
-                }"
-                (click)="listview = 'grid'"
+    <!-- ✅ CONTENEDOR PRINCIPAL: Cambia según el modo -->
+<div class="flex-grow-1 ms-20">
+  
+  <!-- ✅ MODO NORMAL: Vista de productos existente -->
+  <div *ngIf="!modoArmadoPC">
+    <!-- Top Start (similar a shop.component.html) -->
+    <div class="flex-between gap-16 flex-wrap mb-40">
+      <span class="text-gray-900">
+        Mostrando {{ productos.length }} de {{ totalProductos }} resultados
+      </span>
+      <div class="position-relative flex-align gap-16 flex-wrap">
+        <!-- List/Grid Toggle (opcional, puedes quitarlo si solo quieres grid) -->
+        <div class="list-grid-btns flex-align gap-16">
+          <button
+            type="button"
+            class="w-44 h-44 flex-center border rounded-6 text-2xl grid-btn"
+            [ngClass]="{
+              'border-gray-100 text-gray-700': listview !== 'grid',
+              'border-main-600 text-white bg-main-600': listview === 'grid'
+            }"
+            (click)="listview = 'grid'"
+          >
+            <i class="ph ph-squares-four"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenedor de productos -->
+    <div
+      class="list-grid-wrapper"
+      [ngClass]="{
+        'list-view': listview === 'list',
+        'grid-view': listview === 'grid'
+      }"
+    >
+      <!-- Loading -->
+      <div *ngIf="productosLoading" class="text-center py-5 w-100">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+
+      <!-- Mensaje si no hay productos -->
+      <div
+        *ngIf="!productosLoading && productos.length === 0"
+        class="text-center py-5 w-100"
+      >
+        <h5>No se encontraron productos</h5>
+        <p class="text-muted">Intenta con otra categoría o marca</p>
+      </div>
+
+      <!-- Contenedor de productos SOLO cuando hay productos -->
+      <div
+        *ngIf="!productosLoading && productos.length > 0"
+        class="row g-4"
+      >
+        <div
+          *ngFor="let producto of productos"
+          class="col-xl-3 col-lg-4 col-md-6"
+        >
+          <div
+            class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2"
+          >
+            <a
+              [routerLink]="['/product-details', producto.id]"
+              class="product-card__thumb d-block rounded-8 bg-gray-50 position-relative overflow-hidden"
+              style="height: 200px"
+            >
+              <img
+                [src]="producto.imagen_principal"
+                [alt]="producto.nombre"
+                (error)="onImageError($event)"
+                loading="lazy"
+                class="w-100 h-100 transition-2"
+                style="object-fit: contain; object-position: center"
+              />
+
+              <span
+                *ngIf="producto.is_on_sale"
+                class="product-card__badge bg-danger-600 px-8 py-4 text-sm text-white position-absolute inset-inline-start-0 inset-block-start-0"
               >
-                <i class="ph ph-squares-four"></i>
+                Sale {{ producto.discount_percentage }}%
+              </span>
+            </a>
+
+            <div class="product-card__content mt-16">
+              <h6 class="title text-lg fw-semibold mt-12 mb-8">
+                <a
+                  [routerLink]="['/product-details', producto.id]"
+                  class="link text-line-2"
+                >
+                  {{ producto.nombre }}
+                </a>
+              </h6>
+
+              <div class="mt-8">
+                <span class="text-gray-900 text-xs fw-medium mt-8">
+                  Vendidos: {{ producto.sold_count }}/{{
+                    producto.total_stock
+                  }}
+                </span>
+              </div>
+
+              <div class="product-card__price my-20">
+                <span
+                  *ngIf="producto.precio_oferta"
+                  class="text-gray-400 text-md fw-semibold text-decoration-line-through"
+                >
+                  S/ {{ producto.precio }}
+                </span>
+                <span class="text-heading text-md fw-semibold">
+                  S/ {{ producto.precio_oferta || producto.precio }}
+                  <span class="text-gray-500 fw-normal">/Qty</span>
+                </span>
+              </div>
+
+              <button
+                (click)="addToCart(producto)"
+                [disabled]="producto.stock <= 0"
+                class="btn btn-main text-white py-11 px-24 rounded-8 flex-center gap-8 fw-medium"
+                [ngClass]="{
+                  'btn-main': producto.stock > 0,
+                  'btn-secondary': producto.stock <= 0
+                }"
+              >
+                <span *ngIf="producto.stock > 0">
+                  <i class="ph ph-shopping-cart me-8"></i>
+                  Agregar al carrito
+                </span>
+                <span *ngIf="producto.stock <= 0">
+                  <i class="ph ph-x-circle me-8"></i>
+                  Sin stock
+                </span>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Contenedor de productos -->
-        <div
-          class="list-grid-wrapper"
-          [ngClass]="{
-            'list-view': listview === 'list',
-            'grid-view': listview === 'grid'
-          }"
-        >
-          <!-- Loading -->
-          <div *ngIf="productosLoading" class="text-center py-5 w-100">
-            <div class="spinner-border" role="status">
-              <span class="visually-hidden">Cargando...</span>
+        <!-- Paginación -->
+        <ul class="pagination flex-center flex-wrap gap-16 mt-40">
+          <li class="page-item">
+            <a
+              class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
+              href="javascript:void(0)"
+              (click)="onPageChange(currentPage - 1)"
+              [class.disabled]="currentPage === 1"
+            >
+              <i class="ph-bold ph-arrow-left"></i>
+            </a>
+          </li>
+
+          <li
+            *ngFor="let page of getPages()"
+            class="page-item"
+            [class.active]="page === currentPage"
+          >
+            <a
+              class="page-link h-64 w-64 flex-center text-md rounded-8 fw-medium text-neutral-600 border border-gray-100"
+              href="javascript:void(0)"
+              (click)="onPageChange(page)"
+            >
+              {{ page < 10 ? "0" + page : page }}
+            </a>
+          </li>
+
+          <li class="page-item">
+            <a
+              class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
+              href="javascript:void(0)"
+              (click)="onPageChange(currentPage + 1)"
+              [class.disabled]="currentPage === totalPages"
+            >
+              <i class="ph-bold ph-arrow-right"></i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ NUEVO: MODO ARMADO DE PC -->
+  <div *ngIf="modoArmadoPC" class="armado-pc-container">
+    <!-- Header del modo armado -->
+    <div class="text-center mb-40">
+      <h2 class="text-3xl fw-bold text-gray-900 mb-8">Arma y cotiza tu propia computadora</h2>
+      <p class="text-gray-600">Si necesitas asesoría, solo dínoslo.</p>
+    </div>
+
+    <div class="row">
+      <!-- Columna de productos (lado izquierdo) -->
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0 fw-semibold">Productos</h5>
             </div>
           </div>
 
-          <!-- Mensaje si no hay productos -->
-          <div
-            *ngIf="!productosLoading && productos.length === 0"
-            class="text-center py-5 w-100"
-          >
-            <h5>No se encontraron productos</h5>
-            <p class="text-muted">Intenta con otra categoría o marca</p>
-          </div>
+          <div class="card-body p-0">
+            <!-- Mensaje para seleccionar categoría -->
+            <div *ngIf="!categoriaArmadoSeleccionada" class="text-center py-5">
+              <i class="ph ph-desktop text-6xl text-gray-300 mb-3"></i>
+              <h5 class="text-gray-500">Selecciona una categoría</h5>
+              <p class="text-gray-400">Elige una categoría del menú izquierdo para ver los productos disponibles</p>
+            </div>
 
-          <!-- Contenedor de productos SOLO cuando hay productos -->
-          <div
-            *ngIf="!productosLoading && productos.length > 0"
-            class="row g-4"
-          >
-            <div
-              *ngFor="let producto of productos"
-              class="col-xl-3 col-lg-4 col-md-6"
-            >
-              <div
-                class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2"
-              >
-                <a
-                  [routerLink]="['/product-details', producto.id]"
-                  class="product-card__thumb d-block rounded-8 bg-gray-50 position-relative overflow-hidden"
-                  style="height: 200px"
-                >
-                  <img
-                    [src]="producto.imagen_principal"
-                    [alt]="producto.nombre"
-                    (error)="onImageError($event)"
-                    loading="lazy"
-                    class="w-100 h-100 transition-2"
-                    style="object-fit: contain; object-position: center"
-                  />
+            <!-- Loading productos armado -->
+            <div *ngIf="productosArmadoLoading" class="text-center py-5">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando productos...</span>
+              </div>
+            </div>
 
-                  <span
-                    *ngIf="producto.is_on_sale"
-                    class="product-card__badge bg-danger-600 px-8 py-4 text-sm text-white position-absolute inset-inline-start-0 inset-block-start-0"
-                  >
-                    Sale {{ producto.discount_percentage }}%
-                  </span>
-                </a>
+            <!-- Lista de productos para armado -->
+            <div *ngIf="categoriaArmadoSeleccionada && !productosArmadoLoading && productosArmado.length > 0" class="p-3">
+              <div class="row g-3">
+                <div *ngFor="let producto of productosArmado" class="col-md-6">
+                  <div class="card border h-100" [ngClass]="{ 'border-main-600 bg-main-50': isProductoSeleccionado(producto) }">
+                    <div class="card-body p-3">
+                      <div class="d-flex align-items-start gap-3">
+                        <!-- Checkbox -->
+                        <div class="form-check mt-1">
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            [id]="'producto-' + producto.id"
+                            [checked]="isProductoSeleccionado(producto)"
+                            (change)="toggleProductoArmado(producto, $event)"
+                          />
+                        </div>
 
-                <div class="product-card__content mt-16">
-                  <h6 class="title text-lg fw-semibold mt-12 mb-8">
-                    <a
-                      [routerLink]="['/product-details', producto.id]"
-                      class="link text-line-2"
-                    >
-                      {{ producto.nombre }}
-                    </a>
-                  </h6>
+                        <!-- Imagen del producto -->
+                        <div class="flex-shrink-0">
+                          <img
+                            [src]="producto.imagen_principal"
+                            [alt]="producto.nombre"
+                            (error)="onImageError($event)"
+                            class="rounded"
+                            style="width: 60px; height: 60px; object-fit: contain;"
+                          />
+                        </div>
 
-                  <!-- <div class="flex-align mb-20 mt-16 gap-6">
-                    <span class="text-xs fw-medium text-gray-500">{{
-                      producto.rating
-                    }}</span>
-                    <span class="text-xs fw-medium text-warning-600 d-flex">
-                      <i class="ph-fill ph-star"></i>
-                    </span>
-                    <span class="text-xs fw-medium text-gray-500"
-                      >({{ producto.total_reviews }})</span
-                    >
-                  </div> -->
-
-                  <div class="mt-8">
-                    <!-- <div
-                      class="progress w-100 bg-color-three rounded-pill h-4"
-                      role="progressbar"
-                      [attr.aria-valuenow]="
-                        (producto.sold_count / producto.total_stock) * 100
-                      "
-                      aria-valuemin="0"
-                      aria-valuemax="100"
-                    >
-                      <div
-                        class="progress-bar bg-main-two-600 rounded-pill"
-                        [style.width.%]="
-                          (producto.sold_count / producto.total_stock) * 100
-                        "
-                      ></div>
-                    </div> -->
-                    <span class="text-gray-900 text-xs fw-medium mt-8">
-                      Vendidos: {{ producto.sold_count }}/{{
-                        producto.total_stock
-                      }}
-                    </span>
+                        <!-- Información del producto -->
+                        <div class="flex-grow-1">
+                          <h6 class="fw-semibold mb-1 text-sm">{{ producto.nombre }}</h6>
+                          <p class="text-xs text-gray-600 mb-2 line-clamp-2">{{ producto.descripcion }}</p>
+                          
+                          <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                              <span *ngIf="producto.precio_oferta" class="text-decoration-line-through text-gray-400 text-xs me-2">
+                                S/ {{ producto.precio }}
+                              </span>
+                              <span class="fw-bold text-main-600">
+                                S/ {{ producto.precio_oferta || producto.precio }}
+                              </span>
+                            </div>
+                            <small class="text-gray-500">Stock: {{ producto.stock }}</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-
-                  <div class="product-card__price my-20">
-                    <span
-                      *ngIf="producto.precio_oferta"
-                      class="text-gray-400 text-md fw-semibold text-decoration-line-through"
-                    >
-                      S/ {{ producto.precio }}
-                    </span>
-                    <span class="text-heading text-md fw-semibold">
-                      S/ {{ producto.precio_oferta || producto.precio }}
-                      <span class="text-gray-500 fw-normal">/Qty</span>
-                    </span>
-                  </div>
-
-                  <!-- Botón de carrito que aparece solo en hover -->
-                  <!-- <div class="product-card__overlay position-absolute w-100 h-100 top-0 start-0 d-flex align-items-end justify-content-center pb-2 opacity-0 transition-2"> -->
-                  <button
-                    (click)="addToCart(producto)"
-                    [disabled]="producto.stock <= 0"
-                    class="btn btn-main text-white py-11 px-24 rounded-8 flex-center gap-8 fw-medium"
-                    [ngClass]="{
-                      'btn-main': producto.stock > 0,
-                      'btn-secondary': producto.stock <= 0
-                    }"
-                  >
-                    <span *ngIf="producto.stock > 0">
-                      <i class="ph ph-shopping-cart me-8"></i>
-                      Agregar al carrito
-                    </span>
-                    <span *ngIf="producto.stock <= 0">
-                      <i class="ph ph-x-circle me-8"></i>
-                      Sin stock
-                    </span>
-                  </button>
                 </div>
               </div>
-              <!-- </div> -->
             </div>
 
-            <!-- Paginación -->
-            <ul class="pagination flex-center flex-wrap gap-16 mt-40">
-              <li class="page-item">
-                <a
-                  class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
-                  href="javascript:void(0)"
-                  (click)="onPageChange(currentPage - 1)"
-                  [class.disabled]="currentPage === 1"
-                >
-                  <i class="ph-bold ph-arrow-left"></i>
-                </a>
-              </li>
-
-              <li
-                *ngFor="let page of getPages()"
-                class="page-item"
-                [class.active]="page === currentPage"
-              >
-                <a
-                  class="page-link h-64 w-64 flex-center text-md rounded-8 fw-medium text-neutral-600 border border-gray-100"
-                  href="javascript:void(0)"
-                  (click)="onPageChange(page)"
-                >
-                  {{ page < 10 ? "0" + page : page }}
-                </a>
-              </li>
-
-              <li class="page-item">
-                <a
-                  class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
-                  href="javascript:void(0)"
-                  (click)="onPageChange(currentPage + 1)"
-                  [class.disabled]="currentPage === totalPages"
-                >
-                  <i class="ph-bold ph-arrow-right"></i>
-                </a>
-              </li>
-            </ul>
+            <!-- Mensaje si no hay productos -->
+            <div *ngIf="categoriaArmadoSeleccionada && !productosArmadoLoading && productosArmado.length === 0" class="text-center py-5">
+              <i class="ph ph-package text-4xl text-gray-300 mb-3"></i>
+              <h5 class="text-gray-500">No hay productos disponibles</h5>
+              <p class="text-gray-400">Esta categoría no tiene productos disponibles en este momento</p>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div
-          class="banner-item-two-wrapper rounded-24 overflow-hidden position-relative arrow-center flex-grow-1 mb-0 m-20"
-        >
-          <img
-            src="assets/images/bg/banner-two-bg.png"
-            alt=""
-            class="banner-img position-absolute inset-block-start-0 inset-inline-start-0 w-100 h-100 z-n1 object-fit-cover rounded-24"
-          />
+      <!-- Columna de resumen (lado derecho) -->
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+          <div class="card-header bg-white border-bottom">
+            <h5 class="mb-0 fw-semibold">Productos Seleccionados</h5>
+          </div>
+
+          <div class="card-body">
+            <!-- Lista de productos seleccionados -->
+            <div *ngIf="productosSeleccionados.length === 0" class="text-center py-4">
+              <i class="ph ph-shopping-cart text-4xl text-gray-300 mb-2"></i>
+              <p class="text-gray-500 mb-0">No hay productos seleccionados</p>
+            </div>
+
+            <div *ngFor="let item of productosSeleccionados" class="border-bottom pb-3 mb-3">
+              <div class="d-flex align-items-start gap-2">
+                <img
+                  [src]="item.producto.imagen_principal"
+                  [alt]="item.producto.nombre"
+                  (error)="onImageError($event)"
+                  class="rounded"
+                  style="width: 40px; height: 40px; object-fit: contain;"
+                />
+                
+                <div class="flex-grow-1">
+                  <h6 class="fw-semibold mb-1 text-sm">{{ item.producto.nombre }}</h6>
+                  <small class="text-gray-600">{{ item.categoria_nombre }}</small>
+                  
+                  <div class="d-flex justify-content-between align-items-center mt-2">
+                    <div class="d-flex align-items-center gap-2">
+                      <button
+                        class="btn btn-sm btn-outline-secondary p-1"
+                        style="width: 24px; height: 24px;"
+                        (click)="cambiarCantidadProducto(item.producto.id, item.cantidad - 1)"
+                        [disabled]="item.cantidad <= 1"
+                      >
+                        <i class="ph ph-minus text-xs"></i>
+                      </button>
+                      <span class="text-sm fw-medium">{{ item.cantidad }}</span>
+                      <button
+                        class="btn btn-sm btn-outline-secondary p-1"
+                        style="width: 24px; height: 24px;"
+                        (click)="cambiarCantidadProducto(item.producto.id, item.cantidad + 1)"
+                      >
+                        <i class="ph ph-plus text-xs"></i>
+                      </button>
+                    </div>
+                    
+                    <button
+                      class="btn btn-sm btn-outline-danger p-1"
+                      style="width: 24px; height: 24px;"
+                      (click)="removerProductoSeleccionado(item.producto.id)"
+                    >
+                      <i class="ph ph-trash text-xs"></i>
+                    </button>
+                  </div>
+                  
+                  <div class="text-end mt-1">
+                    <span class="fw-bold text-main-600">
+                      S/ {{ ((item.producto.precio_oferta || item.producto.precio) * item.cantidad).toFixed(2) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Total -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0 fw-bold">Total:</h5>
+              <h5 class="mb-0 fw-bold text-main-600">S/ {{ totalCotizacion.toFixed(2) }}</h5>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="d-grid gap-2">
+              <button
+                class="btn btn-main text-white fw-semibold"
+                (click)="enviarCotizacion()"
+                [disabled]="productosSeleccionados.length === 0"
+              >
+                Enviar cotización
+              </button>
+              <button
+                class="btn btn-outline-main fw-semibold"
+                (click)="agregarTodoAlCarrito()"
+                [disabled]="productosSeleccionados.length === 0"
+              >
+                Agregar al carrito
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
     </div>
     <!-- ============================ Banner Section End =============================== -->
   </div>

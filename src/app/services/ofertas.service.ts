@@ -22,6 +22,7 @@ export interface Oferta {
   enlace_url: string;
   mostrar_countdown: boolean;
   es_oferta_principal?: boolean;
+  es_oferta_semana?: boolean;
   productos?: ProductoOferta[];
 }
 
@@ -43,6 +44,11 @@ export interface ProductoOferta {
 
 export interface OfertaPrincipalResponse {
   oferta_principal: Oferta | null;
+  productos: ProductoOferta[];
+  mensaje?: string;
+}
+export interface OfertaSemanaResponse {
+  oferta_semana: Oferta | null;
   productos: ProductoOferta[];
   mensaje?: string;
 }
@@ -89,6 +95,10 @@ export class OfertasService {
   obtenerOfertaPrincipalDelDia(): Observable<OfertaPrincipalResponse> {
     return this.http.get<OfertaPrincipalResponse>(`${this.apiUrl}/ofertas/principal-del-dia`);
   }
+  // ✅ NUEVO MÉTODO: Obtener oferta de la semana
+obtenerOfertaSemanaActiva(): Observable<OfertaSemanaResponse> {
+  return this.http.get<OfertaSemanaResponse>(`${this.apiUrl}/ofertas/semana-activa`);
+}
 
   validarCupon(codigo: string, total: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/cupones/validar`, { codigo, total });
