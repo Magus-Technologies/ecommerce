@@ -35,6 +35,7 @@ import {
   ProductoOferta,
   Cupon,
   OfertaPrincipalResponse,
+  OfertaSemanaResponse
 } from '../../services/ofertas.service';
 import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 import { WhatsappFloatComponent } from '../../components/whatsapp-float/whatsapp-float.component';
@@ -227,6 +228,9 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   ofertaPrincipalDelDia: OfertaPrincipalResponse | null = null;
   isLoadingOfertaPrincipal = false;
 
+  ofertaSemanaActiva: OfertaSemanaResponse | null = null;
+  isLoadingOfertaSemana = false;
+
   cargarBannersPromocionales(): void {
     this.isLoadingPromotionalBanners = true;
     this.bannersService.obtenerBannersPromocionalesPublicos().subscribe({
@@ -273,6 +277,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cargarCategoriasParaFiltro(); // ✅ NUEVA FUNCIÓN
     this.cargarTodosLosProductos(); // ✅ NUEVA FUNCIÓN
     this.cargarProductosDestacados();
+    this.cargarOfertaSemanaActiva();
 
     // NUEVA LÍNEA: Actualizar cupones cada 5 minutos
     if (this.isBrowser) {
@@ -688,6 +693,34 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       },
     });
   }
+  // ✅ NUEVA FUNCIÓN: Cargar oferta de la semana
+  cargarOfertaSemanaActiva(): void {
+    this.isLoadingOfertaSemana = true;
+    this.ofertasService.obtenerOfertaSemanaActiva().subscribe({
+      next: (response) => {
+        if (this.debugMode) {
+          console.log('✅ Oferta de la semana cargada:', response);
+        }
+        this.ofertaSemanaActiva = response;
+        this.isLoadingOfertaSemana = false;
+        this.cdr.detectChanges();
+
+        // ✅ INICIALIZAR COUNTDOWN PARA LA OFERTA DE LA SEMANA
+        if (this.isBrowser && response.oferta_semana?.fecha_fin) {
+          setTimeout(() => {
+            this.inicializarCountdown(
+              'countdown-oferta-semana',
+              response.oferta_semana!.fecha_fin
+            );
+          }, 1000);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar oferta de la semana:', error);
+        this.isLoadingOfertaSemana = false;
+      },
+    });
+  }
 
   cargarCuponesActivos(): void {
     this.isLoadingCupones = true;
@@ -777,6 +810,13 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       this.inicializarCountdown(
         'countdown-oferta-principal',
         this.ofertaPrincipalDelDia.oferta_principal.fecha_fin
+      );
+    }
+    // ✅ COUNTDOWN PARA OFERTA DE LA SEMANA
+    if (this.ofertaSemanaActiva?.oferta_semana?.fecha_fin) {
+      this.inicializarCountdown(
+        'countdown-oferta-semana',
+        this.ofertaSemanaActiva.oferta_semana.fecha_fin
       );
     }
 
@@ -1195,4 +1235,10 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     return this.sanitizer.bypassSecurityTrustUrl(finalUrl);
   }
+  calcularPorcentajeProgreso(producto: any): number {
+  if (!producto?.vendidos_oferta || !producto?.stock_oferta) {
+    return 0;
+  }
+  return (producto.vendidos_oferta / producto.stock_oferta) * 100;
+}
 }

@@ -6,11 +6,23 @@ import { OfertasAdminService, OfertaAdmin } from '../../../../services/ofertas-a
 import { OfertaModalComponent } from '../oferta-modal/oferta-modal.component';
 import { ProductosOfertaComponent } from '../productos-oferta/productos-oferta.component';
 import Swal from 'sweetalert2';
+import {
+  NgxDatatableModule,
+  ColumnMode,
+  SelectionType,
+  SortType,
+} from '@swimlane/ngx-datatable';
 
 @Component({
   selector: 'app-ofertas-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, OfertaModalComponent, ProductosOfertaComponent],
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    OfertaModalComponent, 
+    ProductosOfertaComponent,
+    NgxDatatableModule
+  ],
   template: `
     <div class="container-fluid">
       <!-- Header -->
@@ -47,7 +59,7 @@ import Swal from 'sweetalert2';
 
       <!-- Vista principal de ofertas -->
       <div *ngIf="!mostrarProductos">
-        <!-- Tabla de ofertas -->
+        <!-- Tabla con NGX-Datatable -->
         <div class="card border-0 shadow-sm rounded-12">
           <div class="card-body p-0">
             
@@ -59,162 +71,216 @@ import Swal from 'sweetalert2';
               <p class="text-gray-500 mt-12 mb-0">Cargando ofertas...</p>
             </div>
 
-            <!-- Tabla -->
-            <div *ngIf="!isLoading" class="table-responsive">
-              <table class="table table-hover mb-0">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-24 py-16 text-heading fw-semibold border-0">Oferta</th>
-                    <th class="px-24 py-16 text-heading fw-semibold border-0">Descuento</th>
-                    <th class="px-24 py-16 text-heading fw-semibold border-0">Fechas</th>
-                    <th class="px-24 py-16 text-heading fw-semibold border-0">Productos</th>
-                    <th class="px-24 py-16 text-heading fw-semibold border-0">Configuración</th>
-                    <th class="px-24 py-16 text-heading fw-semibold border-0">Estado</th>
-                    <th class="px-24 py-16 text-heading fw-semibold border-0 text-center">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let oferta of ofertas" class="border-bottom border-gray-100">
-                    <!-- Oferta -->
-                    <td class="px-24 py-16">
-                      <div class="d-flex align-items-center gap-12">
-                        <div class="w-48 h-48 bg-gray-100 rounded-8 flex-center overflow-hidden">
-                          <img *ngIf="oferta.imagen_url" 
-                               [src]="oferta.imagen_url" 
-                               [alt]="oferta.titulo"
-                               class="w-100 h-100 object-fit-cover">
-                          <i *ngIf="!oferta.imagen_url" class="ph ph-tag text-gray-400 text-xl"></i>
-                        </div>
-                        <div>
-                          <div class="d-flex align-items-center gap-8">
-                            <h6 class="text-heading fw-semibold mb-4">{{ oferta.titulo }}</h6>
-                            <!-- ✅ INDICADOR DE OFERTA PRINCIPAL -->
-                            <span *ngIf="oferta.es_oferta_principal" 
-                                  class="badge bg-warning-50 text-warning-600 px-8 py-4 rounded-pill text-xs fw-bold"
-                                  title="Esta es la oferta principal del día">
-                              <i class="ph ph-star me-4"></i>PRINCIPAL
-                            </span>
-                          </div>
-                          <p class="text-gray-500 text-sm mb-0">{{ oferta.subtitulo || 'Sin subtítulo' }}</p>
-                        </div>
-                      </div>
-                    </td>
-
-                    <!-- Descuento -->
-                    <td class="px-24 py-16">
-                      <div class="text-center">
-                        <span class="badge bg-success-50 text-success-600 px-12 py-6 rounded-pill fw-semibold">
-                          {{ oferta.tipo_descuento === 'porcentaje' ? oferta.valor_descuento + '%' : 'S/ ' + oferta.valor_descuento }}
+            <!-- Datatable -->
+            <ngx-datatable
+              *ngIf="!isLoading"
+              class="bootstrap ofertas-table"
+              [columns]="columns"
+              [rows]="ofertas"
+              [columnMode]="ColumnMode.flex"
+              [headerHeight]="50"
+              [footerHeight]="50"
+              [rowHeight]="80"
+              [limit]="10"
+              [scrollbarV]="true"
+              [scrollbarH]="false"
+              [loadingIndicator]="isLoading"
+              [trackByProp]="'id'"
+              [sortType]="SortType.single"
+              [selectionType]="SelectionType.single"
+            >
+              <!-- Columna Oferta -->
+              <ngx-datatable-column
+                name="Oferta"
+                prop="titulo"
+                [flexGrow]="2.5"
+                [sortable]="true"
+              >
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <div class="d-flex align-items-center gap-12">
+                    <div class="oferta-image-container">
+                      <img *ngIf="row.imagen_url" 
+                           [src]="row.imagen_url" 
+                           [alt]="row.titulo"
+                           class="oferta-image">
+                      <i *ngIf="!row.imagen_url" class="ph ph-tag text-gray-400"></i>
+                    </div>
+                    <div class="oferta-info">
+                      <div class="d-flex align-items-center gap-8">
+                        <h6 class="oferta-title" [title]="row.titulo">{{ row.titulo }}</h6>
+                        <span *ngIf="row.es_oferta_principal" 
+                              class="badge bg-warning-50 text-warning-600 principal-badge"
+                              title="Esta es la oferta principal del día">
+                          <i class="ph ph-star me-4"></i>PRINCIPAL
                         </span>
-                        <div class="text-xs text-gray-500 mt-4">
-                          {{ oferta.tipo_descuento === 'porcentaje' ? 'Porcentaje' : 'Cantidad fija' }}
-                        </div>
                       </div>
-                    </td>
+                      <p class="oferta-subtitle">{{ row.subtitulo || 'Sin subtítulo' }}</p>
+                    </div>
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
 
-                    <!-- Fechas -->
-                    <td class="px-24 py-16">
-                      <div class="text-sm">
-                        <div class="text-gray-600">
-                          <strong>Inicio:</strong> {{ formatDate(oferta.fecha_inicio) }}
-                        </div>
-                        <div class="text-gray-600 mt-4">
-                          <strong>Fin:</strong> {{ formatDate(oferta.fecha_fin) }}
-                        </div>
-                        <div class="mt-4">
-                          <span class="badge px-8 py-4 rounded-pill text-xs"
-                                [class]="getEstadoFecha(oferta).class">
-                            {{ getEstadoFecha(oferta).texto }}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
+              <!-- Columna Descuento -->
+              <ngx-datatable-column
+                name="Descuento"
+                prop="valor_descuento"
+                [flexGrow]="1"
+                [sortable]="true"
+              >
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <div class="text-center">
+                    <span class="badge bg-success-50 text-success-600 descuento-badge">
+                      {{ row.tipo_descuento === 'porcentaje' ? row.valor_descuento + '%' : 'S/ ' + row.valor_descuento }}
+                    </span>
+                    <div class="descuento-tipo">
+                      {{ row.tipo_descuento === 'porcentaje' ? 'Porcentaje' : 'Cantidad fija' }}
+                    </div>
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
 
-                    <!-- Productos -->
-                    <td class="px-24 py-16">
-                      <div class="text-center">
-                        <button class="btn bg-info-50 hover-bg-info-100 text-info-600 px-12 py-6 rounded-pill text-sm fw-medium"
-                                (click)="gestionarProductos(oferta)">
-                          <i class="ph ph-package me-6"></i>
-                          Gestionar
-                        </button>
-                        <div class="text-xs text-gray-500 mt-4">
-                          {{ contarProductos(oferta) }} productos
-                        </div>
-                      </div>
-                    </td>
+              <!-- Columna Fechas -->
+              <ngx-datatable-column
+                name="Fechas"
+                prop="fecha_inicio"
+                [flexGrow]="1.5"
+                [sortable]="true"
+              >
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <div class="fechas-info">
+                    <div class="fecha-item">
+                      <strong>Inicio:</strong> {{ formatDate(row.fecha_inicio) }}
+                    </div>
+                    <div class="fecha-item">
+                      <strong>Fin:</strong> {{ formatDate(row.fecha_fin) }}
+                    </div>
+                    <span class="badge fecha-estado-badge"
+                          [class]="getEstadoFecha(row).class">
+                      {{ getEstadoFecha(row).texto }}
+                    </span>
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
 
-                    <!-- Configuración -->
-                    <td class="px-24 py-16">
-                      <div class="d-flex flex-column gap-4">
-                        <span *ngIf="oferta.mostrar_countdown" 
-                              class="badge bg-warning-50 text-warning-600 px-8 py-4 rounded-pill text-xs">
-                          <i class="ph ph-timer me-4"></i>Countdown
-                        </span>
-                        <span *ngIf="oferta.mostrar_en_slider" 
-                              class="badge bg-info-50 text-info-600 px-8 py-4 rounded-pill text-xs">
-                          <i class="ph ph-slides me-4"></i>Slider
-                        </span>
-                        <span *ngIf="oferta.mostrar_en_banner" 
-                              class="badge bg-purple-50 text-purple-600 px-8 py-4 rounded-pill text-xs">
-                          <i class="ph ph-image me-4"></i>Banner
-                        </span>
-                        <div class="text-xs text-gray-500">
-                          <strong>Prioridad:</strong> {{ oferta.prioridad }}
-                        </div>
-                      </div>
-                    </td>
+              <!-- Columna Productos -->
+              <ngx-datatable-column
+                name="Productos"
+                [flexGrow]="1"
+                [sortable]="false"
+              >
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <div class="text-center">
+                    <button class="btn bg-info-50 hover-bg-info-100 text-info-600 productos-btn"
+                            (click)="gestionarProductos(row)">
+                      <i class="ph ph-package me-6"></i>
+                      Gestionar
+                    </button>
+                    <div class="productos-count">
+                      {{ contarProductos(row) }} productos
+                    </div>
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
 
-                    <!-- Estado -->
-                    <td class="px-24 py-16">
-                      <span class="badge px-12 py-6 rounded-pill fw-medium"
-                            [class]="oferta.activo ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600'">
-                        {{ oferta.activo ? 'Activa' : 'Inactiva' }}
+              <!-- Columna Configuración -->
+              <ngx-datatable-column
+                name="Configuración"
+                [flexGrow]="1.2"
+                [sortable]="false"
+              >
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <div class="config-info">
+                    <div class="config-badges">
+                      <span *ngIf="row.mostrar_countdown" 
+                            class="badge bg-warning-50 text-warning-600 config-badge">
+                        <i class="ph ph-timer me-4"></i>Countdown
                       </span>
-                    </td>
+                      <span *ngIf="row.mostrar_en_slider" 
+                            class="badge bg-info-50 text-info-600 config-badge">
+                        <i class="ph ph-slides me-4"></i>Slider
+                      </span>
+                      <span *ngIf="row.mostrar_en_banner" 
+                            class="badge bg-purple-50 text-purple-600 config-badge">
+                        <i class="ph ph-image me-4"></i>Banner
+                      </span>
+                    </div>
+                    <div class="prioridad-info">
+                      <strong>Prioridad:</strong> {{ row.prioridad }}
+                    </div>
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
 
-                    <!-- Acciones -->
-                    <td class="px-24 py-16 text-center">
-                      <div class="d-flex justify-content-center gap-8">
-                        <!-- ✅ BOTÓN PARA MARCAR/DESMARCAR COMO PRINCIPAL -->
-                        <button class="btn w-32 h-32 rounded-6 flex-center transition-2"
-                                [class]="oferta.es_oferta_principal ? 'bg-warning-50 hover-bg-warning-100 text-warning-600' : 'bg-gray-50 hover-bg-gray-100 text-gray-600'"
-                                [title]="oferta.es_oferta_principal ? 'Quitar como oferta principal' : 'Marcar como oferta principal'"
-                                (click)="toggleOfertaPrincipal(oferta)">
-                          <i class="ph ph-star text-sm" [class.ph-fill]="oferta.es_oferta_principal"></i>
-                        </button>
+              <!-- Columna Estado -->
+              <ngx-datatable-column
+                name="Estado"
+                prop="activo"
+                [flexGrow]="0.8"
+                [sortable]="true"
+              >
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <span class="badge estado-badge"
+                        [class]="row.activo ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600'">
+                    {{ row.activo ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </ng-template>
+              </ngx-datatable-column>
 
-                        <!-- Editar -->
-                        <button class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
-                                title="Editar"
-                                (click)="editarOferta(oferta)">
-                          <i class="ph ph-pencil text-sm"></i>
-                        </button>
+              <!-- Columna Acciones -->
+              <ngx-datatable-column
+                name="Acciones"
+                [flexGrow]="1.2"
+                [sortable]="false"
+                [canAutoResize]="false"
+              >
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <div class="action-buttons">
+                    <!-- Toggle Oferta Principal -->
+                    <button class="btn action-btn principal-btn"
+                            [class.principal-active]="row.es_oferta_principal"
+                            [class.principal-inactive]="!row.es_oferta_principal"
+                            [title]="row.es_oferta_principal ? 'Quitar como oferta principal' : 'Marcar como oferta principal'"
+                            (click)="toggleOfertaPrincipal(row)">
+                      <i class="ph ph-star" [class.ph-fill]="row.es_oferta_principal"></i>
+                    </button>
+                    <!-- Toggle Oferta de la Semana -->
+<button class="btn action-btn semana-btn"
+        [class.semana-active]="row.es_oferta_semana"
+        [class.semana-inactive]="!row.es_oferta_semana"
+        [title]="row.es_oferta_semana ? 'Quitar como oferta de la semana' : 'Marcar como oferta de la semana'"
+        (click)="toggleOfertaSemana(row)">
+  <i class="ph ph-calendar-star" [class.ph-fill]="row.es_oferta_semana"></i>
+</button>
 
-                        <!-- Eliminar -->
-                        <button class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
-                                title="Eliminar"
-                                (click)="eliminarOferta(oferta.id!)">
-                          <i class="ph ph-trash text-sm"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                    <!-- Editar -->
+                    <button class="btn action-btn edit-btn"
+                            title="Editar"
+                            (click)="editarOferta(row)">
+                      <i class="ph ph-pencil"></i>
+                    </button>
 
-              <!-- Empty state -->
-              <div *ngIf="ofertas.length === 0" class="text-center py-40">
-                <i class="ph ph-tag text-gray-300 text-6xl mb-16"></i>
-                <h6 class="text-heading fw-semibold mb-8">No hay ofertas</h6>
-                <p class="text-gray-500 mb-16">Aún no has creado ninguna oferta</p>
-                <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#modalCrearOferta">
-                  <i class="ph ph-plus me-8"></i>
-                  Crear primera oferta
-                </button>
-              </div>
+                    <!-- Eliminar -->
+                    <button class="btn action-btn delete-btn"
+                            title="Eliminar"
+                            (click)="eliminarOferta(row.id!)">
+                      <i class="ph ph-trash"></i>
+                    </button>
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+
+            <!-- Empty state -->
+            <div *ngIf="!isLoading && ofertas.length === 0" class="text-center py-40">
+              <i class="ph ph-tag text-gray-300 text-6xl mb-16"></i>
+              <h6 class="text-heading fw-semibold mb-8">No hay ofertas</h6>
+              <p class="text-gray-500 mb-16">Aún no has creado ninguna oferta</p>
+              <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
+                      data-bs-toggle="modal" 
+                      data-bs-target="#modalCrearOferta">
+                <i class="ph ph-plus me-8"></i>
+                Crear primera oferta
+              </button>
             </div>
           </div>
         </div>
@@ -229,13 +295,353 @@ import Swal from 'sweetalert2';
     </div>
   `,
   styles: [`
-    .table td {
-      vertical-align: middle;
-    }
     .vr {
       width: 1px;
       height: 24px;
       background-color: #dee2e6;
+    }
+
+    /* Configuración base del datatable */
+    ::ng-deep .ofertas-table {
+      box-shadow: none !important;
+      border: none !important;
+      font-size: 13px;
+      width: 100% !important;
+    }
+
+    /* Header de la tabla */
+    ::ng-deep .ofertas-table .datatable-header {
+      background-color: #f8f9fa !important;
+      border-bottom: 1px solid #dee2e6 !important;
+      height: 50px !important;
+    }
+
+    ::ng-deep .ofertas-table .datatable-header-cell {
+      font-weight: 600 !important;
+      color: #495057 !important;
+      font-size: 12px !important;
+      padding: 12px 8px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      border-right: 1px solid #e9ecef !important;
+    }
+
+    ::ng-deep .ofertas-table .datatable-header-cell:last-child {
+      border-right: none !important;
+    }
+
+    /* Celdas del cuerpo */
+    ::ng-deep .ofertas-table .datatable-body-cell {
+      padding: 8px !important;
+      border-bottom: 1px solid #f1f3f4 !important;
+      border-right: 1px solid #f8f9fa !important;
+      font-size: 13px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      height: 80px !important;
+      vertical-align: middle !important;
+    }
+
+    ::ng-deep .ofertas-table .datatable-body-cell:last-child {
+      border-right: none !important;
+    }
+
+    /* Filas alternadas */
+    ::ng-deep .ofertas-table .datatable-row-even {
+      background-color: #ffffff !important;
+    }
+
+    ::ng-deep .ofertas-table .datatable-row-odd {
+      background-color: #fafbfc !important;
+    }
+
+    /* Hover en filas */
+    ::ng-deep .ofertas-table .datatable-body-row:hover {
+      background-color: #f5f5f5 !important;
+    }
+
+    /* Estilos específicos para ofertas */
+    .oferta-image-container {
+      width: 48px;
+      height: 48px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .oferta-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .oferta-info {
+      text-align: left;
+      width: 100%;
+      padding-left: 8px;
+    }
+
+    .oferta-title {
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      margin-bottom: 2px !important;
+      color: #212529 !important;
+      line-height: 1.3 !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+    .oferta-subtitle {
+      font-size: 11px !important;
+      color: #6c757d !important;
+      margin-bottom: 0 !important;
+    }
+
+    .principal-badge {
+      font-size: 9px !important;
+      padding: 2px 6px !important;
+      border-radius: 10px !important;
+      font-weight: 600 !important;
+      white-space: nowrap;
+    }
+
+    .descuento-badge {
+      font-size: 12px !important;
+      padding: 6px 10px !important;
+      border-radius: 12px !important;
+      font-weight: 600 !important;
+      white-space: nowrap;
+    }
+
+    .descuento-tipo {
+      font-size: 10px !important;
+      color: #6c757d !important;
+      margin-top: 4px;
+    }
+
+    .fechas-info {
+      text-align: left;
+      width: 100%;
+    }
+
+    .fecha-item {
+      font-size: 11px !important;
+      color: #6c757d !important;
+      margin-bottom: 2px;
+    }
+
+    .fecha-estado-badge {
+      font-size: 9px !important;
+      padding: 2px 6px !important;
+      border-radius: 10px !important;
+      font-weight: 500 !important;
+      margin-top: 4px;
+    }
+
+    .productos-btn {
+      font-size: 11px !important;
+      padding: 4px 8px !important;
+      border-radius: 12px !important;
+      font-weight: 500 !important;
+      border: none !important;
+    }
+
+    .productos-count {
+      font-size: 10px !important;
+      color: #6c757d !important;
+      margin-top: 4px;
+    }
+
+    .config-info {
+      text-align: left;
+      width: 100%;
+    }
+
+    .config-badges {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 4px;
+    }
+
+    .config-badge {
+      font-size: 9px !important;
+      padding: 2px 6px !important;
+      border-radius: 10px !important;
+      font-weight: 500 !important;
+      white-space: nowrap;
+      align-self: flex-start;
+    }
+
+    .prioridad-info {
+      font-size: 10px !important;
+      color: #6c757d !important;
+    }
+
+    .estado-badge {
+      font-size: 10px !important;
+      padding: 4px 8px !important;
+      border-radius: 12px !important;
+      font-weight: 500 !important;
+    }
+
+    .action-buttons {
+      display: flex !important;
+      gap: 4px !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-wrap: nowrap !important;
+    }
+
+    .action-btn {
+      width: 24px !important;
+      height: 24px !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 4px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transition: all 0.2s ease !important;
+      font-size: 10px !important;
+      min-width: 24px !important;
+    }
+
+    .principal-btn.principal-active {
+      background-color: #fff3cd !important;
+      color: #856404 !important;
+    }
+
+    .principal-btn.principal-inactive {
+      background-color: #f8f9fa !important;
+      color: #6c757d !important;
+    }
+
+    .edit-btn {
+      background-color: #cfe2ff !important;
+      color: #084298 !important;
+    }
+
+    .delete-btn {
+      background-color: #f8d7da !important;
+      color: #842029 !important;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .principal-btn.principal-active:hover {
+      background-color: #ffecb5 !important;
+      color: #664d03 !important;
+    }
+
+    .principal-btn.principal-inactive:hover {
+      background-color: #e9ecef !important;
+      color: #495057 !important;
+    }
+
+    /* Estilos para el botón de oferta de la semana */
+    .semana-btn.semana-active {
+      background-color: #f8d7da !important;
+      color: #842029 !important;
+    }
+
+    .semana-btn.semana-inactive {
+      background-color: #f8f9fa !important;
+      color: #6c757d !important;
+    }
+
+    .semana-btn:hover {
+      transform: translateY(-1px) !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .semana-btn.semana-active:hover {
+      background-color: #f1aeb5 !important;
+      color: #721c24 !important;
+    }
+
+    .semana-btn.semana-inactive:hover {
+      background-color: #e9ecef !important;
+      color: #495057 !important;
+    }
+
+    /* Footer */
+    ::ng-deep .ofertas-table .datatable-footer {
+      background-color: #f8f9fa !important;
+      border-top: 1px solid #dee2e6 !important;
+      padding: 8px 16px !important;
+      font-size: 12px !important;
+      height: 50px !important;
+    }
+
+    ::ng-deep .ofertas-table .datatable-pager {
+      margin: 0 !important;
+    }
+
+    ::ng-deep .ofertas-table .datatable-pager .pager .pages .page {
+      padding: 4px 8px !important;
+      margin: 0 1px !important;
+      border-radius: 4px !important;
+      font-size: 11px !important;
+    }
+
+    ::ng-deep .ofertas-table .datatable-pager .pager .pages .page.active {
+      background-color: #0d6efd !important;
+      color: white !important;
+    }
+
+    /* Eliminar espacios innecesarios */
+    ::ng-deep .ofertas-table .datatable-body {
+      width: 100% !important;
+    }
+
+    ::ng-deep .ofertas-table .datatable-row-wrapper {
+      width: 100% !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      ::ng-deep .ofertas-table .datatable-header-cell,
+      ::ng-deep .ofertas-table .datatable-body-cell {
+        font-size: 11px !important;
+        padding: 6px 4px !important;
+      }
+      
+      .oferta-title {
+        font-size: 12px !important;
+        max-width: 120px;
+      }
+      
+      .action-btn {
+        width: 20px !important;
+        height: 20px !important;
+      }
+
+      .action-buttons {
+        gap: 2px !important;
+      }
+
+      .config-badges {
+        gap: 1px;
+      }
+
+      .config-badge {
+        font-size: 8px !important;
+        padding: 1px 4px !important;
+      }
     }
   `]
 })
@@ -245,9 +651,24 @@ export class OfertasListComponent implements OnInit {
   isLoading = true;
   ofertaParaEditar: OfertaAdmin | null = null;
   
-  // ✅ NUEVAS PROPIEDADES PARA GESTIÓN DE PRODUCTOS
+  // Propiedades para gestión de productos
   mostrarProductos = false;
   ofertaSeleccionada: OfertaAdmin | null = null;
+
+  // Configuración para NGX-Datatable
+  columns = [
+    { name: 'Oferta', prop: 'titulo', flexGrow: 2.5 },
+    { name: 'Descuento', prop: 'valor_descuento', flexGrow: 1 },
+    { name: 'Fechas', prop: 'fecha_inicio', flexGrow: 1.5 },
+    { name: 'Productos', prop: 'productos', flexGrow: 1 },
+    { name: 'Configuración', prop: 'configuracion', flexGrow: 1.2 },
+    { name: 'Estado', prop: 'activo', flexGrow: 0.8 },
+    { name: 'Acciones', prop: 'acciones', flexGrow: 1.2 }
+  ];
+
+  ColumnMode = ColumnMode;
+  SelectionType = SelectionType;
+  SortType = SortType;
 
   constructor(
     private ofertasAdminService: OfertasAdminService
@@ -261,7 +682,7 @@ export class OfertasListComponent implements OnInit {
     this.isLoading = true;
     this.ofertasAdminService.obtenerOfertas().subscribe({
       next: (ofertas) => {
-        // ✅ ORDENAR POR PRIORIDAD DESCENDENTE (mayor prioridad primero)
+        // Ordenar por prioridad descendente (mayor prioridad primero)
         this.ofertas = ofertas.sort((a, b) => b.prioridad - a.prioridad);
         this.isLoading = false;
       },
@@ -281,7 +702,6 @@ export class OfertasListComponent implements OnInit {
     }
   }
 
-  // ✅ NUEVA FUNCIÓN: Toggle oferta principal
   toggleOfertaPrincipal(oferta: OfertaAdmin): void {
     const accion = oferta.es_oferta_principal ? 'quitar' : 'marcar';
     const mensaje = oferta.es_oferta_principal 
@@ -300,7 +720,12 @@ export class OfertasListComponent implements OnInit {
       confirmButtonColor: oferta.es_oferta_principal ? '#dc3545' : '#28a745',
       cancelButtonColor: '#6c757d',
       confirmButtonText: oferta.es_oferta_principal ? 'Sí, quitar' : 'Sí, marcar como principal',
-      cancelButtonText: 'Cancelar'
+      cancelButtonText: 'Cancelar',
+      customClass: {
+        popup: 'rounded-12',
+        confirmButton: 'rounded-8',
+        cancelButton: 'rounded-8',
+      },
     }).then((result) => {
       if (result.isConfirmed) {
         this.ofertasAdminService.toggleOfertaPrincipal(oferta.id!).subscribe({
@@ -310,32 +735,96 @@ export class OfertasListComponent implements OnInit {
               text: response.message,
               icon: 'success',
               timer: 2000,
-              showConfirmButton: false
+              showConfirmButton: false,
+              customClass: {
+                popup: 'rounded-12',
+              },
             });
             this.cargarOfertas(); // Recargar para actualizar el estado
           },
           error: (error) => {
-            Swal.fire('Error', 'No se pudo actualizar la oferta principal.', 'error');
+            Swal.fire({
+              title: 'Error',
+              text: 'No se pudo actualizar la oferta principal.',
+              icon: 'error',
+              customClass: {
+                popup: 'rounded-12',
+                confirmButton: 'rounded-8',
+              },
+            });
             console.error('Error al toggle oferta principal:', error);
           }
         });
       }
     });
   }
+  toggleOfertaSemana(oferta: OfertaAdmin): void {
+  const accion = oferta.es_oferta_semana ? 'quitar' : 'marcar';
+  const mensaje = oferta.es_oferta_semana 
+    ? '¿Quitar como oferta de la semana?' 
+    : '¿Marcar como oferta de la semana?';
+  
+  const textoConfirmacion = oferta.es_oferta_semana
+    ? 'Esta oferta ya no será la oferta de la semana'
+    : 'Esta oferta se mostrará en la sección "Ofertas de la semana" y cualquier otra oferta de la semana será desmarcada automáticamente';
 
-  // ✅ NUEVA FUNCIÓN: Gestionar productos de una oferta
+  Swal.fire({
+    title: mensaje,
+    text: textoConfirmacion,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: oferta.es_oferta_semana ? '#dc3545' : '#28a745',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: oferta.es_oferta_semana ? 'Sí, quitar' : 'Sí, marcar como oferta de la semana',
+    cancelButtonText: 'Cancelar',
+    customClass: {
+      popup: 'rounded-12',
+      confirmButton: 'rounded-8',
+      cancelButton: 'rounded-8',
+    },
+  }).then((result) => {
+    if (result.isConfirmed) {
+      this.ofertasAdminService.toggleOfertaSemana(oferta.id!).subscribe({
+        next: (response) => {
+          Swal.fire({
+            title: '¡Actualizado!',
+            text: response.message,
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            customClass: {
+              popup: 'rounded-12',
+            },
+          });
+          this.cargarOfertas(); // Recargar para actualizar el estado
+        },
+        error: (error) => {
+          Swal.fire({
+            title: 'Error',
+            text: 'No se pudo actualizar la oferta de la semana.',
+            icon: 'error',
+            customClass: {
+              popup: 'rounded-12',
+              confirmButton: 'rounded-8',
+            },
+          });
+          console.error('Error al toggle oferta de la semana:', error);
+        }
+      });
+    }
+  });
+}
+
   gestionarProductos(oferta: OfertaAdmin): void {
     this.ofertaSeleccionada = oferta;
     this.mostrarProductos = true;
   }
 
-  // ✅ NUEVA FUNCIÓN: Volver a la vista de ofertas
   volverAOfertas(): void {
     this.mostrarProductos = false;
     this.ofertaSeleccionada = null;
   }
 
-  // ✅ NUEVA FUNCIÓN: Contar productos en una oferta
   contarProductos(oferta: OfertaAdmin): number {
     return (oferta as any).productos?.length || 0;
   }
@@ -349,16 +838,37 @@ export class OfertasListComponent implements OnInit {
       confirmButtonColor: '#dc3545',
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
+      cancelButtonText: 'Cancelar',
+      customClass: {
+        popup: 'rounded-12',
+        confirmButton: 'rounded-8',
+        cancelButton: 'rounded-8',
+      },
     }).then((result) => {
       if (result.isConfirmed) {
         this.ofertasAdminService.eliminarOferta(id).subscribe({
           next: () => {
-            Swal.fire('¡Eliminada!', 'La oferta ha sido eliminada.', 'success');
+            Swal.fire({
+              title: '¡Eliminada!',
+              text: 'La oferta ha sido eliminada.',
+              icon: 'success',
+              customClass: {
+                popup: 'rounded-12',
+                confirmButton: 'rounded-8',
+              },
+            });
             this.cargarOfertas();
           },
           error: (error) => {
-            Swal.fire('Error', 'No se pudo eliminar la oferta.', 'error');
+            Swal.fire({
+              title: 'Error',
+              text: 'No se pudo eliminar la oferta.',
+              icon: 'error',
+              customClass: {
+                popup: 'rounded-12',
+                confirmButton: 'rounded-8',
+              },
+            });
             console.error('Error al eliminar oferta:', error);
           }
         });

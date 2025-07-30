@@ -527,7 +527,9 @@
       <div class="flex-align menu-category-wrapper position-relative">
         <!-- Category Dropdown Start -->
         <div class="position-relative category-dropdown-wrapper">
+          <!-- Botón Explorar categorías (solo cuando NO esté en index-two) -->
           <button
+            *ngIf="!isIndexTwoPage"
             type="button"
             (click)="toggleCategoryDropdown()"
             class="category-button d-flex align-items-center gap-12 text-white bg-success-600 px-20 py-16 rounded-6 hover-bg-success-700 transition-2"
@@ -540,6 +542,19 @@
               ><i class="ph-bold ph-caret-down"></i
             ></span>
           </button>
+
+       <!-- ✅ NUEVO: Enlace "Arma tu PC" (solo cuando esté en index-two) -->
+<a
+  *ngIf="isIndexTwoPage"
+  (click)="activarModoArmadoPC()"
+  class="text-main-600 hover-text-main-700 text-decoration-none fw-semibold d-flex align-items-center gap-8"
+  style="cursor: pointer"
+>
+  <span class="text-lg line-height-1"
+    ><i class="ph ph-desktop"></i
+  ></span>
+  <span>Arma tu PC</span>
+</a>
 
           <!-- Dropdown -->
           <div
@@ -697,8 +712,7 @@
                 </li>
               </ul>
             </li>
-         
-          
+
             <li
               class="on-hover-item nav-menu__item has-submenu"
               [class.activePage]="isParentActive(['/blog', '/blog-details'])"
@@ -763,7 +777,7 @@
             >
             <span
               class="d-block fw-bold text-danger-10 hover-text-decoration-underline"
-              >{{ empresaInfo?.telefono || '+ 999 999 999' }}</span
+              >{{ empresaInfo?.telefono || "+ 999 999 999" }}</span
             >
           </span>
         </a>
