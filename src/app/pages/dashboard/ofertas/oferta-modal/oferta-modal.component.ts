@@ -338,6 +338,21 @@ import Swal from 'sweetalert2';
                             Esta oferta se mostrará en la sección especial "Ofertas del día" del home.
                           </small>
                         </div>
+                        <div class="form-check">
+  <input class="form-check-input" 
+         type="checkbox" 
+         [(ngModel)]="formData.es_oferta_semana"
+         name="es_oferta_semana"
+         id="es_oferta_semana">
+  <label class="form-check-label text-heading fw-medium" for="es_oferta_semana">
+    <i class="ph ph-calendar-star text-purple-600 me-4"></i>
+    Oferta de la semana
+  </label>
+  <small class="text-gray-500 d-block">
+    <strong>¡IMPORTANTE!</strong> Solo una oferta puede ser de la semana a la vez. 
+    Esta oferta se mostrará en la sección "Ofertas de la semana" del home.
+  </small>
+</div>
 
                         <div class="form-check">
                           <input class="form-check-input" 
@@ -500,6 +515,7 @@ export class OfertaModalComponent implements OnInit, OnChanges {
       mostrar_en_slider: false,
       mostrar_en_banner: false,
       es_oferta_principal: false, // ✅ NUEVO CAMPO
+      es_oferta_semana: false,
       prioridad: 0
     };
   }

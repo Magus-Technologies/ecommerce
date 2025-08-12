@@ -1,7 +1,7 @@
 // src\app\layouts\main-layouts\header\header.component.ts
 import { Component, ElementRef, Inject, OnInit, ViewChild,  PLATFORM_ID, HostListener,AfterViewInit, OnDestroy  } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Select2, Select2Data } from 'ng-select2-component';
@@ -10,8 +10,8 @@ import { CategoriasPublicasService, CategoriaPublica } from '../../../services/c
 import { ProductosService, ProductoSugerencia } from '../../../services/productos.service';
 import { CartService } from '../../../services/cart.service';
 import { EmpresaInfoService } from '../../../services/empresa-info.service';
-import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
-
+import { Subject, takeUntil, debounceTime, distinctUntilChanged, filter } from 'rxjs';
+import { IndexTwoService } from '../../../services/index-two.service';
 @Component({
   selector: 'app-header',
   standalone: true,
@@ -86,6 +86,7 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   selectedCategory: string = '';
   searchTerm: string = '';
   isHomePageActive: boolean = false;
+  isIndexTwoPage: boolean = false;
   categoryDropdownVisible = false;
   isActive = false;
 
@@ -134,16 +135,23 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     private categoriasPublicasService: CategoriasPublicasService,
     private productosService: ProductosService,
     private cartService: CartService,
-    private empresaInfoService: EmpresaInfoService
+    private empresaInfoService: EmpresaInfoService,
+    private route: ActivatedRoute,
+    private indexTwoService: IndexTwoService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
       this.windowWidth = window.innerWidth;
     }
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      this.updateRouteFlags(event.urlAfterRedirects);
+    });
   }
 
   ngOnInit() {
-    this.isHomePageActive = this.router.url === '/' || this.router.url === '/index-two' || this.router.url === '/index-three';
+    this.updateRouteFlags(this.router.url);
     this.cargarCategoriasPublicas();
     
     // Suscribirse a los cambios del carrito
@@ -378,10 +386,20 @@ private cargarInformacionEmpresa(): void {
     const currentUrl = this.router.url;
     return routes.some(route => route !== '/' ? currentUrl.startsWith(route) : currentUrl === route);
   }
+
+  private updateRouteFlags(url: string): void {
+    this.isHomePageActive = url === '/' || url.startsWith('/index-two') || url.startsWith('/index-three');
+    this.isIndexTwoPage = url.startsWith('/index-two');
+  }
   
   activeDropdown: string | null = null;
 
   toggleDropdown(menu: string): void {
     this.activeDropdown = this.activeDropdown === menu ? null : menu;
   }
+  // ✅ NUEVO MÉTODO: Activar modo armado PC desde el header
+activarModoArmadoPC(): void {
+  // Emitir evento para que index-two component lo escuche
+  this.indexTwoService.activarModoArmado();
+}
 }

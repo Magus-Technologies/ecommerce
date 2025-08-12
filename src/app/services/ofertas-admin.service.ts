@@ -30,6 +30,7 @@ export interface OfertaAdmin {
   mostrar_en_slider: boolean;
   mostrar_en_banner: boolean;
   es_oferta_principal: boolean; // ✅ NUEVO CAMPO
+  es_oferta_semana: boolean;
   prioridad: number;
   created_at?: string;
   updated_at?: string;
@@ -168,6 +169,9 @@ export class OfertasAdminService {
   toggleOfertaPrincipal(id: number): Observable<any> {
     return this.http.patch(`${this.apiUrl}/ofertas/${id}/toggle-principal`, {});
   }
+  toggleOfertaSemana(id: number): Observable<any> {
+  return this.http.patch(`${this.apiUrl}/ofertas/${id}/toggle-semana`, {});
+}
 
   // ==================== GESTIÓN DE PRODUCTOS EN OFERTAS ====================
 
