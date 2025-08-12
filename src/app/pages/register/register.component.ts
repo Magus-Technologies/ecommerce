@@ -64,6 +64,7 @@ export class RegisterComponent implements OnInit {
   private puzzleImages: string[] = [];
   private draggedPiece: any = null;
   showPuzzle = false;
+  puzzleError = false;
   
 
   // Tipos de documento
@@ -178,10 +179,22 @@ export class RegisterComponent implements OnInit {
     const isSolved = this.puzzleBoard.every((piece, i) => piece && piece.id === i);
     if (isSolved) {
       this.puzzleSolved = true;
+      this.puzzleError = false; // Limpiar error si se resuelve correctamente
       // Ocultar el puzzle después de un breve delay para mostrar el éxito
       setTimeout(() => {
         this.showPuzzle = false;
       }, 2000);
+    } else {
+      // Verificar si todas las posiciones están ocupadas pero mal colocadas
+      const allPositionsFilled = this.puzzleBoard.every(piece => piece !== null);
+      if (allPositionsFilled) {
+        this.puzzleError = true; // Mostrar error si está completo pero mal
+        // Opcional: resetear automáticamente después de mostrar el error
+        setTimeout(() => {
+          this.resetPuzzle();
+          this.puzzleError = false;
+        }, 2000);
+      }
     }
   }
 
@@ -508,7 +521,7 @@ export class RegisterComponent implements OnInit {
 
     // Nueva validación: verificar que el puzzle esté resuelto si se está mostrando
     if (this.showPuzzle && !this.puzzleSolved) {
-      this.registerError = 'Debes completar el rompecabezas para continuar con el registro';
+      this.registerError = 'Debes completar el Captcha para continuar con el registro';
       return;
     }
 
@@ -631,6 +644,7 @@ export class RegisterComponent implements OnInit {
   // Nueva función para resetear el puzzle
   resetPuzzle(): void {
     this.puzzleSolved = false;
+    this.puzzleError = false;
     this.puzzleBoard = [null, null, null, null];
     
     // Recrear las piezas originales

@@ -433,6 +433,18 @@
 
            <!-- Puzzle CAPTCHA Start -->
           <div *ngIf="showPuzzle" class="mb-24 text-center">
+            <style>
+              @keyframes fadeInScale {
+                0% {
+                  opacity: 0;
+                  transform: translate(-50%, -50%) scale(0.8);
+                }
+                100% {
+                  opacity: 1;
+                  transform: translate(-50%, -50%) scale(1);
+                }
+              }
+            </style>
             <h6 class="fw-medium mb-3">Completa el captcha para registrarte</h6>
             
             <!-- Mensaje instructivo -->
@@ -443,7 +455,7 @@
               </p>
             </div>
             
-            <div class="puzzle-container d-inline-block" style="background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%); padding: 30px; border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.12); border: 1px solid #dee2e6; position: relative;">
+            <div class="puzzle-container d-inline-block" style="background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%); padding: 30px; border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.12); border: 1px solid #dee2e6; position: relative; overflow: visible;">
               <!-- Tablero del Rompecabezas -->
               <div class="puzzle-board" 
                   style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; margin-bottom: 30px; padding: 15px; background: white; border-radius: 16px; box-shadow: inset 0 3px 12px rgba(0,0,0,0.08); border: 3px solid #1e3a8a; width: 340px; height: 340px; margin-left: -50px; margin-right: auto;">
@@ -502,6 +514,19 @@
                 Continúa arrastrando las piezas restantes... ({{4 - puzzlePieces.length}}/4 colocadas)
               </div>
             </div>
+
+            <!-- Mensaje de error del Captcha flotante -->
+            <div *ngIf="puzzleError" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; width: 350px;">
+              <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 3px solid #ef4444; border-radius: 16px; padding: 20px; box-shadow: 0 15px 35px rgba(239, 68, 68, 0.3); backdrop-filter: blur(10px); animation: fadeInScale 0.3s ease-out;">
+                <i class="ph ph-x-circle" style="color: #ef4444; font-size: 36px; margin-bottom: 10px; display: block; text-align: center;"></i>
+                <span style="color: #dc2626; font-weight: bold; font-size: 18px; display: block; text-align: center;">¡Captcha incorrecto!</span>
+                <p style="color: #b91c1c; font-size: 14px; margin: 8px 0 0 0; text-align: center;">Las piezas no están en el orden correcto. Inténtalo de nuevo.</p>
+              </div>
+            </div>
+
+            <!-- Overlay de fondo para el mensaje de error -->
+            <div *ngIf="puzzleError" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); border-radius: 20px; z-index: 999;"></div>
+
           </div>
           <!-- Puzzle CAPTCHA End -->
 
