@@ -16,6 +16,7 @@ import { authInterceptor } from './interceptors/auth.interceptor';
 import { logInterceptor } from './interceptors/log.interceptor'; 
 
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideToastr } from 'ngx-toastr';
 import { QuillModule } from 'ngx-quill';
 
 export const appConfig: ApplicationConfig = {
@@ -28,6 +29,13 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([authInterceptor, logInterceptor])
     ),
     provideAnimations(),
+    // ✅ Configuración de ngx-toastr
+    provideToastr({
+      timeOut: 3000,
+      positionClass: 'toast-top-right',
+      preventDuplicates: true,
+      progressBar: true
+    }),
     // ✅ Configuración mejorada de Quill
     importProvidersFrom(
       QuillModule.forRoot({

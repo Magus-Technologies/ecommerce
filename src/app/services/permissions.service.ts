@@ -143,4 +143,13 @@ public permissions$: Observable<string[]> = this.permissionsSubject.asObservable
     return this.hasPermission('empresa_info.edit');
   }
 
+  // Métodos específicos para envío de correos
+  canViewEmailTemplates(): boolean {
+    return this.hasPermission('envio_correos.ver');
+  }
+
+  canEditEmailTemplates(): boolean {
+    return this.hasPermission('envio_correos.edit');
+  }
+
 }
