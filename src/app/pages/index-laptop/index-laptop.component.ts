@@ -7,6 +7,7 @@ import { MarcaProducto, ProductoPublico } from '../../types/almacen.types';
 import { AlmacenService } from '../../services/almacen.service';
 import { ProductosService } from '../../services/productos.service';
 import { CartService } from "../../services/cart.service"
+import { ProductFilterComponent } from '../../component/product-filter/product-filter.component';
 
 interface CategoriaTemplate {
   id: number;
@@ -22,13 +23,14 @@ interface CategoriaTemplate {
 
 @Component({
   selector: 'app-index-laptop',
-  imports: [CommonModule, SlickCarouselModule, RouterLink],
+  imports: [CommonModule, SlickCarouselModule, RouterLink, ProductFilterComponent],
   templateUrl: './index-laptop.component.html',
   styleUrl: './index-laptop.component.scss',
 })
 export class IndexLaptopComponent implements OnInit {
   // ✅ CAMBIO: Usar la nueva interfaz compatible
   categories: CategoriaTemplate[] = [];
+  marcas: MarcaProducto[] = [];
 
   // ✅ NUEVO: Loading state para mostrar indicador de carga
   categoriesLoading = true;
@@ -45,6 +47,7 @@ export class IndexLaptopComponent implements OnInit {
 
   // ✅ NUEVO: Propiedad para vista de lista/grid (opcional, si quieres el toggle)
   listview: 'list' | 'grid' = 'grid';
+  filters: any = {}; // Para almacenar filtros aplicados
 
   constructor(
     private categoriasService: CategoriasPublicasService,
@@ -127,13 +130,13 @@ export class IndexLaptopComponent implements OnInit {
     });
   }
 
-  // ✅ NUEVO: Método para cargar productos
   cargarProductos(): void {
     this.productosLoading = true;
 
     const filtros = {
       categoria: this.categoriaSeleccionada,
-      marca: this.marcaSeleccionada,
+      seccion: 2,
+      ...this.filters,
       page: this.currentPage,
     };
 
@@ -219,5 +222,11 @@ export class IndexLaptopComponent implements OnInit {
       console.error('No se pudo agregar el producto al carrito. Revisa el stock disponible.');
       // Notificación de error
     }
+  }
+
+  onFiltersApplied(filters: any) {
+    this.filters = filters;
+    this.currentPage = 1; // Resetear página al filtrar
+    this.cargarProductos();
   }
 }
