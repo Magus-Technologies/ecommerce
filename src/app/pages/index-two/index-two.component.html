@@ -135,6 +135,9 @@
               </div>
             </li>
           </ul>
+
+          <!-- --- Filtros ---------------- -->
+          <app-product-filter [categories]="categories" [marcas]="marcas" (filtersApplied)="onFiltersApplied($event)"></app-product-filter>
         </div>
       </div>
       <!-- ✅ NUEVO: Contenedor principal para los productos -->

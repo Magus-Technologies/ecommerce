@@ -8,7 +8,8 @@ import { MarcaProducto, ProductoPublico } from '../../types/almacen.types';
 import { AlmacenService } from '../../services/almacen.service';
 import { ProductosService } from '../../services/productos.service';
 import { CartService } from '../../services/cart.service';
-import { IndexTwoService } from '../../services/index-two.service'; 
+import { IndexTwoService } from '../../services/index-two.service';
+import { ProductFilterComponent } from '../../component/product-filter/product-filter.component'; 
 interface CategoriaTemplate {
   id: number;
   name: string;
@@ -29,13 +30,14 @@ interface ProductoSeleccionado {
 
 @Component({
   selector: 'app-index-two',
-  imports: [CommonModule, SlickCarouselModule, RouterLink],
+  imports: [CommonModule, SlickCarouselModule, RouterLink, ProductFilterComponent],
   templateUrl: './index-two.component.html',
   styleUrl: './index-two.component.scss',
 })
 export class IndexTwoComponent implements OnInit {
   // ✅ CAMBIO: Usar la nueva interfaz compatible
   categories: CategoriaTemplate[] = [];
+  marcas: MarcaProducto[] = [];
 
   // ✅ NUEVO: Loading state para mostrar indicador de carga
   categoriesLoading = true;
@@ -58,6 +60,8 @@ export class IndexTwoComponent implements OnInit {
 
   // ✅ NUEVO: Propiedad para vista de lista/grid (opcional, si quieres el toggle)
   listview: 'list' | 'grid' = 'grid';
+
+  filters: any = {}; // Para almacenar filtros aplicados
 
   constructor(
     private categoriasService: CategoriasPublicasService,
@@ -152,6 +156,8 @@ export class IndexTwoComponent implements OnInit {
 
     const filtros = {
       categoria: this.categoriaSeleccionada,
+      seccion: 1,
+      ...this.filters,
       marca: this.marcaSeleccionada,
       page: this.currentPage,
     };
@@ -245,6 +251,13 @@ export class IndexTwoComponent implements OnInit {
       // Notificación de error
     }
   }
+
+  onFiltersApplied(filters: any) {
+    this.filters = filters;
+    this.currentPage = 1; // Resetear página al filtrar
+    this.cargarProductos();
+  }
+
   // ✅ NUEVO MÉTODO: Activar modo armado de PC
 activarModoArmadoPC(): void {
   this.modoArmadoPC = true;

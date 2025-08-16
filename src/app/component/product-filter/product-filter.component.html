@@ -1,0 +1,53 @@
+<div class="filter-block border-top border-neutral-50 pt-16">
+  <!-- ✅ COMENTADO: Opciones de entrega y servicios -->
+  <!--
+  <div class="mb-16">
+    <h6 class="text-sm fw-semibold mb-8">Opciones de entrega y servicios</h6>
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="choice" (change)="applyFilters()">
+      <label class="form-check-label" for="choice">Choice (Productos activos)</label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="free-shipping" (change)="applyFilters()">
+      <label class="form-check-label" for="free-shipping">Envío gratis (Stock >0)</label>
+    </div>
+  </div>
+  -->
+
+  <!-- ✅ COMENTADO: Envío desde -->
+  <!--
+  <div class="mb-16">
+    <h6 class="text-sm fw-semibold mb-8">Envío desde</h6>
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="shipping" id="all" (change)="selectedBrandId = null; applyFilters()">
+      <label class="form-check-label" for="all">Todos</label>
+    </div>
+    <div *ngFor="let marca of marcas" class="form-check">
+      <input class="form-check-input" type="radio" name="shipping" [id]="'marca-' + marca.id" [value]="marca.id" [(ngModel)]="selectedBrandId" (change)="applyFilters()">
+      <label class="form-check-label" [for]="'marca-' + marca.id">{{ marca.nombre }} ({{ marca.productos_count || 0 }})</label>
+    </div>
+  </div>
+  -->
+
+  <!-- Precio -->
+<div class="mb-16" style="margin-right: 16px;">
+  <h6 class="text-sm fw-semibold mb-8">Precio</h6>
+  <div class="d-flex align-items-center gap-8">
+    <input type="number" class="form-control" placeholder="PEN Min" [(ngModel)]="minPrice" style="flex: 1; font-size: 12px;">
+    <span>-</span>
+    <input type="number" class="form-control" placeholder="PEN Max" [(ngModel)]="maxPrice" style="flex: 1; font-size: 12px;">
+    <button class="btn btn-sm btn-main" (click)="applyFilters()" style="height: 43px;">OK</button>
+  </div>
+</div>
+
+  <!-- Ordenar por -->
+<div style="margin-right: 16px;">
+  <h6 class="text-sm fw-semibold mb-8">Ordenar por</h6>
+  <select class="form-select" [(ngModel)]="sortBy" (change)="applyFilters()">
+    <option value="price_asc">Precio ascendente</option>
+    <option value="price_desc">Precio descendente</option>
+    <option value="name_asc">Nombre ascendente</option>
+    <option value="popularity_desc">Popularidad descendente</option>
+  </select>
+</div>
+</div>
