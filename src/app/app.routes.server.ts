@@ -108,5 +108,9 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'claimbook',
     renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'my-account',
+    renderMode: RenderMode.Prerender
   }
 ];
