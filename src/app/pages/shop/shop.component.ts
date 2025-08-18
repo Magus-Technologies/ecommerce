@@ -21,6 +21,7 @@ export class ShopComponent implements OnInit {
   categorias: CategoriaParaSidebar[] = []
   isLoading = false
   categoriaSeleccionada?: number
+  searchTerm: string = ''; 
 
   // pagination
   currentPage = 1
@@ -67,14 +68,16 @@ export class ShopComponent implements OnInit {
 
   ngOnInit(): void {
     // Cargar categorías para el sidebar
-    this.cargarCategorias()
+    this.cargarCategorias();
 
     // Escuchar cambios en los query parameters
     this.route.queryParams.subscribe((params) => {
-      this.categoriaSeleccionada = params["categoria"] ? +params["categoria"] : undefined
-      this.currentPage = 1 // Reset página al cambiar filtros
-      this.cargarProductos()
-    })
+      // ✅ MODIFICADO: Agregar soporte para búsqueda
+      this.categoriaSeleccionada = params['categoria'] ? +params['categoria'] : undefined;
+      this.searchTerm = params['search'] || ''; // ✅ NUEVO
+      this.currentPage = 1; // Reset página al cambiar filtros
+      this.cargarProductos();
+    });
   }
 
   cargarCategorias(): void {
@@ -88,27 +91,40 @@ export class ShopComponent implements OnInit {
     })
   }
 
+  // Modifica el método existente cargarProductos():
   cargarProductos(): void {
-    this.isLoading = true
+    this.isLoading = true;
 
-    const filtros = {
+    const filtros: any = {
       categoria: this.categoriaSeleccionada,
-      page: this.currentPage,
+      page: this.currentPage
+    };
+
+    // ✅ NUEVO: Agregar término de búsqueda si existe
+    if (this.searchTerm) {
+      filtros.search = this.searchTerm;
     }
+
+    // ✅ NUEVO: Agregar sección si se especifica en query params
+    this.route.queryParams.subscribe(params => {
+      if (params['seccion']) {
+        filtros.seccion = +params['seccion'];
+      }
+    });
 
     this.productosService.obtenerProductosPublicos(filtros).subscribe({
       next: (response) => {
-        this.productos = response.productos
-        this.currentPage = response.pagination.current_page
-        this.totalPages = response.pagination.last_page
-        this.totalProductos = response.pagination.total
-        this.isLoading = false
+        this.productos = response.productos;
+        this.currentPage = response.pagination.current_page;
+        this.totalPages = response.pagination.last_page;
+        this.totalProductos = response.pagination.total;
+        this.isLoading = false;
       },
       error: (error) => {
-        console.error("Error al cargar productos:", error)
-        this.isLoading = false
-      },
-    })
+        console.error('Error al cargar productos:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   seleccionarCategoria(categoriaId: number): void {

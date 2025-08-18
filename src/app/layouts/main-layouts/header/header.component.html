@@ -383,28 +383,29 @@
               autocomplete="off"
             />
 
-            <!-- ✅ NUEVO: Dropdown de sugerencias -->
+            <!-- ✅ NUEVO: Dropdown de sugerencias con estilos de dashboard -->
             <div
               *ngIf="showSuggestions"
-              class="search-suggestions position-absolute w-100"
-              style="top: 100%; left: 0; max-height: 400px; overflow-y: auto"
+              class="search-suggestions position-absolute w-100 table-card"
+              style="top: 100%; left: 0; max-height: 400px; overflow-y: auto; z-index: 1050; margin-top: 4px;"
             >
               <!-- Loading state -->
               <div
                 *ngIf="isLoadingSuggestions"
                 class="p-3 text-center text-gray-500"
               >
-                <i class="ph ph-spinner ph-spin me-2"></i>
-                Buscando...
+                <div class="loading-skeleton w-100" style="height: 20px; border-radius: 4px;"></div>
+                <small class="text-muted mt-2 d-block">Buscando...</small>
               </div>
 
               <!-- Sugerencias -->
               <div
                 *ngFor="let producto of searchSuggestions; let i = index"
-                class="search-suggestion-item d-flex align-items-center p-3 border-bottom border-gray-100 cursor-pointer"
-                [class.bg-gray-100]="i === selectedSuggestionIndex"
+                class="search-suggestion-item product-cell p-3 table-row"
+                [class.bg-light]="i === selectedSuggestionIndex"
                 (click)="selectSuggestion(producto)"
                 (mouseenter)="selectedSuggestionIndex = i"
+                style="cursor: pointer; border-bottom: 1px solid #f1f3f4;"
               >
                 <!-- Imagen del producto -->
                 <div class="suggestion-image me-3 flex-shrink-0">
@@ -414,28 +415,28 @@
                       '/assets/images/placeholder-product.jpg'
                     "
                     [alt]="producto.nombre"
-                    class="w-12 h-12 object-cover rounded"
+                    class="product-image"
                     style="width: 48px; height: 48px"
                   />
                 </div>
 
                 <!-- Información del producto -->
-                <div class="suggestion-content flex-grow-1">
-                  <div class="suggestion-title fw-medium text-dark">
+                <div class="suggestion-content product-info flex-grow-1">
+                  <div class="suggestion-title product-name fw-medium">
                     {{ producto.nombre }}
                   </div>
-                  <div class="suggestion-category text-muted small">
+                  <div class="suggestion-category seller small">
                     {{ producto.categoria }}
                   </div>
                 </div>
 
                 <!-- Precio -->
-                <div class="suggestion-price text-success fw-bold me-2">
+                <div class="suggestion-price price fw-bold me-2">
                   ${{ producto.precio | number : "1.2-2" }}
                 </div>
 
                 <!-- Icono -->
-                <div class="suggestion-icon text-gray-400">
+                <div class="suggestion-icon text-muted">
                   <i class="ph ph-arrow-up-right"></i>
                 </div>
               </div>
@@ -443,10 +444,12 @@
               <!-- Sin resultados -->
               <div
                 *ngIf="!isLoadingSuggestions && searchSuggestions.length === 0"
-                class="p-3 text-center text-gray-500"
+                class="p-3 text-center"
               >
-                <i class="ph ph-magnifying-glass me-2"></i>
-                No se encontraron productos
+                <div class="stats-icon mx-auto mb-2" style="width: 40px; height: 40px; background: linear-gradient(135deg, #6c757d, #adb5bd);">
+                  <i class="ph ph-magnifying-glass"></i>
+                </div>
+                <p class="stats-label mb-0">No se encontraron productos</p>
               </div>
             </div>
 

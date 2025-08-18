@@ -44,6 +44,8 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   isLoadingSuggestions: boolean = false;
   selectedSuggestionIndex: number = -1;
 
+
+
   setupPath() {
     if (!this.progressPathRef?.nativeElement) {
       return;
@@ -91,6 +93,8 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   isActive = false;
 
   isMobileMenuActive: boolean = false;
+
+  currentRoute: string = '';
 
   openMobileMenu() {
     this.isMobileMenuActive = true;
@@ -154,6 +158,15 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     this.updateRouteFlags(this.router.url);
     this.cargarCategoriasPublicas();
     
+    // ✅ NUEVO: Suscribirse a cambios de ruta
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      takeUntil(this.destroy$)
+    ).subscribe((event: NavigationEnd) => {
+      this.currentRoute = event.urlAfterRedirects;
+      this.updateRouteFlags(event.urlAfterRedirects);
+    });
+
     // Suscribirse a los cambios del carrito
     this.cartService.cartSummary$
       .pipe(takeUntil(this.destroy$))
@@ -202,7 +215,7 @@ private cargarInformacionEmpresa(): void {
       });
   }
 
-  // ✅ NUEVO: Método para buscar productos
+  // Modifica el método existente buscarProductos():
   private buscarProductos(termino: string): void {
     if (!termino.trim() || termino.length < 2) {
       this.hideSuggestions();
@@ -210,7 +223,11 @@ private cargarInformacionEmpresa(): void {
     }
 
     this.isLoadingSuggestions = true;
-    this.productosService.buscarProductos(termino)
+    
+    // ✅ MODIFICADO: Pasar categoría seleccionada para filtrar sugerencias
+    const categoriaFiltro = this.selectedCategory && this.selectedCategory !== '' ? this.selectedCategory : undefined;
+    
+    this.productosService.buscarProductos(termino, categoriaFiltro)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (sugerencias) => {
@@ -281,27 +298,6 @@ private cargarInformacionEmpresa(): void {
     this.hideSuggestions();
     // Navegar al detalle del producto
     this.router.navigate(['/product-details', producto.id]);
-  }
-
-  // ✅ MODIFICADO: Método onSearch para búsqueda tradicional
-  onSearch(): void {
-    if (this.searchTerm.trim()) {
-      this.hideSuggestions();
-      const queryParams: any = {
-        search: this.searchTerm.trim()
-      };
-
-      // Agregar categoría si está seleccionada
-      if (this.selectedCategory && this.selectedCategory !== '') {
-        queryParams.categoria = this.selectedCategory;
-      }
-
-      // Navegar a la página de la tienda con los parámetros de búsqueda
-      this.router.navigate(['/shop'], { 
-        queryParams,
-        queryParamsHandling: 'merge'
-      });
-    }
   }
 
   // ✅ NUEVO: Método para manejar cambios en la categoría
@@ -398,8 +394,113 @@ private cargarInformacionEmpresa(): void {
     this.activeDropdown = this.activeDropdown === menu ? null : menu;
   }
   // ✅ NUEVO MÉTODO: Activar modo armado PC desde el header
-activarModoArmadoPC(): void {
-  // Emitir evento para que index-two component lo escuche
-  this.indexTwoService.activarModoArmado();
-}
+  activarModoArmadoPC(): void {
+    // Emitir evento para que index-two component lo escuche
+    this.indexTwoService.activarModoArmado();
+  }
+
+  // ✅ NUEVO: Método para detectar tipo de página actual
+  private detectarTipoPagina(): { tipo: 'home' | 'shop' | 'categoria' | 'computadoras' | 'laptops' | 'otros', categoriaId?: number } {
+    const url = this.currentRoute || this.router.url;
+    
+    // Páginas principales
+    if (url === '/' || url === '') {
+      return { tipo: 'home' };
+    }
+    
+    if (url.startsWith('/index-two')) {
+      return { tipo: 'computadoras' };
+    }
+    
+    if (url.startsWith('/index-laptop')) {
+      return { tipo: 'laptops' };
+    }
+    
+    if (url.startsWith('/shop')) {
+      // Extraer categoria de query params si existe
+      const urlParams = new URLSearchParams(url.split('?')[1] || '');
+      const categoriaId = urlParams.get('categoria');
+      return { 
+        tipo: categoriaId ? 'categoria' : 'shop', 
+        categoriaId: categoriaId ? parseInt(categoriaId) : undefined 
+      };
+    }
+    
+    return { tipo: 'otros' };
+  }
+
+  // ✅ COMPLETAMENTE NUEVO: Método onSearch con lógica compleja
+  onSearch(): void {
+    if (!this.searchTerm.trim()) return;
+    
+    this.hideSuggestions();
+    
+    const paginaActual = this.detectarTipoPagina();
+    const categoriaSeleccionada = this.selectedCategory && this.selectedCategory !== '' ? this.selectedCategory : null;
+    const terminoBusqueda = this.searchTerm.trim();
+    
+    // **REGLA PRINCIPAL: La categoría del selector tiene máxima prioridad**
+    
+    if (categoriaSeleccionada) {
+      // Escenario 1: Usuario seleccionó categoría específica en el selector
+      // SIEMPRE navegar a shop con esa categoría, sin importar la página actual
+      this.router.navigate(['/shop'], { 
+        queryParams: {
+          search: terminoBusqueda,
+          categoria: categoriaSeleccionada
+        }
+      });
+      return;
+    }
+    
+    // Escenario 2: "Todas las categorías" seleccionado
+    switch (paginaActual.tipo) {
+      case 'categoria':
+        // Está en una página de categoría específica, mantener en la misma página
+        // pero con el nuevo término de búsqueda
+        this.router.navigate(['/shop'], {
+          queryParams: {
+            search: terminoBusqueda,
+            categoria: paginaActual.categoriaId
+          },
+          queryParamsHandling: 'merge'
+        });
+        break;
+        
+      case 'computadoras':
+        // Está en sección computadoras, buscar solo en productos de computadoras
+        // Aquí necesitarías definir qué categorías pertenecen a computadoras
+        // Por ahora, navegar a shop con búsqueda global pero podrías filtrar por sección
+        this.router.navigate(['/shop'], { 
+          queryParams: {
+            search: terminoBusqueda,
+            seccion: 1 // Asumiendo que sección 1 es computadoras
+          }
+        });
+        break;
+        
+      case 'laptops':
+        // Está en sección laptops, buscar solo en productos de laptops
+        this.router.navigate(['/shop'], { 
+          queryParams: {
+            search: terminoBusqueda,
+            seccion: 2 // Asumiendo que sección 2 es laptops
+          }
+        });
+        break;
+        
+      case 'home':
+      case 'shop':
+      case 'otros':
+      default:
+        // Búsqueda global en todas las categorías
+        this.router.navigate(['/shop'], { 
+          queryParams: {
+            search: terminoBusqueda
+          }
+        });
+        break;
+    }
+  }
+
 }

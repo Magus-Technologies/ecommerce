@@ -113,11 +113,18 @@ export class ProductosService {
 
   constructor(private http: HttpClient) {}
 
-  // ✅ NUEVO MÉTODO PARA BUSCAR PRODUCTOS (AUTOCOMPLETADO)
-  buscarProductos(termino: string): Observable<ProductoSugerencia[]> {
-    const params = new HttpParams().set('q', termino);
+  // Encuentra este método existente y modifícalo:
+  buscarProductos(termino: string, categoriaId?: string): Observable<ProductoSugerencia[]> {
+    let params = new HttpParams().set('q', termino);
+    
+    // ✅ NUEVO: Agregar categoría si se proporciona
+    if (categoriaId && categoriaId !== '') {
+      params = params.set('categoria', categoriaId);
+    }
+    
     return this.http.get<ProductoSugerencia[]>(`${this.apiUrl}/productos/buscar`, { params });
   }
+
 
   // Productos
   obtenerProductos(): Observable<Producto[]> {
