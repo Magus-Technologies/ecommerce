@@ -1,443 +1,660 @@
-import { Component, OnInit } from "@angular/core"
-import { CommonModule } from "@angular/common"
-import { FormsModule } from "@angular/forms"
-import { PedidosService, Pedido, PedidosFiltros, EstadoPedido } from "../../../services/pedidos.service"
-import { PermissionsService } from "../../../services/permissions.service"
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { PedidosService, Pedido, EstadoPedido } from '../../../services/pedidos.service';
+import Swal from 'sweetalert2';
 
 @Component({
-  selector: "app-pedidos-list",
+  selector: 'app-pedidos-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  styles: [`
-    .badge {
-      padding: 0.5em 0.75em;
-      font-size: 0.75em;
-      font-weight: 500;
-      border-radius: 0.375rem;
-      color: white !important;
-    }
-    .bg-gradient-info { background: linear-gradient(87deg, #11cdef 0, #1171ef 100%) !important; color: white !important; }
-    .bg-gradient-warning { background: linear-gradient(87deg, #fb6340 0, #fbb140 100%) !important; color: white !important; }
-    .bg-gradient-success { background: linear-gradient(87deg, #2dce89 0, #2dcecc 100%) !important; color: white !important; }
-    .bg-gradient-primary { background: linear-gradient(87deg, #5e72e4 0, #825ee4 100%) !important; color: white !important; }
-    .bg-gradient-danger { background: linear-gradient(87deg, #f5365c 0, #f56036 100%) !important; color: white !important; }
-    .bg-gradient-secondary { background: linear-gradient(87deg, #6c757d 0, #8c7ae6 100%) !important; color: white !important; }
-  `],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule],
   template: `
-    <div class="dashboard-container">
-      <div class="row">
-        <div class="col-12">
-          <h1 class="dashboard-title">
-            <i class="fas fa-shopping-cart"></i> Gestión de Pedidos
-          </h1>
-          <p class="text-muted mb-4">Administra y supervisa todos los pedidos de la plataforma</p>
-          
-          <div class="table-card">
-            <div class="table-card-header">
-              <h6 class="table-title mb-0">
-                <i class="fas fa-list"></i> Listado de Pedidos
-              </h6>
-            </div>
-            
-            <!-- Filtros -->
-            <div class="row px-3 mb-4 mt-3">
-              <div class="col-md-3 mb-2">
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  placeholder="🔍 Buscar cliente..."
-                  [(ngModel)]="filtros.cliente"
-                  (keyup.enter)="filtrarPedidos()">
-              </div>
-              <div class="col-md-2 mb-2">
-                <select class="form-select" [(ngModel)]="filtros.estado">
-                  <option value="">📋 Estado</option>
-                  <option *ngFor="let estado of estados" [value]="estado.id">
-                    {{estado.nombre_estado}}
-                  </option>
-                </select>
-              </div>
-              <div class="col-md-2 mb-2">
-                <input 
-                  type="date" 
-                  class="form-control" 
-                  [(ngModel)]="filtros.fecha_desde"
-                  placeholder="Fecha desde">
-              </div>
-              <div class="col-md-2 mb-2">
-                <input 
-                  type="date" 
-                  class="form-control" 
-                  [(ngModel)]="filtros.fecha_hasta"
-                  placeholder="Fecha hasta">
-              </div>
-              <div class="col-md-2 mb-2">
-                <select class="form-select" [(ngModel)]="filtros.tienda">
-                  <option value="">🏪 Tienda</option>
-                  <!-- Placeholder para tiendas -->
-                </select>
-              </div>
-              <div class="col-md-1 mb-2">
-                <button class="btn btn-primary w-100" (click)="filtrarPedidos()">
-                  <i class="fas fa-search"></i>
-                </button>
-              </div>
-            </div>
-            <!-- Tabla -->
-            <div class="table-responsive">
-              <table class="table align-items-center">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Tipo doc / Numero</th>
-                    <th>Cliente</th>
-                    <th>Fecha</th>
-                    <th>Total</th>
-                    <th>Estado</th>
-                    <th>Pago</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let pedido of pedidos; let i = index; trackBy: trackByPedidoId">
-                    <td>
-                      <span class="text-sm font-weight-bold">{{(currentPage - 1) * 15 + i + 1}}</span>
-                    </td>
-                    <td>
-                      <span class="text-sm text-muted">
-                        {{pedido.cliente.tipo_documento}} / {{pedido.cliente.numero_documento}}
-                      </span>
-                    </td>
-                    <td>
-                      <span class="text-sm font-weight-bold">{{pedido.cliente.nombre_completo}}</span>
-                    </td>
-                    <td>
-                      <span class="text-sm text-muted">{{pedido.fecha}}</span>
-                    </td>
-                    <td>
-                      <span class="text-sm font-weight-bold text-success">{{pedido.moneda}} {{pedido.total}}</span>
-                    </td>
-                    <td>
-                      <span class="badge" 
-                            [ngClass]="getEstadoBadgeClass(pedido.estado?.nombre)">
-                        {{pedido.estado?.nombre}}
-                      </span>
-                    </td>
-                    <td>
-                      <span class="text-sm text-muted">{{pedido.metodo_pago}}</span>
-                    </td>
-                    <td>
-                      <button 
-                        *ngIf="permissionsService.hasPermission('pedidos.show')"
-                        class="btn-sm btn-outline-primary" 
-                        (click)="verDetalle(pedido.id)"
-                        title="Ver detalle">
-                        <i class="fas fa-eye"></i>
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <!-- Paginación -->
-            <div class="d-flex justify-content-between align-items-center px-3 mt-4" *ngIf="totalPages > 1">
-              <span class="text-sm text-muted">
-                Mostrando {{(currentPage - 1) * 15 + 1}} a {{Math.min(currentPage * 15, totalItems)}} de {{totalItems}} pedidos
-              </span>
-              <nav>
-                <ul class="pagination pagination-sm mb-0">
-                  <li class="page-item" [class.disabled]="currentPage === 1">
-                    <button class="page-link" (click)="cambiarPagina(currentPage - 1)">Anterior</button>
-                  </li>
-                  <li class="page-item" 
-                      *ngFor="let page of getPageNumbers()" 
-                      [class.active]="page === currentPage">
-                    <button class="page-link" (click)="cambiarPagina(page)">{{page}}</button>
-                  </li>
-                  <li class="page-item" [class.disabled]="currentPage === totalPages">
-                    <button class="page-link" (click)="cambiarPagina(currentPage + 1)">Siguiente</button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-          </div>
-        </div>
+    <div class="d-flex justify-content-between align-items-center mb-24">
+      <div>
+        <h5 class="text-heading fw-semibold mb-8">Gestión de Pedidos</h5>
+        <p class="text-gray-500 mb-0">Administra todos los pedidos del e-commerce</p>
+      </div>
+      <div class="d-flex gap-12">
+        <button 
+          class="btn bg-success-600 hover-bg-success-700 text-white px-16 py-8 rounded-8"
+          (click)="cargarPedidos()">
+          <i class="ph ph-arrow-clockwise me-8"></i>
+          Actualizar
+        </button>
       </div>
     </div>
-    <!-- Modal Detalle Pedido -->
-    <div class="modal fade" id="modalDetallePedido" tabindex="-1" *ngIf="pedidoSeleccionado">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              <i class="fas fa-box"></i> Detalle del Pedido #{{pedidoSeleccionado.codigo_pedido}} - {{pedidoSeleccionado.cliente.nombre_completo}}
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <p><strong>📅 Fecha:</strong> {{pedidoSeleccionado.fecha}}</p>
-                <p><strong>💳 Método de pago:</strong> {{pedidoSeleccionado.metodo_pago}}</p>
-                <p><strong>📍 Dirección:</strong> {{pedidoSeleccionado.direccion}}</p>
-              </div>
-              <div class="col-md-6">
-                <div class="d-flex align-items-center mb-2">
-                  <strong>📋 Estado:</strong>
-                  <select class="form-select ms-2" 
-                          [(ngModel)]="nuevoEstadoId" 
-                          *ngIf="permissionsService.hasPermission('pedidos.edit')">
-                    <option *ngFor="let estado of estados" [value]="estado.id">
-                      {{estado.nombre_estado}}
-                    </option>
-                  </select>
-                  <button class="btn btn-sm btn-warning ms-2" 
-                          (click)="abrirModalCambiarEstado()"
-                          *ngIf="permissionsService.hasPermission('pedidos.edit')">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                </div>
-                <p><strong>💰 Total:</strong> {{pedidoSeleccionado.moneda}} {{pedidoSeleccionado.total}}</p>
-                <p><strong>🏪 Tienda:</strong> {{pedidoSeleccionado.tienda}}</p>
-              </div>
-            </div>
-            <h6><i class="fas fa-shopping-bag"></i> Productos:</h6>
-            <div class="table-responsive">
-              <table class="table table-sm">
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Cant.</th>
-                    <th>Precio U.</th>
-                    <th>Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let producto of pedidoSeleccionado.productos">
-                    <td>{{producto.nombre}}</td>
-                    <td><span class="badge bg-secondary">{{producto.cantidad}}</span></td>
-                    <td>{{pedidoSeleccionado.moneda}} {{producto.precio_unitario}}</td>
-                    <td class="text-success fw-bold">{{pedidoSeleccionado.moneda}} {{producto.subtotal}}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="text-end border-top pt-3">
-              <p class="mb-1"><strong>Subtotal productos:</strong> <span class="text-success">{{pedidoSeleccionado.moneda}} {{pedidoSeleccionado.subtotal}}</span></p>
-              <p class="mb-1"><strong>Envío:</strong> <span class="text-info">{{pedidoSeleccionado.moneda}} 5.00</span></p>
-              <h5 class="text-primary"><strong>Total a pagar: {{pedidoSeleccionado.moneda}} {{pedidoSeleccionado.total}}</strong></h5>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Modal Cambiar Estado -->
-    <div class="modal fade" id="modalCambiarEstado" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              <i class="fas fa-sync-alt"></i> Cambiar Estado del Pedido
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <p><strong>Estado actual:</strong> 
-              <span class="badge" 
-                    [ngClass]="getEstadoBadgeClass(pedidoSeleccionado?.estado?.nombre)">
-                {{pedidoSeleccionado?.estado?.nombre || 'Sin estado'}}
-              </span>
-            </p>
-            <div class="mb-3">
-              <label class="form-label">Nuevo estado:</label>
-              <select class="form-select" [(ngModel)]="nuevoEstadoId">
+
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm rounded-12 mb-24">
+      <div class="card-body p-24">
+        <form [formGroup]="filtrosForm" (ngSubmit)="aplicarFiltros()">
+          <div class="row">
+            <div class="col-md-3 mb-16">
+              <label class="form-label text-heading fw-medium mb-8">Estado</label>
+              <select class="form-select px-16 py-12 border rounded-8" formControlName="estado_pedido_id">
+                <option value="">Todos los estados</option>
                 <option *ngFor="let estado of estados" [value]="estado.id">
-                  {{estado.nombre_estado}}
+                  {{ estado.nombre }}
                 </option>
               </select>
             </div>
+            <div class="col-md-3 mb-16">
+              <label class="form-label text-heading fw-medium mb-8">Fecha Inicio</label>
+              <input 
+                type="date" 
+                class="form-control px-16 py-12 border rounded-8"
+                formControlName="fecha_inicio">
+            </div>
+            <div class="col-md-3 mb-16">
+              <label class="form-label text-heading fw-medium mb-8">Fecha Fin</label>
+              <input 
+                type="date" 
+                class="form-control px-16 py-12 border rounded-8"
+                formControlName="fecha_fin">
+            </div>
+            <div class="col-md-3 mb-16">
+              <label class="form-label text-heading fw-medium mb-8">Buscar</label>
+              <div class="input-group">
+                <input 
+                  type="text" 
+                  class="form-control px-16 py-12 border rounded-start-8"
+                  formControlName="search"
+                  placeholder="Código, cliente...">
+                <button 
+                  type="submit" 
+                  class="btn bg-main-600 text-white px-16 rounded-end-8">
+                  <i class="ph ph-magnifying-glass"></i>
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-success" (click)="confirmarCambioEstado()">
-              <i class="fas fa-check"></i> Confirmar
+        </form>
+      </div>
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div class="row mb-24">
+      <div class="col-md-3 mb-16">
+        <div class="card border-0 shadow-sm rounded-12 p-20">
+          <div class="d-flex align-items-center gap-16">
+            <div class="w-48 h-48 bg-warning-50 rounded-12 flex-center">
+              <i class="ph ph-clock text-warning-600 text-xl"></i>
+            </div>
+            <div>
+              <h6 class="text-heading fw-bold mb-4">{{ estadisticas.pendientes || 0 }}</h6>
+              <p class="text-sm text-gray-500 mb-0">Pendientes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-16">
+        <div class="card border-0 shadow-sm rounded-12 p-20">
+          <div class="d-flex align-items-center gap-16">
+            <div class="w-48 h-48 bg-info-50 rounded-12 flex-center">
+              <i class="ph ph-package text-info-600 text-xl"></i>
+            </div>
+            <div>
+              <h6 class="text-heading fw-bold mb-4">{{ estadisticas.preparacion || 0 }}</h6>
+              <p class="text-sm text-gray-500 mb-0">En Preparación</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-16">
+        <div class="card border-0 shadow-sm rounded-12 p-20">
+          <div class="d-flex align-items-center gap-16">
+            <div class="w-48 h-48 bg-primary-50 rounded-12 flex-center">
+              <i class="ph ph-truck text-primary-600 text-xl"></i>
+            </div>
+            <div>
+              <h6 class="text-heading fw-bold mb-4">{{ estadisticas.enviados || 0 }}</h6>
+              <p class="text-sm text-gray-500 mb-0">Enviados</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-16">
+        <div class="card border-0 shadow-sm rounded-12 p-20">
+          <div class="d-flex align-items-center gap-16">
+            <div class="w-48 h-48 bg-success-50 rounded-12 flex-center">
+              <i class="ph ph-check-circle text-success-600 text-xl"></i>
+            </div>
+            <div>
+              <h6 class="text-heading fw-bold mb-4">{{ estadisticas.entregados || 0 }}</h6>
+              <p class="text-sm text-gray-500 mb-0">Entregados</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de pedidos -->
+    <div class="card border-0 shadow-sm rounded-12">
+      <div class="card-body p-0">
+        
+        <!-- Loading state -->
+        <div *ngIf="isLoading" class="text-center py-40">
+          <div class="spinner-border text-main-600" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="text-gray-500 mt-12 mb-0">Cargando pedidos...</p>
+        </div>
+
+        <!-- Tabla -->
+        <div *ngIf="!isLoading" class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-24 py-16 text-heading fw-semibold border-0">Código</th>
+                <th class="px-24 py-16 text-heading fw-semibold border-0">Cliente</th>
+                <th class="px-24 py-16 text-heading fw-semibold border-0">Fecha</th>
+                <th class="px-24 py-16 text-heading fw-semibold border-0">Total</th>
+                <th class="px-24 py-16 text-heading fw-semibold border-0">Estado</th>
+                <th class="px-24 py-16 text-heading fw-semibold border-0">Método Pago</th>
+                <th class="px-24 py-16 text-heading fw-semibold border-0 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let pedido of pedidos" class="border-bottom border-gray-100">
+                <!-- Código -->
+                <td class="px-24 py-16">
+                  <span class="text-heading fw-semibold">{{ pedido.codigo_pedido }}</span>
+                </td>
+
+                <!-- Cliente -->
+                <td class="px-24 py-16">
+                  <div>
+                    <h6 class="text-heading fw-medium mb-4">
+                      {{ getClienteNombre(pedido) }}
+                    </h6>
+                    <p class="text-gray-500 text-sm mb-0">
+                      {{ getClienteDocumento(pedido) }}
+                    </p>
+                  </div>
+                </td>
+
+                <!-- Fecha -->
+                <td class="px-24 py-16">
+                  <span class="text-heading">{{ formatearFecha(pedido.fecha_pedido) }}</span>
+                </td>
+
+                <!-- Total -->
+                <td class="px-24 py-16">
+                  <span class="text-heading fw-semibold">S/ {{ formatPrice(pedido.total) }}</span>
+                </td>
+
+                <!-- Estado -->
+                <td class="px-24 py-16">
+                  <div class="dropdown">
+                    <button 
+                      class="btn badge px-12 py-6 rounded-pill fw-medium dropdown-toggle border-0"
+                      [ngClass]="getEstadoBadgeClass(pedido.estadoPedido?.nombre)"
+                      type="button" 
+                      [id]="'dropdown-estado-' + pedido.id"
+                      data-bs-toggle="dropdown">
+                      {{ pedido.estadoPedido?.nombre || 'Sin estado' }}
+                    </button>
+                    <ul class="dropdown-menu" [attr.aria-labelledby]="'dropdown-estado-' + pedido.id">
+                      <li *ngFor="let estado of estados">
+                        <button 
+                          class="dropdown-item"
+                          (click)="cambiarEstado(pedido, estado.id)"
+                          [class.active]="estado.id === pedido.estado_pedido_id">
+                          <span class="badge me-8 px-8 py-4 rounded-pill fw-medium"
+                                [ngClass]="getEstadoBadgeClass(estado.nombre)">
+                            {{ estado.nombre }}
+                          </span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+
+                <!-- Método Pago -->
+                <td class="px-24 py-16">
+                  <span class="badge bg-info-50 text-info-600 px-12 py-6 rounded-pill fw-medium">
+                    {{ pedido.metodo_pago || 'No especificado' }}
+                  </span>
+                </td>
+
+                <!-- Acciones -->
+                <td class="px-24 py-16 text-center">
+                  <div class="d-flex justify-content-center gap-8">
+                    <!-- Ver detalle -->
+                    <button 
+                      class="btn bg-info-50 hover-bg-info-100 text-info-600 w-32 h-32 rounded-6 flex-center transition-2"
+                      title="Ver detalle"
+                      (click)="verDetalle(pedido)">
+                      <i class="ph ph-eye text-sm"></i>
+                    </button>
+
+                    <!-- Editar -->
+                    <button 
+                      class="btn bg-warning-50 hover-bg-warning-100 text-warning-600 w-32 h-32 rounded-6 flex-center transition-2"
+                      title="Editar estado"
+                      (click)="editarPedido(pedido)">
+                      <i class="ph ph-pencil text-sm"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Empty state -->
+          <div *ngIf="pedidos.length === 0" class="text-center py-40">
+            <i class="ph ph-package text-gray-300 text-6xl mb-16"></i>
+            <h6 class="text-heading fw-semibold mb-8">No hay pedidos</h6>
+            <p class="text-gray-500 mb-16">No se encontraron pedidos con los filtros aplicados</p>
+          </div>
+        </div>
+
+        <!-- Paginación -->
+        <div *ngIf="paginacion && paginacion.last_page > 1" class="p-24 border-top border-gray-100">
+          <nav>
+            <ul class="pagination justify-content-center mb-0">
+              <li class="page-item" [class.disabled]="paginacion.current_page === 1">
+                <button class="page-link" (click)="cambiarPagina(paginacion.current_page - 1)">
+                  Anterior
+                </button>
+              </li>
+              <li 
+                *ngFor="let page of getPaginas()" 
+                class="page-item" 
+                [class.active]="page === paginacion.current_page">
+                <button class="page-link" (click)="cambiarPagina(page)">
+                  {{ page }}
+                </button>
+              </li>
+              <li class="page-item" [class.disabled]="paginacion.current_page === paginacion.last_page">
+                <button class="page-link" (click)="cambiarPagina(paginacion.current_page + 1)">
+                  Siguiente
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Detalle Pedido -->
+    <div class="modal fade" id="modalDetallePedido" tabindex="-1" *ngIf="pedidoSeleccionado">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header border-bottom border-gray-200">
+            <h5 class="modal-title text-heading fw-semibold">
+              <i class="ph ph-package me-8"></i>
+              Detalle del Pedido {{ pedidoSeleccionado.codigo_pedido }}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-24">
+            <div class="row mb-24">
+              <!-- Información del cliente -->
+              <div class="col-md-6">
+                <h6 class="text-heading fw-semibold mb-16">
+                  <i class="ph ph-user me-8"></i>Información del Cliente
+                </h6>
+                <div class="bg-gray-50 rounded-8 p-16 mb-16">
+                  <p class="mb-8"><strong>Nombre:</strong> {{ getClienteNombre(pedidoSeleccionado) }}</p>
+                  <p class="mb-8"><strong>Documento:</strong> {{ getClienteDocumento(pedidoSeleccionado) }}</p>
+                  <p class="mb-8"><strong>Teléfono:</strong> {{ pedidoSeleccionado.telefono_contacto || 'No especificado' }}</p>
+                  <p class="mb-0"><strong>Dirección:</strong> {{ pedidoSeleccionado.direccion_envio || 'No especificada' }}</p>
+                </div>
+              </div>
+
+              <!-- Información del pedido -->
+              <div class="col-md-6">
+                <h6 class="text-heading fw-semibold mb-16">
+                  <i class="ph ph-info me-8"></i>Información del Pedido
+                </h6>
+                <div class="bg-gray-50 rounded-8 p-16 mb-16">
+                  <p class="mb-8"><strong>Fecha:</strong> {{ formatearFecha(pedidoSeleccionado.fecha_pedido) }}</p>
+                  <p class="mb-8"><strong>Estado:</strong> 
+                    <span class="badge px-8 py-4 rounded-pill fw-medium ms-8"
+                          [ngClass]="getEstadoBadgeClass(pedidoSeleccionado.estadoPedido?.nombre)">
+                      {{ pedidoSeleccionado.estadoPedido?.nombre }}
+                    </span>
+                  </p>
+                  <p class="mb-8"><strong>Método de Pago:</strong> {{ pedidoSeleccionado.metodo_pago }}</p>
+                  <p class="mb-0"><strong>Observaciones:</strong> {{ pedidoSeleccionado.observaciones || 'Ninguna' }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Productos -->
+            <h6 class="text-heading fw-semibold mb-16">
+              <i class="ph ph-shopping-bag me-8"></i>Productos del Pedido
+            </h6>
+            <div class="table-responsive mb-24">
+              <table class="table table-bordered">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-16 py-12 text-heading fw-semibold">Producto</th>
+                    <th class="px-16 py-12 text-heading fw-semibold text-center">Cantidad</th>
+                    <th class="px-16 py-12 text-heading fw-semibold text-end">Precio Unit.</th>
+                    <th class="px-16 py-12 text-heading fw-semibold text-end">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let detalle of pedidoSeleccionado.detalles">
+                    <td class="px-16 py-12">
+                      <div class="d-flex align-items-center gap-12">
+                        <img 
+                          [src]="detalle.producto?.imagen_url || '/placeholder.svg?height=40&width=40'" 
+                          [alt]="detalle.nombre_producto"
+                          class="w-40 h-40 object-fit-cover rounded-6">
+                        <div>
+                          <h6 class="text-heading fw-medium mb-4">{{ detalle.nombre_producto }}</h6>
+                          <p class="text-gray-500 text-sm mb-0">{{ detalle.codigo_producto }}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-16 py-12 text-center">
+                      <span class="badge bg-secondary-50 text-secondary-600 px-12 py-6 rounded-pill">
+                        {{ detalle.cantidad }}
+                      </span>
+                    </td>
+                    <td class="px-16 py-12 text-end">
+                      <span class="text-heading fw-medium">S/ {{ formatPrice(detalle.precio_unitario) }}</span>
+                    </td>
+                    <td class="px-16 py-12 text-end">
+                      <span class="text-heading fw-semibold">S/ {{ formatPrice(detalle.subtotal_linea) }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Resumen totales -->
+            <div class="row justify-content-end">
+              <div class="col-md-4">
+                <div class="bg-gray-50 rounded-8 p-16">
+                  <div class="d-flex justify-content-between align-items-center mb-8">
+                    <span class="text-gray-600">Subtotal:</span>
+                    <span class="text-heading fw-medium">S/ {{ formatPrice(pedidoSeleccionado.subtotal) }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mb-8">
+                    <span class="text-gray-600">IGV (18%):</span>
+                    <span class="text-heading fw-medium">S/ {{ formatPrice(pedidoSeleccionado.igv) }}</span>
+                  </div>
+                  <div *ngIf="pedidoSeleccionado.descuento_total > 0" class="d-flex justify-content-between align-items-center mb-8">
+                    <span class="text-success-600">Descuento:</span>
+                    <span class="text-success-600 fw-medium">-S/ {{ formatPrice(pedidoSeleccionado.descuento_total) }}</span>
+                  </div>
+                  <hr class="border-gray-300 my-12">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-heading fw-bold">Total:</span>
+                    <span class="text-heading fw-bold text-xl">S/ {{ formatPrice(pedidoSeleccionado.total) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer border-top border-gray-200">
+            <button type="button" class="btn bg-gray-100 text-gray-600 px-16 py-8 rounded-8" data-bs-dismiss="modal">
+              Cerrar
             </button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              <i class="fas fa-times"></i> Cancelar
+            <button type="button" class="btn bg-main-600 text-white px-16 py-8 rounded-8" (click)="editarPedido(pedidoSeleccionado)">
+              <i class="ph ph-pencil me-8"></i>
+              Cambiar Estado
             </button>
           </div>
         </div>
       </div>
     </div>
   `,
+  styles: [`
+    .table td {
+      vertical-align: middle;
+    }
+    
+    .dropdown-toggle::after {
+      display: none;
+    }
+    
+    .badge.dropdown-toggle {
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    
+    .badge.dropdown-toggle:hover {
+      opacity: 0.8;
+    }
+  `]
 })
 export class PedidosListComponent implements OnInit {
-  pedidos: Pedido[] = []
-  estados: EstadoPedido[] = []
-  pedidoSeleccionado: any = null
-  nuevoEstadoId = 0
-  // Agregar esta línea
-  trackByPedidoId = (index: number, pedido: any) => pedido.id
-  filtros: PedidosFiltros = {}
-  currentPage = 1
-  totalPages = 1
-  totalItems = 0
-  loading = false
-  Math = Math
+  pedidos: Pedido[] = [];
+  estados: EstadoPedido[] = [];
+  isLoading = true;
+  filtrosForm: FormGroup;
+  paginacion: any = null;
+  pedidoSeleccionado: Pedido | null = null;
+  estadisticas: any = {
+    pendientes: 0,
+    preparacion: 0,
+    enviados: 0,
+    entregados: 0
+  };
 
   constructor(
     private pedidosService: PedidosService,
-    public permissionsService: PermissionsService,
-  ) {}
-
-  ngOnInit() {
-    this.cargarEstados()
-    // Cargar pedidos después de un pequeño delay para asegurar que los estados estén listos
-    setTimeout(() => {
-      this.cargarPedidos()
-    }, 100)
+    private fb: FormBuilder
+  ) {
+    this.filtrosForm = this.fb.group({
+      estado_pedido_id: [''],
+      fecha_inicio: [''],
+      fecha_fin: [''],
+      search: ['']
+    });
   }
 
-  cargarPedidos() {
-    this.loading = true
-    this.filtros.page = this.currentPage
-    this.pedidosService.getPedidos(this.filtros).subscribe({
-      next: (response) => {
-        console.log("Respuesta del servicio:", response) // Para debug
-        this.pedidos = response.pedidos || []
-        this.currentPage = response.pagination.current_page
-        this.totalPages = response.pagination.last_page
-        this.totalItems = response.pagination.total
-        this.loading = false
-
-        // Forzar detección de cambios
-        setTimeout(() => {
-          // Este timeout asegura que Angular detecte los cambios
-        }, 0)
-      },
-      error: (error) => {
-        console.error("Error al cargar pedidos:", error)
-        this.pedidos = []
-        this.loading = false
-      },
-    })
+  ngOnInit(): void {
+    this.cargarEstados();
+    this.cargarPedidos();
+    this.cargarEstadisticas();
   }
 
-  cargarEstados() {
-    this.pedidosService.getEstados().subscribe({
+  cargarEstados(): void {
+    this.pedidosService.obtenerEstados().subscribe({
       next: (estados) => {
-        this.estados = estados
+        this.estados = estados;
       },
       error: (error) => {
-        console.error("Error al cargar estados:", error)
-      },
-    })
+        console.error('Error al cargar estados:', error);
+      }
+    });
   }
 
-  filtrarPedidos() {
-    this.currentPage = 1
-    this.cargarPedidos()
-  }
+  cargarPedidos(page: number = 1): void {
+    this.isLoading = true;
+    const filtros = {
+      ...this.filtrosForm.value,
+      page
+    };
 
-  verDetalle(pedidoId: number) {
-    this.pedidosService.getPedido(pedidoId).subscribe({
-      next: (pedido) => {
-        this.pedidoSeleccionado = pedido
-        this.nuevoEstadoId = pedido.estado.id
-        // Abrir modal usando Bootstrap
-        const modal = new (window as any).bootstrap.Modal(document.getElementById("modalDetallePedido"))
-        modal.show()
+    this.pedidosService.obtenerPedidos(filtros).subscribe({
+      next: (response) => {
+        this.pedidos = response.data || response;
+        this.paginacion = response.meta || null;
+        this.isLoading = false;
       },
       error: (error) => {
-        console.error("Error al cargar detalle del pedido:", error)
+        console.error('Error al cargar pedidos:', error);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  cargarEstadisticas(): void {
+    this.pedidosService.obtenerEstadisticas().subscribe({
+      next: (stats) => {
+        this.estadisticas = stats;
       },
-    })
+      error: (error) => {
+        console.error('Error al cargar estadísticas:', error);
+      }
+    });
   }
 
-  abrirModalCambiarEstado() {
-    const modal = new (window as any).bootstrap.Modal(document.getElementById("modalCambiarEstado"))
-    modal.show()
+  aplicarFiltros(): void {
+    this.cargarPedidos(1);
   }
 
-  confirmarCambioEstado() {
-    if (this.pedidoSeleccionado && this.nuevoEstadoId) {
-      this.pedidosService.updateEstado(this.pedidoSeleccionado.id, this.nuevoEstadoId).subscribe({
-        next: (response) => {
-          // Actualizar estado en el pedido seleccionado
-          const estadoActualizado = this.estados.find((e) => e.id === this.nuevoEstadoId)
-          if (estadoActualizado) {
-            this.pedidoSeleccionado.estado = {
-              id: estadoActualizado.id,
-              nombre: estadoActualizado.nombre_estado,
+  cambiarPagina(page: number): void {
+    if (page >= 1 && page <= this.paginacion.last_page) {
+      this.cargarPedidos(page);
+    }
+  }
+
+  getPaginas(): number[] {
+    if (!this.paginacion) return [];
+    
+    const current = this.paginacion.current_page;
+    const last = this.paginacion.last_page;
+    const pages: number[] = [];
+    
+    for (let i = Math.max(1, current - 2); i <= Math.min(last, current + 2); i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  }
+
+  verDetalle(pedido: Pedido): void {
+    this.pedidosService.obtenerPedido(pedido.id).subscribe({
+      next: (pedidoDetallado) => {
+        this.pedidoSeleccionado = pedidoDetallado;
+        const modal = new (window as any).bootstrap.Modal(document.getElementById('modalDetallePedido'));
+        modal.show();
+      },
+      error: (error) => {
+        console.error('Error al cargar detalle del pedido:', error);
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudo cargar el detalle del pedido',
+          icon: 'error',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
+  }
+
+  editarPedido(pedido: Pedido): void {
+    // Implementar modal para cambiar estado
+    console.log('Editar pedido:', pedido);
+  }
+
+  cambiarEstado(pedido: Pedido, nuevoEstadoId: number): void {
+    if (pedido.estado_pedido_id === nuevoEstadoId) {
+      return; // No cambiar si es el mismo estado
+    }
+
+    const estado = this.estados.find(e => e.id === nuevoEstadoId);
+    
+    Swal.fire({
+      title: '¿Cambiar estado del pedido?',
+      html: `Se cambiará el estado del pedido <strong>${pedido.codigo_pedido}</strong> a <strong>${estado?.nombre}</strong>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#198754',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, cambiar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.pedidosService.actualizarEstado(pedido.id, nuevoEstadoId).subscribe({
+          next: (response) => {
+            // Actualizar el pedido en la lista
+            const index = this.pedidos.findIndex(p => p.id === pedido.id);
+            if (index >= 0) {
+              this.pedidos[index].estado_pedido_id = nuevoEstadoId;
+              this.pedidos[index].estadoPedido = { id: nuevoEstadoId, nombre: estado?.nombre || '' };
             }
+
+            Swal.fire({
+              title: '¡Estado actualizado!',
+              text: `El pedido ahora está en estado: ${estado?.nombre}`,
+              icon: 'success',
+              confirmButtonColor: '#198754',
+              timer: 2000,
+              showConfirmButton: false
+            });
+
+            // Recargar estadísticas
+            this.cargarEstadisticas();
+          },
+          error: (error) => {
+            Swal.fire({
+              title: 'Error',
+              text: 'No se pudo actualizar el estado del pedido',
+              icon: 'error',
+              confirmButtonColor: '#dc3545'
+            });
+            console.error('Error al actualizar estado:', error);
           }
-          // Actualizar en la lista
-          const pedidoEnLista = this.pedidos.find((p) => p.id === this.pedidoSeleccionado.id)
-          if (pedidoEnLista && estadoActualizado) {
-            pedidoEnLista.estado = {
-              id: estadoActualizado.id,
-              nombre: estadoActualizado.nombre_estado,
-            }
-          }
-          // Cerrar modal
-          const modal = (window as any).bootstrap.Modal.getInstance(document.getElementById("modalCambiarEstado"))
-          modal.hide()
-          alert("Estado actualizado correctamente")
-        },
-        error: (error) => {
-          console.error("Error al actualizar estado:", error)
-          alert("Error al actualizar estado")
-        },
-      })
-    }
+        });
+      }
+    });
   }
 
-  cambiarPagina(page: number) {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page
-      this.cargarPedidos()
+  getClienteNombre(pedido: Pedido): string {
+    if (pedido.userCliente) {
+      return `${pedido.userCliente.nombres} ${pedido.userCliente.apellidos}`;
     }
+    if (pedido.cliente) {
+      return pedido.cliente.razon_social || pedido.cliente.nombre_comercial;
+    }
+    return 'Cliente no especificado';
   }
 
-  getPageNumbers(): number[] {
-    const pages: number[] = []
-    const start = Math.max(1, this.currentPage - 2)
-    const end = Math.min(this.totalPages, this.currentPage + 2)
-    for (let i = start; i <= end; i++) {
-      pages.push(i)
+  getClienteDocumento(pedido: Pedido): string {
+    if (pedido.userCliente) {
+      return pedido.userCliente.numero_documento;
     }
-    return pages
+    if (pedido.cliente) {
+      return pedido.cliente.numero_documento;
+    }
+    return 'Sin documento';
   }
 
-  getEstadoBadgeClass(estado: string | null | undefined): string {
-    // Validación mejorada para valores nulos, undefined o vacíos
-    if (!estado || typeof estado !== "string") {
-      return "bg-gradient-secondary"
-    }
-
+  getEstadoBadgeClass(estado: string | undefined): string {
+    if (!estado) return 'bg-gray-100 text-gray-600';
+    
     switch (estado.toLowerCase()) {
-      case "nuevo":
-        return "bg-gradient-info"
-      case "pendiente":
-        return "bg-gradient-warning"
-      case "pagado":
-        return "bg-gradient-success"
-      case "en preparación":
-      case "en preparacion":
-        return "bg-gradient-primary"
-      case "en camino":
-        return "bg-gradient-info"
-      case "enviado":
-        return "bg-gradient-info"
-      case "entregado":
-        return "bg-gradient-success"
-      case "sin stock":
-        return "bg-gradient-warning"
-      case "cancelado":
-        return "bg-gradient-danger"
-      case "devuelto":
-        return "bg-gradient-danger"
+      case 'pendiente':
+        return 'bg-warning-100 text-warning-700';
+      case 'confirmado':
+        return 'bg-info-100 text-info-700';
+      case 'en preparación':
+      case 'preparando':
+        return 'bg-primary-100 text-primary-700';
+      case 'enviado':
+      case 'en camino':
+        return 'bg-secondary-100 text-secondary-700';
+      case 'entregado':
+        return 'bg-success-100 text-success-700';
+      case 'cancelado':
+        return 'bg-danger-100 text-danger-700';
       default:
-        return "bg-gradient-danger"
+        return 'bg-gray-100 text-gray-600';
     }
+  }
+
+  formatearFecha(fecha: string): string {
+    return new Date(fecha).toLocaleDateString('es-PE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  formatPrice(price: number | string): string {
+    const numPrice = typeof price === 'number' ? price : parseFloat(String(price || 0));
+    if (isNaN(numPrice)) return '0.00';
+    return numPrice.toFixed(2);
   }
 }

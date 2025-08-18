@@ -1,182 +1,381 @@
 <!-- ========================= Breadcrumb Start =============================== -->
-<app-breadcrumb title="Checkout" subtitle="Checkout"></app-breadcrumb>
+<app-breadcrumb title="Finalizar Compra" subtitle="Checkout"></app-breadcrumb>
 
 <!-- ========================= Breadcrumb End =============================== -->
 
-<!-- ================================= Checkout Page Start ===================================== -->
+<!-- ================================ Checkout Section Start ================================ -->
 <section class="checkout py-80">
-    <div class="container container-lg">
-        <div class="border border-gray-100 rounded-8 px-30 py-20 mb-40">
-            <span class="">¿Tienes un cupón? <a [routerLink]="['cart']"
-                    class="fw-semibold text-gray-900 hover-text-decoration-underline hover-text-main-600">Haz clic aquí para
-                    ingresar tu código</a> </span>
-        </div>
-        <div class="row">
-            <div class="col-xl-9 col-lg-8">
-                <form action="#" class="pe-xl-5">
-                    <div class="row gy-3">
-                        <div class="col-sm-6 col-xs-6">
-                            <input type="text" class="common-input border-gray-100" placeholder="Nombres">
-                        </div>
-                        <div class="col-sm-6 col-xs-6">
-                            <input type="text" class="common-input border-gray-100" placeholder="Apellidos">
-                        </div>
-                        <div class="col-12">
-                            <input type="text" class="common-input border-gray-100" placeholder="Nombre de la Empresa (opcional)">
-                        </div>
-                        <div class="col-12">
-                            <input type="text" class="common-input border-gray-100" placeholder="Estados Unidos (US)">
-                        </div>
-                        <div class="col-12">
-                            <input type="text" class="common-input border-gray-100"
-                                placeholder="Número de casa y nombre de la calle">
-                        </div>
-                        <div class="col-12">
-                            <input type="text" class="common-input border-gray-100"
-                                placeholder="Apartamento, suite, unidad, etc. (opcional)">
-                        </div>
-                        <div class="col-12">
-                            <input type="text" class="common-input border-gray-100" placeholder="Ciudad">
-                        </div>
-                        <div class="col-12">
-                            <input type="text" class="common-input border-gray-100" placeholder="San Francisco">
-                        </div>
-                        <div class="col-12">
-                            <input type="text" class="common-input border-gray-100" placeholder="Código Postal">
-                        </div>
-                        <div class="col-12">
-                            <input type="number" class="common-input border-gray-100" placeholder="Teléfono">
-                        </div>
-                        <div class="col-12">
-                            <input type="email" class="common-input border-gray-100" placeholder="Correo Electrónico">
-                        </div>
-
-                        <div class="col-12">
-                            <div class="my-40">
-                                <h6 class="text-lg mb-24">Información Adicional</h6>
-                                <input type="text" class="common-input border-gray-100"
-                                    placeholder="Notas sobre tu pedido, p. ej. notas especiales para la entrega.">
-                            </div>
-                        </div>
-
-                    </div>
-                </form>
+  <div class="container container-lg">
+    <div class="row gy-4">
+      
+      <!-- Formulario de Checkout -->
+      <div class="col-lg-8">
+        <div class="checkout-form">
+          <div class="card border-0 shadow-sm rounded-12">
+            <div class="card-header bg-main-600 text-white py-16">
+              <h5 class="mb-0 fw-semibold">
+                <i class="ph ph-shopping-cart me-8"></i>
+                Detalle Compra
+              </h5>
             </div>
-            <div class="col-xl-3 col-lg-4">
-                <div class="checkout-sidebar">
-                    <div class="bg-color-three rounded-8 p-24 text-center">
-                        <span class="text-gray-900 text-xl fw-semibold">Tus Pedidos</span>
+            <div class="card-body p-24">
+              <form [formGroup]="checkoutForm" (ngSubmit)="onSubmit()">
+                
+                <!-- DNI / RUC -->
+                <div class="row mb-20">
+                  <div class="col-md-6">
+                    <label class="form-label text-heading fw-medium">DNI / RUC</label>
+                    <div class="input-group">
+                      <input 
+                        type="text" 
+                        class="form-control rounded-start-8 border-end-0"
+                        formControlName="numeroDocumento"
+                        placeholder="Ingrese DNI o RUC"
+                        maxlength="11">
+                      <button 
+                        type="button" 
+                        class="btn btn-main px-16 rounded-end-8"
+                        (click)="buscarDocumento()"
+                        [disabled]="buscandoDocumento">
+                        <i class="ph ph-magnifying-glass" *ngIf="!buscandoDocumento"></i>
+                        <i class="ph ph-spinner ph-spin" *ngIf="buscandoDocumento"></i>
+                      </button>
                     </div>
-
-                    <div class="border border-gray-100 rounded-8 px-24 py-40 mt-24">
-                        <div class="mb-32 pb-32 border-bottom border-gray-100 flex-between gap-8">
-                            <span class="text-gray-900 fw-medium text-xl font-heading-two">Producto</span>
-                            <span class="text-gray-900 fw-medium text-xl font-heading-two">Subtotal</span>
-                        </div>
-
-                        <div class="flex-between gap-24 mb-32">
-                            <div class="flex-align gap-12">
-                                <span class="text-gray-900 fw-normal text-md font-heading-two w-144">HP Chromebook Con
-                                    Intel Celeron</span>
-                                <span class="text-gray-900 fw-normal text-md font-heading-two"><i
-                                        class="ph-bold ph-x"></i></span>
-                                <span class="text-gray-900 fw-semibold text-md font-heading-two">1</span>
-                            </div>
-                            <span class="text-gray-900 fw-bold text-md font-heading-two">$250.00</span>
-                        </div>
-                        <div class="flex-between gap-24 mb-32">
-                            <div class="flex-align gap-12">
-                                <span class="text-gray-900 fw-normal text-md font-heading-two w-144">HP Chromebook Con
-                                    Intel Celeron</span>
-                                <span class="text-gray-900 fw-normal text-md font-heading-two"><i
-                                        class="ph-bold ph-x"></i></span>
-                                <span class="text-gray-900 fw-semibold text-md font-heading-two">1</span>
-                            </div>
-                            <span class="text-gray-900 fw-bold text-md font-heading-two">S/250.00</span>
-                        </div>
-                        <div class="flex-between gap-24 mb-32">
-                            <div class="flex-align gap-12">
-                                <span class="text-gray-900 fw-normal text-md font-heading-two w-144">HP Chromebook Con
-                                    Intel Celeron</span>
-                                <span class="text-gray-900 fw-normal text-md font-heading-two"><i
-                                        class="ph-bold ph-x"></i></span>
-                                <span class="text-gray-900 fw-semibold text-md font-heading-two">1</span>
-                            </div>
-                            <span class="text-gray-900 fw-bold text-md font-heading-two">$250.00</span>
-                        </div>
-                        <div class="flex-between gap-24 mb-32">
-                            <div class="flex-align gap-12">
-                                <span class="text-gray-900 fw-normal text-md font-heading-two w-144">HP Chromebook With
-                                    Intel Celeron</span>
-                                <span class="text-gray-900 fw-normal text-md font-heading-two"><i
-                                        class="ph-bold ph-x"></i></span>
-                                <span class="text-gray-900 fw-semibold text-md font-heading-two">1</span>
-                            </div>
-                            <span class="text-gray-900 fw-bold text-md font-heading-two">$250.00</span>
-                        </div>
-
-
-                        <div class="border-top border-gray-100 pt-30  mt-30">
-                            <div class="mb-32 flex-between gap-8">
-                                <span class="text-gray-900 font-heading-two text-xl fw-semibold">Subtotal</span>
-                                <span class="text-gray-900 font-heading-two text-md fw-bold">S/859.00</span>
-                            </div>
-                            <div class="mb-0 flex-between gap-8">
-                                <span class="text-gray-900 font-heading-two text-xl fw-semibold">Total</span>
-                                <span class="text-gray-900 font-heading-two text-md fw-bold">S/859.00</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-32">
-                        <div class="payment-item">
-                            <div class="form-check common-check common-radio py-16 mb-0">
-                                <input class="form-check-input" type="radio" name="payment" id="payment1" checked>
-                                <label class="form-check-label fw-semibold text-neutral-600" for="payment1">Transferencia
-                                    bancaria directa</label>
-                            </div>
-                            <div class="payment-item__content px-16 py-24 rounded-8 bg-main-50 position-relative">
-                                <p class="text-gray-800">Realice su pago directamente en nuestra cuenta bancaria. Utilice su ID de pedido como referencia de pago. Su pedido no se enviará hasta que los fondos se hayan acreditado en nuestra cuenta.</p>
-                            </div>
-                        </div>
-                        <div class="payment-item">
-                            <div class="form-check common-check common-radio py-16 mb-0">
-                                <input class="form-check-input" type="radio" name="payment" id="payment2">
-                                <label class="form-check-label fw-semibold text-neutral-600" for="payment2">Verificar
-                                    pagos</label>
-                            </div>
-                            <div class="payment-item__content px-16 py-24 rounded-8 bg-main-50 position-relative">
-                                <p class="text-gray-800">Realice su pago directamente en nuestra cuenta bancaria. Utilice su ID de pedido como referencia de pago. Su pedido no se enviará hasta que los fondos se hayan acreditado en nuestra cuenta.</p>
-                            </div>
-                        </div>
-                        <div class="payment-item">
-                            <div class="form-check common-check common-radio py-16 mb-0">
-                                <input class="form-check-input" type="radio" name="payment" id="payment3">
-                                <label class="form-check-label fw-semibold text-neutral-600" for="payment3">Pago
-                                    contra entrega</label>
-                            </div>
-                            <div class="payment-item__content px-16 py-24 rounded-8 bg-main-50 position-relative">
-                                <p class="text-gray-800">Realice su pago en efectivo al momento de la entrega. Asegúrese de tener el monto exacto, ya que no se podrá proporcionar cambio.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-32 pt-32 border-top border-gray-100">
-                        <p class="text-gray-500">Sus datos personales se utilizarán para procesar su pedido, mejorar su experiencia en este sitio web y para otros fines descritos en nuestra <a href="#"
-                                class="text-main-600 text-decoration-underline"> política de privacidad</a> .</p>
-                    </div>
-
-                    <a [routerLink]="['checkout']" class="btn btn-main mt-40 py-18 w-100 rounded-8 mt-56">Realizar
-                        pedido</a>
-
+                  </div>
                 </div>
+
+                <!-- Cliente -->
+                <div class="mb-20">
+                  <label class="form-label text-heading fw-medium">
+                    Cliente <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-control rounded-8"
+                    formControlName="cliente"
+                    placeholder="Nombre completo del cliente"
+                    [class.is-invalid]="checkoutForm.get('cliente')?.invalid && checkoutForm.get('cliente')?.touched">
+                  <div class="invalid-feedback" *ngIf="checkoutForm.get('cliente')?.invalid && checkoutForm.get('cliente')?.touched">
+                    El nombre del cliente es requerido
+                  </div>
+                </div>
+
+                <!-- Dirección -->
+                <div class="mb-20">
+                  <label class="form-label text-heading fw-medium">
+                    Dirección <span class="text-danger">*</span>
+                  </label>
+                  <textarea 
+                    class="form-control rounded-8"
+                    formControlName="direccion"
+                    rows="2"
+                    placeholder="Ingrese su dirección completa"
+                    [class.is-invalid]="checkoutForm.get('direccion')?.invalid && checkoutForm.get('direccion')?.touched"></textarea>
+                  <div class="invalid-feedback" *ngIf="checkoutForm.get('direccion')?.invalid && checkoutForm.get('direccion')?.touched">
+                    La dirección es requerida
+                  </div>
+                </div>
+
+                <!-- Celular -->
+                <div class="mb-20">
+                  <label class="form-label text-heading fw-medium">
+                    Celular <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="tel" 
+                    class="form-control rounded-8"
+                    formControlName="celular"
+                    placeholder="999 999 999"
+                    maxlength="9"
+                    [class.is-invalid]="checkoutForm.get('celular')?.invalid && checkoutForm.get('celular')?.touched">
+                  <div class="invalid-feedback" *ngIf="checkoutForm.get('celular')?.invalid && checkoutForm.get('celular')?.touched">
+                    El número de celular es requerido
+                  </div>
+                </div>
+
+                <!-- Ubigeo -->
+                <div class="row mb-20">
+                  <!-- Departamento -->
+                  <div class="col-md-4 mb-16 mb-md-0">
+                    <label class="form-label text-heading fw-medium">
+                      Departamento <span class="text-danger">*</span>
+                    </label>
+                    <select 
+                      class="form-select rounded-8"
+                      formControlName="departamento"
+                      (change)="onDepartamentoChange()"
+                      [class.is-invalid]="checkoutForm.get('departamento')?.invalid && checkoutForm.get('departamento')?.touched">
+                      <option value="">SELECCIONE DEPARTAMENTO (*)</option>
+                      <option 
+                        *ngFor="let depto of departamentos" 
+                        [value]="depto.id">
+                        {{ depto.nombre }}
+                      </option>
+                    </select>
+                    <div class="invalid-feedback" *ngIf="checkoutForm.get('departamento')?.invalid && checkoutForm.get('departamento')?.touched">
+                      Seleccione un departamento
+                    </div>
+                  </div>
+
+                  <!-- Provincia -->
+                  <div class="col-md-4 mb-16 mb-md-0">
+                    <label class="form-label text-heading fw-medium">
+                      Provincia <span class="text-danger">*</span>
+                    </label>
+                    <select 
+                      class="form-select rounded-8"
+                      formControlName="provincia"
+                      (change)="onProvinciaChange()"
+                      [disabled]="!checkoutForm.get('departamento')?.value"
+                      [class.is-invalid]="checkoutForm.get('provincia')?.invalid && checkoutForm.get('provincia')?.touched">
+                      <option value="">SELECCIONE PROVINCIA (*)</option>
+                      <option 
+                        *ngFor="let prov of provincias" 
+                        [value]="prov.id">
+                        {{ prov.nombre }}
+                      </option>
+                    </select>
+                    <div class="invalid-feedback" *ngIf="checkoutForm.get('provincia')?.invalid && checkoutForm.get('provincia')?.touched">
+                      Seleccione una provincia
+                    </div>
+                  </div>
+
+                  <!-- Distrito -->
+                  <div class="col-md-4">
+                    <label class="form-label text-heading fw-medium">
+                      Distrito <span class="text-danger">*</span>
+                    </label>
+                    <select 
+                      class="form-select rounded-8"
+                      formControlName="distrito"
+                      [disabled]="!checkoutForm.get('provincia')?.value"
+                      [class.is-invalid]="checkoutForm.get('distrito')?.invalid && checkoutForm.get('distrito')?.touched">
+                      <option value="">SELECCIONE DISTRITO (*)</option>
+                      <option 
+                        *ngFor="let dist of distritos" 
+                        [value]="dist.id">
+                        {{ dist.nombre }}
+                      </option>
+                    </select>
+                    <div class="invalid-feedback" *ngIf="checkoutForm.get('distrito')?.invalid && checkoutForm.get('distrito')?.touched">
+                      Seleccione un distrito
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Forma de Envío y Tipo de Pago -->
+                <div class="row mb-20">
+                  <!-- Forma de Envío -->
+                  <div class="col-md-6 mb-16 mb-md-0">
+                    <label class="form-label text-heading fw-medium">
+                      Forma de Envío <span class="text-danger">*</span>
+                    </label>
+                    <select 
+                      class="form-select rounded-8"
+                      formControlName="formaEnvio"
+                      (change)="onFormaEnvioChange()"
+                      [class.is-invalid]="checkoutForm.get('formaEnvio')?.invalid && checkoutForm.get('formaEnvio')?.touched">
+                      <option value="">Forma de Envío (*)</option>
+                      <option value="delivery">Delivery - S/ {{ costoEnvio.delivery }}</option>
+                      <option value="recojo_tienda">Recojo en tienda - Gratis</option>
+                      <option value="envio_provincia">Envío a provincia - S/ {{ costoEnvio.provincia }}</option>
+                    </select>
+                    <div class="invalid-feedback" *ngIf="checkoutForm.get('formaEnvio')?.invalid && checkoutForm.get('formaEnvio')?.touched">
+                      Seleccione una forma de envío
+                    </div>
+                  </div>
+
+                  <!-- Tipo de Pago -->
+                  <div class="col-md-6">
+                    <label class="form-label text-heading fw-medium">
+                      Tipo de Pago <span class="text-danger">*</span>
+                    </label>
+                    <select 
+                      class="form-select rounded-8"
+                      formControlName="tipoPago"
+                      [class.is-invalid]="checkoutForm.get('tipoPago')?.invalid && checkoutForm.get('tipoPago')?.touched">
+                      <option value="">Tipo de pago (*)</option>
+                      <option value="efectivo">Efectivo</option>
+                      <option value="tarjeta">Tarjeta de crédito/débito</option>
+                      <option value="transferencia">Transferencia bancaria</option>
+                      <option value="yape">Yape</option>
+                      <option value="plin">Plin</option>
+                    </select>
+                    <div class="invalid-feedback" *ngIf="checkoutForm.get('tipoPago')?.invalid && checkoutForm.get('tipoPago')?.touched">
+                      Seleccione un tipo de pago
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-20">
+                  <label class="form-label text-heading fw-medium">
+                    Email <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="email" 
+                    class="form-control rounded-8"
+                    formControlName="email"
+                    placeholder="correo@ejemplo.com"
+                    [class.is-invalid]="checkoutForm.get('email')?.invalid && checkoutForm.get('email')?.touched">
+                  <div class="invalid-feedback" *ngIf="checkoutForm.get('email')?.invalid && checkoutForm.get('email')?.touched">
+                    <span *ngIf="checkoutForm.get('email')?.errors?.['required']">El email es requerido</span>
+                    <span *ngIf="checkoutForm.get('email')?.errors?.['email']">Ingrese un email válido</span>
+                  </div>
+                </div>
+
+                <!-- Términos y Condiciones -->
+                <div class="mb-20">
+                  <div class="form-check">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      formControlName="aceptaTerminos"
+                      id="aceptaTerminos">
+                    <label class="form-check-label text-sm" for="aceptaTerminos">
+                      He leído y acepto los 
+                      <a href="#" class="text-main-600 text-decoration-underline">términos y condiciones</a> 
+                      y las 
+                      <a href="#" class="text-main-600 text-decoration-underline">políticas de privacidad</a>
+                    </label>
+                  </div>
+                  <div class="text-danger text-sm mt-4" *ngIf="checkoutForm.get('aceptaTerminos')?.invalid && checkoutForm.get('aceptaTerminos')?.touched">
+                    Debe aceptar los términos y condiciones
+                  </div>
+                </div>
+
+                <!-- Información Adicional -->
+                <div class="mb-0">
+                  <h6 class="text-heading fw-semibold mb-16">Información Adicional</h6>
+                  <label class="form-label text-heading fw-medium">Otras notas...</label>
+                  <textarea 
+                    class="form-control rounded-8"
+                    formControlName="observaciones"
+                    rows="3"
+                    placeholder="Instrucciones especiales para la entrega, referencias de ubicación, etc."></textarea>
+                </div>
+
+              </form>
             </div>
+          </div>
         </div>
+      </div>
+
+      <!-- Resumen del Pedido -->
+      <div class="col-lg-4">
+        <div class="checkout-sidebar position-sticky" style="top: 24px;">
+          
+          <!-- Tu Orden -->
+          <div class="card border-0 shadow-sm rounded-12 mb-20">
+            <div class="card-header bg-gray-50 py-16">
+              <h6 class="mb-0 fw-semibold text-heading">Tu Orden</h6>
+            </div>
+            <div class="card-body p-20">
+              
+              <!-- Productos -->
+              <div class="order-products mb-20">
+                <div class="d-flex justify-content-between align-items-center fw-medium text-sm mb-12 pb-8 border-bottom border-gray-100">
+                  <span>Producto</span>
+                  <span>Total</span>
+                </div>
+                
+                <div class="product-item d-flex justify-content-between align-items-start mb-12" *ngFor="let item of cartItems">
+                  <div class="flex-grow-1">
+                    <h6 class="text-sm fw-medium mb-4">{{ item.nombre }}</h6>
+                    <span class="text-xs text-gray-500">x {{ item.cantidad }}</span>
+                  </div>
+                  <span class="text-sm fw-medium">S/ {{ formatPrice(getItemSubtotal(item)) }}</span>
+                </div>
+              </div>
+
+              <!-- Totales -->
+              <div class="order-totals">
+                <div class="d-flex justify-content-between align-items-center mb-12">
+                  <span class="text-gray-600">SubTotal</span>
+                  <span class="fw-medium">S/ {{ formatPrice(cartSummary.subtotal) }}</span>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-12">
+                  <span class="text-gray-600">Envío</span>
+                  <span class="fw-medium">S/ {{ formatPrice(costoEnvioCalculado) }}</span>
+                </div>
+
+                <hr class="border-gray-200 my-12">
+
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-heading fw-bold">Total</span>
+                  <span class="text-heading fw-bold">S/ {{ formatPrice(getTotalFinal()) }}</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Procesamiento -->
+          <div class="card border-0 shadow-sm rounded-12 mb-20">
+            <div class="card-header bg-info-50 py-16">
+              <h6 class="mb-0 fw-semibold text-heading">Procesamiento</h6>
+            </div>
+            <div class="card-body p-20">
+              <p class="text-sm text-gray-600 mb-16">
+                Contáctese por WhatsApp con el número de pedido que se asignará a su pedido, para procesar su compra
+              </p>
+              
+              <!-- Botones de Acción -->
+              <div class="d-grid gap-12">
+                <button 
+                  type="button"
+                  class="btn btn-outline-main py-12 rounded-8"
+                  (click)="pedirCotizacion()"
+                  [disabled]="!checkoutForm.valid || procesandoPedido">
+                  <i class="ph ph-whatsapp-logo me-8"></i>
+                  Pedir Cotización
+                </button>
+                
+                <button 
+                  type="button"
+                  class="btn btn-main py-12 rounded-8"
+                  (click)="pagarConTarjeta()"
+                  [disabled]="!checkoutForm.valid || procesandoPedido">
+                  <i class="ph ph-credit-card me-8" *ngIf="!procesandoPedido"></i>
+                  <i class="ph ph-spinner ph-spin me-8" *ngIf="procesandoPedido"></i>
+                  Pagar Con Tarjeta
+                </button>
+              </div>
+              
+              <p class="text-xs text-gray-500 mt-12 mb-0">
+                *Pagos con tarjeta se le suma 5%
+              </p>
+            </div>
+          </div>
+
+          <!-- Costo por envío -->
+          <div class="card border-0 shadow-sm rounded-12">
+            <div class="card-header bg-warning-50 py-16">
+              <h6 class="mb-0 fw-semibold text-heading">Costo por envío</h6>
+            </div>
+            <div class="card-body p-20">
+              <div class="shipping-costs">
+                <div class="d-flex justify-content-between align-items-center mb-8">
+                  <span class="text-sm text-gray-600">Dentro de Lima:</span>
+                  <span class="text-sm fw-medium">S/ {{ formatPrice(costoEnvio.delivery) }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-sm text-gray-600">Fuera de Lima:</span>
+                  <span class="text-sm fw-medium">S/ {{ formatPrice(costoEnvio.provincia) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
+  </div>
 </section>
-<!-- ================================= Checkout Page End ===================================== -->
+<!-- ================================ Checkout Section End ================================ -->
 
 <!-- ========================== Shipping Section Start ============================ -->
 <app-shipping></app-shipping>
-
 <!-- ========================== Shipping Section End ============================ -->

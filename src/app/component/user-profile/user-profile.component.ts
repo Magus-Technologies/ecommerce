@@ -20,9 +20,10 @@ import { User } from '../../models/user.model';
         <span class="text-xl text-white d-flex position-relative item-hover__text">
           <i class="ph ph-user"></i>
         </span>
-        <span class="text-md text-white item-hover__text d-none d-lg-flex">
-          {{ user?.name || 'Mi Perfil' }}
-        </span>
+     <span class="text-md text-white item-hover__text d-none d-lg-flex">
+  {{ esCliente ? (user?.name || 'Cliente') : 'Admin Usuario' }}
+</span>
+
         <span class="text-sm d-none d-lg-flex">
           <i class="ph ph-caret-down"></i>
         </span>
@@ -34,14 +35,25 @@ import { User } from '../../models/user.model';
         class="user-dropdown position-absolute top-100 end-0 mt-8 bg-white border border-gray-100 rounded-12 shadow-lg py-8 min-w-200 z-99"
         (click)="$event.stopPropagation()"
       >
-        <a 
-          routerLink="/dashboard" 
+        <!-- Enlace condicional: Mi Cuenta o Mi Perfil -->
+        <a *ngIf="esCliente; else adminProfile" 
+          routerLink="/my-account" 
           class="dropdown-item d-flex align-items-center gap-8 px-16 py-12 text-gray-700 hover-bg-white hover-text-main-600 transition-1"
           (click)="closeUserDropdown()"
         >
           <i class="ph ph-user text-lg"></i>
-          <span>Mi Perfil</span>
+          <span>Mi Cuenta</span>
         </a>
+
+        <ng-template #adminProfile>
+          <a routerLink="/dashboard" 
+            class="dropdown-item d-flex align-items-center gap-8 px-16 py-12 text-gray-700 hover-bg-white hover-text-main-600 transition-1"
+            (click)="closeUserDropdown()"
+          >
+            <i class="ph ph-user text-lg"></i>
+            <span>Mi Perfil</span>
+          </a>
+        </ng-template>
         <a 
           routerLink="/wishlist" 
           class="dropdown-item d-flex align-items-center gap-8 px-16 py-12 text-gray-700 hover-bg-main-50 hover-text-main-600 transition-1"
@@ -77,13 +89,17 @@ import { User } from '../../models/user.model';
         class="flex-align gap-4 item-hover-white btn border-0 bg-transparent p-0"
         (click)="toggleAuthDropdown($event)"
       >
-        <span class="text-xl text-white d-flex position-relative item-hover__text">
-          <i class="ph ph-user"></i>
-        </span>
-        <span class="text-md text-white item-hover__text d-none d-lg-flex">Mi Cuenta</span>
-        <span class="text-sm d-none d-lg-flex">
-          <i class="ph ph-caret-down"></i>
-        </span>
+      <span class="text-xl text-white d-flex position-relative item-hover__text">
+  <i class="ph ph-user"></i>
+</span>
+<span class="text-md text-white item-hover__text d-none d-lg-flex">
+  Mi Cuenta
+</span>
+<span class="text-sm d-none d-lg-flex">
+  <i class="ph ph-caret-down"></i>
+</span>
+
+
       </button>
       
       <!-- Dropdown de autenticación -->
@@ -141,6 +157,7 @@ export class UserProfileComponent implements OnInit {
   user: User | null = null;
   isLoggedIn = false;
   esSuperadmin = false;
+  esCliente = false;
   showAuthDropdown = false;
   showUserDropdown = false;
 
@@ -155,6 +172,7 @@ export class UserProfileComponent implements OnInit {
       if (user && user.roles) {
         this.esSuperadmin = user.roles.includes('superadmin');
       }
+      this.esCliente = user?.tipo_usuario === 'cliente';
     });
   }
 

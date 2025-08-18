@@ -80,6 +80,15 @@ export const routes: Routes = [
         component: RegisterComponent,
         title: 'Register',
       },
+      {
+        path: 'my-account',
+        loadComponent: () =>
+          import('./pages/my-account/my-account.component').then(
+            (m) => m.MyAccountComponent
+          ),
+        title: 'Mi Cuenta',
+        canActivate: [authGuard],
+      },
             {
         path: 'verify-email',
         loadComponent: () =>

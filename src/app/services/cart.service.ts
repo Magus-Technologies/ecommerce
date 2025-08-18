@@ -1,7 +1,7 @@
 // src/app/services/cart.service.ts
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { VentasService } from './ventas.service';
+import { PedidosService, CrearPedidoRequest } from './pedidos.service';
 
 export interface CartItem {
   id: number;
@@ -39,7 +39,7 @@ export class CartService {
   public cartItems$ = this.cartItemsSubject.asObservable();
   public cartSummary$ = this.cartSummarySubject.asObservable();
 
-  constructor(private ventasService?: VentasService) {
+  constructor(private pedidosService?: PedidosService) {
     this.loadCartFromStorage();
   }
 
@@ -228,10 +228,11 @@ export class CartService {
     return this.cartSummarySubject.value;
   }
 
-  // Procesar compra (crear venta) - solo si VentasService está disponible
-  procesarCompra(datosCompra: {
+  // ✅ NUEVO: Procesar pedido (reemplaza la funcionalidad de venta)
+  procesarPedido(datosCheckout: {
     metodo_pago: string;
-    requiere_factura?: boolean;
+    direccion_envio: string;
+    telefono_contacto: string;
     observaciones?: string;
   }): Observable<any> {
     const items = this.cartItemsSubject.value;
@@ -240,8 +241,8 @@ export class CartService {
       throw new Error('El carrito está vacío');
     }
 
-    if (!this.ventasService) {
-      throw new Error('VentasService no está disponible');
+    if (!this.pedidosService) {
+      throw new Error('PedidosService no está disponible');
     }
 
     const productos = items.map(item => ({
@@ -249,13 +250,14 @@ export class CartService {
       cantidad: item.cantidad
     }));
 
-    const ventaData = {
+    const pedidoData: CrearPedidoRequest = {
       productos,
-      metodo_pago: datosCompra.metodo_pago,
-      requiere_factura: datosCompra.requiere_factura || false,
-      observaciones: datosCompra.observaciones || ''
+      metodo_pago: datosCheckout.metodo_pago,
+      direccion_envio: datosCheckout.direccion_envio,
+      telefono_contacto: datosCheckout.telefono_contacto,
+      observaciones: datosCheckout.observaciones || ''
     };
 
-    return this.ventasService.crearVentaEcommerce(ventaData);
+    return this.pedidosService.crearPedidoEcommerce(pedidoData);
   }
 }

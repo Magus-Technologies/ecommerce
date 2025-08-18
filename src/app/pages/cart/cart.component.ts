@@ -30,6 +30,12 @@ export class CartComponent implements OnInit, OnDestroy {
   isUpdating = false;
   isLoggedIn = false;
   
+  // ✅ NUEVOS: Datos para checkout
+  direccionEnvio = '';
+  telefonoContacto = '';
+  metodoPago = 'efectivo';
+  observaciones = '';
+  
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -188,7 +194,7 @@ export class CartComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Proceder al checkout
+  // ✅ NUEVO: Proceder al checkout (crear pedido)
   proceedToCheckout(): void {
     if (this.cartItems.length === 0) {
       Swal.fire({
@@ -218,7 +224,143 @@ export class CartComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.router.navigate(['/checkout']);
+    // Mostrar modal de checkout
+    this.mostrarModalCheckout();
+  }
+
+  // ✅ NUEVO: Mostrar modal de checkout
+  mostrarModalCheckout(): void {
+    Swal.fire({
+      title: 'Finalizar Pedido',
+      html: `
+        <div class="text-start">
+          <div class="mb-3">
+            <label class="form-label">Dirección de envío *</label>
+            <textarea 
+              id="direccion-envio" 
+              class="form-control" 
+              rows="2" 
+              placeholder="Ingresa tu dirección completa">${this.direccionEnvio}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Teléfono de contacto *</label>
+            <input 
+              type="tel" 
+              id="telefono-contacto" 
+              class="form-control" 
+              placeholder="999 999 999"
+              value="${this.telefonoContacto}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Método de pago *</label>
+            <select id="metodo-pago" class="form-select">
+              <option value="efectivo" ${this.metodoPago === 'efectivo' ? 'selected' : ''}>Efectivo</option>
+              <option value="tarjeta" ${this.metodoPago === 'tarjeta' ? 'selected' : ''}>Tarjeta</option>
+              <option value="transferencia" ${this.metodoPago === 'transferencia' ? 'selected' : ''}>Transferencia</option>
+              <option value="yape" ${this.metodoPago === 'yape' ? 'selected' : ''}>Yape</option>
+              <option value="plin" ${this.metodoPago === 'plin' ? 'selected' : ''}>Plin</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Observaciones (opcional)</label>
+            <textarea 
+              id="observaciones" 
+              class="form-control" 
+              rows="2" 
+              placeholder="Instrucciones especiales...">${this.observaciones}</textarea>
+          </div>
+          <div class="bg-light p-3 rounded">
+            <div class="d-flex justify-content-between">
+              <span><strong>Total a pagar:</strong></span>
+              <span><strong>S/ ${this.formatPrice(this.getTotalFinal())}</strong></span>
+            </div>
+          </div>
+        </div>
+      `,
+      width: 600,
+      showCancelButton: true,
+      confirmButtonColor: '#198754',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: '<i class="ph ph-check me-2"></i>Confirmar Pedido',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const direccion = (document.getElementById('direccion-envio') as HTMLTextAreaElement).value;
+        const telefono = (document.getElementById('telefono-contacto') as HTMLInputElement).value;
+        const metodo = (document.getElementById('metodo-pago') as HTMLSelectElement).value;
+        const obs = (document.getElementById('observaciones') as HTMLTextAreaElement).value;
+
+        if (!direccion.trim()) {
+          Swal.showValidationMessage('La dirección de envío es requerida');
+          return false;
+        }
+
+        if (!telefono.trim()) {
+          Swal.showValidationMessage('El teléfono de contacto es requerido');
+          return false;
+        }
+
+        return {
+          direccion_envio: direccion.trim(),
+          telefono_contacto: telefono.trim(),
+          metodo_pago: metodo,
+          observaciones: obs.trim()
+        };
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.confirmarPedido(result.value);
+      }
+    });
+  }
+
+  // ✅ NUEVO: Confirmar pedido
+  confirmarPedido(datosCheckout: any): void {
+    Swal.fire({
+      title: 'Procesando pedido...',
+      text: 'Por favor espera mientras procesamos tu pedido',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      willOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    this.cartService.procesarPedido(datosCheckout).subscribe({
+      next: (response) => {
+        // Limpiar carrito después de crear el pedido exitosamente
+        this.cartService.clearCart();
+        
+        Swal.fire({
+          title: '¡Pedido creado exitosamente!',
+          html: `
+            <div class="text-center">
+              <i class="ph ph-check-circle text-success mb-3" style="font-size: 4rem;"></i>
+              <h5>Pedido #${response.pedido?.codigo_pedido || response.codigo_pedido}</h5>
+              <p class="text-muted">Tu pedido ha sido registrado y será procesado pronto.</p>
+              <p><strong>Total: S/ ${this.formatPrice(this.getTotalFinal())}</strong></p>
+            </div>
+          `,
+          icon: 'success',
+          confirmButtonColor: '#198754',
+          confirmButtonText: 'Ver mis pedidos'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.router.navigate(['/mis-pedidos']);
+          } else {
+            this.router.navigate(['/shop']);
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error al crear pedido:', error);
+        Swal.fire({
+          title: 'Error al crear pedido',
+          text: error.error?.message || 'Ocurrió un error al procesar tu pedido. Inténtalo de nuevo.',
+          icon: 'error',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
   }
 
   // Continuar comprando
@@ -226,40 +368,38 @@ export class CartComponent implements OnInit, OnDestroy {
     this.router.navigate(['/shop']);
   }
 
-// Obtener subtotal de un item
-getItemSubtotal(item: CartItem): number {
-  const precio = typeof item.precio === 'number' ? item.precio : parseFloat(String(item.precio || 0));
-  const cantidad = typeof item.cantidad === 'number' ? item.cantidad : parseInt(String(item.cantidad || 0));
-  
-  if (isNaN(precio) || isNaN(cantidad)) {
-    return 0;
+  // Obtener subtotal de un item
+  getItemSubtotal(item: CartItem): number {
+    const precio = typeof item.precio === 'number' ? item.precio : parseFloat(String(item.precio || 0));
+    const cantidad = typeof item.cantidad === 'number' ? item.cantidad : parseInt(String(item.cantidad || 0));
+    
+    if (isNaN(precio) || isNaN(cantidad)) {
+      return 0;
+    }
+    
+    return precio * cantidad;
   }
-  
-  return precio * cantidad;
-}
 
-// Obtener total final con descuento
-getTotalFinal(): number {
-  const total = typeof this.cartSummary.total === 'number' ? this.cartSummary.total : 0;
-  const descuento = typeof this.descuentoCupon === 'number' ? this.descuentoCupon : 0;
-  
-  return Math.max(0, total - descuento);
-}
-
-
-// Formatear precio
-formatPrice(price: number | string | null | undefined): string {
-  // Convertir a número y validar
-  const numPrice = typeof price === 'number' ? price : parseFloat(String(price || 0));
-  
-  // Si no es un número válido, retornar 0.00
-  if (isNaN(numPrice)) {
-    return '0.00';
+  // Obtener total final con descuento
+  getTotalFinal(): number {
+    const total = typeof this.cartSummary.total === 'number' ? this.cartSummary.total : 0;
+    const descuento = typeof this.descuentoCupon === 'number' ? this.descuentoCupon : 0;
+    
+    return Math.max(0, total - descuento);
   }
-  
-  return numPrice.toFixed(2);
-}
 
+  // Formatear precio
+  formatPrice(price: number | string | null | undefined): string {
+    // Convertir a número y validar
+    const numPrice = typeof price === 'number' ? price : parseFloat(String(price || 0));
+    
+    // Si no es un número válido, retornar 0.00
+    if (isNaN(numPrice)) {
+      return '0.00';
+    }
+    
+    return numPrice.toFixed(2);
+  }
 
   // Manejar error de imagen
   onImageError(event: any): void {
