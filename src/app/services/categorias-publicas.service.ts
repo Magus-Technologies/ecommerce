@@ -36,4 +36,10 @@ export class CategoriasPublicasService {
   obtenerCategoriasSeccion1(): Observable<CategoriaPublica[]> {
     return this.obtenerCategoriasPublicas(1);
   }
+
+    // ✅ NUEVO MÉTODO: Específico para obtener categorías de la sección 2 (Laptops)
+  obtenerCategoriasSeccion2(): Observable<CategoriaPublica[]> {
+    return this.obtenerCategoriasPublicas(2);
+  }
+
 }

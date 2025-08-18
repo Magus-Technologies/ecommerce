@@ -406,6 +406,16 @@ export const routes: Routes = [
         canActivate: [permissionGuard],
         data: { permission: 'empresa_info.ver' },
       },
+      {
+        path: 'email-templates',
+        loadComponent: () =>
+          import('./pages/dashboard/email-templates/email-templates.component').then(
+            (m) => m.EmailTemplatesComponent
+          ),
+        title: 'Gestión de Correos',
+        canActivate: [permissionGuard],
+        data: { permission: 'envio_correos.ver' },
+      },
     ],
   },
   {

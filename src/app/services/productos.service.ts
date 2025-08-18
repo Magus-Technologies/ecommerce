@@ -197,19 +197,41 @@ export class ProductosService {
   }
   obtenerProductosPublicos(filtros?: {
     categoria?: number;
+    seccion?: number;
     search?: string;
     page?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    categoryIds?: string;
+    brand?: number;
+    sortBy?: string;
   }): Observable<ProductosPublicosResponse> {
     let params = new HttpParams();
     
-    if (filtros?.categoria) {
-      params = params.set('categoria', filtros.categoria.toString());
+    if (filtros?.seccion) {
+      params = params.set('seccion', filtros.seccion.toString());
     }
     if (filtros?.search) {
       params = params.set('search', filtros.search);
     }
     if (filtros?.page) {
       params = params.set('page', filtros.page.toString());
+    }
+
+    if (filtros?.minPrice) {
+      params = params.set('minPrice', filtros.minPrice.toString());
+    }
+    if (filtros?.maxPrice) {
+      params = params.set('maxPrice', filtros.maxPrice.toString());
+    }
+    if (filtros?.categoryIds) {
+      params = params.set('categoryIds', filtros.categoryIds);
+    }
+    if (filtros?.brand) {
+      params = params.set('brand', filtros.brand.toString());
+    }
+    if (filtros?.sortBy) {
+      params = params.set('sortBy', filtros.sortBy);
     }
 
     return this.http.get<ProductosPublicosResponse>(`${this.apiUrl}/productos-publicos`, { params });

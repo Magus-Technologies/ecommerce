@@ -40,6 +40,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   puedeVerPedidos = false;
   puedeVerHorarios = false;
   puedeVerEmpresaInfo = false;
+  puedeVerEmailTemplates = false; 
 
 
 
@@ -48,8 +49,9 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
 
   constructor(
     private authService: AuthService,
-    private permissionsService: PermissionsService
+    public permissionsService: PermissionsService   // <- Cambiar private por public
   ) {}
+
 
   ngOnInit(): void {
     const currentUser = this.authService.getCurrentUser();
@@ -80,7 +82,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
     this.puedeVerPedidos = this.permissionsService.hasPermission('pedidos.ver');
     this.puedeVerHorarios = this.permissionsService.hasPermission('horarios.ver');
     this.puedeVerEmpresaInfo = this.permissionsService.hasPermission('empresa_info.ver');
-
+    this.puedeVerEmailTemplates = this.permissionsService.hasPermission('envio_correos.ver');
   }
 
   ngAfterViewInit(): void {
