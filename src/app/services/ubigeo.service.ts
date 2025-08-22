@@ -41,4 +41,8 @@ export class UbigeoService {
   getDistritos(departamentoId: string, provinciaId: string): Observable<Distrito[]> {
     return this.http.get<Distrito[]>(`${this.baseUrl}/distritos/${departamentoId}/${provinciaId}`);
   }
+
+  getUbigeoChain(ubigeoId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/ubigeo-chain/${ubigeoId}`);
+  }
 }

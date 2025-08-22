@@ -84,6 +84,14 @@
                           <i class="ph ph-check-circle me-4"></i>
                           {{ item.stock_disponible }} disponibles
                         </p>
+                        <!-- Botón temporal para debug -->
+                        <button 
+                          type="button" 
+                          class="btn btn-sm btn-outline-info mt-4"
+                          (click)="debugImageUrl(item)"
+                          title="Debug imagen">
+                          Debug Imagen
+                        </button>
                       </div>
                     </div>
                   </td>
@@ -105,16 +113,16 @@
                       </button>
                       <input 
                         type="number" 
-                        [(ngModel)]="item.cantidad"
-                        (change)="updateQuantity(item, item.cantidad)"
+                        [ngModel]="item.cantidad || 1"
+                        (ngModelChange)="updateQuantity(item, $event)"
                         class="quantity-input border-0 text-center w-60 h-40 bg-white"
                         min="1"
-                        [max]="item.stock_disponible">
+                        [max]="item.stock_disponible || 1">
                       <button 
                         type="button"
                         class="quantity-btn border-0 bg-gray-50 hover-bg-main-600 hover-text-white w-40 h-40 d-flex align-items-center justify-content-center transition-2"
                         (click)="incrementQuantity(item)"
-                        [disabled]="isUpdating || item.cantidad >= item.stock_disponible">
+                        [disabled]="isUpdating || (item.cantidad || 0) >= (item.stock_disponible || 0)">
                         <i class="ph ph-plus"></i>
                       </button>
                     </div>

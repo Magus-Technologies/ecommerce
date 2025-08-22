@@ -514,30 +514,31 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    const success = this.cartService.addToCart(product, 1);
-
-    if (success) {
-      Swal.fire({
-        title: '¡Producto agregado!',
-        text: `${
-          product.name || product.title || product.nombre
-        } ha sido agregado a tu carrito`,
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false,
-        toast: true,
-        position: 'top-end',
-        background: '#f8f9fa',
-        color: '#333',
-      });
-    } else {
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo agregar el producto al carrito. Revisa el stock disponible.',
-        icon: 'error',
-        confirmButtonColor: '#dc3545',
-      });
-    }
+    this.cartService.addToCart(product, 1).subscribe({
+      next: () => {
+        Swal.fire({
+          title: '¡Producto agregado!',
+          text: `${
+            product.name || product.title || product.nombre
+          } ha sido agregado a tu carrito`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
+          background: '#f8f9fa',
+          color: '#333',
+        });
+      },
+      error: (err) => {
+        Swal.fire({
+          title: 'Error',
+          text: err.message || 'No se pudo agregar el producto al carrito. Revisa el stock disponible.',
+          icon: 'error',
+          confirmButtonColor: '#dc3545',
+        });
+      }
+    });
   }
   // ✅ NUEVO MÉTODO: Agregar a wishlist con verificación de autenticación
   agregarAWishlist(product: any): void {

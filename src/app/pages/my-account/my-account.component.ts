@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
 import { DireccionesService, Direccion } from '../../services/direcciones.service';
 import { UbigeoService, Departamento, Provincia, Distrito } from '../../services/ubigeo.service';
+import { PedidosService, Pedido } from '../../services/pedidos.service';
 import { ModalDireccionComponent } from '../../component/modal-direccion/modal-direccion.component';
 @Component({
   selector: 'app-my-account',
@@ -32,17 +33,25 @@ export class MyAccountComponent implements OnInit, OnDestroy {
   provincias: Provincia[] = [];
   distritos: Distrito[] = [];
 
+  // Propiedades para pedidos
+  pedidos: Pedido[] = [];
+  isLoadingPedidos = false;
+  showPedidos = false;
+  pedidoSeleccionado: Pedido | null = null;
+
   constructor(
     private authService: AuthService,
     private router: Router,
     private direccionesService: DireccionesService,
-    private ubigeoService: UbigeoService
+    private ubigeoService: UbigeoService,
+    private pedidosService: PedidosService
   ) {}
 
   ngOnInit(): void {
     this.loadUserData();
     this.cargarDirecciones();
     this.cargarDepartamentos();
+    this.cargarPedidos();
   }
 
   ngOnDestroy(): void {
@@ -68,6 +77,11 @@ export class MyAccountComponent implements OnInit, OnDestroy {
           // Si no hay usuario, redirigir al login
           if (!user) {
             this.router.navigate(['/account']);
+          } else {
+            // Si es cliente, cargar pedidos
+            if (user.tipo_usuario === 'cliente') {
+              this.cargarPedidos();
+            }
           }
         },
         error: (error) => {
@@ -152,7 +166,16 @@ export class MyAccountComponent implements OnInit, OnDestroy {
     this.isLoadingDirecciones = true;
     this.direccionesService.obtenerDirecciones().subscribe({
       next: (response) => {
+        console.log('Direcciones cargadas:', response);
         this.direcciones = response.direcciones;
+        console.log('Direcciones procesadas:', this.direcciones);
+        
+        // Verificar que cada dirección tenga su ubigeo
+        this.direcciones.forEach((direccion, index) => {
+          console.log(`Dirección ${index}:`, direccion);
+          console.log(`Ubigeo de dirección ${index}:`, direccion.ubigeo);
+        });
+        
         this.isLoadingDirecciones = false;
       },
       error: (error) => {
@@ -166,24 +189,43 @@ export class MyAccountComponent implements OnInit, OnDestroy {
     });
   }
 
-abrirModal(mode: 'create' | 'edit' = 'create', direccion?: Direccion): void {
-  this.modalMode = mode;
-  this.direccionEditando = direccion || null;
-  
-  // Abrir modal usando Bootstrap
-  const modal = document.getElementById('modalDireccion');
-  if (modal) {
-    const bootstrapModal = new (window as any).bootstrap.Modal(modal);
-    bootstrapModal.show();
+  abrirModal(mode: 'create' | 'edit' = 'create', direccion?: Direccion): void {
+    console.log('🚀 Abriendo modal en modo:', mode);
+    console.log('📝 Dirección a editar:', direccion);
+    
+    this.modalMode = mode;
+    this.direccionEditando = direccion || null;
+    
+    // Usar Angular en lugar de Bootstrap nativo
+    this.showModal = true;
+    
+    // Forzar detección de cambios para que Angular sepa que cambió la propiedad
+    setTimeout(() => {
+      const modal = document.getElementById('modalDireccion');
+      if (modal) {
+        const bootstrapModal = new (window as any).bootstrap.Modal(modal);
+        bootstrapModal.show();
+      }
+    }, 0);
   }
-}
   cerrarModal(): void {
     this.showModal = false;
     this.direccionEditando = null;
   }
 
   onDireccionGuardada(): void {
-    this.cargarDirecciones();
+    console.log('Dirección guardada, esperando un momento antes de recargar...');
+    
+    // Esperar un momento para que el backend procese la actualización
+    setTimeout(() => {
+      console.log('Recargando direcciones después de guardar...');
+      this.cargarDirecciones();
+      // También recargar pedidos por si hay cambios
+      if (this.currentUser?.tipo_usuario === 'cliente') {
+        this.cargarPedidos();
+      }
+    }, 500);
+    
     this.cerrarModal();
   }
 
@@ -196,6 +238,82 @@ abrirModal(mode: 'create' | 'edit' = 'create', direccion?: Direccion): void {
         console.error('Error cargando departamentos:', error);
       }
     });
+  }
+
+  // ✅ MÉTODOS PARA PEDIDOS
+  cargarPedidos(): void {
+    // Solo cargar pedidos si el usuario está logueado y es cliente
+    if (!this.authService.isLoggedIn() || this.currentUser?.tipo_usuario !== 'cliente') {
+      return;
+    }
+
+    this.isLoadingPedidos = true;
+    this.pedidosService.getPedidosPorUsuario(this.currentUser.id).subscribe({
+      next: (response) => {
+        if (response.status === 'success') {
+          this.pedidos = response.pedidos;
+        }
+        this.isLoadingPedidos = false;
+      },
+      error: (error) => {
+        console.error('Error cargando pedidos:', error);
+        this.isLoadingPedidos = false;
+        this.pedidos = [];
+      }
+    });
+  }
+
+  togglePedidos(): void {
+    this.showPedidos = !this.showPedidos;
+    if (this.showPedidos && this.pedidos.length === 0) {
+      this.cargarPedidos();
+    }
+  }
+
+  toggleDirecciones(): void {
+    this.showPedidos = false; // Siempre mostrar direcciones
+  }
+
+  getEstadoBadgeClass(estado: string | undefined): string {
+    if (!estado) return 'bg-secondary-50 text-secondary-600';
+    
+    switch (estado.toLowerCase()) {
+      case 'pendiente':
+        return 'bg-warning-50 text-warning-600';
+      case 'procesando':
+        return 'bg-info-50 text-info-600';
+      case 'enviado':
+        return 'bg-primary-50 text-primary-600';
+      case 'entregado':
+        return 'bg-success-50 text-success-600';
+      case 'cancelado':
+        return 'bg-danger-50 text-danger-600';
+      default:
+        return 'bg-secondary-50 text-secondary-600';
+    }
+  }
+
+  verDetallePedido(pedido: Pedido): void {
+    this.pedidoSeleccionado = pedido;
+    const modal = document.getElementById('detallePedidoModal');
+    if (modal) {
+      const bootstrapModal = new (window as any).bootstrap.Modal(modal);
+      bootstrapModal.show();
+    }
+  }
+
+  onImageError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+      target.style.display = 'none';
+    }
+  }
+
+  imprimirPedido(): void {
+    console.log('Imprimir pedido:', this.pedidoSeleccionado?.codigo_pedido);
+    // Aquí puedes implementar la lógica de impresión
+    // Por ejemplo, abrir en nueva ventana o generar PDF
+    window.print();
   }
 
   eliminarDireccion(direccion: Direccion): void {

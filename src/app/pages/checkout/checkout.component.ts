@@ -272,11 +272,138 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     }
 
     const formData = this.checkoutForm.value;
-    const mensaje = this.generarMensajeWhatsApp(formData);
-    const numeroWhatsApp = '51999999999'; // Reemplazar con tu número
-    const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
     
-    window.open(url, '_blank');
+    // Mostrar opciones de cotización
+    Swal.fire({
+      title: 'Cotización Generada',
+      html: `
+        <div class="text-center">
+          <i class="ph ph-file-pdf text-danger mb-3" style="font-size: 4rem;"></i>
+          <h5>Cotización lista</h5>
+          <p class="text-muted">¿Cómo deseas recibir tu cotización?</p>
+        </div>
+      `,
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: '<i class="ph ph-download me-2"></i>Descargar PDF',
+      denyButtonText: '<i class="ph ph-envelope me-2"></i>Enviar por Email',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc3545',
+      denyButtonColor: '#198754',
+      cancelButtonColor: '#6c757d'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Descargar PDF
+        this.descargarCotizacionPDF(formData);
+      } else if (result.isDenied) {
+        // Enviar por email
+        this.enviarCotizacionPorEmail(formData);
+      }
+    });
+  }
+
+  // Descargar cotización como PDF
+  private descargarCotizacionPDF(formData: any): void {
+    this.procesandoPedido = true;
+    
+    const datosCotizacion = {
+      cliente: formData.cliente,
+      email: formData.email,
+      direccion: formData.direccion,
+      telefono: formData.celular,
+      departamento: formData.departamento,
+      provincia: formData.provincia,
+      distrito: formData.distrito,
+      forma_envio: formData.formaEnvio,
+      tipo_pago: formData.tipoPago,
+      observaciones: formData.observaciones || '',
+      productos: this.cartItems,
+      total: this.getTotalFinal()
+    };
+
+    // Llamar al backend para generar PDF
+    this.cartService.generarCotizacionPDF(datosCotizacion).subscribe({
+      next: (response) => {
+        this.procesandoPedido = false;
+        
+        // Crear blob y descargar
+        const blob = new Blob([response], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `cotizacion-${Date.now()}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        
+        Swal.fire({
+          title: '¡PDF Descargado!',
+          text: 'Tu cotización se ha descargado correctamente',
+          icon: 'success',
+          confirmButtonColor: '#198754'
+        });
+      },
+      error: (error) => {
+        this.procesandoPedido = false;
+        console.error('Error generando PDF:', error);
+        Swal.fire({
+          title: 'Error al generar PDF',
+          text: 'Ocurrió un error al generar tu cotización. Inténtalo de nuevo.',
+          icon: 'error',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
+  }
+
+  // Enviar cotización por email
+  private enviarCotizacionPorEmail(formData: any): void {
+    this.procesandoPedido = true;
+    
+    const datosCotizacion = {
+      cliente: formData.cliente,
+      email: formData.email,
+      direccion: formData.direccion,
+      telefono: formData.celular,
+      departamento: formData.departamento,
+      provincia: formData.provincia,
+      distrito: formData.distrito,
+      forma_envio: formData.formaEnvio,
+      tipo_pago: formData.tipoPago,
+      observaciones: formData.observaciones || '',
+      productos: this.cartItems,
+      total: this.getTotalFinal()
+    };
+
+    // Llamar al backend para enviar por email
+    this.cartService.enviarCotizacionPorEmail(datosCotizacion).subscribe({
+      next: (response) => {
+        this.procesandoPedido = false;
+        
+        Swal.fire({
+          title: '¡Cotización Enviada!',
+          html: `
+            <div class="text-center">
+              <i class="ph ph-envelope text-success mb-3" style="font-size: 4rem;"></i>
+              <h5>Email enviado exitosamente</h5>
+              <p class="text-muted">Tu cotización ha sido enviada a: <strong>${formData.email}</strong></p>
+              <p class="text-sm text-gray-500">Revisa tu bandeja de entrada y carpeta de spam</p>
+            </div>
+          `,
+          icon: 'success',
+          confirmButtonColor: '#198754'
+        });
+      },
+      error: (error) => {
+        this.procesandoPedido = false;
+        console.error('Error enviando email:', error);
+        Swal.fire({
+          title: 'Error al enviar email',
+          text: error.error?.message || 'Ocurrió un error al enviar tu cotización. Inténtalo de nuevo.',
+          icon: 'error',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
   }
 
   // Pagar con tarjeta
@@ -351,30 +478,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       const control = this.checkoutForm.get(key);
       control?.markAsTouched();
     });
-  }
-
-  // Generar mensaje de WhatsApp
-  private generarMensajeWhatsApp(formData: any): string {
-    let mensaje = '🛒 *NUEVA COTIZACIÓN DE PEDIDO*\n\n';
-    mensaje += `👤 *Cliente:* ${formData.cliente}\n`;
-    mensaje += `📱 *Celular:* ${formData.celular}\n`;
-    mensaje += `📧 *Email:* ${formData.email}\n`;
-    mensaje += `📍 *Dirección:* ${formData.direccion}\n`;
-    mensaje += `🚚 *Envío:* ${formData.formaEnvio}\n`;
-    mensaje += `💳 *Pago:* ${formData.tipoPago}\n\n`;
-    
-    mensaje += '*PRODUCTOS:*\n';
-    this.cartItems.forEach(item => {
-      mensaje += `• ${item.nombre} x${item.cantidad} - S/ ${this.formatPrice(this.getItemSubtotal(item))}\n`;
-    });
-    
-    mensaje += `\n💰 *TOTAL: S/ ${this.formatPrice(this.getTotalFinal())}*`;
-    
-    if (formData.observaciones) {
-      mensaje += `\n\n📝 *Notas:* ${formData.observaciones}`;
-    }
-
-    return mensaje;
   }
 
   // Helpers
