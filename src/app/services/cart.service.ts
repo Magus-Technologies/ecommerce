@@ -1,10 +1,15 @@
+
 // src/app/services/cart.service.ts
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { PedidosService, CrearPedidoRequest } from './pedidos.service';
+import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 export interface CartItem {
-  id: number;
+  id: number; // Puede ser el ID del backend o un ID temporal del frontend
   producto_id: number;
   nombre: string;
   imagen_url: string;
@@ -28,236 +33,410 @@ export interface CartSummary {
 })
 export class CartService {
   private readonly STORAGE_KEY = 'shopping_cart';
+  private readonly API_URL = `${environment.apiUrl}/cart`;
+
   private cartItemsSubject = new BehaviorSubject<CartItem[]>([]);
   private cartSummarySubject = new BehaviorSubject<CartSummary>({
-    subtotal: 0,
-    igv: 0,
-    total: 0,
-    cantidad_items: 0
+    subtotal: 0, igv: 0, total: 0, cantidad_items: 0
   });
 
   public cartItems$ = this.cartItemsSubject.asObservable();
   public cartSummary$ = this.cartSummarySubject.asObservable();
 
-  constructor(private pedidosService?: PedidosService) {
-    this.loadCartFromStorage();
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+    private pedidosService: PedidosService
+  ) {
+    this.initCart();
   }
 
-  // Cargar carrito desde localStorage
-  private loadCartFromStorage(): void {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        const savedCart = localStorage.getItem(this.STORAGE_KEY);
-        if (savedCart) {
-          const items: CartItem[] = JSON.parse(savedCart);
-          this.cartItemsSubject.next(items);
-          this.updateCartSummary(items);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading cart from storage:', error);
-      this.clearCart();
-    }
-  }
-
-  // Guardar carrito en localStorage
-  private saveCartToStorage(items: CartItem[]): void {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(items));
-      }
-    } catch (error) {
-      console.error('Error saving cart to storage:', error);
-    }
-  }
-
-  // Normalizar producto para el carrito
-  private normalizeProduct(producto: any): any {
-    return {
-      id: producto.id,
-      nombre: producto.nombre || producto.name || producto.title,
-      precio: producto.precio_venta || producto.precio || producto.price,
-      stock: producto.stock || producto.stock_disponible || 100,
-      codigo_producto: producto.codigo_producto || producto.code || `PROD-${producto.id}`,
-      imagen_url: producto.imagen_url || producto.imagen_principal || producto.image,
-      categoria: producto.categoria?.nombre || producto.categoria,
-      marca: producto.marca?.nombre || producto.marca
-    };
-  }
-
-  // Agregar producto al carrito
-  addToCart(producto: any, cantidad: number = 1): boolean {
-    try {
-      const normalizedProduct = this.normalizeProduct(producto);
-      const currentItems = this.cartItemsSubject.value;
-      const existingItemIndex = currentItems.findIndex(item => item.producto_id === normalizedProduct.id);
-
-      if (existingItemIndex >= 0) {
-        // Si el producto ya existe, actualizar cantidad
-        const existingItem = currentItems[existingItemIndex];
-        const nuevaCantidad = existingItem.cantidad + cantidad;
-        
-        if (nuevaCantidad > normalizedProduct.stock) {
-          console.warn('No hay suficiente stock disponible');
-          return false;
-        }
-
-        currentItems[existingItemIndex] = {
-          ...existingItem,
-          cantidad: nuevaCantidad
-        };
+  private initCart(): void {
+    this.authService.currentUser.subscribe(user => {
+      console.log('CartService - Usuario cambió:', user);
+      if (user) {
+        console.log('CartService - Cargando carrito desde API');
+        this.loadCartFromApi().subscribe({
+          next: (items) => {
+            console.log('CartService - Carrito cargado desde API:', items);
+          },
+          error: (error) => {
+            console.error('CartService - Error cargando carrito desde API:', error);
+            // Si falla la carga desde API, cargar desde storage como fallback
+            this.loadCartFromStorage();
+          }
+        });
       } else {
-        // Si es un producto nuevo, agregarlo
-        if (cantidad > normalizedProduct.stock) {
-          console.warn('No hay suficiente stock disponible');
-          return false;
+        console.log('CartService - Cargando carrito desde localStorage');
+        this.loadCartFromStorage();
+      }
+    });
+  }
+  
+  // =================================================================
+  // MÉTODOS PÚBLICOS PRINCIPALES
+  // =================================================================
+
+  public addToCart(producto: any, cantidad: number = 1): Observable<any> {
+    console.log('Producto recibido en addToCart:', producto);
+    const normalizedProduct = this.normalizeProduct(producto);
+    console.log('Producto normalizado:', normalizedProduct);
+    if (this.authService.isLoggedIn()) {
+      return this.addToCartApi(normalizedProduct.id, cantidad);
+    } else {
+      this.addToCartLocal(normalizedProduct, cantidad);
+      return of({ message: 'Producto añadido al carrito local.' });
+    }
+  }
+
+  public updateQuantity(item: CartItem, cantidad: number): Observable<any> {
+    if (cantidad < 1) {
+      return this.removeFromCart(item);
+    }
+    if (cantidad > item.stock_disponible) {
+      return throwError(() => new Error('Stock insuficiente'));
+    }
+
+    if (this.authService.isLoggedIn()) {
+      return this.updateQuantityApi(item.producto_id, cantidad);
+    } else {
+      this.updateQuantityLocal(item.id, cantidad);
+      return of({ message: 'Cantidad actualizada localmente.' });
+    }
+  }
+
+  public removeFromCart(item: CartItem): Observable<any> {
+    if (this.authService.isLoggedIn()) {
+      return this.removeFromCartApi(item.producto_id);
+    } else {
+      this.removeFromCartLocal(item.id);
+      return of({ message: 'Producto eliminado localmente.' });
+    }
+  }
+
+  public clearCart(): Observable<any> {
+    if (this.authService.isLoggedIn()) {
+      return this.clearCartApi();
+    } else {
+      this.clearCartLocal();
+      return of({ message: 'Carrito local vaciado.' });
+    }
+  }
+
+  public syncCart(): Observable<any> {
+    const localCart = this.getLocalCart();
+    if (localCart.length === 0) {
+      console.log('Carrito local vacío, no hay nada que sincronizar');
+      return of({ message: 'Carrito local vacío' });
+    }
+
+    console.log('Sincronizando carrito local:', localCart);
+    console.log('Token de autenticación:', this.authService.getToken());
+
+    return this.http.post(`${environment.apiUrl}/cart/sync`, { items: localCart }).pipe(
+      tap(response => {
+        console.log('Respuesta de sincronización:', response);
+        // Limpiar carrito local después de sincronizar exitosamente
+        this.clearLocalCart();
+        // Recargar carrito desde el servidor
+        this.loadCartFromServer();
+      }),
+      catchError(error => {
+        console.error('Error al sincronizar carrito:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  public isEmpty(): boolean {
+    return this.cartItemsSubject.value.length === 0;
+  }
+
+  public getTotalItems(): number {
+    return this.cartSummarySubject.value.cantidad_items;
+  }
+
+  // =================================================================
+  // MÉTODOS PARA API (USUARIO AUTENTICADO)
+  // =================================================================
+
+  private loadCartFromApi(): Observable<CartItem[]> {
+    return this.http.get<CartItem[]>(this.API_URL).pipe(
+      tap(items => this.updateCartState(items)),
+      catchError(this.handleError)
+    );
+  }
+
+  private addToCartApi(productoId: number, cantidad: number): Observable<any> {
+    return this.http.post(`${this.API_URL}/add`, { producto_id: productoId, cantidad }).pipe(
+      tap(() => {
+        // Recargar el carrito para obtener el estado actualizado
+        this.loadCartFromApi().subscribe({
+          next: (items) => console.log('Carrito actualizado después de agregar:', items),
+          error: (error) => console.error('Error actualizando carrito:', error)
+        });
+      }),
+      catchError(this.handleError)
+    );
+  }
+  
+
+  private updateQuantityApi(productoId: number, cantidad: number): Observable<any> {
+    return this.http.put(`${this.API_URL}/update/${productoId}`, { cantidad }).pipe(
+      tap(() => {
+        this.loadCartFromApi().subscribe({
+          next: (items) => console.log('Carrito actualizado después de cambiar cantidad:', items),
+          error: (error) => console.error('Error actualizando carrito:', error)
+        });
+      }),
+      catchError(this.handleError)
+    );
+  }
+  
+
+  private removeFromCartApi(productoId: number): Observable<any> {
+    return this.http.delete(`${this.API_URL}/remove/${productoId}`).pipe(
+      tap(() => {
+        this.loadCartFromApi().subscribe({
+          next: (items) => console.log('Carrito actualizado después de eliminar:', items),
+          error: (error) => console.error('Error actualizando carrito:', error)
+        });
+      }),
+      catchError(this.handleError)
+    );
+  }
+  
+
+  private clearCartApi(): Observable<any> {
+    return this.http.delete(`${this.API_URL}/clear`).pipe(
+      tap(() => this.updateCartState([])),
+      catchError(this.handleError)
+    );
+  }
+
+  // =================================================================
+  // MÉTODOS PARA LOCALSTORAGE (INVITADO)
+  // =================================================================
+
+  private loadCartFromStorage(): void {
+    const items = this.getLocalCartItems();
+    this.updateCartState(items);
+  }
+
+  private addToCartLocal(producto: any, cantidad: number): void {
+    const currentItems = this.cartItemsSubject.value;
+    const existingItemIndex = currentItems.findIndex(item => item.producto_id === producto.id);
+
+    if (existingItemIndex > -1) {
+      const existingItem = currentItems[existingItemIndex];
+      const newQuantity = existingItem.cantidad + cantidad;
+      if (newQuantity <= producto.stock) {
+        existingItem.cantidad = newQuantity;
+      }
+    } else {
+      if (cantidad <= producto.stock) {
+        // Construir la URL de la imagen
+        let imagenUrl = '';
+        if (producto.imagen_url) {
+          imagenUrl = producto.imagen_url;
+        } else if (producto.imagen_principal) {
+          // Si imagen_principal es solo un nombre de archivo, construir la URL completa
+          if (producto.imagen_principal.startsWith('http') || producto.imagen_principal.startsWith('/')) {
+            imagenUrl = producto.imagen_principal;
+          } else {
+            // Construir URL completa asumiendo que está en storage/productos/
+            imagenUrl = `${environment.apiUrl.replace('/api', '')}/storage/productos/${producto.imagen_principal}`;
+          }
         }
-
+        
         const newItem: CartItem = {
-          id: Date.now(), // ID temporal único
-          producto_id: normalizedProduct.id,
-          nombre: normalizedProduct.nombre,
-          imagen_url: normalizedProduct.imagen_url,
-          precio: normalizedProduct.precio,
-          cantidad: cantidad,
-          stock_disponible: normalizedProduct.stock,
-          codigo_producto: normalizedProduct.codigo_producto,
-          categoria: normalizedProduct.categoria,
-          marca: normalizedProduct.marca
+          id: Date.now(),
+          producto_id: producto.id,
+          nombre: producto.nombre || 'Producto',
+          imagen_url: imagenUrl,
+          precio: Number(producto.precio || 0),
+          cantidad: Number(cantidad || 1),
+          stock_disponible: Number(producto.stock || 100),
+          codigo_producto: producto.codigo_producto || `PROD-${producto.id}`,
+          categoria: producto.categoria || '',
+          marca: producto.marca || ''
         };
-
         currentItems.push(newItem);
       }
-
-      this.cartItemsSubject.next([...currentItems]);
-      this.updateCartSummary(currentItems);
-      this.saveCartToStorage(currentItems);
-      return true;
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-      return false;
     }
+    this.saveCartToStorage(currentItems);
+    this.updateCartState(currentItems);
   }
 
-  // Actualizar cantidad de un item
-  updateQuantity(itemId: number, cantidad: number): boolean {
+  private updateQuantityLocal(itemId: number, cantidad: number): void {
     const currentItems = this.cartItemsSubject.value;
     const itemIndex = currentItems.findIndex(item => item.id === itemId);
-
-    if (itemIndex >= 0) {
-      const item = currentItems[itemIndex];
-      
-      if (cantidad <= 0) {
-        this.removeFromCart(itemId);
-        return true;
-      }
-
-      if (cantidad > item.stock_disponible) {
-        console.warn('No hay suficiente stock disponible');
-        return false;
-      }
-
-      currentItems[itemIndex] = {
-        ...item,
-        cantidad: cantidad
-      };
-
-      this.cartItemsSubject.next([...currentItems]);
-      this.updateCartSummary(currentItems);
+    if (itemIndex > -1) {
+      currentItems[itemIndex].cantidad = cantidad;
       this.saveCartToStorage(currentItems);
-      return true;
+      this.updateCartState(currentItems);
     }
-
-    return false;
   }
 
-  // Remover item del carrito
-  removeFromCart(itemId: number): void {
-    const currentItems = this.cartItemsSubject.value;
-    const filteredItems = currentItems.filter(item => item.id !== itemId);
-    
-    this.cartItemsSubject.next(filteredItems);
-    this.updateCartSummary(filteredItems);
-    this.saveCartToStorage(filteredItems);
+  private removeFromCartLocal(itemId: number): void {
+    let currentItems = this.cartItemsSubject.value;
+    currentItems = currentItems.filter(item => item.id !== itemId);
+    this.saveCartToStorage(currentItems);
+    this.updateCartState(currentItems);
   }
 
-  // Limpiar carrito completo
-  clearCart(): void {
-    this.cartItemsSubject.next([]);
-    this.updateCartSummary([]);
+  private clearCartLocal(): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(this.STORAGE_KEY);
+    }
+    this.updateCartState([]);
+  }
+
+  private saveCartToStorage(items: CartItem[]): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(items));
+    }
+  }
+
+  private getLocalCartItems(): CartItem[] {
+    if (typeof localStorage === 'undefined') return [];
+    const savedCart = localStorage.getItem(this.STORAGE_KEY);
+    return savedCart ? JSON.parse(savedCart) : [];
+  }
+
+  // Método para obtener el carrito local (público para sincronización)
+  public getLocalCart(): CartItem[] {
+    return this.getLocalCartItems();
+  }
+
+  // Método para limpiar el carrito local
+  private clearLocalCart(): void {
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(this.STORAGE_KEY);
     }
   }
 
-  // Actualizar resumen del carrito
+  private loadCartFromServer(): void {
+    if (this.authService.isLoggedIn()) {
+      this.loadCartFromApi().subscribe({
+        next: (items) => {
+          console.log('CartService - Carrito recargado desde servidor:', items);
+        },
+        error: (error) => {
+          console.error('CartService - Error recargando carrito:', error);
+        }
+      });
+    }
+  }
+  
+
+  // =================================================================
+  // MÉTODOS AUXILIARES Y DE PROCESAMIENTO
+  // =================================================================
+
+  private updateCartState(items: CartItem[]): void {
+    this.cartItemsSubject.next(items);
+    this.updateCartSummary(items);
+  }
+
   private updateCartSummary(items: CartItem[]): void {
     const subtotal = items.reduce((sum, item) => {
-      return sum + (item.precio * item.cantidad);
+      const precio = item.precio || 0;
+      const cantidad = item.cantidad || 0;
+      return sum + (precio * cantidad);
     }, 0);
-
     const igv = subtotal * 0.18;
     const total = subtotal + igv;
-    const cantidad_items = items.reduce((sum, item) => sum + item.cantidad, 0);
+    const cantidad_items = items.reduce((sum, item) => sum + (item.cantidad || 0), 0);
+    this.cartSummarySubject.next({ subtotal, igv, total, cantidad_items });
+  }
 
-    this.cartSummarySubject.next({
-      subtotal,
-      igv,
-      total,
-      cantidad_items
+  private normalizeProduct(producto: any): any {
+    console.log('Normalizando producto:', producto);
+    console.log('imagen_url:', producto.imagen_url);
+    console.log('imagen_principal:', producto.imagen_principal);
+    
+    // Construir la URL de la imagen
+    let imagenUrl = '';
+    if (producto.imagen_url) {
+      imagenUrl = producto.imagen_url;
+    } else if (producto.imagen_principal) {
+      // Si imagen_principal es solo un nombre de archivo, construir la URL completa
+      if (producto.imagen_principal.startsWith('http') || producto.imagen_principal.startsWith('/')) {
+        imagenUrl = producto.imagen_principal;
+      } else {
+        // Construir URL completa asumiendo que está en storage/productos/
+        imagenUrl = `${environment.apiUrl.replace('/api', '')}/storage/productos/${producto.imagen_principal}`;
+      }
+    }
+    
+    const normalized = {
+      id: producto.id,
+      nombre: producto.nombre || producto.name || 'Producto',
+      precio: Number(producto.precio_venta || producto.precio || 0),
+      stock: Number(producto.stock || producto.stock_disponible || 100),
+      codigo_producto: producto.codigo_producto || `PROD-${producto.id}`,
+      imagen_url: imagenUrl,
+      categoria: producto.categoria?.nombre || producto.categoria || '',
+      marca: producto.marca?.nombre || producto.marca || ''
+    };
+    
+    console.log('Producto normalizado resultante:', normalized);
+    return normalized;
+  }
+
+  private handleError(error: any): Observable<never> {
+    console.error('Ocurrió un error en CartService', error);
+    return throwError(() => new Error(error.error?.message || 'Error del servidor'));
+  }
+
+  public procesarPedido(datosCheckout: any): Observable<any> {
+    const items = this.cartItemsSubject.value;
+    if (items.length === 0) {
+      return throwError(() => new Error('El carrito está vacío'));
+    }
+    const pedidoData: CrearPedidoRequest = {
+      productos: items.map(item => ({
+        producto_id: item.producto_id,
+        cantidad: item.cantidad
+      })),
+      ...datosCheckout
+    };
+    return this.pedidosService.crearPedidoEcommerce(pedidoData).pipe(
+      tap(() => {
+        // Limpiar el carrito de la API después de un pedido exitoso
+        this.clearCart().subscribe();
+      })
+    );
+  }
+  public forceReloadCart(): void {
+    if (this.authService.isLoggedIn()) {
+      this.loadCartFromApi().subscribe({
+        next: (items) => {
+          console.log('CartService - Carrito forzado a recargar:', items);
+        },
+        error: (error) => {
+          console.error('CartService - Error forzando recarga:', error);
+        }
+      });
+    } else {
+      this.loadCartFromStorage();
+    }
+  }
+
+  // =================================================================
+  // MÉTODOS DE COTIZACIÓN
+  // =================================================================
+
+  // Generar cotización como PDF
+  public generarCotizacionPDF(datosCotizacion: any): Observable<Blob> {
+    return this.http.post(`${environment.apiUrl}/cotizacion/generar-pdf`, datosCotizacion, {
+      responseType: 'blob'
     });
   }
 
-  // Obtener cantidad total de items
-  getTotalItems(): number {
-    return this.cartSummarySubject.value.cantidad_items;
-  }
-
-  // Verificar si el carrito está vacío
-  isEmpty(): boolean {
-    return this.cartItemsSubject.value.length === 0;
-  }
-
-  // Obtener items actuales del carrito
-  getCurrentItems(): CartItem[] {
-    return this.cartItemsSubject.value;
-  }
-
-  // Obtener resumen actual del carrito
-  getCurrentSummary(): CartSummary {
-    return this.cartSummarySubject.value;
-  }
-
-  // ✅ NUEVO: Procesar pedido (reemplaza la funcionalidad de venta)
-  procesarPedido(datosCheckout: {
-    metodo_pago: string;
-    direccion_envio: string;
-    telefono_contacto: string;
-    observaciones?: string;
-  }): Observable<any> {
-    const items = this.cartItemsSubject.value;
-    
-    if (items.length === 0) {
-      throw new Error('El carrito está vacío');
-    }
-
-    if (!this.pedidosService) {
-      throw new Error('PedidosService no está disponible');
-    }
-
-    const productos = items.map(item => ({
-      producto_id: item.producto_id,
-      cantidad: item.cantidad
-    }));
-
-    const pedidoData: CrearPedidoRequest = {
-      productos,
-      metodo_pago: datosCheckout.metodo_pago,
-      direccion_envio: datosCheckout.direccion_envio,
-      telefono_contacto: datosCheckout.telefono_contacto,
-      observaciones: datosCheckout.observaciones || ''
-    };
-
-    return this.pedidosService.crearPedidoEcommerce(pedidoData);
+  // Enviar cotización por email
+  public enviarCotizacionPorEmail(datosCotizacion: any): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/cotizacion/enviar-email`, datosCotizacion);
   }
 }

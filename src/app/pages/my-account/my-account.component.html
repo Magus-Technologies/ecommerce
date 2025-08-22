@@ -73,14 +73,18 @@
           </div>
           
           <div class="p-0">
-            <a href="#" class="d-flex align-items-center justify-content-between p-16 text-decoration-none border-bottom border-gray-100 hover-bg-main-50 transition-2 bg-main-50 border-start border-start-4 border-main-600">
+            <a href="#" (click)="toggleDirecciones(); $event.preventDefault()" class="d-flex align-items-center justify-content-between p-16 text-decoration-none border-bottom border-gray-100 hover-bg-main-50 transition-2"
+               [ngClass]="!showPedidos ? 'bg-main-50 border-start border-start-4 border-main-600' : ''">
               <div class="flex-align gap-12">
-                <span class="w-32 h-32 bg-main-600 text-white rounded-circle flex-center text-sm">
+                <span class="w-32 h-32 rounded-circle flex-center text-sm transition-2"
+                      [ngClass]="!showPedidos ? 'bg-main-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-main-600 hover:text-white'">
                   <i class="ph-bold ph-map-pin"></i>
                 </span>
-                <span class="text-heading fw-medium">Direcciones</span>
+                <span class="fw-medium transition-2"
+                      [ngClass]="!showPedidos ? 'text-heading' : 'text-gray-700 hover:text-heading'">Direcciones</span>
               </div>
-              <i class="ph-bold ph-caret-right text-main-600"></i>
+              <i class="ph-bold transition-2"
+                 [ngClass]="!showPedidos ? 'ph-caret-down text-main-600' : 'ph-caret-right text-gray-400'"></i>
             </a>
             
             <a href="#" class="d-flex align-items-center justify-content-between p-16 text-decoration-none border-bottom border-gray-100 hover-bg-main-50 transition-2">
@@ -93,14 +97,19 @@
               <i class="ph-bold ph-caret-right text-gray-400"></i>
             </a>
             
-            <a href="#" class="d-flex align-items-center justify-content-between p-16 text-decoration-none border-bottom border-gray-100 hover-bg-main-50 transition-2">
+            <!-- ✅ ENLACE DE MIS COMPRAS FUNCIONAL -->
+            <a href="#" (click)="togglePedidos(); $event.preventDefault()" class="d-flex align-items-center justify-content-between p-16 text-decoration-none border-bottom border-gray-100 hover-bg-main-50 transition-2"
+               [ngClass]="showPedidos ? 'bg-main-50 border-start border-start-4 border-main-600' : ''">
               <div class="flex-align gap-12">
-                <span class="w-32 h-32 bg-gray-100 text-gray-600 rounded-circle flex-center text-sm hover-bg-main-600 hover-text-white transition-2">
+                <span class="w-32 h-32 rounded-circle flex-center text-sm transition-2"
+                      [ngClass]="showPedidos ? 'bg-main-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-main-600 hover:text-white'">
                   <i class="ph-bold ph-package"></i>
                 </span>
-                <span class="text-gray-700 fw-medium hover-text-heading">Mis compras</span>
+                <span class="fw-medium transition-2"
+                      [ngClass]="showPedidos ? 'text-heading' : 'text-gray-700 hover:text-heading'">Mis compras</span>
               </div>
-              <i class="ph-bold ph-caret-right text-gray-400"></i>
+              <i class="ph-bold transition-2"
+                 [ngClass]="showPedidos ? 'ph-caret-down text-main-600' : 'ph-caret-right text-gray-400'"></i>
             </a>
             
             <a href="#" class="d-flex align-items-center justify-content-between p-16 text-decoration-none border-bottom border-gray-100 hover-bg-main-50 transition-2">
@@ -159,7 +168,7 @@
               <div class="col-6">
                 <div class="text-center">
                   <div class="w-40 h-40 bg-success-50 text-success-600 rounded-circle flex-center mx-auto mb-8">
-                    <i class="ph-bold ph-shopping-bag text-lg"></i>
+                    <i class="ph-bold ph-map-pin text-lg"></i>
                   </div>
                   <h6 class="mb-4 text-heading">{{ direcciones.length }}</h6>
                   <span class="text-xs text-gray-500">Direcciones</span>
@@ -168,10 +177,10 @@
               <div class="col-6">
                 <div class="text-center">
                   <div class="w-40 h-40 bg-warning-50 text-warning-600 rounded-circle flex-center mx-auto mb-8">
-                    <i class="ph-bold ph-heart text-lg"></i>
+                    <i class="ph-bold ph-shopping-bag text-lg"></i>
                   </div>
-                  <h6 class="mb-4 text-heading">12</h6>
-                  <span class="text-xs text-gray-500">Favoritos</span>
+                  <h6 class="mb-4 text-heading">{{ pedidos.length }}</h6>
+                  <span class="text-xs text-gray-500">Pedidos</span>
                 </div>
               </div>
             </div>
@@ -181,7 +190,8 @@
 
       <!-- ✅ CONTENIDO PRINCIPAL MEJORADO -->
       <div class="col-lg-9">
-        <div class="border border-gray-100 hover-border-main-600 rounded-16 overflow-hidden bg-white transition-2">
+        <!-- ✅ SECCIÓN DE DIRECCIONES -->
+        <div *ngIf="!showPedidos" class="border border-gray-100 hover-border-main-600 rounded-16 overflow-hidden bg-white transition-2">
           <!-- ✅ Header de la sección -->
           <div class="p-24 p-md-32 border-bottom border-gray-100 bg-main-50">
             <div class="flex-between align-items-center gap-16 flex-wrap">
@@ -244,7 +254,7 @@
                     <div class="flex-align gap-16 text-xs text-gray-500">
                       <span class="flex-align gap-4" *ngIf="direccion.ubigeo">
                         <i class="ph ph-map-pin"></i>
-                        {{ direccion.ubigeo.distrito }}, {{ direccion.ubigeo.provincia }}, {{ direccion.ubigeo.departamento }}
+                        {{ direccion.ubigeo.distrito_nombre || direccion.ubigeo.distrito }}, {{ direccion.ubigeo.provincia_nombre || direccion.ubigeo.provincia }}, {{ direccion.ubigeo.departamento_nombre || direccion.ubigeo.departamento }}
                       </span>
                       <span class="flex-align gap-4" *ngIf="direccion.telefono">
                         <i class="ph ph-phone"></i>
@@ -305,7 +315,7 @@
                   <i class="ph ph-check text-success-600 me-8"></i>
                   Puedes tener hasta 10 direcciones guardadas
                 </li>
-                <li class="text-gray-700 text-sm mb-8">
+                <li class="mb-8">
                   <i class="ph ph-check text-success-600 me-8"></i>
                   La dirección principal se usará por defecto en tus compras
                 </li>
@@ -314,6 +324,140 @@
                   Verifica que la información esté completa para evitar problemas de entrega
                 </li>
               </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- ✅ SECCIÓN DE PEDIDOS -->
+        <div *ngIf="showPedidos" class="border border-gray-100 hover-border-main-600 rounded-16 overflow-hidden bg-white transition-2">
+          <!-- Header de la sección de pedidos -->
+          <div class="p-24 p-md-32 border-bottom border-gray-100 bg-main-50">
+            <div class="flex-between align-items-center gap-16 flex-wrap">
+              <div class="flex-align gap-16">
+                <div class="w-48 h-48 bg-main-600 text-white rounded-circle flex-center">
+                  <i class="ph-bold ph-package text-xl"></i>
+                </div>
+                <div>
+                  <h4 class="mb-4 text-heading">Mis Compras</h4>
+                  <p class="text-gray-500 mb-0 text-sm">Historial de todos tus pedidos y su estado actual</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Contenido de pedidos -->
+          <div class="p-24 p-md-32">
+            <!-- Loading state -->
+            <div *ngIf="isLoadingPedidos" class="text-center py-40">
+              <div class="spinner-border text-main-600" role="status">
+                <span class="visually-hidden">Cargando pedidos...</span>
+              </div>
+              <p class="text-gray-500 mt-12 mb-0">Cargando tu historial de compras...</p>
+            </div>
+
+            <!-- Lista de pedidos -->
+            <div *ngIf="!isLoadingPedidos && pedidos.length > 0">
+              <div *ngFor="let pedido of pedidos" 
+                   class="border border-gray-100 hover-border-main-600 rounded-16 p-20 transition-2 hover-shadow-sm mb-16">
+                
+                <!-- Header del pedido -->
+                <div class="flex-between align-items-center gap-16 mb-16">
+                  <div class="flex-align gap-16">
+                    <div class="w-40 h-40 bg-main-50 text-main-600 rounded-circle flex-center">
+                      <i class="ph-bold ph-receipt text-lg"></i>
+                    </div>
+                    <div>
+                      <h6 class="mb-4 text-heading">{{ pedido.codigo_pedido }}</h6>
+                      <p class="text-gray-500 mb-0 text-sm">{{ pedido.fecha_pedido | date:'dd/MM/yyyy HH:mm' }}</p>
+                    </div>
+                  </div>
+                  <div class="text-end">
+                    <div class="mb-4">
+                      <span class="badge px-12 py-6 rounded-pill fw-medium"
+                            [ngClass]="getEstadoBadgeClass(pedido.estado_pedido?.nombre)">
+                        {{ pedido.estado_pedido?.nombre || 'PENDIENTE' }}
+                      </span>
+                    </div>
+                    <h5 class="text-success-600 fw-bold mb-0">S/ {{ pedido.total }}</h5>
+                  </div>
+                </div>
+
+                <!-- Información del pedido -->
+                <div class="row g-16 mb-16">
+                  <div class="col-md-6">
+                    <div class="flex-align gap-8 text-sm text-gray-600">
+                      <i class="ph ph-credit-card"></i>
+                      <span>{{ pedido.metodo_pago }}</span>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="flex-align gap-8 text-sm text-gray-600">
+                      <i class="ph ph-map-pin"></i>
+                      <span>{{ pedido.direccion_envio }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Productos del pedido -->
+                <div class="border-top border-gray-100 pt-16">
+                  <h6 class="text-sm text-gray-600 mb-12">Productos:</h6>
+                  <div class="row g-12">
+                    <div *ngFor="let detalle of pedido.detalles?.slice(0, 3)" class="col-md-4">
+                      <div class="flex-align gap-12 p-12 bg-gray-50 rounded-8">
+                        <img [src]="detalle.imagen_url" 
+                             [alt]="detalle.nombre_producto"
+                             class="w-32 h-32 rounded-4 object-fit-cover"
+                             (error)="onImageError($event)">
+                        <div class="flex-grow-1">
+                          <p class="text-xs text-gray-700 mb-2 line-height-1-2">{{ detalle.nombre_producto }}</p>
+                          <div class="flex-between align-items-center">
+                            <span class="text-xs text-gray-500">Cant: {{ detalle.cantidad }}</span>
+                            <span class="text-xs text-success-600 fw-semibold">S/ {{ detalle.precio_unitario }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div *ngIf="(pedido.detalles?.length || 0) > 3" class="col-md-4">
+                      <div class="flex-center h-100">
+                        <span class="text-xs text-gray-500">+{{ (pedido.detalles?.length || 0) - 3 }} más</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Acciones del pedido -->
+                <div class="border-top border-gray-100 pt-16 mt-16">
+                  <div class="flex-between align-items-center">
+                    <div class="flex-align gap-8">
+                      <span class="text-xs text-gray-500">
+                        <i class="ph ph-info me-4"></i>
+                        {{ pedido.observaciones || 'Sin observaciones' }}
+                      </span>
+                    </div>
+                    <button (click)="verDetallePedido(pedido)"
+                            class="btn bg-main-50 hover-bg-main-100 text-main-600 px-16 py-8 rounded-8 text-sm transition-2">
+                      <i class="ph ph-eye me-4"></i>
+                      Ver detalle
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Estado vacío -->
+            <div *ngIf="!isLoadingPedidos && pedidos.length === 0" class="text-center py-60">
+              <div class="w-80 h-80 bg-gray-100 rounded-circle flex-center mx-auto mb-24">
+                <i class="ph ph-package text-4xl text-gray-400"></i>
+              </div>
+              <h6 class="text-gray-500 mb-12">No tienes pedidos aún</h6>
+              <p class="text-gray-400 text-sm mb-24 max-w-300 mx-auto">
+                Realiza tu primera compra para ver aquí el historial de tus pedidos
+              </p>
+              <a routerLink="/shop" 
+                 class="btn bg-main-600 hover-bg-main-800 text-white rounded-pill px-32 py-12 flex-align gap-8 mx-auto transition-2">
+                <i class="ph-bold ph-shopping-cart"></i>
+                <span>Ir a la tienda</span>
+              </a>
             </div>
           </div>
         </div>
@@ -381,6 +525,8 @@
       </div>
     </div>
   </div>
+</div>
+<!-- ========================== Shipping Section End ============================ -->
 
 <!-- Modal de dirección -->
 <app-modal-direccion
@@ -389,5 +535,117 @@
   (direccionGuardada)="onDireccionGuardada()"
   (modalCerrado)="cerrarModal()">
 </app-modal-direccion>
+
+<!-- ✅ MODAL DE DETALLE DEL PEDIDO -->
+<div class="modal fade" id="detallePedidoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalle del Pedido {{ pedidoSeleccionado?.codigo_pedido }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Información del Cliente -->
+        <div class="card mb-3">
+          <div class="card-header">
+            <h6 class="mb-0">Información del Cliente</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <p><strong>Nombre:</strong> {{ pedidoSeleccionado?.user_cliente?.nombres }} {{ pedidoSeleccionado?.user_cliente?.apellidos }}</p>
+                <p><strong>Documento:</strong> {{ pedidoSeleccionado?.user_cliente?.numero_documento }}</p>
+                <p><strong>Teléfono:</strong> {{ pedidoSeleccionado?.telefono_contacto }}</p>
+              </div>
+              <div class="col-md-6">
+                <p><strong>Dirección:</strong> {{ pedidoSeleccionado?.direccion_envio }}</p>
+                <p><strong>Email:</strong> {{ pedidoSeleccionado?.user_cliente?.email }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información del Pedido -->
+        <div class="card mb-3">
+          <div class="card-header">
+            <h6 class="mb-0">Información del Pedido</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <p><strong>Fecha:</strong> {{ pedidoSeleccionado?.fecha_pedido | date:'dd/MM/yyyy HH:mm' }}</p>
+                <p><strong>Estado:</strong> 
+                  <span class="badge px-12 py-6 rounded-pill fw-medium"
+                        [ngClass]="getEstadoBadgeClass(pedidoSeleccionado?.estado_pedido?.nombre)">
+                    {{ pedidoSeleccionado?.estado_pedido?.nombre || 'PENDIENTE' }}
+                  </span>
+                </p>
+              </div>
+              <div class="col-md-6">
+                <p><strong>Método Pago:</strong> {{ pedidoSeleccionado?.metodo_pago }}</p>
+                <p><strong>Observaciones:</strong> {{ pedidoSeleccionado?.observaciones || 'Sin observaciones' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Productos del Pedido -->
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">Productos del Pedido</h6>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Imagen</th>
+                    <th>Producto</th>
+                    <th>Código</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unit.</th>
+                    <th>Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let detalle of pedidoSeleccionado?.detalles">
+                    <td>
+                      <img [src]="detalle.imagen_url" 
+                           [alt]="detalle.nombre_producto"
+                           class="img-thumbnail"
+                           style="width: 50px; height: 50px; object-fit: cover;"
+                           (error)="onImageError($event)">
+                    </td>
+                    <td>
+                      <div class="fw-bold">{{ detalle.nombre_producto }}</div>
+                      <small class="text-muted">{{ detalle.producto?.descripcion }}</small>
+                    </td>
+                    <td>{{ detalle.codigo_producto }}</td>
+                    <td>
+                      <span class="badge bg-primary rounded-circle">{{ detalle.cantidad }}</span>
+                    </td>
+                    <td>S/ {{ detalle.precio_unitario }}</td>
+                    <td class="text-success-600 fw-bold">S/ {{ detalle.subtotal_linea }}</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="4"></td>
+                    <td><strong>Total:</strong></td>
+                    <td class="text-success-600 fw-bold">S/ {{ pedidoSeleccionado?.total }}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary" (click)="imprimirPedido()">
+          <i class="ph ph-printer me-2"></i>Imprimir
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
-<!-- ========================== Shipping Section End ============================ -->

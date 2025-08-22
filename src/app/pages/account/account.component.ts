@@ -89,6 +89,7 @@ export class AccountComponent implements OnInit {
       password: this.loginForm.value.password
     };
 
+    // Usar el login unificado que maneja tanto admin como cliente
     this.authService.login(credentials).subscribe({
       next: (response) => {
         this.isLoading = false;
@@ -107,41 +108,44 @@ export class AccountComponent implements OnInit {
           this.router.navigate(['/']); // E-commerce home
         }
       },
-            error: (error) => {
-          this.isLoading = false;
-          
-          if (error.status === 403 && error.error.requires_verification) {
-            // Redirigir a verificación si la cuenta no está verificada
-            this.router.navigate(['/verify-email'], {
-              queryParams: { email: credentials.email }
-            });
-            return;
-          }
-          
-          if (error.status === 401) {
-            this.loginError = 'Las credenciales proporcionadas son incorrectas.';
-          } else if (error.status === 403) {
-            this.loginError = error.error.message || 'Tu cuenta está desactivada.';
-          } else if (error.status === 422) {
-          if (error.error && error.error.errors) {
-            const errors = error.error.errors;
-            if (errors.email && errors.email.length > 0) {
-              this.loginError = errors.email[0];
-            } else if (errors.password && errors.password.length > 0) {
-              this.loginError = errors.password[0];
-            } else {
-              this.loginError = 'Por favor, verifica los datos ingresados.';
-            }
-          } else {
-            this.loginError = 'Por favor, verifica los datos ingresados.';
-          }
-        } else if (error.status === 0) {
-          this.loginError = 'Error de conexión. Verifica tu conexión a internet.';
-        } else {
-          this.loginError = 'Error del servidor. Por favor, inténtalo más tarde.';
-        }
+      error: (error) => {
+        this.isLoading = false;
+        this.handleLoginError(error);
       }
     });
+  }
+
+  private handleLoginError(error: any): void {
+    if (error.status === 403 && error.error.requires_verification) {
+      // Redirigir a verificación si la cuenta no está verificada
+      this.router.navigate(['/verify-email'], {
+        queryParams: { email: this.loginForm.value.email }
+      });
+      return;
+    }
+    
+    if (error.status === 401) {
+      this.loginError = 'Las credenciales proporcionadas son incorrectas.';
+    } else if (error.status === 403) {
+      this.loginError = error.error.message || 'Tu cuenta está desactivada.';
+    } else if (error.status === 422) {
+      if (error.error && error.error.errors) {
+        const errors = error.error.errors;
+        if (errors.email && errors.email.length > 0) {
+          this.loginError = errors.email[0];
+        } else if (errors.password && errors.password.length > 0) {
+          this.loginError = errors.password[0];
+        } else {
+          this.loginError = 'Por favor, verifica los datos ingresados.';
+        }
+      } else {
+        this.loginError = 'Por favor, verifica los datos ingresados.';
+      }
+    } else if (error.status === 0) {
+      this.loginError = 'Error de conexión. Verifica tu conexión a internet.';
+    } else {
+      this.loginError = 'Error del servidor. Por favor, inténtalo más tarde.';
+    }
   }
 
   togglePasswordVisibility(): void {
