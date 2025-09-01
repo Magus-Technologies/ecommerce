@@ -83,8 +83,8 @@ export interface ProductoPublico {
   id: number
   nombre: string
   descripcion: string
-  precio: number
-  precio_oferta?: number
+  precio: string | number
+  precio_oferta?: string | number
   stock: number
   imagen_principal: string
   categoria: string

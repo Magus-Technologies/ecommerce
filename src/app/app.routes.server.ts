@@ -112,5 +112,9 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'my-account',
     renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'arma-tu-pc',
+    renderMode: RenderMode.Prerender
   }
 ];

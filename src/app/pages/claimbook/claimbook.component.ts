@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BreadcrumbComponent } from '../../component/breadcrumb/breadcrumb.component';
 import { ShippingComponent } from '../../component/shipping/shipping.component';
+import { ReclamosService, Reclamo } from '../../services/reclamos.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -26,7 +27,10 @@ export class ClaimbookComponent implements OnInit {
     store: 'Tienda Virtual - E-commerce'
   };
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private reclamosService: ReclamosService
+  ) {}
 
   ngOnInit(): void {
     this.initializeForm();
@@ -35,52 +39,52 @@ export class ClaimbookComponent implements OnInit {
   private initializeForm(): void {
     this.claimbookForm = this.fb.group({
       // Datos del consumidor
-      consumerName: ['', [Validators.required, Validators.minLength(2)]],
-      consumerAddress: ['', [Validators.required]],
-      consumerDni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
-      consumerPhone: ['', [Validators.required, Validators.pattern(/^\d{9}$/)]],
-      consumerEmail: ['', [Validators.required, Validators.email]],
-      isMinor: [false],
+      consumidor_nombre: ['', [Validators.required, Validators.minLength(2)]],
+      consumidor_direccion: ['', [Validators.required]],
+      consumidor_dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
+      consumidor_telefono: ['', [Validators.required, Validators.pattern(/^\d{9}$/)]],
+      consumidor_email: ['', [Validators.required, Validators.email]],
+      es_menor_edad: [false],
       
       // Datos del apoderado (si es menor de edad)
-      guardianName: [''],
-      guardianAddress: [''],
-      guardianDni: [''],
-      guardianPhone: [''],
-      guardianEmail: [''],
+      apoderado_nombre: [''],
+      apoderado_direccion: [''],
+      apoderado_dni: [''],
+      apoderado_telefono: [''],
+      apoderado_email: [''],
       
       // Identificación del bien contratado
-      claimType: ['producto', Validators.required], // producto o servicio
-      claimedAmount: ['', [Validators.required, Validators.min(0)]],
-      description: ['', [Validators.required, Validators.minLength(10)]],
+      tipo_bien: ['producto', Validators.required], // producto o servicio
+      monto_reclamado: ['', [Validators.required, Validators.min(0)]],
+      descripcion_bien: ['', [Validators.required, Validators.minLength(10)]],
       
       // Detalle de la reclamación
-      complaintType: ['reclamo', Validators.required], // reclamo o queja
-      complaintDetail: ['', [Validators.required, Validators.minLength(20)]],
-      consumerRequest: ['', [Validators.required, Validators.minLength(10)]],
+      tipo_solicitud: ['reclamo', Validators.required], // reclamo o queja
+      detalle_reclamo: ['', [Validators.required, Validators.minLength(20)]],
+      pedido_consumidor: ['', [Validators.required, Validators.minLength(10)]],
       
       // Observaciones del proveedor
-      providerResponse: [''],
-      responseDate: [''],
+      respuesta_proveedor: [''],
+      fecha_respuesta: [''],
       
       // Términos y condiciones
       acceptTerms: [false, Validators.requiredTrue]
     });
 
     // Validaciones condicionales para menor de edad
-    this.claimbookForm.get('isMinor')?.valueChanges.subscribe(isMinor => {
-      const guardianFields = ['guardianName', 'guardianAddress', 'guardianDni', 'guardianPhone', 'guardianEmail'];
+    this.claimbookForm.get('es_menor_edad')?.valueChanges.subscribe(isMinor => {
+      const guardianFields = ['apoderado_nombre', 'apoderado_direccion', 'apoderado_dni', 'apoderado_telefono', 'apoderado_email'];
       
       if (isMinor) {
         guardianFields.forEach(field => {
           this.claimbookForm.get(field)?.setValidators([Validators.required]);
-          if (field === 'guardianDni') {
+          if (field === 'apoderado_dni') {
             this.claimbookForm.get(field)?.setValidators([Validators.required, Validators.pattern(/^\d{8}$/)]);
           }
-          if (field === 'guardianPhone') {
+          if (field === 'apoderado_telefono') {
             this.claimbookForm.get(field)?.setValidators([Validators.required, Validators.pattern(/^\d{9}$/)]);
           }
-          if (field === 'guardianEmail') {
+          if (field === 'apoderado_email') {
             this.claimbookForm.get(field)?.setValidators([Validators.required, Validators.email]);
           }
         });
@@ -106,29 +110,77 @@ export class ClaimbookComponent implements OnInit {
     if (this.claimbookForm.valid) {
       this.isSubmitting = true;
       
-      // Simular envío del formulario
-      setTimeout(() => {
-        this.isSubmitting = false;
-        
-        Swal.fire({
-          title: '¡Reclamo registrado exitosamente!',
-          html: `
-            <div class="text-start">
-              <p><strong>Número de reclamo:</strong> ${this.claimNumber}</p>
-              <p><strong>Fecha:</strong> ${this.currentDate}</p>
-              <p class="text-sm text-gray-600 mt-3">
-                Su reclamo ha sido registrado correctamente. Recibirá una respuesta 
-                en un plazo no mayor a 30 días calendario.
-              </p>
-            </div>
-          `,
-          icon: 'success',
-          confirmButtonText: 'Entendido',
-          confirmButtonColor: '#198754'
-        }).then(() => {
-          this.resetForm();
-        });
-      }, 2000);
+      // Preparar los datos del reclamo
+      const formValue = this.claimbookForm.value;
+      const reclamoData: Reclamo = {
+        ...formValue
+      };
+      
+      // Eliminar el campo acceptTerms ya que no es parte del modelo
+      delete (reclamoData as any).acceptTerms;
+      
+      // Si no es menor de edad, limpiar campos del apoderado
+      if (!reclamoData.es_menor_edad) {
+        reclamoData.apoderado_nombre = undefined;
+        reclamoData.apoderado_dni = undefined;
+        reclamoData.apoderado_direccion = undefined;
+        reclamoData.apoderado_telefono = undefined;
+        reclamoData.apoderado_email = undefined;
+      }
+      
+      this.reclamosService.crearReclamo(reclamoData).subscribe({
+        next: (response) => {
+          this.isSubmitting = false;
+          
+          if (response.status === 'success' && response.reclamo) {
+            Swal.fire({
+              title: '¡Reclamo registrado exitosamente!',
+              html: `
+                <div class="text-start">
+                  <p><strong>Número de reclamo:</strong> ${response.reclamo.numero_reclamo}</p>
+                  <p><strong>Fecha:</strong> ${this.currentDate}</p>
+                  <p class="text-sm text-gray-600 mt-3">
+                    Su reclamo ha sido registrado correctamente. Recibirá una respuesta 
+                    en un plazo no mayor a 30 días calendario.
+                  </p>
+                  <div class="mt-3 p-3 bg-info-50 rounded">
+                    <p class="text-sm mb-0">
+                      <strong>Importante:</strong> Guarde el número de reclamo para consultas futuras.
+                    </p>
+                  </div>
+                </div>
+              `,
+              icon: 'success',
+              confirmButtonText: 'Entendido',
+              confirmButtonColor: '#198754'
+            }).then(() => {
+              this.resetForm();
+            });
+          }
+        },
+        error: (error) => {
+          this.isSubmitting = false;
+          console.error('Error al enviar reclamo:', error);
+          
+          let errorMessage = 'Error al procesar su reclamo. Intente nuevamente.';
+          
+          if (error.error && error.error.message) {
+            errorMessage = error.error.message;
+          }
+          
+          if (error.error && error.error.errors) {
+            const errors = Object.values(error.error.errors).flat();
+            errorMessage = errors.join('<br>');
+          }
+          
+          Swal.fire({
+            title: 'Error al enviar reclamo',
+            html: errorMessage,
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+          });
+        }
+      });
     } else {
       this.markFormGroupTouched();
       Swal.fire({
@@ -150,9 +202,9 @@ export class ClaimbookComponent implements OnInit {
   private resetForm(): void {
     this.claimbookForm.reset();
     this.claimbookForm.patchValue({
-      claimType: 'producto',
-      complaintType: 'reclamo',
-      isMinor: false,
+      tipo_bien: 'producto',
+      tipo_solicitud: 'reclamo',
+      es_menor_edad: false,
       acceptTerms: false
     });
     this.claimNumber = this.generateClaimNumber();

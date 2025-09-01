@@ -384,8 +384,8 @@ private cargarInformacionEmpresa(): void {
   }
 
   private updateRouteFlags(url: string): void {
-    this.isHomePageActive = url === '/' || url.startsWith('/index-two') || url.startsWith('/index-three');
-    this.isIndexTwoPage = url.startsWith('/index-two');
+    this.isHomePageActive = url === '/';
+    this.isIndexTwoPage = url.startsWith('/index-two') || url.startsWith('/index-laptop') || url.startsWith('/index-three');
   }
   
   activeDropdown: string | null = null;

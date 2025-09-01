@@ -38,9 +38,11 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   puedeVerOfertas = false;
   puedeVerCupones = false;
   puedeVerPedidos = false;
+  puedeVerReclamos = false;
   puedeVerHorarios = false;
   puedeVerEmpresaInfo = false;
-  puedeVerEmailTemplates = false; 
+  puedeVerEmailTemplates = false;
+  puedeConfigure = false; // ✅ NUEVO: Para Arma tu PC 
 
 
 
@@ -80,9 +82,11 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
     this.puedeVerOfertas = this.permissionsService.hasPermission('ofertas.ver');
     this.puedeVerCupones = this.permissionsService.hasPermission('cupones.ver');
     this.puedeVerPedidos = this.permissionsService.hasPermission('pedidos.ver');
+    this.puedeVerReclamos = this.permissionsService.hasPermission('reclamos.ver');
     this.puedeVerHorarios = this.permissionsService.hasPermission('horarios.ver');
     this.puedeVerEmpresaInfo = this.permissionsService.hasPermission('empresa_info.ver');
     this.puedeVerEmailTemplates = this.permissionsService.hasPermission('envio_correos.ver');
+    this.puedeConfigure = this.permissionsService.hasPermission('categorias.edit'); // ✅ NUEVO
   }
 
   ngAfterViewInit(): void {

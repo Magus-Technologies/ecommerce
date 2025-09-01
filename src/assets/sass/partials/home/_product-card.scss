@@ -71,48 +71,4 @@
 }
 
 
-.wishlist-btn-two {
-    width: 48px;
-    height: 48px;
-    border: 1px solid var(--neutral-200);
-    color: hsl(var(--heading-color));
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 22px;
-    transition: .15s linear;
-    position: absolute;
-    inset-inline-end: 16px;
-    inset-block-start: 16px;
-    transform: scale(.3);
-    z-index: 1;
-    visibility: hidden;
-    opacity: 0;
-    &:hover {
-        border-color: var(--main-600);
-        color: var(--main-600);
-    }
-    &.active {
-        visibility: visible;
-        opacity: 1;
-        transform: scale(1);
-        border-color: var(--main-600);
-        background-color: var(--main-600);
-        color: #fff;
-        &:hover {
-            background-color: var(--main-700);
-        }
-    }
-}
-
-.group-item {
-    &:hover {
-        .wishlist-btn-two {
-            transform: scale(1);
-            visibility: visible;
-            opacity: 1;
-        }
-    }
-}
 /* ============================= Product Card Css End ========================== */

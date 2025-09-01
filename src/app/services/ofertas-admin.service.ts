@@ -122,6 +122,7 @@ export class OfertasAdminService {
     formData.append('mostrar_en_slider', oferta.mostrar_en_slider ? '1' : '0');
     formData.append('mostrar_en_banner', oferta.mostrar_en_banner ? '1' : '0');
     formData.append('es_oferta_principal', oferta.es_oferta_principal ? '1' : '0'); // ✅ NUEVO CAMPO
+    formData.append('es_oferta_semana', oferta.es_oferta_semana ? '1' : '0'); // ✅ AGREGAR CAMPO FALTANTE
     formData.append('prioridad', oferta.prioridad.toString());
 
     // Campos opcionales

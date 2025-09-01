@@ -28,7 +28,12 @@
     mask-size: 100% 100%;
     gap: clampCal(24, 72);
     @include sm-screen {
+        -webkit-mask-image: none;
         mask-image: none;
+        background-image: url(../../../images/bg/banner-fondo.png);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
         overflow: unset !important;
     }
     &__content {

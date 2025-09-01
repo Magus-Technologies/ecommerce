@@ -81,6 +81,18 @@
         </a>
       </li>
 
+      <!-- ✅ NUEVO: Arma tu PC -->
+      <li *ngIf="puedeConfigure" class="mb-8">
+        <a
+          routerLink="/dashboard/arma-pc"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
+          <i class="ph ph-desktop text-xl flex-shrink-0"></i>
+          <span *ngIf="!isCollapsed" class="fw-medium">Arma tu PC</span>
+        </a>
+      </li>
+
       <!-- ✅ NUEVO: Horarios -->
       <li *ngIf="puedeVerHorarios" class="mb-8">
         <a
@@ -142,6 +154,18 @@
         >
           <i class="ph ph-receipt text-xl flex-shrink-0"></i>
           <span *ngIf="!isCollapsed" class="fw-medium">Pedidos</span>
+        </a>
+      </li>
+
+      <!-- Reclamos -->
+      <li *ngIf="puedeVerReclamos" class="mb-8">
+        <a
+          routerLink="/dashboard/reclamos"
+          routerLinkActive="active"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+        >
+          <i class="ph ph-user-circle text-xl flex-shrink-0"></i>
+          <span *ngIf="!isCollapsed" class="fw-medium">Reclamos</span>
         </a>
       </li>
 

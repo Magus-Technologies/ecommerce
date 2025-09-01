@@ -1200,15 +1200,16 @@ if(copyCouponBtn && copyText) {
     // ========================== Trending Products Js End =====================
 
     // ========================== Wishlist Button Js Start =====================
-    let wishlistBtnTwos = document.querySelectorAll('.wishlist-btn-two');
+    // DESHABILITADO: Angular maneja el estado del wishlist
+    // let wishlistBtnTwos = document.querySelectorAll('.wishlist-btn-two');
 
-    if(wishlistBtnTwos) {
-      wishlistBtnTwos.forEach(wishlistBtnTwo => {
-        wishlistBtnTwo.addEventListener('click', function() { 
-          this.classList.toggle('active');
-        });
-      });
-    }
+    // if(wishlistBtnTwos) {
+    //   wishlistBtnTwos.forEach(wishlistBtnTwo => {
+    //     wishlistBtnTwo.addEventListener('click', function() { 
+    //       this.classList.toggle('active');
+    //     });
+    //   });
+    // }
     // ========================== Wishlist Button Js End =====================
 
     // ========================== Instagram Slider Js Start =====================

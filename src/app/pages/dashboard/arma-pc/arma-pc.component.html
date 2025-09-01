@@ -1,0 +1,165 @@
+<!-- src/app/pages/dashboard/arma-pc/arma-pc.component.html -->
+<div class="d-flex justify-content-between align-items-center mb-24">
+  <div>
+    <h5 class="text-heading fw-semibold mb-8">Configurar Arma tu PC</h5>
+    <p class="text-gray-500 mb-0">Administra las categorías que aparecerán en "Arma tu PC" para los clientes</p>
+  </div>
+</div>
+
+<!-- Tarjeta principal -->
+<div class="card border-0 shadow-sm rounded-12">
+  <div class="card-body p-24">
+    <!-- Instrucciones -->
+    <div class="alert alert-light border border-gray-100 mb-24">
+      <div class="d-flex">
+        <i class="ph ph-info text-main-600 text-lg me-12 flex-shrink-0 mt-4"></i>
+        <div>
+          <h6 class="text-heading mb-8">Instrucciones</h6>
+          <p class="text-gray-600 mb-0">Selecciona las categorías que aparecerán en "Arma tu PC" para los clientes. Puedes arrastrar para cambiar el orden de visualización.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="text-center py-40">
+      <div class="spinner-border text-main-600" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="text-gray-500 mt-12 mb-0">Cargando configuración...</p>
+    </div>
+
+      <!-- Categorías Disponibles -->
+      <div *ngIf="!loading" class="row">
+        <!-- Columna Izquierda: Categorías Disponibles -->
+        <div class="col-md-6">
+          <div class="card border border-gray-100 rounded-12">
+            <div class="card-header bg-gray-50 border-bottom border-gray-100 py-16 px-20">
+              <h6 class="text-heading fw-semibold mb-4">Categorías Disponibles</h6>
+              <small class="text-gray-500">Selecciona las categorías para Arma tu PC</small>
+            </div>
+            <div class="card-body p-20" style="max-height: 400px; overflow-y: auto;">
+              <div *ngIf="categoriasDisponibles.length === 0" class="text-center py-40">
+                <i class="ph ph-folder text-gray-300 text-4xl mb-12 d-block"></i>
+                <p class="text-gray-500 mb-0">No hay categorías disponibles</p>
+              </div>
+              
+              <div 
+                *ngFor="let categoria of categoriasDisponibles" 
+                class="categoria-item d-flex align-items-center justify-content-between p-12 mb-8 border border-gray-100 rounded-8 hover-bg-gray-50 transition-all"
+                style="cursor: pointer;"
+                (click)="agregarCategoria(categoria)"
+              >
+                <div class="d-flex align-items-center flex-grow-1">
+                  <div class="categoria-imagen me-12 flex-shrink-0">
+                    <img 
+                      [src]="categoria.imagen_url || categoria.img || 'assets/images/default-category.png'" 
+                      [alt]="categoria.nombre"
+                      class="w-40 h-40 rounded-8 object-fit-cover border border-gray-200"
+                      (error)="onImageError($event)"
+                    />
+                  </div>
+                  <div class="categoria-info">
+                    <h6 class="text-heading mb-4 fw-medium">{{ categoria.nombre }}</h6>
+                    <p class="text-gray-500 text-sm mb-0">{{ categoria.productos_count || 0 }} productos disponibles</p>
+                  </div>
+                </div>
+                <button 
+                  class="btn btn-outline-main-600 hover-bg-main-600 hover-text-white btn-sm px-12 py-8 rounded-6"
+                  type="button"
+                >
+                  <i class="ph ph-plus text-sm"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Categorías Seleccionadas -->
+        <div class="col-md-6">
+          <div class="card border border-main-600 rounded-12">
+            <div class="card-header bg-main-600 text-white border-bottom border-main-600 py-16 px-20">
+              <h6 class="text-white fw-semibold mb-4">Categorías en Arma tu PC</h6>
+              <small class="text-white opacity-75">Arrastra para cambiar el orden</small>
+            </div>
+            <div class="card-body p-20" style="max-height: 400px; overflow-y: auto;">
+              <div *ngIf="categoriasArmaPc.length === 0" class="text-center py-40">
+                <i class="ph ph-desktop text-main-600 text-4xl mb-12 d-block"></i>
+                <p class="text-gray-600 mb-8 fw-medium">No hay categorías seleccionadas</p>
+                <small class="text-gray-500">Agrega categorías desde la columna izquierda</small>
+              </div>
+
+              <div 
+                cdkDropList 
+                (cdkDropListDropped)="onDrop($event)"
+                class="category-list"
+              >
+                <div 
+                  *ngFor="let categoria of categoriasArmaPc; let i = index" 
+                  cdkDrag
+                  class="categoria-seleccionada d-flex align-items-center p-12 mb-12 border border-main-200 rounded-8 bg-main-50 hover-bg-main-100 transition-all"
+                >
+                  <!-- Drag Handle -->
+                  <div cdkDragHandle class="text-main-600 me-12 flex-shrink-0" style="cursor: grab;">
+                    <i class="ph ph-dots-six-vertical text-lg"></i>
+                  </div>
+
+                  <!-- Orden -->
+                  <span class="badge bg-main-600 text-white me-12 px-8 py-4 text-xs fw-medium">{{ i + 1 }}</span>
+
+                  <!-- Imagen y Info -->
+                  <div class="d-flex align-items-center flex-grow-1">
+                    <div class="categoria-imagen me-12 flex-shrink-0">
+                      <img 
+                        [src]="categoria.imagen_url || categoria.img || 'assets/images/default-category.png'" 
+                        [alt]="categoria.nombre"
+                        class="w-40 h-40 rounded-8 object-fit-cover border border-white shadow-sm"
+                        (error)="onImageError($event)"
+                      />
+                    </div>
+                    <div class="categoria-info">
+                      <h6 class="text-heading mb-4 fw-medium">{{ categoria.nombre }}</h6>
+                      <p class="text-gray-500 text-sm mb-0">{{ categoria.productos_count || 0 }} productos</p>
+                    </div>
+                  </div>
+
+                  <!-- Botón eliminar -->
+                  <button 
+                    class="btn btn-outline-danger hover-bg-danger hover-text-white btn-sm px-8 py-6 rounded-6 ms-8"
+                    type="button"
+                    (click)="removerCategoria(i)"
+                    [title]="'Remover ' + categoria.nombre"
+                  >
+                    <i class="ph ph-trash text-sm"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- Botones de Acción -->
+    <div class="d-flex justify-content-end gap-12 mt-32" *ngIf="!loading">
+      <button 
+        class="btn btn-outline-gray-400 hover-bg-gray-100 px-20 py-12 rounded-8"
+        type="button"
+        (click)="resetearConfiguracion()"
+        [disabled]="guardando"
+      >
+        <i class="ph ph-arrow-clockwise me-8"></i>
+        Resetear
+      </button>
+      
+      <button 
+        class="btn bg-main-600 hover-bg-main-700 text-white px-20 py-12 rounded-8"
+        type="button"
+        (click)="guardarConfiguracion()"
+        [disabled]="guardando"
+      >
+        <span *ngIf="guardando" class="spinner-border spinner-border-sm me-8"></span>
+        <i *ngIf="!guardando" class="ph ph-check me-8"></i>
+        {{ guardando ? 'Guardando...' : 'Guardar Configuración' }}
+      </button>
+    </div>
+  </div>
+</div>

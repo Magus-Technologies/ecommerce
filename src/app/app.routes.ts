@@ -200,6 +200,14 @@ export const routes: Routes = [
           ),
         title: 'Libro de Reclamaciones',
       },
+      {
+        path: 'arma-tu-pc',
+        loadComponent: () =>
+          import('./pages/arma-pc-publico/arma-pc-publico.component').then(
+            (m) => m.ArmaPcPublicoComponent
+          ),
+        title: 'Arma tu PC',
+      },
     ],
   },
   // ✅ Lazy Loading para Dashboard
@@ -395,6 +403,27 @@ export const routes: Routes = [
           ).then((m) => m.PedidosListComponent),
         canActivate: [authGuard, permissionGuard],
         data: { permission: 'pedidos.ver' },
+      },
+      {
+        path: 'reclamos',
+        loadComponent: () =>
+          import('./pages/dashboard/reclamos/reclamos.component').then(
+            (m) => m.ReclamosComponent
+          ),
+        title: 'Gestión de Reclamos',
+        canActivate: [authGuard, permissionGuard],
+        data: { permission: 'reclamos.ver' },
+      },
+      // ✅ NUEVO: Arma tu PC
+      {
+        path: 'arma-pc',
+        loadComponent: () =>
+          import('./pages/dashboard/arma-pc/arma-pc.component').then(
+            (m) => m.ArmaPcComponent
+          ),
+        title: 'Configurar Arma tu PC',
+        canActivate: [permissionGuard],
+        data: { permission: 'categorias.edit' },
       },
       {
         path: 'empresa-info',
