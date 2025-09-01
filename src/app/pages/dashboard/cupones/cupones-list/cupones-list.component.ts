@@ -5,11 +5,17 @@ import { RouterModule } from '@angular/router';
 import { OfertasAdminService, CuponAdmin } from '../../../../services/ofertas-admin.service';
 import { CuponModalComponent } from '../cupon-modal/cupon-modal.component';
 import Swal from 'sweetalert2';
+import {
+  NgxDatatableModule,
+  ColumnMode,
+  SelectionType,
+  SortType,
+} from '@swimlane/ngx-datatable';
 
 @Component({
   selector: 'app-cupones-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, CuponModalComponent],
+  imports: [CommonModule, RouterModule, CuponModalComponent, NgxDatatableModule],
   template: `
     <div class="container-fluid">
       <!-- Header -->
@@ -26,7 +32,7 @@ import Swal from 'sweetalert2';
         </button>
       </div>
 
-      <!-- Tabla de cupones -->
+      <!-- Tabla con ngx-datatable -->
       <div class="card border-0 shadow-sm rounded-12">
         <div class="card-body p-0">
           
@@ -38,137 +44,178 @@ import Swal from 'sweetalert2';
             <p class="text-gray-500 mt-12 mb-0">Cargando cupones...</p>
           </div>
 
-          <!-- Tabla -->
-          <div *ngIf="!isLoading" class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-24 py-16 text-heading fw-semibold border-0">Código</th>
-                  <th class="px-24 py-16 text-heading fw-semibold border-0">Descuento</th>
-                  <th class="px-24 py-16 text-heading fw-semibold border-0">Fechas</th>
-                  <th class="px-24 py-16 text-heading fw-semibold border-0">Uso</th>
-                  <th class="px-24 py-16 text-heading fw-semibold border-0">Estado</th>
-                  <th class="px-24 py-16 text-heading fw-semibold border-0 text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let cupon of cupones" class="border-bottom border-gray-100">
-                  <!-- Código -->
-                  <td class="px-24 py-16">
-                    <div>
-                      <h6 class="text-heading fw-semibold mb-4">{{ cupon.codigo }}</h6>
-                      <p class="text-gray-500 text-sm mb-0">{{ cupon.titulo }}</p>
-                      <div *ngIf="cupon.solo_primera_compra" class="mt-4">
-                        <span class="badge bg-info-50 text-info-600 px-8 py-4 rounded-pill text-xs">
-                          Solo primera compra
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-
-                  <!-- Descuento -->
-                  <td class="px-24 py-16">
-                    <div class="text-center">
-                      <span class="badge bg-success-50 text-success-600 px-12 py-6 rounded-pill fw-semibold">
-                        {{ cupon.tipo_descuento === 'porcentaje' ? cupon.valor_descuento + '%' : 'S/ ' + cupon.valor_descuento }}
+          <!-- Datatable -->
+          <ngx-datatable
+            *ngIf="!isLoading"
+            class="bootstrap cupones-table"
+            [columns]="columns"
+            [rows]="cupones"
+            [columnMode]="ColumnMode.flex"
+            [headerHeight]="50"
+            [footerHeight]="50"
+            [rowHeight]="80"
+            [limit]="10"
+            [scrollbarV]="true"
+            [scrollbarH]="false"
+            [loadingIndicator]="isLoading"
+            [trackByProp]="'id'"
+            [sortType]="SortType.single"
+            [selectionType]="SelectionType.single"
+          >
+            <!-- Columna Código -->
+            <ngx-datatable-column
+              name="Código"
+              prop="codigo"
+              [flexGrow]="2.5"
+              [sortable]="true"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <div class="d-flex align-items-center gap-12">
+                  <div class="cupon-info">
+                    <h6 class="cupon-title" [title]="row.codigo">{{ row.codigo }}</h6>
+                    <p class="cupon-subtitle">{{ row.titulo }}</p>
+                    <div *ngIf="row.solo_primera_compra" class="mt-4">
+                      <span class="badge bg-info-50 text-info-600 config-badge">
+                        <i class="ph ph-user me-4"></i>Solo primera compra
                       </span>
-                      <div class="text-xs text-gray-500 mt-4">
-                        {{ cupon.tipo_descuento === 'porcentaje' ? 'Porcentaje' : 'Cantidad fija' }}
-                      </div>
-                      <div *ngIf="cupon.compra_minima" class="text-xs text-gray-500 mt-4">
-                        Mín: S/ {{ cupon.compra_minima }}
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+
+            <!-- Columna Descuento -->
+            <ngx-datatable-column
+              name="Descuento"
+              prop="valor_descuento"
+              [flexGrow]="1"
+              [sortable]="true"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <div class="text-center">
+                  <span class="badge bg-success-50 text-success-600 descuento-badge">
+                    {{ row.tipo_descuento === 'porcentaje' ? row.valor_descuento + '%' : 'S/ ' + row.valor_descuento }}
+                  </span>
+                  <div class="descuento-tipo">
+                    {{ row.tipo_descuento === 'porcentaje' ? 'Porcentaje' : 'Cantidad fija' }}
+                  </div>
+                  <div *ngIf="row.compra_minima" class="descuento-tipo">
+                    Mín: S/ {{ row.compra_minima }}
+                  </div>
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+
+            <!-- Columna Fechas -->
+            <ngx-datatable-column
+              name="Vigencia"
+              prop="fecha_inicio"
+              [flexGrow]="1.5"
+              [sortable]="true"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <div class="fechas-info">
+                  <div class="fecha-item">
+                    <strong>Inicio:</strong> {{ formatDate(row.fecha_inicio) }}
+                  </div>
+                  <div class="fecha-item">
+                    <strong>Fin:</strong> {{ formatDate(row.fecha_fin) }}
+                  </div>
+                  <span class="badge fecha-estado-badge"
+                        [class]="getEstadoFecha(row).class">
+                    {{ getEstadoFecha(row).texto }}
+                  </span>
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+
+            <!-- Columna Usos -->
+            <ngx-datatable-column
+              name="Usos"
+              [flexGrow]="1"
+              [sortable]="false"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <div class="text-center">
+                  <div class="uso-info">
+                    <strong>{{ row.usos_actuales || 0 }}</strong>
+                    <span *ngIf="row.limite_uso">/ {{ row.limite_uso }}</span>
+                    <span *ngIf="!row.limite_uso">/ ∞</span>
+                  </div>
+                  <div class="uso-tipo">
+                    {{ row.limite_uso ? 'Limitado' : 'Ilimitado' }}
+                  </div>
+                  <div *ngIf="row.limite_uso" class="progress-container">
+                    <div class="progress" style="height: 4px;">
+                      <div class="progress-bar bg-main-600" 
+                           [style.width.%]="((row.usos_actuales || 0) / row.limite_uso) * 100">
                       </div>
                     </div>
-                  </td>
+                  </div>
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
 
-                  <!-- Fechas -->
-                  <td class="px-24 py-16">
-                    <div class="text-sm">
-                      <div class="text-gray-600">
-                        <strong>Inicio:</strong> {{ formatDate(cupon.fecha_inicio) }}
-                      </div>
-                      <div class="text-gray-600 mt-4">
-                        <strong>Fin:</strong> {{ formatDate(cupon.fecha_fin) }}
-                      </div>
-                      <div class="mt-4">
-                        <span class="badge px-8 py-4 rounded-pill text-xs"
-                              [class]="getEstadoFecha(cupon).class">
-                          {{ getEstadoFecha(cupon).texto }}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
+            <!-- Columna Estado -->
+            <ngx-datatable-column
+              name="Estado"
+              prop="activo"
+              [flexGrow]="0.8"
+              [sortable]="true"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <span class="badge estado-badge"
+                      [class]="row.activo ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600'">
+                  {{ row.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </ng-template>
+            </ngx-datatable-column>
 
-                  <!-- Uso -->
-                  <td class="px-24 py-16">
-                    <div class="text-center">
-                      <div class="text-sm fw-semibold text-heading">
-                        {{ cupon.usos_actuales || 0 }}
-                        <span *ngIf="cupon.limite_uso">/ {{ cupon.limite_uso }}</span>
-                        <span *ngIf="!cupon.limite_uso">/ ∞</span>
-                      </div>
-                      <div class="text-xs text-gray-500 mt-4">
-                        {{ cupon.limite_uso ? 'Limitado' : 'Ilimitado' }}
-                      </div>
-                      <div *ngIf="cupon.limite_uso" class="mt-8">
-                        <div class="progress" style="height: 4px;">
-                          <div class="progress-bar bg-main-600" 
-                               [style.width.%]="((cupon.usos_actuales || 0) / cupon.limite_uso) * 100">
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
+            <!-- Columna Acciones -->
+            <ngx-datatable-column
+              name="Acciones"
+              [flexGrow]="1.2"
+              [sortable]="false"
+              [canAutoResize]="false"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <div class="action-buttons">
+                  <!-- Copiar código -->
+                  <button class="btn action-btn copy-btn"
+                          title="Copiar código"
+                          (click)="copiarCodigo(row.codigo)">
+                    <i class="ph ph-copy"></i>
+                  </button>
 
-                  <!-- Estado -->
-                  <td class="px-24 py-16">
-                    <span class="badge px-12 py-6 rounded-pill fw-medium"
-                          [class]="cupon.activo ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600'">
-                      {{ cupon.activo ? 'Activo' : 'Inactivo' }}
-                    </span>
-                  </td>
+                  <!-- Editar -->
+                  <button class="btn action-btn edit-btn"
+                          title="Editar"
+                          (click)="editarCupon(row)">
+                    <i class="ph ph-pencil"></i>
+                  </button>
 
-                  <!-- Acciones -->
-                  <td class="px-24 py-16 text-center">
-                    <div class="d-flex justify-content-center gap-8">
-                      <!-- Copiar código -->
-                      <button class="btn bg-info-50 hover-bg-info-100 text-info-600 w-32 h-32 rounded-6 flex-center transition-2"
-                              title="Copiar código"
-                              (click)="copiarCodigo(cupon.codigo)">
-                        <i class="ph ph-copy text-sm"></i>
-                      </button>
+                  <!-- Eliminar -->
+                  <button class="btn action-btn delete-btn"
+                          title="Eliminar"
+                          (click)="eliminarCupon(row.id!)">
+                    <i class="ph ph-trash"></i>
+                  </button>
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+          </ngx-datatable>
 
-                      <!-- Editar -->
-                      <button class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
-                              title="Editar"
-                              (click)="editarCupon(cupon)">
-                        <i class="ph ph-pencil text-sm"></i>
-                      </button>
-
-                      <!-- Eliminar -->
-                      <button class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
-                              title="Eliminar"
-                              (click)="eliminarCupon(cupon.id!)">
-                        <i class="ph ph-trash text-sm"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Empty state -->
-            <div *ngIf="cupones.length === 0" class="text-center py-40">
-              <i class="ph ph-ticket text-gray-300 text-6xl mb-16"></i>
-              <h6 class="text-heading fw-semibold mb-8">No hay cupones</h6>
-              <p class="text-gray-500 mb-16">Aún no has creado ningún cupón</p>
-              <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
-                      data-bs-toggle="modal" 
-                      data-bs-target="#modalCrearCupon">
-                <i class="ph ph-plus me-8"></i>
-                Crear primer cupón
-              </button>
-            </div>
+          <!-- Empty state -->
+          <div *ngIf="!isLoading && cupones.length === 0" class="text-center py-40">
+            <i class="ph ph-ticket text-gray-300 text-6xl mb-16"></i>
+            <h6 class="text-heading fw-semibold mb-8">No hay cupones</h6>
+            <p class="text-gray-500 mb-16">Aún no has creado ningún cupón</p>
+            <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#modalCrearCupon">
+              <i class="ph ph-plus me-8"></i>
+              Crear primer cupón
+            </button>
           </div>
         </div>
       </div>
@@ -182,11 +229,283 @@ import Swal from 'sweetalert2';
     </div>
   `,
   styles: [`
-    .table td {
-      vertical-align: middle;
+    /* Configuración base del datatable */
+    ::ng-deep .cupones-table {
+      box-shadow: none !important;
+      border: none !important;
+      font-size: 13px;
+      width: 100% !important;
     }
+
+    /* Header de la tabla */
+    ::ng-deep .cupones-table .datatable-header {
+      background-color: #f8f9fa !important;
+      border-bottom: 1px solid #dee2e6 !important;
+      height: 50px !important;
+    }
+
+    ::ng-deep .cupones-table .datatable-header-cell {
+      font-weight: 600 !important;
+      color: #495057 !important;
+      font-size: 12px !important;
+      padding: 12px 8px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      border-right: 1px solid #e9ecef !important;
+    }
+
+    ::ng-deep .cupones-table .datatable-header-cell:last-child {
+      border-right: none !important;
+    }
+
+    /* Celdas del cuerpo */
+    ::ng-deep .cupones-table .datatable-body-cell {
+      padding: 8px !important;
+      border-bottom: 1px solid #f1f3f4 !important;
+      border-right: 1px solid #f8f9fa !important;
+      font-size: 13px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      height: 80px !important;
+      vertical-align: middle !important;
+    }
+
+    ::ng-deep .cupones-table .datatable-body-cell:last-child {
+      border-right: none !important;
+    }
+
+    /* Filas alternadas */
+    ::ng-deep .cupones-table .datatable-row-even {
+      background-color: #ffffff !important;
+    }
+
+    ::ng-deep .cupones-table .datatable-row-odd {
+      background-color: #fafbfc !important;
+    }
+
+    /* Hover en filas */
+    ::ng-deep .cupones-table .datatable-body-row:hover {
+      background-color: #f5f5f5 !important;
+    }
+
+    /* Estilos específicos para cupones */
+    .cupon-info {
+      text-align: left;
+      width: 100%;
+      padding-left: 8px;
+    }
+
+    .cupon-title {
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      margin-bottom: 2px !important;
+      color: #212529 !important;
+      line-height: 1.3 !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+    .cupon-subtitle {
+      font-size: 11px !important;
+      color: #6c757d !important;
+      margin-bottom: 0 !important;
+    }
+
+    .config-badge {
+      font-size: 9px !important;
+      padding: 2px 6px !important;
+      border-radius: 10px !important;
+      font-weight: 500 !important;
+      white-space: nowrap;
+    }
+
+    .descuento-badge {
+      font-size: 12px !important;
+      padding: 6px 10px !important;
+      border-radius: 12px !important;
+      font-weight: 600 !important;
+      white-space: nowrap;
+    }
+
+    .descuento-tipo {
+      font-size: 10px !important;
+      color: #6c757d !important;
+      margin-top: 4px;
+    }
+
+    .fechas-info {
+      text-align: left;
+      width: 100%;
+    }
+
+    .fecha-item {
+      font-size: 11px !important;
+      color: #6c757d !important;
+      margin-bottom: 2px;
+    }
+
+    .fecha-estado-badge {
+      font-size: 9px !important;
+      padding: 2px 6px !important;
+      border-radius: 10px !important;
+      font-weight: 500 !important;
+      margin-top: 4px;
+    }
+
+    .uso-info {
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      color: #212529 !important;
+      margin-bottom: 4px;
+    }
+
+    .uso-tipo {
+      font-size: 10px !important;
+      color: #6c757d !important;
+      margin-bottom: 4px;
+    }
+
+    .progress-container {
+      margin-top: 4px;
+    }
+
     .progress {
-      background-color: #e9ecef;
+      background-color: #e9ecef !important;
+      border-radius: 2px !important;
+      overflow: hidden !important;
+      height: 4px !important;
+    }
+
+    .progress-bar {
+      transition: width 0.3s ease !important;
+      height: 100% !important;
+    }
+
+    .estado-badge {
+      font-size: 10px !important;
+      padding: 4px 8px !important;
+      border-radius: 12px !important;
+      font-weight: 500 !important;
+    }
+
+    .action-buttons {
+      display: flex !important;
+      gap: 4px !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-wrap: nowrap !important;
+    }
+
+    .action-btn {
+      width: 24px !important;
+      height: 24px !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 4px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transition: all 0.2s ease !important;
+      font-size: 10px !important;
+      min-width: 24px !important;
+    }
+
+    .copy-btn {
+      background-color: #cfe2ff !important;
+      color: #084298 !important;
+    }
+
+    .edit-btn {
+      background-color: #cfe2ff !important;
+      color: #084298 !important;
+    }
+
+    .delete-btn {
+      background-color: #f8d7da !important;
+      color: #842029 !important;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .copy-btn:hover,
+    .edit-btn:hover {
+      background-color: #9ec5fe !important;
+      color: #052c65 !important;
+    }
+
+    .delete-btn:hover {
+      background-color: #f1aeb5 !important;
+      color: #721c24 !important;
+    }
+
+    /* Footer */
+    ::ng-deep .cupones-table .datatable-footer {
+      background-color: #f8f9fa !important;
+      border-top: 1px solid #dee2e6 !important;
+      padding: 8px 16px !important;
+      font-size: 12px !important;
+      height: 50px !important;
+    }
+
+    ::ng-deep .cupones-table .datatable-pager {
+      margin: 0 !important;
+    }
+
+    ::ng-deep .cupones-table .datatable-pager .pager .pages .page {
+      padding: 4px 8px !important;
+      margin: 0 1px !important;
+      border-radius: 4px !important;
+      font-size: 11px !important;
+    }
+
+    ::ng-deep .cupones-table .datatable-pager .pager .pages .page.active {
+      background-color: #0d6efd !important;
+      color: white !important;
+    }
+
+    /* Eliminar espacios innecesarios */
+    ::ng-deep .cupones-table .datatable-body {
+      width: 100% !important;
+    }
+
+    ::ng-deep .cupones-table .datatable-row-wrapper {
+      width: 100% !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      ::ng-deep .cupones-table .datatable-header-cell,
+      ::ng-deep .cupones-table .datatable-body-cell {
+        font-size: 11px !important;
+        padding: 6px 4px !important;
+      }
+      
+      .cupon-title {
+        font-size: 12px !important;
+        max-width: 120px;
+      }
+      
+      .action-btn {
+        width: 20px !important;
+        height: 20px !important;
+      }
+
+      .action-buttons {
+        gap: 2px !important;
+      }
+
+      .config-badge {
+        font-size: 8px !important;
+        padding: 1px 4px !important;
+      }
     }
   `]
 })
@@ -195,6 +514,20 @@ export class CuponesListComponent implements OnInit {
   cupones: CuponAdmin[] = [];
   isLoading = true;
   cuponSeleccionado: CuponAdmin | null = null;
+
+  // Configuración para NGX-Datatable
+  columns = [
+    { name: 'Código', prop: 'codigo', flexGrow: 2.5 },
+    { name: 'Descuento', prop: 'valor_descuento', flexGrow: 1 },
+    { name: 'Vigencia', prop: 'fecha_inicio', flexGrow: 1.5 },
+    { name: 'Usos', prop: 'usos', flexGrow: 1 },
+    { name: 'Estado', prop: 'activo', flexGrow: 0.8 },
+    { name: 'Acciones', prop: 'acciones', flexGrow: 1.2 }
+  ];
+
+  ColumnMode = ColumnMode;
+  SelectionType = SelectionType;
+  SortType = SortType;
 
   constructor(
     private ofertasAdminService: OfertasAdminService

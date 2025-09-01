@@ -67,11 +67,11 @@
                   <input 
                     type="text" 
                     class="form-control"
-                    formControlName="consumerName"
-                    [class.is-invalid]="isFieldInvalid('consumerName')"
+                    formControlName="consumidor_nombre"
+                    [class.is-invalid]="isFieldInvalid('consumidor_nombre')"
                     placeholder="Ingrese su nombre completo">
-                  <div class="invalid-feedback" *ngIf="isFieldInvalid('consumerName')">
-                    {{ getFieldError('consumerName') }}
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('consumidor_nombre')">
+                    {{ getFieldError('consumidor_nombre') }}
                   </div>
                 </div>
               </div>
@@ -81,12 +81,12 @@
                   <input 
                     type="text" 
                     class="form-control"
-                    formControlName="consumerDni"
-                    [class.is-invalid]="isFieldInvalid('consumerDni')"
+                    formControlName="consumidor_dni"
+                    [class.is-invalid]="isFieldInvalid('consumidor_dni')"
                     placeholder="12345678"
                     maxlength="8">
-                  <div class="invalid-feedback" *ngIf="isFieldInvalid('consumerDni')">
-                    {{ getFieldError('consumerDni') }}
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('consumidor_dni')">
+                    {{ getFieldError('consumidor_dni') }}
                   </div>
                 </div>
               </div>
@@ -99,11 +99,11 @@
                   <input 
                     type="text" 
                     class="form-control"
-                    formControlName="consumerAddress"
-                    [class.is-invalid]="isFieldInvalid('consumerAddress')"
+                    formControlName="consumidor_direccion"
+                    [class.is-invalid]="isFieldInvalid('consumidor_direccion')"
                     placeholder="Ingrese su dirección completa">
-                  <div class="invalid-feedback" *ngIf="isFieldInvalid('consumerAddress')">
-                    {{ getFieldError('consumerAddress') }}
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('consumidor_direccion')">
+                    {{ getFieldError('consumidor_direccion') }}
                   </div>
                 </div>
               </div>
@@ -116,12 +116,12 @@
                   <input 
                     type="text" 
                     class="form-control"
-                    formControlName="consumerPhone"
-                    [class.is-invalid]="isFieldInvalid('consumerPhone')"
+                    formControlName="consumidor_telefono"
+                    [class.is-invalid]="isFieldInvalid('consumidor_telefono')"
                     placeholder="987654321"
                     maxlength="9">
-                  <div class="invalid-feedback" *ngIf="isFieldInvalid('consumerPhone')">
-                    {{ getFieldError('consumerPhone') }}
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('consumidor_telefono')">
+                    {{ getFieldError('consumidor_telefono') }}
                   </div>
                 </div>
               </div>
@@ -131,11 +131,11 @@
                   <input 
                     type="email" 
                     class="form-control"
-                    formControlName="consumerEmail"
-                    [class.is-invalid]="isFieldInvalid('consumerEmail')"
+                    formControlName="consumidor_email"
+                    [class.is-invalid]="isFieldInvalid('consumidor_email')"
                     placeholder="ejemplo@correo.com">
-                  <div class="invalid-feedback" *ngIf="isFieldInvalid('consumerEmail')">
-                    {{ getFieldError('consumerEmail') }}
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('consumidor_email')">
+                    {{ getFieldError('consumidor_email') }}
                   </div>
                 </div>
               </div>
@@ -148,7 +148,7 @@
                   <input 
                     class="form-check-input" 
                     type="checkbox" 
-                    formControlName="isMinor"
+                    formControlName="es_menor_edad"
                     id="isMinor">
                   <label class="form-check-label fw-medium" for="isMinor">
                     MENOR DE EDAD (LLENAR INFORMACIÓN DEL APODERADO)
@@ -158,7 +158,7 @@
             </div>
 
             <!-- Datos del apoderado (si es menor de edad) -->
-            <div *ngIf="claimbookForm.get('isMinor')?.value" class="guardian-section bg-warning-50 p-20 rounded-8">
+            <div *ngIf="claimbookForm.get('es_menor_edad')?.value" class="guardian-section bg-warning-50 p-20 rounded-8">
               <h6 class="text-warning-700 fw-semibold mb-16">DATOS DEL APODERADO</h6>
               
               <div class="row">
@@ -168,11 +168,11 @@
                     <input 
                       type="text" 
                       class="form-control"
-                      formControlName="guardianName"
-                      [class.is-invalid]="isFieldInvalid('guardianName')"
+                      formControlName="apoderado_nombre"
+                      [class.is-invalid]="isFieldInvalid('apoderado_nombre')"
                       placeholder="Nombre del apoderado">
-                    <div class="invalid-feedback" *ngIf="isFieldInvalid('guardianName')">
-                      {{ getFieldError('guardianName') }}
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('apoderado_nombre')">
+                      {{ getFieldError('apoderado_nombre') }}
                     </div>
                   </div>
                 </div>
@@ -182,12 +182,12 @@
                     <input 
                       type="text" 
                       class="form-control"
-                      formControlName="guardianDni"
-                      [class.is-invalid]="isFieldInvalid('guardianDni')"
+                      formControlName="apoderado_dni"
+                      [class.is-invalid]="isFieldInvalid('apoderado_dni')"
                       placeholder="12345678"
                       maxlength="8">
-                    <div class="invalid-feedback" *ngIf="isFieldInvalid('guardianDni')">
-                      {{ getFieldError('guardianDni') }}
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('apoderado_dni')">
+                      {{ getFieldError('apoderado_dni') }}
                     </div>
                   </div>
                 </div>
@@ -200,11 +200,11 @@
                     <input 
                       type="text" 
                       class="form-control"
-                      formControlName="guardianAddress"
-                      [class.is-invalid]="isFieldInvalid('guardianAddress')"
+                      formControlName="apoderado_direccion"
+                      [class.is-invalid]="isFieldInvalid('apoderado_direccion')"
                       placeholder="Dirección del apoderado">
-                    <div class="invalid-feedback" *ngIf="isFieldInvalid('guardianAddress')">
-                      {{ getFieldError('guardianAddress') }}
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('apoderado_direccion')">
+                      {{ getFieldError('apoderado_direccion') }}
                     </div>
                   </div>
                 </div>
@@ -217,12 +217,12 @@
                     <input 
                       type="text" 
                       class="form-control"
-                      formControlName="guardianPhone"
-                      [class.is-invalid]="isFieldInvalid('guardianPhone')"
+                      formControlName="apoderado_telefono"
+                      [class.is-invalid]="isFieldInvalid('apoderado_telefono')"
                       placeholder="987654321"
                       maxlength="9">
-                    <div class="invalid-feedback" *ngIf="isFieldInvalid('guardianPhone')">
-                      {{ getFieldError('guardianPhone') }}
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('apoderado_telefono')">
+                      {{ getFieldError('apoderado_telefono') }}
                     </div>
                   </div>
                 </div>
@@ -232,11 +232,11 @@
                     <input 
                       type="email" 
                       class="form-control"
-                      formControlName="guardianEmail"
-                      [class.is-invalid]="isFieldInvalid('guardianEmail')"
+                      formControlName="apoderado_email"
+                      [class.is-invalid]="isFieldInvalid('apoderado_email')"
                       placeholder="apoderado@correo.com">
-                    <div class="invalid-feedback" *ngIf="isFieldInvalid('guardianEmail')">
-                      {{ getFieldError('guardianEmail') }}
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('apoderado_email')">
+                      {{ getFieldError('apoderado_email') }}
                     </div>
                   </div>
                 </div>
@@ -260,7 +260,7 @@
                       <input 
                         class="form-check-input" 
                         type="radio" 
-                        formControlName="claimType"
+                        formControlName="tipo_bien"
                         value="producto"
                         id="producto">
                       <label class="form-check-label" for="producto">
@@ -271,7 +271,7 @@
                       <input 
                         class="form-check-input" 
                         type="radio" 
-                        formControlName="claimType"
+                        formControlName="tipo_bien"
                         value="servicio"
                         id="servicio">
                       <label class="form-check-label" for="servicio">
@@ -289,13 +289,13 @@
                     <input 
                       type="number" 
                       class="form-control"
-                      formControlName="claimedAmount"
-                      [class.is-invalid]="isFieldInvalid('claimedAmount')"
+                      formControlName="monto_reclamado"
+                      [class.is-invalid]="isFieldInvalid('monto_reclamado')"
                       placeholder="0.00"
                       min="0"
                       step="0.01">
-                    <div class="invalid-feedback" *ngIf="isFieldInvalid('claimedAmount')">
-                      {{ getFieldError('claimedAmount') }}
+                    <div class="invalid-feedback" *ngIf="isFieldInvalid('monto_reclamado')">
+                      {{ getFieldError('monto_reclamado') }}
                     </div>
                   </div>
                 </div>
@@ -308,12 +308,12 @@
                   <label class="form-label fw-semibold text-heading">DESCRIPCIÓN: <span class="text-danger">*</span></label>
                   <textarea 
                     class="form-control"
-                    formControlName="description"
-                    [class.is-invalid]="isFieldInvalid('description')"
+                    formControlName="descripcion_bien"
+                    [class.is-invalid]="isFieldInvalid('descripcion_bien')"
                     rows="3"
                     placeholder="Describa detalladamente el producto o servicio objeto del reclamo"></textarea>
-                  <div class="invalid-feedback" *ngIf="isFieldInvalid('description')">
-                    {{ getFieldError('description') }}
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('descripcion_bien')">
+                    {{ getFieldError('descripcion_bien') }}
                   </div>
                 </div>
               </div>
@@ -336,7 +336,7 @@
                       <input 
                         class="form-check-input" 
                         type="radio" 
-                        formControlName="complaintType"
+                        formControlName="tipo_solicitud"
                         value="reclamo"
                         id="reclamo">
                       <label class="form-check-label" for="reclamo">
@@ -347,7 +347,7 @@
                       <input 
                         class="form-check-input" 
                         type="radio" 
-                        formControlName="complaintType"
+                        formControlName="tipo_solicitud"
                         value="queja"
                         id="queja">
                       <label class="form-check-label" for="queja">
@@ -365,12 +365,12 @@
                   <label class="form-label fw-semibold text-heading">DETALLE: <span class="text-danger">*</span></label>
                   <textarea 
                     class="form-control"
-                    formControlName="complaintDetail"
-                    [class.is-invalid]="isFieldInvalid('complaintDetail')"
+                    formControlName="detalle_reclamo"
+                    [class.is-invalid]="isFieldInvalid('detalle_reclamo')"
                     rows="4"
                     placeholder="Describa detalladamente su reclamo o queja"></textarea>
-                  <div class="invalid-feedback" *ngIf="isFieldInvalid('complaintDetail')">
-                    {{ getFieldError('complaintDetail') }}
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('detalle_reclamo')">
+                    {{ getFieldError('detalle_reclamo') }}
                   </div>
                 </div>
               </div>
@@ -382,12 +382,12 @@
                   <label class="form-label fw-semibold text-heading">PEDIDO DEL CONSUMIDOR: <span class="text-danger">*</span></label>
                   <textarea 
                     class="form-control"
-                    formControlName="consumerRequest"
-                    [class.is-invalid]="isFieldInvalid('consumerRequest')"
+                    formControlName="pedido_consumidor"
+                    [class.is-invalid]="isFieldInvalid('pedido_consumidor')"
                     rows="3"
                     placeholder="Indique qué solicita como solución a su reclamo"></textarea>
-                  <div class="invalid-feedback" *ngIf="isFieldInvalid('consumerRequest')">
-                    {{ getFieldError('consumerRequest') }}
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('pedido_consumidor')">
+                    {{ getFieldError('pedido_consumidor') }}
                   </div>
                 </div>
               </div>
@@ -408,7 +408,7 @@
                   <input 
                     type="date" 
                     class="form-control"
-                    formControlName="responseDate"
+                    formControlName="fecha_respuesta"
                     placeholder="dd/mm/aaaa">
                 </div>
               </div>
@@ -420,7 +420,7 @@
                   <label class="form-label fw-semibold text-heading">RESPUESTA:</label>
                   <textarea 
                     class="form-control bg-gray-50"
-                    formControlName="providerResponse"
+                    formControlName="respuesta_proveedor"
                     rows="4"
                     placeholder="Este campo será completado por el proveedor"
                     readonly></textarea>

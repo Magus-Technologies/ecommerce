@@ -8,6 +8,7 @@ import { User } from '../../models/user.model';
 import { DireccionesService, Direccion } from '../../services/direcciones.service';
 import { UbigeoService, Departamento, Provincia, Distrito } from '../../services/ubigeo.service';
 import { PedidosService, Pedido } from '../../services/pedidos.service';
+import { ReclamosService, Reclamo } from '../../services/reclamos.service';
 import { ModalDireccionComponent } from '../../component/modal-direccion/modal-direccion.component';
 @Component({
   selector: 'app-my-account',
@@ -39,12 +40,19 @@ export class MyAccountComponent implements OnInit, OnDestroy {
   showPedidos = false;
   pedidoSeleccionado: Pedido | null = null;
 
+  // Propiedades para reclamos
+  reclamos: Reclamo[] = [];
+  isLoadingReclamos = false;
+  showReclamos = false;
+  reclamoSeleccionado: Reclamo | null = null;
+
   constructor(
     private authService: AuthService,
     private router: Router,
     private direccionesService: DireccionesService,
     private ubigeoService: UbigeoService,
-    private pedidosService: PedidosService
+    private pedidosService: PedidosService,
+    private reclamosService: ReclamosService
   ) {}
 
   ngOnInit(): void {
@@ -52,6 +60,7 @@ export class MyAccountComponent implements OnInit, OnDestroy {
     this.cargarDirecciones();
     this.cargarDepartamentos();
     this.cargarPedidos();
+    this.cargarReclamos();
   }
 
   ngOnDestroy(): void {
@@ -265,13 +274,23 @@ export class MyAccountComponent implements OnInit, OnDestroy {
 
   togglePedidos(): void {
     this.showPedidos = !this.showPedidos;
+    this.showReclamos = false;
     if (this.showPedidos && this.pedidos.length === 0) {
       this.cargarPedidos();
     }
   }
 
   toggleDirecciones(): void {
-    this.showPedidos = false; // Siempre mostrar direcciones
+    this.showPedidos = false;
+    this.showReclamos = false;
+  }
+
+  toggleReclamos(): void {
+    this.showReclamos = !this.showReclamos;
+    this.showPedidos = false;
+    if (this.showReclamos && this.reclamos.length === 0) {
+      this.cargarReclamos();
+    }
   }
 
   getEstadoBadgeClass(estado: string | undefined): string {
@@ -340,5 +359,79 @@ export class MyAccountComponent implements OnInit, OnDestroy {
         }
       });
     }
+  }
+
+  // ✅ MÉTODOS PARA RECLAMOS
+  cargarReclamos(): void {
+    // Solo cargar reclamos si el usuario está logueado
+    if (!this.authService.isLoggedIn()) {
+      return;
+    }
+
+    console.log('Usuario actual:', this.currentUser);
+    console.log('Cargando reclamos del usuario...');
+
+    this.isLoadingReclamos = true;
+    this.reclamosService.obtenerMisReclamos().subscribe({
+      next: (response) => {
+        console.log('Respuesta completa de reclamos:', response);
+        console.log('Reclamos encontrados:', response.reclamos?.length || 0);
+        if (response.status === 'success') {
+          this.reclamos = response.reclamos || [];
+        }
+        this.isLoadingReclamos = false;
+      },
+      error: (error) => {
+        console.error('Error cargando reclamos:', error);
+        console.error('Detalles del error:', error.error);
+        this.isLoadingReclamos = false;
+        this.reclamos = [];
+      }
+    });
+  }
+
+  verDetalleReclamo(reclamo: Reclamo): void {
+    this.reclamoSeleccionado = reclamo;
+    const modal = document.getElementById('detalleReclamoModal');
+    if (modal) {
+      const bootstrapModal = new (window as any).bootstrap.Modal(modal);
+      bootstrapModal.show();
+    }
+  }
+
+  getEstadoReclamoClass(estado: string | undefined): string {
+    return this.reclamosService.getEstadoClass(estado || 'pendiente');
+  }
+
+  getEstadoReclamoLabel(estado: string | undefined): string {
+    const estados = this.reclamosService.getEstadosReclamos();
+    const estadoObj = estados.find(e => e.value === (estado || 'pendiente'));
+    return estadoObj ? estadoObj.label : 'Desconocido';
+  }
+
+  getTipoSolicitudLabel(tipo: string | undefined): string {
+    return tipo === 'reclamo' ? 'Reclamo' : 'Queja';
+  }
+
+  getTipoBienLabel(tipo: string | undefined): string {
+    return tipo === 'producto' ? 'Producto' : 'Servicio';
+  }
+
+  calcularDiasRestantes(fechaLimite: string): number {
+    if (!fechaLimite) return 0;
+    const limite = new Date(fechaLimite);
+    const hoy = new Date();
+    const diferencia = limite.getTime() - hoy.getTime();
+    const dias = Math.ceil(diferencia / (1000 * 3600 * 24));
+    return dias > 0 ? dias : 0;
+  }
+
+  isReclamoVencido(fechaLimite: string, estado: string): boolean {
+    if (!fechaLimite || estado === 'resuelto' || estado === 'cerrado') {
+      return false;
+    }
+    const limite = new Date(fechaLimite);
+    const hoy = new Date();
+    return limite < hoy;
   }
 }

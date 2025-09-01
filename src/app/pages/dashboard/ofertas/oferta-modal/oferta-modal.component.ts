@@ -1,5 +1,5 @@
 // src/app/component/oferta-modal.component.ts
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OfertasAdminService, OfertaAdmin, TipoOferta } from '../../../../services/ofertas-admin.service';
@@ -322,37 +322,43 @@ import Swal from 'sweetalert2';
                       </h6>
                       
                       <div class="d-flex flex-column gap-12">
-                        <!-- ✅ NUEVO CHECKBOX: Oferta principal del día -->
+                        <!-- ✅ CHECKBOX: Oferta principal del día -->
                         <div class="form-check">
                           <input class="form-check-input" 
                                  type="checkbox" 
-                                 [(ngModel)]="formData.es_oferta_principal"
+                                 [checked]="formData.es_oferta_principal"
                                  name="es_oferta_principal"
-                                 id="es_oferta_principal">
+                                 id="es_oferta_principal"
+                                 (change)="onPrincipalChange($event)">
                           <label class="form-check-label text-heading fw-medium" for="es_oferta_principal">
                             <i class="ph ph-star text-warning-600 me-4"></i>
                             Oferta principal del día
+                            <span class="badge bg-info ms-2 text-xs">{{ formData.es_oferta_principal ? 'SI' : 'NO' }}</span>
                           </label>
                           <small class="text-gray-500 d-block">
                             <strong>¡IMPORTANTE!</strong> Solo una oferta puede ser principal a la vez. 
                             Esta oferta se mostrará en la sección especial "Ofertas del día" del home.
+                            <br><strong>Debug:</strong> Valor actual: {{ formData.es_oferta_principal }}
                           </small>
                         </div>
                         <div class="form-check">
-  <input class="form-check-input" 
-         type="checkbox" 
-         [(ngModel)]="formData.es_oferta_semana"
-         name="es_oferta_semana"
-         id="es_oferta_semana">
-  <label class="form-check-label text-heading fw-medium" for="es_oferta_semana">
-    <i class="ph ph-calendar-star text-purple-600 me-4"></i>
-    Oferta de la semana
-  </label>
-  <small class="text-gray-500 d-block">
-    <strong>¡IMPORTANTE!</strong> Solo una oferta puede ser de la semana a la vez. 
-    Esta oferta se mostrará en la sección "Ofertas de la semana" del home.
-  </small>
-</div>
+                          <input class="form-check-input" 
+                                 type="checkbox" 
+                                 [checked]="formData.es_oferta_semana"
+                                 name="es_oferta_semana"
+                                 id="es_oferta_semana"
+                                 (change)="onSemanaChange($event)">
+                          <label class="form-check-label text-heading fw-medium" for="es_oferta_semana">
+                            <i class="ph ph-calendar-star text-purple-600 me-4"></i>
+                            Oferta de la semana
+                            <span class="badge bg-purple ms-2 text-xs">{{ formData.es_oferta_semana ? 'SI' : 'NO' }}</span>
+                          </label>
+                          <small class="text-gray-500 d-block">
+                            <strong>¡IMPORTANTE!</strong> Solo una oferta puede ser de la semana a la vez. 
+                            Esta oferta se mostrará en la sección "Ofertas de la semana" del home.
+                            <br><strong>Debug:</strong> Valor actual: {{ formData.es_oferta_semana }}
+                          </small>
+                        </div>
 
                         <div class="form-check">
                           <input class="form-check-input" 
@@ -455,7 +461,8 @@ export class OfertaModalComponent implements OnInit, OnChanges {
   bannerPreview: string | null = null;
 
   constructor(
-    private ofertasAdminService: OfertasAdminService
+    private ofertasAdminService: OfertasAdminService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -467,14 +474,44 @@ export class OfertaModalComponent implements OnInit, OnChanges {
     
     if (this.oferta) {
       // ✅ Modo edición - cargar datos existentes
-      this.formData = { ...this.oferta };
-      
-      // ✅ Cargar previews de imágenes existentes con logs para debug
-      console.log('📸 URLs de imágenes:', {
-        imagen_url: this.oferta.imagen_url,
-        banner_imagen_url: this.oferta.banner_imagen_url
+      console.log('📋 Estado ANTES de copiar:', {
+        es_oferta_principal: this.oferta.es_oferta_principal,
+        es_oferta_semana: this.oferta.es_oferta_semana,
+        activo: this.oferta.activo
       });
       
+      this.formData = { ...this.oferta };
+      
+      // ✅ FORZAR conversión de valores booleanos por si vienen como strings o números del backend
+      this.formData.activo = this.convertToBoolean(this.oferta.activo);
+      this.formData.mostrar_countdown = this.convertToBoolean(this.oferta.mostrar_countdown);
+      this.formData.mostrar_en_slider = this.convertToBoolean(this.oferta.mostrar_en_slider);
+      this.formData.mostrar_en_banner = this.convertToBoolean(this.oferta.mostrar_en_banner);
+      this.formData.es_oferta_principal = this.convertToBoolean(this.oferta.es_oferta_principal);
+      this.formData.es_oferta_semana = this.convertToBoolean(this.oferta.es_oferta_semana);
+      
+      console.log('🔧 Conversión de booleans:', {
+        'activo - original': this.oferta.activo, 'activo - convertido': this.formData.activo,
+        'es_oferta_principal - original': this.oferta.es_oferta_principal, 'es_oferta_principal - convertido': this.formData.es_oferta_principal,
+        'es_oferta_semana - original': this.oferta.es_oferta_semana, 'es_oferta_semana - convertido': this.formData.es_oferta_semana
+      });
+      
+      console.log('📋 Estado DESPUÉS de copiar y convertir:', {
+        es_oferta_principal: this.formData.es_oferta_principal,
+        es_oferta_semana: this.formData.es_oferta_semana,
+        activo: this.formData.activo
+      });
+      
+      // ✅ FORZAR detección de cambios para actualizar la vista
+      setTimeout(() => {
+        this.cdr.detectChanges();
+        console.log('🔄 Change detection forzada - Estado final del form:', {
+          es_oferta_principal: this.formData.es_oferta_principal,
+          es_oferta_semana: this.formData.es_oferta_semana
+        });
+      }, 10);
+      
+    
       this.imagenPreview = this.oferta.imagen_url || null;
       this.bannerPreview = this.oferta.banner_imagen_url || null;
       
@@ -492,9 +529,16 @@ export class OfertaModalComponent implements OnInit, OnChanges {
       }
     } else {
       // ✅ Modo creación - resetear todo
+      console.log('🆕 Modo creación - Reseteando formulario');
       this.formData = this.getEmptyForm();
       this.imagenPreview = null;
       this.bannerPreview = null;
+      
+      console.log('📋 Form reseteado:', {
+        es_oferta_principal: this.formData.es_oferta_principal,
+        es_oferta_semana: this.formData.es_oferta_semana,
+        activo: this.formData.activo
+      });
     }
   }
 
@@ -561,12 +605,54 @@ export class OfertaModalComponent implements OnInit, OnChanges {
     }
   }
 
+  // ✅ Método para debugging del checkbox principal
+  onPrincipalChange(event: any): void {
+    console.log('🔘 Checkbox principal cambió:', {
+      event_checked: event.target.checked,
+      formData_antes: this.formData.es_oferta_principal,
+    });
+    this.formData.es_oferta_principal = event.target.checked;
+    console.log('🔘 Checkbox principal después del cambio:', {
+      formData_despues: this.formData.es_oferta_principal
+    });
+  }
+
+  // ✅ Método para debugging del checkbox semana
+  onSemanaChange(event: any): void {
+    console.log('🔘 Checkbox semana cambió:', {
+      event_checked: event.target.checked,
+      formData_antes: this.formData.es_oferta_semana,
+    });
+    this.formData.es_oferta_semana = event.target.checked;
+    console.log('🔘 Checkbox semana después del cambio:', {
+      formData_despues: this.formData.es_oferta_semana
+    });
+  }
+
   guardarOferta(): void {
     this.isLoading = true;
 
+    // ✅ ASEGURAR QUE LOS CAMPOS BOOLEANOS SE ENVÍEN EXPLÍCITAMENTE
+    const datosParaEnviar = { ...this.formData };
+    
+    // ✅ GARANTIZAR que los campos booleanos siempre se envíen, incluso si son false
+    datosParaEnviar.activo = this.formData.activo;
+    datosParaEnviar.mostrar_countdown = this.formData.mostrar_countdown;
+    datosParaEnviar.mostrar_en_slider = this.formData.mostrar_en_slider;
+    datosParaEnviar.mostrar_en_banner = this.formData.mostrar_en_banner;
+    datosParaEnviar.es_oferta_principal = this.formData.es_oferta_principal;
+    datosParaEnviar.es_oferta_semana = this.formData.es_oferta_semana;
+
+    console.log('📤 Datos que se enviarán:', datosParaEnviar);
+    console.log('📤 Estados específicos que se envían:', {
+      es_oferta_principal: datosParaEnviar.es_oferta_principal,
+      es_oferta_semana: datosParaEnviar.es_oferta_semana,
+      activo: datosParaEnviar.activo
+    });
+
     const operacion = this.oferta?.id 
-      ? this.ofertasAdminService.actualizarOferta(this.oferta.id, this.formData)
-      : this.ofertasAdminService.crearOferta(this.formData);
+      ? this.ofertasAdminService.actualizarOferta(this.oferta.id, datosParaEnviar)
+      : this.ofertasAdminService.crearOferta(datosParaEnviar);
 
     operacion.subscribe({
       next: () => {
@@ -608,5 +694,22 @@ export class OfertaModalComponent implements OnInit, OnChanges {
   private formatDateForInput(dateString: string): string {
     const date = new Date(dateString);
     return date.toISOString().slice(0, 16);
+  }
+
+  // ✅ Método helper para convertir cualquier valor a boolean de forma robusta
+  private convertToBoolean(value: any): boolean {
+    if (value === null || value === undefined) {
+      return false;
+    }
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    if (typeof value === 'string') {
+      return value.toLowerCase() === 'true' || value === '1';
+    }
+    if (typeof value === 'number') {
+      return value === 1;
+    }
+    return Boolean(value);
   }
 }

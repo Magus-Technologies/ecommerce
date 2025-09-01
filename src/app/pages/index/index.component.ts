@@ -99,6 +99,9 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   isLoadingCupones = false;
   productosDestacados: ProductoPublico[] = [];
   isLoadingProductosDestacados = false;
+  
+  // ✅ NUEVA PROPIEDAD: Cache para el estado de wishlist
+  private wishlistState = new Set<number>();
 
   slideConfig = {
     slidesToShow: 1,
@@ -278,6 +281,9 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cargarTodosLosProductos(); // ✅ NUEVA FUNCIÓN
     this.cargarProductosDestacados();
     this.cargarOfertaSemanaActiva();
+
+    // ✅ NUEVA LÍNEA: Inicializar wishlist state
+    this.inicializarWishlistState();
 
     // NUEVA LÍNEA: Actualizar cupones cada 5 minutos
     if (this.isBrowser) {
@@ -565,7 +571,9 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     // Usuario logueado: proceder con la wishlist
     const isToggled = this.wishlistService.toggleWishlist(product);
 
+    // ✅ ACTUALIZAR CACHE
     if (isToggled) {
+      this.wishlistState.add(product.id);
       // Producto agregado
       Swal.fire({
         title: '¡Agregado a favoritos!',
@@ -581,6 +589,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         color: '#333',
       });
     } else {
+      this.wishlistState.delete(product.id);
       // Producto removido
       Swal.fire({
         title: 'Removido de favoritos',
@@ -598,9 +607,18 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // ✅ NUEVO MÉTODO: Verificar si un producto está en wishlist
+  // ✅ NUEVO MÉTODO: Inicializar estado de wishlist
+  private inicializarWishlistState(): void {
+    const wishlistItems = this.wishlistService.getCurrentItems();
+    this.wishlistState.clear();
+    wishlistItems.forEach(item => {
+      this.wishlistState.add(item.producto_id);
+    });
+  }
+
+  // ✅ NUEVO MÉTODO: Verificar si un producto está en wishlist (con cache)
   isInWishlist(productoId: number): boolean {
-    return this.wishlistService.isInWishlist(productoId);
+    return this.wishlistState.has(productoId);
   }
 
   cargarOfertasActivas(): void {

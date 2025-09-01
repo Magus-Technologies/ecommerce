@@ -226,14 +226,18 @@
           id="feature-item-wrapper-prev"
           class="slick-prev slick-arrow flex-center rounded-circle bg-white text-xl hover-bg-main-600 hover-text-white transition-1"
         >
-          <i class="ph ph-caret-left"></i>
+          <svg width="16" height="16" viewBox="0 0 256 256" fill="none">
+            <path d="M168.49 199.51a12 12 0 0 1-17 17l-80-80a12 12 0 0 1 0-17l80-80a12 12 0 0 1 17 17L97 128Z" fill="currentColor"/>
+          </svg>
         </button>
         <button
           type="button"
           id="feature-item-wrapper-next"
           class="slick-next slick-arrow flex-center rounded-circle bg-white text-xl hover-bg-main-600 hover-text-white transition-1"
         >
-          <i class="ph ph-caret-right"></i>
+          <svg width="16" height="16" viewBox="0 0 256 256" fill="none">
+            <path d="M87.51 56.49a12 12 0 0 1 17-17l80 80a12 12 0 0 1 0 17l-80 80a12 12 0 0 1-17-17L159 128Z" fill="currentColor"/>
+          </svg>
         </button>
       </div>
 
@@ -586,14 +590,38 @@
             <div
               class="product-card h-100 p-12 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 group-item"
             >
-              <button type="button" class="wishlist-btn-two">
-                <i
-                  class="ph-bold"
-                  [class.ph-heart]="!isInWishlist(product.id)"
-                  [class.ph-heart-fill]="isInWishlist(product.id)"
-                  [class.text-danger-600]="isInWishlist(product.id)"
-                  (click)="agregarAWishlist(product)"
-                ></i>
+              <button 
+                type="button" 
+                class="wishlist-btn-custom"
+                [class.active]="isInWishlist(product.id)"
+                (click)="agregarAWishlist(product)"
+              >
+                <!-- Corazón vacío (cuando no está en wishlist) -->
+                <svg 
+                  *ngIf="!isInWishlist(product.id)"
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 256 256" 
+                  fill="none"
+                  class="heart-icon"
+                >
+                  <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z" fill="currentColor"/>
+                </svg>
+
+                <!-- Corazón con solo el borde (cuando está en wishlist) -->
+                <svg 
+                  *ngIf="isInWishlist(product.id)"
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 256 256" 
+                  fill="none"
+                  class="heart-icon heart-outline"
+                >
+                  <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z" 
+                    stroke="currentColor" 
+                    stroke-width="16" 
+                    fill="none"/>
+                </svg>
               </button>
 
               <span

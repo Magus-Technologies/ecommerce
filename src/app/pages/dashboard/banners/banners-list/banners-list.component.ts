@@ -8,10 +8,17 @@ import { BannersService, Banner } from '../../../../services/banner.service';
 import { BannerModalComponent } from '../../../../component/banner-modal/banner-modal.component';
 import { PermissionsService } from '../../../../services/permissions.service';
 import { Observable } from 'rxjs';
+import Swal from 'sweetalert2';
+import {
+  NgxDatatableModule,
+  ColumnMode,
+  SelectionType,
+  SortType,
+} from '@swimlane/ngx-datatable';
 @Component({
   selector: 'app-banners-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, BannerModalComponent],
+  imports: [CommonModule, RouterModule, BannerModalComponent, NgxDatatableModule],
   template: `
     <div class="container-fluid">
       <!-- Header -->
@@ -40,113 +47,159 @@ import { Observable } from 'rxjs';
             <p class="text-gray-500 mt-12 mb-0">Cargando banners...</p>
           </div>
 
-          <!-- Tabla -->
-          <div *ngIf="!isLoading" class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-24 py-16 text-heading fw-semibold border-0">Imagen</th>
-                  <th class="px-24 py-16 text-heading fw-semibold border-0">Título</th>
-                  <th class="px-24 py-16 text-heading fw-semibold border-0">Subtítulo</th>
-                  <th class="px-24 py-16 text-heading fw-semibold border-0">Precio</th>
-                  <th class="px-24 py-16 text-heading fw-semibold border-0">Orden</th>
-                  <th class="px-24 py-16 text-heading fw-semibold border-0">Estado</th>
-                  <th class="px-24 py-16 text-heading fw-semibold border-0 text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let banner of banners" class="border-bottom border-gray-100">
-                  <!-- Imagen -->
-                  <td class="px-24 py-16">
-                    <div class="w-80 h-48 bg-gray-100 rounded-8 flex-center overflow-hidden">
-                      <img *ngIf="banner.imagen_url" 
-                           [src]="banner.imagen_url" 
-                           [alt]="banner.titulo"
-                           class="w-100 h-100 object-fit-cover">
-                      <i *ngIf="!banner.imagen_url" class="ph ph-image text-gray-400 text-xl"></i>
-                    </div>
-                  </td>
+          <!-- Datatable -->
+          <ngx-datatable
+            *ngIf="!isLoading"
+            class="bootstrap banners-table"
+            [columns]="columns"
+            [rows]="banners"
+            [columnMode]="ColumnMode.flex"
+            [headerHeight]="50"
+            [footerHeight]="50"
+            [rowHeight]="80"
+            [limit]="10"
+            [scrollbarV]="true"
+            [scrollbarH]="false"
+            [loadingIndicator]="isLoading"
+            [trackByProp]="'id'"
+            [sortType]="SortType.single"
+            [selectionType]="SelectionType.single"
+          >
+            <!-- Columna Imagen -->
+            <ngx-datatable-column
+              name="Imagen"
+              [flexGrow]="1.2"
+              [sortable]="false"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <div class="banner-image-container">
+                  <img *ngIf="row.imagen_url" 
+                       [src]="row.imagen_url" 
+                       [alt]="row.titulo"
+                       class="banner-image">
+                  <i *ngIf="!row.imagen_url" class="ph ph-image text-gray-400"></i>
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
 
-                  <!-- Título -->
-                  <td class="px-24 py-16">
-                    <h6 class="text-heading fw-semibold mb-4">{{ banner.titulo }}</h6>
-                    <span class="text-gray-500 text-sm">{{ banner.texto_boton }}</span>
-                  </td>
-
-                  <!-- Subtítulo -->
-                  <td class="px-24 py-16">
-                    <p class="text-gray-600 mb-0" [title]="banner.subtitulo">
-                      {{ banner.subtitulo ? (banner.subtitulo.length > 40 ? banner.subtitulo.substring(0, 40) + '...' : banner.subtitulo) : 'Sin subtítulo' }}
+            <!-- Columna Banner Info -->
+            <ngx-datatable-column
+              name="Banner"
+              prop="titulo"
+              [flexGrow]="2.5"
+              [sortable]="true"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <div class="d-flex align-items-center gap-12">
+                  <div class="banner-info">
+                    <h6 class="banner-title" [title]="row.titulo">{{ row.titulo }}</h6>
+                    <p class="banner-subtitle" [title]="row.subtitulo">
+                      {{ row.subtitulo ? (row.subtitulo.length > 30 ? row.subtitulo.substring(0, 30) + '...' : row.subtitulo) : 'Sin subtítulo' }}
                     </p>
-                  </td>
-
-                  <!-- Precio -->
-                  <td class="px-24 py-16">
-                    <span class="text-success-600 fw-semibold" *ngIf="banner.precio_desde">
-                      S/ {{ banner.precio_desde }}
-                    </span>
-                    <span class="text-gray-400" *ngIf="!banner.precio_desde">-</span>
-                  </td>
-
-                  <!-- Orden -->
-                  <td class="px-24 py-16">
-                    <span class="badge bg-main-50 text-main-600 px-12 py-6 rounded-pill fw-medium">
-                      {{ banner.orden }}
-                    </span>
-                  </td>
-
-                  <!-- Estado -->
-                  <td class="px-24 py-16">
-                    <span class="badge px-12 py-6 rounded-pill fw-medium"
-                          [class]="banner.activo ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600'">
-                      {{ banner.activo ? 'Activo' : 'Inactivo' }}
-                    </span>
-                  </td>
-
-                  <!-- Acciones -->
-                  <td class="px-24 py-16 text-center">
-                    <div class="d-flex justify-content-center gap-8">
-                      <!-- Toggle Estado -->
-                      <button *ngIf="canEdit$"
-                              class="btn w-32 h-32 rounded-6 flex-center transition-2"
-                              [class]="banner.activo ? 'bg-warning-50 hover-bg-warning-100 text-warning-600' : 'bg-success-50 hover-bg-success-100 text-success-600'"
-                              [title]="banner.activo ? 'Desactivar' : 'Activar'"
-                              (click)="toggleEstado(banner)">
-                        <i class="ph text-sm" 
-                          [class]="banner.activo ? 'ph-eye-slash' : 'ph-eye'"></i>
-                      </button>
-
-                      <!-- Modificar el botón de edición -->
-                      <button *ngIf="canEdit$" class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
-                              title="Editar"
-                              (click)="editarBanner(banner)">
-                        <i class="ph ph-pencil text-sm"></i>
-                      </button>
-
-                      <!-- Eliminar -->
-                      <button *ngIf="canDelete$" class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
-                              title="Eliminar"
-                              (click)="eliminarBanner(banner.id)">
-                        <i class="ph ph-trash text-sm"></i>
-                      </button>
+                    <div *ngIf="row.texto_boton" class="banner-button-text">
+                      <i class="ph ph-cursor-click me-4"></i>{{ row.texto_boton }}
                     </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  </div>
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
 
-            <!-- Empty state -->
-            <div *ngIf="banners.length === 0" class="text-center py-40">
-              <i class="ph ph-image text-gray-300 text-6xl mb-16"></i>
-              <h6 class="text-heading fw-semibold mb-8">No hay banners</h6>
-              <p class="text-gray-500 mb-16">Aún no has creado ningún banner</p>
-              <button *nIf="canCreate$" class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
-                      data-bs-toggle="modal" 
-                      data-bs-target="#modalCrearBanner">
-                <i class="ph ph-plus me-8"></i>
-                Crear primer banner
-              </button>
-            </div>
+            <!-- Columna Precio -->
+            <ngx-datatable-column
+              name="Precio"
+              prop="precio_desde"
+              [flexGrow]="1"
+              [sortable]="true"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <div class="text-center">
+                  <span class="badge bg-success-50 text-success-600 precio-badge" *ngIf="row.precio_desde">
+                    S/ {{ row.precio_desde }}
+                  </span>
+                  <span class="text-gray-400" *ngIf="!row.precio_desde">-</span>
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+
+            <!-- Columna Orden -->
+            <ngx-datatable-column
+              name="Orden"
+              prop="orden"
+              [flexGrow]="0.8"
+              [sortable]="true"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <div class="text-center">
+                  <span class="badge bg-main-50 text-main-600 orden-badge">
+                    {{ row.orden }}
+                  </span>
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+
+            <!-- Columna Estado -->
+            <ngx-datatable-column
+              name="Estado"
+              prop="activo"
+              [flexGrow]="0.8"
+              [sortable]="true"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <span class="badge estado-badge"
+                      [class]="row.activo ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600'">
+                  {{ row.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </ng-template>
+            </ngx-datatable-column>
+
+            <!-- Columna Acciones -->
+            <ngx-datatable-column
+              name="Acciones"
+              [flexGrow]="1.2"
+              [sortable]="false"
+              [canAutoResize]="false"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <div class="action-buttons">
+                  <!-- Toggle Estado -->
+                  <button *ngIf="canEdit$"
+                          class="btn action-btn toggle-btn"
+                          [class.toggle-active]="row.activo"
+                          [class.toggle-inactive]="!row.activo"
+                          [title]="row.activo ? 'Desactivar' : 'Activar'"
+                          (click)="toggleEstado(row)">
+                    <i class="ph" [class]="row.activo ? 'ph-eye-slash' : 'ph-eye'"></i>
+                  </button>
+
+                  <!-- Editar -->
+                  <button *ngIf="canEdit$" class="btn action-btn edit-btn"
+                          title="Editar"
+                          (click)="editarBanner(row)">
+                    <i class="ph ph-pencil"></i>
+                  </button>
+
+                  <!-- Eliminar -->
+                  <button *ngIf="canDelete$" class="btn action-btn delete-btn"
+                          title="Eliminar"
+                          (click)="eliminarBanner(row.id)">
+                    <i class="ph ph-trash"></i>
+                  </button>
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+          </ngx-datatable>
+
+          <!-- Empty state -->
+          <div *ngIf="!isLoading && banners.length === 0" class="text-center py-40">
+            <i class="ph ph-image text-gray-300 text-6xl mb-16"></i>
+            <h6 class="text-heading fw-semibold mb-8">No hay banners</h6>
+            <p class="text-gray-500 mb-16">Aún no has creado ningún banner</p>
+            <button *ngIf="canCreate$" class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#modalCrearBanner">
+              <i class="ph ph-plus me-8"></i>
+              Crear primer banner
+            </button>
           </div>
         </div>
       </div>
@@ -160,8 +213,271 @@ import { Observable } from 'rxjs';
     </div>
   `,
   styles: [`
-    .table td {
-      vertical-align: middle;
+    /* Configuración base del datatable */
+    ::ng-deep .banners-table {
+      box-shadow: none !important;
+      border: none !important;
+      font-size: 13px;
+      width: 100% !important;
+    }
+
+    /* Header de la tabla */
+    ::ng-deep .banners-table .datatable-header {
+      background-color: #f8f9fa !important;
+      border-bottom: 1px solid #dee2e6 !important;
+      height: 50px !important;
+    }
+
+    ::ng-deep .banners-table .datatable-header-cell {
+      font-weight: 600 !important;
+      color: #495057 !important;
+      font-size: 12px !important;
+      padding: 12px 8px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      border-right: 1px solid #e9ecef !important;
+    }
+
+    ::ng-deep .banners-table .datatable-header-cell:last-child {
+      border-right: none !important;
+    }
+
+    /* Celdas del cuerpo */
+    ::ng-deep .banners-table .datatable-body-cell {
+      padding: 8px !important;
+      border-bottom: 1px solid #f1f3f4 !important;
+      border-right: 1px solid #f8f9fa !important;
+      font-size: 13px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      height: 80px !important;
+      vertical-align: middle !important;
+    }
+
+    ::ng-deep .banners-table .datatable-body-cell:last-child {
+      border-right: none !important;
+    }
+
+    /* Filas alternadas */
+    ::ng-deep .banners-table .datatable-row-even {
+      background-color: #ffffff !important;
+    }
+
+    ::ng-deep .banners-table .datatable-row-odd {
+      background-color: #fafbfc !important;
+    }
+
+    /* Hover en filas */
+    ::ng-deep .banners-table .datatable-body-row:hover {
+      background-color: #f5f5f5 !important;
+    }
+
+    /* Estilos específicos para banners */
+    .banner-image-container {
+      width: 60px;
+      height: 48px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .banner-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .banner-info {
+      text-align: left;
+      width: 100%;
+      padding-left: 8px;
+    }
+
+    .banner-title {
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      margin-bottom: 2px !important;
+      color: #212529 !important;
+      line-height: 1.3 !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+    .banner-subtitle {
+      font-size: 11px !important;
+      color: #6c757d !important;
+      margin-bottom: 2px !important;
+      line-height: 1.2 !important;
+    }
+
+    .banner-button-text {
+      font-size: 9px !important;
+      color: #0d6efd !important;
+      display: flex;
+      align-items: center;
+      margin-top: 2px;
+    }
+
+    .precio-badge {
+      font-size: 12px !important;
+      padding: 6px 10px !important;
+      border-radius: 12px !important;
+      font-weight: 600 !important;
+      white-space: nowrap;
+    }
+
+    .orden-badge {
+      font-size: 12px !important;
+      padding: 6px 10px !important;
+      border-radius: 12px !important;
+      font-weight: 600 !important;
+      min-width: 32px;
+    }
+
+    .estado-badge {
+      font-size: 10px !important;
+      padding: 4px 8px !important;
+      border-radius: 12px !important;
+      font-weight: 500 !important;
+    }
+
+    .action-buttons {
+      display: flex !important;
+      gap: 4px !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-wrap: nowrap !important;
+    }
+
+    .action-btn {
+      width: 24px !important;
+      height: 24px !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 4px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transition: all 0.2s ease !important;
+      font-size: 10px !important;
+      min-width: 24px !important;
+    }
+
+    .toggle-btn.toggle-active {
+      background-color: #fff3cd !important;
+      color: #856404 !important;
+    }
+
+    .toggle-btn.toggle-inactive {
+      background-color: #d1ecf1 !important;
+      color: #0c5460 !important;
+    }
+
+    .edit-btn {
+      background-color: #cfe2ff !important;
+      color: #084298 !important;
+    }
+
+    .delete-btn {
+      background-color: #f8d7da !important;
+      color: #842029 !important;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .toggle-btn.toggle-active:hover {
+      background-color: #ffecb5 !important;
+      color: #664d03 !important;
+    }
+
+    .toggle-btn.toggle-inactive:hover {
+      background-color: #b8daff !important;
+      color: #041e42 !important;
+    }
+
+    .edit-btn:hover {
+      background-color: #9ec5fe !important;
+      color: #052c65 !important;
+    }
+
+    .delete-btn:hover {
+      background-color: #f1aeb5 !important;
+      color: #721c24 !important;
+    }
+
+    /* Footer */
+    ::ng-deep .banners-table .datatable-footer {
+      background-color: #f8f9fa !important;
+      border-top: 1px solid #dee2e6 !important;
+      padding: 8px 16px !important;
+      font-size: 12px !important;
+      height: 50px !important;
+    }
+
+    ::ng-deep .banners-table .datatable-pager {
+      margin: 0 !important;
+    }
+
+    ::ng-deep .banners-table .datatable-pager .pager .pages .page {
+      padding: 4px 8px !important;
+      margin: 0 1px !important;
+      border-radius: 4px !important;
+      font-size: 11px !important;
+    }
+
+    ::ng-deep .banners-table .datatable-pager .pager .pages .page.active {
+      background-color: #0d6efd !important;
+      color: white !important;
+    }
+
+    /* Eliminar espacios innecesarios */
+    ::ng-deep .banners-table .datatable-body {
+      width: 100% !important;
+    }
+
+    ::ng-deep .banners-table .datatable-row-wrapper {
+      width: 100% !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      ::ng-deep .banners-table .datatable-header-cell,
+      ::ng-deep .banners-table .datatable-body-cell {
+        font-size: 11px !important;
+        padding: 6px 4px !important;
+      }
+      
+      .banner-title {
+        font-size: 12px !important;
+        max-width: 120px;
+      }
+      
+      .action-btn {
+        width: 20px !important;
+        height: 20px !important;
+      }
+
+      .action-buttons {
+        gap: 2px !important;
+      }
+
+      .banner-image-container {
+        width: 48px;
+        height: 36px;
+      }
     }
   `]
 })
@@ -173,6 +489,20 @@ export class BannersListComponent implements OnInit {
   canCreate$!: boolean;
   canEdit$!: boolean;
   canDelete$!: boolean;
+
+  // Configuración para NGX-Datatable
+  columns = [
+    { name: 'Imagen', flexGrow: 1.2 },
+    { name: 'Banner', prop: 'titulo', flexGrow: 2.5 },
+    { name: 'Precio', prop: 'precio_desde', flexGrow: 1 },
+    { name: 'Orden', prop: 'orden', flexGrow: 0.8 },
+    { name: 'Estado', prop: 'activo', flexGrow: 0.8 },
+    { name: 'Acciones', prop: 'acciones', flexGrow: 1.2 }
+  ];
+
+  ColumnMode = ColumnMode;
+  SelectionType = SelectionType;
+  SortType = SortType;
 
 
   constructor(
@@ -223,16 +553,50 @@ export class BannersListComponent implements OnInit {
   }
 
   eliminarBanner(id: number): void {
-    if (confirm('¿Estás seguro de que quieres eliminar este banner?')) {
-      this.bannersService.eliminarBanner(id).subscribe({
-        next: () => {
-          this.cargarBanners();
-        },
-        error: (error) => {
-          console.error('Error al eliminar banner:', error);
-        }
-      });
-    }
+    Swal.fire({
+      title: '¿Eliminar banner?',
+      text: 'Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      customClass: {
+        popup: 'rounded-12',
+        confirmButton: 'rounded-8',
+        cancelButton: 'rounded-8',
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.bannersService.eliminarBanner(id).subscribe({
+          next: () => {
+            Swal.fire({
+              title: '¡Eliminado!',
+              text: 'El banner ha sido eliminado.',
+              icon: 'success',
+              customClass: {
+                popup: 'rounded-12',
+                confirmButton: 'rounded-8',
+              },
+            });
+            this.cargarBanners();
+          },
+          error: (error) => {
+            Swal.fire({
+              title: 'Error',
+              text: 'No se pudo eliminar el banner.',
+              icon: 'error',
+              customClass: {
+                popup: 'rounded-12',
+                confirmButton: 'rounded-8',
+              },
+            });
+            console.error('Error al eliminar banner:', error);
+          }
+        });
+      }
+    });
   }
 
   toggleEstado(banner: Banner): void {

@@ -9801,13 +9801,23 @@ input:focus-visible {
     visibility: visible;
     opacity: 1;
     transform: scale(1);
-    border-color: var(--main-600);
+    border-color: #fff !important;
     background-color: var(--main-600);
-    color: #fff;
+    color: #fff !important;
+}
+
+.wishlist-btn-two.active i {
+    color: #fff !important;
 }
 
 .wishlist-btn-two.active:hover {
     background-color: var(--main-700);
+    border-color: #fff !important;
+    color: #fff !important;
+}
+
+.wishlist-btn-two.active:hover i {
+    color: #fff !important;
 }
 
 .group-item:hover .wishlist-btn-two {
@@ -9815,6 +9825,64 @@ input:focus-visible {
     visibility: visible;
     opacity: 1;
 }
+
+
+/* ===== WISHLIST BUTTON PERSONALIZADO - SOLUCIÓN DEFINITIVA ===== */
+.wishlist-btn-custom {
+    width: 48px !important;
+    height: 48px !important;
+    border: 1px solid #e5e7eb !important;
+    color: #6b7280 !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background-color: transparent !important;
+    transition: all 0.15s linear !important;
+    position: absolute !important;
+    top: 16px !important;
+    right: 16px !important;
+    transform: scale(0.3) !important;
+    z-index: 1 !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+}
+
+.wishlist-btn-custom:hover {
+    border-color: #1c799b !important;
+    color: #1c799b !important;
+}
+
+/* Cuando está activo (en wishlist) */
+.wishlist-btn-custom.active {
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: scale(1) !important;
+    border: 2px solid #fff !important;
+    background-color: #1c799b !important;
+    color: #fff !important;
+}
+
+.wishlist-btn-custom.active:hover {
+    background-color: #145a78 !important;
+    border-color: #fff !important;
+}
+
+/* Iconos SVG */
+.heart-icon {
+    width: 20px !important;
+    height: 20px !important;
+    color: inherit !important;
+}
+
+/* Mostrar el botón cuando se hace hover en la card */
+.group-item:hover .wishlist-btn-custom {
+    transform: scale(1) !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
 
 /* ============================= Product Card Css End ========================== */
 /* ======================= Offer Css Start =========================== */

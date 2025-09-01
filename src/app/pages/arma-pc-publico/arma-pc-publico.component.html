@@ -1,0 +1,276 @@
+<!-- ========================= Arma PC Section Start =============================== -->
+<section class="py-40">
+  <div class="container container-lg">
+    <div class="row">
+      <!-- Sidebar Start -->
+      <div class="col-lg-3">
+        <div class="shop-sidebar">
+          <button type="button"
+                  class="shop-sidebar__close d-lg-none d-flex w-32 h-32 flex-center border border-gray-100 rounded-circle hover-bg-main-600 position-absolute inset-inline-end-0 me-10 mt-8 hover-text-white hover-border-main-600">
+              <i class="ph ph-x"></i>
+          </button>
+          <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
+            <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">
+              Categorías de PC
+            </h6>
+            <ul class="max-h-400 overflow-y-auto">
+              <li class="mb-16" *ngFor="let category of categories; let last = last" [ngClass]="{ 'mb-0': last }">
+                <a
+                  href="javascript:void(0)"
+                  (click)="seleccionarCategoriaArmado(category.id)"
+                  class="text-gray-900 hover-text-main-600 cursor-pointer d-block py-8"
+                  [class.fw-bold]="categoriaArmadoSeleccionada === category.id"
+                  [class.text-main-600]="categoriaArmadoSeleccionada === category.id"
+                >
+                  {{ category.name }}
+                  <span 
+                    *ngIf="getProductosSeleccionadosPorCategoria(category.id) > 0"
+                    class="badge bg-main-600 text-white ms-2"
+                  >
+                    {{ getProductosSeleccionadosPorCategoria(category.id) }}
+                  </span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- Sidebar End -->
+
+      <!-- Content Start -->
+      <div class="col-lg-9">
+        <!-- Título Principal al lado de las categorías -->
+        <div class="flex-between flex-wrap mb-32">
+          <div>
+            <h6 class="text-xl mb-8 fw-semibold">Arma y cotiza tu propia computadora</h6>
+            <p class="text-gray-600 text-sm">Selecciona los componentes perfectos para tu PC ideal</p>
+          </div>
+          
+          <!-- Filter Button (Mobile Only) -->
+          <button type="button"
+                  class="w-44 h-44 d-lg-none d-flex flex-center border border-gray-100 rounded-6 text-2xl sidebar-btn">
+              <i class="ph-bold ph-funnel"></i>
+          </button>
+        </div>
+        
+        <div class="row">
+          <!-- Columna de productos -->
+          <div class="col-lg-8">
+            <!-- Mensaje para seleccionar categoría -->
+            <div *ngIf="!categoriaArmadoSeleccionada" class="text-center py-24">
+              <div class="bg-main-50 rounded-8 py-20 px-16">
+                <span class="w-48 h-48 text-2xl text-main-600 mb-12 mx-auto border border-main-600 border-dashed rounded-circle flex-center">
+                  <i class="ph ph-desktop"></i>
+                </span>
+                <h6 class="mb-8 text-main-600 text-sm">Selecciona una categoría</h6>
+                <p class="text-gray-600 text-xs">Elige una categoría para ver productos disponibles</p>
+              </div>
+            </div>
+
+            <!-- Loading productos -->
+            <div *ngIf="productosArmadoLoading" class="text-center py-24">
+              <div class="spinner-border text-main-600" role="status" style="width: 2rem; height: 2rem;">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+              <p class="text-gray-600 mt-8 text-xs">Cargando productos...</p>
+            </div>
+
+            <!-- Lista de productos -->
+            <div *ngIf="categoriaArmadoSeleccionada && !productosArmadoLoading && productosArmado.length > 0">
+              <div class="list-grid-wrapper grid-view">
+                <div *ngFor="let producto of productosArmado" 
+                     class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2"
+                     [ngClass]="{ 'border-main-600 bg-main-50': isProductoSeleccionado(producto) }">
+                  
+                  <!-- Checkbox -->
+                  <div class="custom-checkbox position-absolute" style="top: 12px; left: 12px; z-index: 2;">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      [id]="'producto-' + producto.id"
+                      [checked]="isProductoSeleccionado(producto)"
+                      (change)="toggleProductoArmado(producto, $event)"
+                    />
+                  </div>
+
+                  <!-- Imagen del producto -->
+                  <div class="product-card__thumb flex-center rounded-8 bg-gray-50 position-relative" style="height: 200px;">
+                    <img
+                      [src]="producto.imagen_principal"
+                      [alt]="producto.nombre"
+                      (error)="onImageError($event)"
+                      loading="lazy"
+                      class="w-100 h-100 object-fit-contain"
+                      style="max-width: 180px; max-height: 180px;"
+                    />
+                  </div>
+
+                  <!-- Información del producto -->
+                  <div class="product-card__content mt-16">
+                    <h6 class="title text-lg fw-semibold mt-12 mb-8">
+                      <span class="link text-line-2">{{ producto.nombre }}</span>
+                    </h6>
+                    
+                    <p class="text-gray-500 mb-12 text-sm text-line-2">{{ producto.descripcion }}</p>
+                    
+                    <div class="product-card__price my-20">
+                      <span *ngIf="producto.precio_oferta" 
+                            class="text-gray-400 text-md fw-semibold text-decoration-line-through d-block">
+                        S/ {{ getPrecioNumerico(producto.precio).toFixed(2) }}
+                      </span>
+                      <span class="text-heading text-md fw-semibold">
+                        S/ {{ getPrecioNumerico(producto.precio_oferta || producto.precio).toFixed(2) }}
+                      </span>
+                    </div>
+                    
+                    <div class="mb-12">
+                      <span class="text-gray-600 text-sm">Stock: {{ producto.stock }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mensaje si no hay productos -->
+            <div *ngIf="categoriaArmadoSeleccionada && !productosArmadoLoading && productosArmado.length === 0" class="text-center py-24">
+              <div class="bg-main-50 rounded-8 py-20 px-16">
+                <span class="w-48 h-48 text-2xl text-main-600 mb-12 mx-auto border border-main-600 border-dashed rounded-circle flex-center">
+                  <i class="ph ph-package"></i>
+                </span>
+                <h6 class="mb-8 text-main-600 text-sm">No hay productos disponibles</h6>
+                <p class="text-gray-600 text-xs">Esta categoría no tiene productos en este momento</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna de resumen -->
+          <div class="col-lg-4">
+            <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32 sticky-top" style="top: 20px;">
+              <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">
+                <i class="ph ph-shopping-cart me-8"></i>
+                Mi Configuración
+              </h6>
+
+              <!-- Estado vacío -->
+              <div *ngIf="productosSeleccionados.length === 0" class="text-center py-20">
+                <span class="w-48 h-48 text-xl text-gray-300 mb-8 mx-auto border border-gray-200 border-dashed rounded-circle flex-center">
+                  <i class="ph ph-cpu"></i>
+                </span>
+                <p class="text-gray-500 mb-2 text-xs">No hay componentes seleccionados</p>
+                <small class="text-gray-400 text-xs">Selecciona productos para armar tu PC</small>
+              </div>
+
+              <!-- Lista de productos seleccionados -->
+              <div *ngFor="let item of productosSeleccionados" class="border border-gray-100 rounded-8 p-16 mb-16">
+                <div class="d-flex align-items-start gap-12">
+                  <!-- Imagen -->
+                  <div class="flex-shrink-0">
+                    <img
+                      [src]="item.producto.imagen_principal"
+                      [alt]="item.producto.nombre"
+                      (error)="onImageError($event)"
+                      class="w-48 h-48 object-fit-contain rounded-6 border border-gray-100"
+                    />
+                  </div>
+                  
+                  <!-- Información -->
+                  <div class="flex-grow-1">
+                    <h6 class="text-md mb-4 line-clamp-1">{{ item.producto.nombre }}</h6>
+                    <p class="text-xs text-gray-500 mb-8">{{ item.categoria_nombre }}</p>
+                    
+                    <!-- Precio -->
+                    <div class="d-flex justify-content-between align-items-center mb-12">
+                      <span class="text-md fw-semibold text-heading">
+                        S/ {{ (getPrecioNumerico(item.producto.precio_oferta || item.producto.precio) * item.cantidad).toFixed(2) }}
+                      </span>
+                      <small class="text-gray-500">
+                        S/ {{ getPrecioNumerico(item.producto.precio_oferta || item.producto.precio).toFixed(2) }} c/u
+                      </small>
+                    </div>
+                    
+                    <!-- Controles -->
+                    <div class="flex-between">
+                      <!-- Cantidad -->
+                      <div class="quantity d-flex align-items-center border border-gray-100 rounded-4 overflow-hidden">
+                        <button
+                          type="button"
+                          class="quantity__minus w-32 h-32 flex-center bg-gray-50 text-gray-700 hover-bg-main-600 hover-text-white transition-2"
+                          (click)="cambiarCantidadProducto(item.producto.id, item.cantidad - 1)"
+                          [disabled]="item.cantidad <= 1"
+                        >
+                          <i class="ph ph-minus text-xs"></i>
+                        </button>
+                        <input
+                          type="number"
+                          class="quantity__input w-40 h-32 border-0 text-center text-sm fw-medium bg-white text-gray-900"
+                          [value]="item.cantidad"
+                          readonly
+                          style="color: #000 !important;"
+                        />
+                        <button
+                          type="button"
+                          class="quantity__plus w-32 h-32 flex-center bg-gray-50 text-gray-700 hover-bg-main-600 hover-text-white transition-2"
+                          (click)="cambiarCantidadProducto(item.producto.id, item.cantidad + 1)"
+                        >
+                          <i class="ph ph-plus text-xs"></i>
+                        </button>
+                      </div>
+                      
+                      <!-- Eliminar -->
+                      <button
+                        type="button"
+                        class="w-32 h-32 flex-center rounded-4 bg-danger-50 text-danger-600 hover-bg-danger-600 hover-text-white transition-2"
+                        (click)="removerProductoSeleccionado(item.producto.id)"
+                        title="Eliminar componente"
+                      >
+                        <i class="ph ph-trash text-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Total -->
+              <div *ngIf="productosSeleccionados.length > 0" class="bg-main-50 rounded-8 p-20 mb-24">
+                <div class="flex-between mb-8">
+                  <span class="text-md fw-semibold">Total:</span>
+                  <span class="text-lg fw-bold text-main-600">S/ {{ totalCotizacion.toFixed(2) }}</span>
+                </div>
+                <div class="flex-between text-sm text-gray-600">
+                  <span>{{ productosSeleccionados.length }} componente(s)</span>
+                  <span>Configuración personalizada</span>
+                </div>
+              </div>
+
+              <!-- Botones de acción -->
+              <div class="d-grid gap-12">
+                <button
+                  type="button"
+                  class="btn btn-main text-white fw-semibold py-12 rounded-8"
+                  (click)="descargarCotizacion()"
+                  [disabled]="productosSeleccionados.length === 0"
+                >
+                  <i class="ph ph-download me-8"></i>
+                  Descargar cotización
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-main fw-semibold py-12 rounded-8"
+                  (click)="agregarTodoAlCarrito()"
+                  [disabled]="productosSeleccionados.length === 0"
+                >
+                  <i class="ph ph-shopping-cart me-8"></i>
+                  Agregar al carrito
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- =============================== Shop Section End ======================================== -->
+
+<!-- Side Overlay for mobile sidebar -->
+<div class="side-overlay"></div>

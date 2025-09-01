@@ -530,9 +530,9 @@
       <div class="flex-align menu-category-wrapper position-relative">
         <!-- Category Dropdown Start -->
         <div class="position-relative category-dropdown-wrapper">
-          <!-- Botón Explorar categorías (solo cuando NO esté en index-two) -->
+          <!-- Botón Explorar categorías (solo en página principal) -->
           <button
-            *ngIf="!isIndexTwoPage"
+            *ngIf="isHomePageActive"
             type="button"
             (click)="toggleCategoryDropdown()"
             class="category-button d-flex align-items-center gap-12 text-white bg-success-600 px-20 py-16 rounded-6 hover-bg-success-700 transition-2"
@@ -546,18 +546,17 @@
             ></span>
           </button>
 
-       <!-- ✅ NUEVO: Enlace "Arma tu PC" (solo cuando esté en index-two) -->
-<a
-  *ngIf="isIndexTwoPage"
-  (click)="activarModoArmadoPC()"
-  class="text-main-600 hover-text-main-700 text-decoration-none fw-semibold d-flex align-items-center gap-8"
-  style="cursor: pointer"
->
-  <span class="text-lg line-height-1"
-    ><i class="ph ph-desktop"></i
-  ></span>
-  <span>Arma tu PC</span>
-</a>
+          <!-- Enlace "Arma tu PC" (en otras páginas) -->
+          <a
+            *ngIf="!isHomePageActive"
+            routerLink="/arma-tu-pc"
+            class="text-main-600 hover-text-main-700 text-decoration-none fw-semibold d-flex align-items-center gap-12 px-20 py-16"
+          >
+            <span class="text-lg line-height-1"
+              ><i class="ph ph-desktop"></i
+            ></span>
+            <span>Arma tu PC</span>
+          </a>
 
           <!-- Dropdown -->
           <div

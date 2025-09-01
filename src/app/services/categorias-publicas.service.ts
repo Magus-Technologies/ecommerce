@@ -42,4 +42,9 @@ export class CategoriasPublicasService {
     return this.obtenerCategoriasPublicas(2);
   }
 
+  // ✅ NUEVO MÉTODO: Para obtener categorías configuradas de Arma tu PC
+  obtenerCategoriasArmaPc(): Observable<CategoriaPublica[]> {
+    return this.http.get<CategoriaPublica[]>(`${this.apiUrl}/arma-pc/categorias`);
+  }
+
 }
