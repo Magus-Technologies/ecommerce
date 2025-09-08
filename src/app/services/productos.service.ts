@@ -28,6 +28,8 @@ export interface Producto {
   imagen?: string;
   imagen_url?: string; // Agregado para la URL de la imagen
   activo: boolean;
+  destacado: boolean;        // <- NUEVA LÍNEA
+  mostrar_igv: boolean;  
   created_at: string;
   updated_at: string;
 }
@@ -43,6 +45,7 @@ export interface ProductoCreate {
   stock_minimo: number;
   imagen?: File;
   activo: boolean;
+  mostrar_igv?: boolean;
 }
 export interface ProductoPublico {
   id: number;
@@ -156,6 +159,7 @@ export class ProductosService {
     formData.append('stock', producto.stock.toString());
     formData.append('stock_minimo', producto.stock_minimo.toString());
     formData.append('activo', producto.activo ? '1' : '0');
+    formData.append('mostrar_igv', producto.mostrar_igv ? '1' : '0');
     
     if (producto.descripcion) {
       formData.append('descripcion', producto.descripcion);
@@ -169,27 +173,34 @@ export class ProductosService {
   }
 
   actualizarProducto(id: number, producto: Partial<ProductoCreate>): Observable<any> {
-    const formData = new FormData();
-    
-    Object.keys(producto).forEach(key => {
-      const value = (producto as any)[key];
-      if (value !== null && value !== undefined) {
+  const formData = new FormData();
+  
+  Object.keys(producto).forEach(key => {
+    const value = (producto as any)[key];
+    if (value !== null && value !== undefined) {
 
-        // añadir lógica para manejar tipos específicos
-        if (key === 'activo') {
-          formData.append(key, value.toString()); //envia un boolean
-        } else if (key === 'imagen' && value instanceof File) {
-          formData.append(key, value);
-        }else {
-          formData.append(key, value.toString());
-        }
+      // añadir lógica para manejar tipos específicos
+      if (key === 'activo' || key === 'mostrar_igv') {
+        formData.append(key, value ? '1' : '0'); // Unifica el manejo de booleanos
+      } else if (key === 'imagen' && value instanceof File) {
+        formData.append(key, value);
+      }else {
+        formData.append(key, value.toString());
       }
-    });
+    }
+  });
 
-    formData.append('_method', 'PUT');
-    return this.http.post<any>(`${this.apiUrl}/productos/${id}`, formData);
+  // AGREGAR DEBUG AQUÍ:
+  console.log('=== DEBUG FORMDATA ===');
+  for (let pair of formData.entries()) {
+    console.log(pair[0] + ': ' + pair[1]);
   }
+  console.log('======================');
 
+  formData.append('_method', 'PUT');
+  return this.http.post<any>(`${this.apiUrl}/productos/${id}`, formData);
+}
+ 
   eliminarProducto(id: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/productos/${id}`);
   }

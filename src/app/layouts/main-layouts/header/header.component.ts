@@ -503,4 +503,9 @@ private cargarInformacionEmpresa(): void {
     }
   }
 
+  // ✅ NUEVO: Método para mostrar botón "Arma tu PC" solo en páginas específicas
+  mostrarBotonArmaTuPC(): boolean {
+    const url = this.router.url;
+    return url === '/' || url === '/index-two';
+  }
 }

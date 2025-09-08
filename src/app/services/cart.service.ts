@@ -2,7 +2,7 @@
 // src/app/services/cart.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError, from } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { PedidosService, CrearPedidoRequest } from './pedidos.service';
 import { AuthService } from './auth.service';
@@ -19,6 +19,7 @@ export interface CartItem {
   codigo_producto: string;
   categoria?: string;
   marca?: string;
+  mostrar_igv?: boolean;  // <- NUEVA LÍNEA
 }
 
 export interface CartSummary {
@@ -220,7 +221,25 @@ export class CartService {
 
   private loadCartFromStorage(): void {
     const items = this.getLocalCartItems();
-    this.updateCartState(items);
+    
+    if (items.length > 0) {
+      // Cargar datos básicos primero
+      this.updateCartState(items);
+      
+      // Luego refrescar datos desde la API
+      this.refreshProductData().subscribe({
+        next: () => {
+          console.log('CartService - Datos actualizados después de cargar desde storage');
+        },
+        error: (error) => {
+          console.error('CartService - Error actualizando datos desde storage:', error);
+          // Si falla la actualización, mantener los datos del storage
+        }
+      });
+    } else {
+      // Si no hay items, actualizar estado vacío
+      this.updateCartState(items);
+    }
   }
 
   private addToCartLocal(producto: any, cantidad: number): void {
@@ -249,6 +268,7 @@ export class CartService {
           }
         }
         
+        // DESPUÉS:
         const newItem: CartItem = {
           id: Date.now(),
           producto_id: producto.id,
@@ -259,7 +279,8 @@ export class CartService {
           stock_disponible: Number(producto.stock || 100),
           codigo_producto: producto.codigo_producto || `PROD-${producto.id}`,
           categoria: producto.categoria || '',
-          marca: producto.marca || ''
+          marca: producto.marca || '',
+          mostrar_igv: Boolean(producto.mostrar_igv)  // <- NUEVA LÍNEA
         };
         currentItems.push(newItem);
       }
@@ -339,16 +360,33 @@ export class CartService {
     this.updateCartSummary(items);
   }
 
+  // REEMPLAZAR COMPLETAMENTE EL MÉTODO updateCartSummary:
   private updateCartSummary(items: CartItem[]): void {
-    const subtotal = items.reduce((sum, item) => {
+    // Calcular el total como suma de (precio * cantidad) de todos los productos
+    const total = items.reduce((sum, item) => {
       const precio = item.precio || 0;
       const cantidad = item.cantidad || 0;
       return sum + (precio * cantidad);
     }, 0);
-    const igv = subtotal * 0.18;
-    const total = subtotal + igv;
+
+    let subtotal = total;
+    let igv = 0;
+
+    // Solo calcular IGV si hay exactamente 1 producto Y ese producto tiene mostrar_igv = true
+    if (items.length === 1 && items[0].mostrar_igv === true) {
+      // El precio ya incluye IGV, así que calculamos el subtotal sin IGV
+      subtotal = total / 1.18;
+      igv = total - subtotal;
+    }
+
     const cantidad_items = items.reduce((sum, item) => sum + (item.cantidad || 0), 0);
-    this.cartSummarySubject.next({ subtotal, igv, total, cantidad_items });
+    
+    this.cartSummarySubject.next({ 
+      subtotal: subtotal, 
+      igv: igv, 
+      total: total, 
+      cantidad_items: cantidad_items 
+    });
   }
 
   private normalizeProduct(producto: any): any {
@@ -370,6 +408,7 @@ export class CartService {
       }
     }
     
+    // DESPUÉS:
     const normalized = {
       id: producto.id,
       nombre: producto.nombre || producto.name || 'Producto',
@@ -378,7 +417,8 @@ export class CartService {
       codigo_producto: producto.codigo_producto || `PROD-${producto.id}`,
       imagen_url: imagenUrl,
       categoria: producto.categoria?.nombre || producto.categoria || '',
-      marca: producto.marca?.nombre || producto.marca || ''
+      marca: producto.marca?.nombre || producto.marca || '',
+      mostrar_igv: Boolean(producto.mostrar_igv)  // <- NUEVA LÍNEA
     };
     
     console.log('Producto normalizado resultante:', normalized);
@@ -421,6 +461,52 @@ export class CartService {
       });
     } else {
       this.loadCartFromStorage();
+    }
+  }
+
+  public refreshProductData(): Observable<any> {
+    if (this.authService.isLoggedIn()) {
+      return this.loadCartFromApi();
+    } else {
+      const currentItems = this.cartItemsSubject.value;
+      if (currentItems.length === 0) {
+        return of([]);
+      }
+      
+      const refreshPromises = currentItems.map(cartItem => 
+        this.http.get<any>(`${environment.apiUrl}/productos-publicos/${cartItem.producto_id}`).toPromise()
+          .then(updatedProduct => {
+            console.log(`Producto ${cartItem.producto_id} - Datos del localStorage:`, cartItem);
+            console.log(`Producto ${cartItem.producto_id} - Datos de la API:`, updatedProduct);
+            
+            if (updatedProduct) {
+              const newItem = {
+                ...cartItem,
+                mostrar_igv: Boolean(updatedProduct.producto.mostrar_igv),
+                precio: Number(updatedProduct.producto.precio_venta),
+                stock_disponible: Number(updatedProduct.producto.stock),
+                nombre: updatedProduct.producto.nombre || cartItem.nombre
+              };
+              
+              console.log(`Producto ${cartItem.producto_id} - Datos finales:`, newItem);
+              return newItem;
+            }
+            return cartItem;
+          })
+          .catch(error => {
+            console.error(`Error actualizando producto ${cartItem.producto_id}:`, error);
+            return cartItem;
+          })
+      );
+      
+      return from(Promise.all(refreshPromises)).pipe(
+        tap((updatedItems: CartItem[]) => {
+          this.saveCartToStorage(updatedItems);
+          this.updateCartState(updatedItems);
+          console.log('CartService - Datos del carrito actualizados desde productos-publicos');
+        }),
+        catchError(this.handleError)
+      );
     }
   }
 

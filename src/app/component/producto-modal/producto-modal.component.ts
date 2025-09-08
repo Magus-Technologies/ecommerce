@@ -325,8 +325,16 @@ export class ProductoModalComponent implements OnInit, OnChanges {
       
       const productoData: ProductoCreate = {
         ...this.productoForm.value,
+        mostrar_igv: Boolean(this.productoForm.value.mostrar_igv), // <- AGREGAR esta conversión explícita
         imagen: this.selectedImage
       };
+      // AGREGAR ESTOS CONSOLE.LOG PARA DEBUG:
+      console.log('=== DEBUG PRODUCTO ===');
+      console.log('Form value completo:', this.productoForm.value);
+      console.log('productoData completo:', productoData);
+      console.log('mostrar_igv value:', productoData.mostrar_igv);
+      console.log('mostrar_igv type:', typeof productoData.mostrar_igv);
+      console.log('========================');
 
       const request = this.producto 
         ? this.productosService.actualizarProducto(this.producto.id, productoData)

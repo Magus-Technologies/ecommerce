@@ -308,6 +308,23 @@ import {
                       <i class="ph ph-star me-8 text-warning"></i>
                       Producto destacado
                     </label>
+
+                    <!-- NUEVO CHECKBOX -->
+                    <div class="form-check mt-12">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        formControlName="mostrar_igv"
+                        id="mostrar_igv"
+                      />
+                      <label
+                        class="form-check-label text-heading fw-medium"
+                        for="mostrar_igv"
+                      >
+                        <i class="ph ph-percent me-8 text-info"></i>
+                        Mostrar IGV
+                      </label>
+                    </div>
                   </div>
                 </div>
 
@@ -434,6 +451,7 @@ export class ProductoModalComponent implements OnInit, OnChanges {
       stock_minimo: [5, [Validators.required, Validators.min(0)]],
       activo: [true],
       destacado: [false],
+      mostrar_igv: [true] 
     });
   }
 
@@ -455,6 +473,8 @@ export class ProductoModalComponent implements OnInit, OnChanges {
         stock: this.producto.stock,
         stock_minimo: this.producto.stock_minimo,
         activo: this.producto.activo,
+        destacado: this.producto.destacado,  // <- AGREGAR ESTA LÍNEA
+        mostrar_igv: this.producto.mostrar_igv
       });
       this.imagePreview = this.producto.imagen_url || null;
     } else {
@@ -469,6 +489,8 @@ export class ProductoModalComponent implements OnInit, OnChanges {
         stock: '',
         stock_minimo: 5,
         activo: true,
+        destacado: false,  // <- AGREGAR ESTA LÍNEA
+        mostrar_igv: true
       });
       this.imagePreview = null;
       this.selectedImage = null;

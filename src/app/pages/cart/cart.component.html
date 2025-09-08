@@ -190,8 +190,8 @@
               <span class="text-heading fw-medium">S/ {{ formatPrice(cartSummary.subtotal) }}</span>
             </div>
 
-            <!-- IGV -->
-            <div class="d-flex justify-content-between align-items-center mb-16">
+            <!-- IGV (solo mostrar si hay exactamente 1 producto Y tiene mostrar_igv = true) -->
+            <div *ngIf="cartItems.length === 1 && cartItems[0].mostrar_igv === true" class="d-flex justify-content-between align-items-center mb-16">
               <span class="text-gray-600">IGV (18%):</span>
               <span class="text-heading fw-medium">S/ {{ formatPrice(cartSummary.igv) }}</span>
             </div>

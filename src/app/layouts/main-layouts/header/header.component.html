@@ -548,7 +548,7 @@
 
           <!-- Enlace "Arma tu PC" (en otras páginas) -->
           <a
-            *ngIf="!isHomePageActive"
+            *ngIf="mostrarBotonArmaTuPC() && !isHomePageActive"
             routerLink="/arma-tu-pc"
             class="text-main-600 hover-text-main-700 text-decoration-none fw-semibold d-flex align-items-center gap-12 px-20 py-16"
           >
@@ -646,6 +646,16 @@
                   >
                 </li>
               </ul>
+            </li>
+            <!-- ✅ NUEVO: Botón Arma tu PC solo en página de inicio -->
+            <li
+              *ngIf="isHomePageActive"
+              class="nav-menu__item"
+              [class.activePage]="isRouteActive('/arma-tu-pc')"
+            >
+              <a routerLink="/arma-tu-pc" class="nav-menu__link text-main-600 fw-semibold"
+                >Arma tu PC</a
+              >
             </li>
             <li
               class="nav-menu__item"

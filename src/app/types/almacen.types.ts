@@ -59,6 +59,7 @@ export interface Producto {
   imagen_url?: string
   activo: boolean
   destacado: boolean
+  mostrar_igv:boolean
   created_at: string
   updated_at: string
 }
