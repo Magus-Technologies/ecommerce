@@ -422,11 +422,36 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.procesandoPedido = true;
 
     const formData = this.checkoutForm.value;
+    
+    // Obtener nombres de ubigeo
+    const departamentoNombre = this.departamentos.find(d => d.id === formData.departamento)?.nombre || '';
+    const provinciaNombre = this.provincias.find(p => p.id === formData.provincia)?.nombre || '';
+    const distritoNombre = this.distritos.find(d => d.id === formData.distrito)?.nombre || '';
+    
     const datosCheckout = {
-      metodo_pago: 'tarjeta',
+      // Datos básicos
+      metodo_pago: formData.tipoPago,
       direccion_envio: formData.direccion,
       telefono_contacto: formData.celular,
-      observaciones: formData.observaciones || ''
+      observaciones: formData.observaciones || '',
+      
+      // Datos adicionales del cliente
+      numero_documento: formData.numeroDocumento,
+      cliente_nombre: formData.cliente,
+      cliente_email: formData.email,
+      
+      // Información de envío
+      forma_envio: formData.formaEnvio,
+      costo_envio: this.costoEnvioCalculado,
+      
+      // Ubicación detallada
+      departamento_id: formData.departamento,
+      provincia_id: formData.provincia,  
+      distrito_id: formData.distrito,
+      departamento_nombre: departamentoNombre,
+      provincia_nombre: provinciaNombre,
+      distrito_nombre: distritoNombre,
+      ubicacion_completa: `${distritoNombre}, ${provinciaNombre}, ${departamentoNombre}`
     };
 
     this.cartService.procesarPedido(datosCheckout).subscribe({

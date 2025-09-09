@@ -2,6 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { FormsModule } from '@angular/forms';
 import { CategoriasPublicasService } from '../../../services/categorias-publicas.service';
 import { ArmaPcService } from '../../../services/arma-pc.service';
 import Swal from 'sweetalert2';
@@ -14,12 +15,16 @@ export interface CategoriaArmaPC {
   productos_count?: number;
   orden: number;
   activo: boolean;
+  nombre_paso?: string;
+  descripcion_paso?: string;
+  es_requerido?: boolean;
+  compatibles?: number[]; // IDs de categorías compatibles
 }
 
 @Component({
   selector: 'app-arma-pc',
   standalone: true,
-  imports: [CommonModule, DragDropModule],
+  imports: [CommonModule, DragDropModule, FormsModule],
   templateUrl: './arma-pc.component.html',
   styleUrls: ['./arma-pc.component.scss']
 })
@@ -29,6 +34,10 @@ export class ArmaPcComponent implements OnInit {
   
   categoriasDisponibles: any[] = [];
   categoriasArmaPc: CategoriaArmaPC[] = [];
+  
+  // ✅ NUEVAS PROPIEDADES PARA GESTIÓN AVANZADA
+  mostrarPanelCompatibilidades = false;
+  categoriaSeleccionadaParaCompatibilidades: CategoriaArmaPC | null = null;
   
   private todasLasCategorias: any[] = [];
 
@@ -49,6 +58,9 @@ export class ArmaPcComponent implements OnInit {
       
       // Cargar configuración actual
       await this.cargarConfiguracionActual();
+      
+      // ✅ NUEVO: Cargar compatibilidades
+      await this.cargarCompatibilidades();
       
       // Actualizar categorías disponibles
       this.actualizarCategoriasDisponibles();
@@ -108,7 +120,11 @@ export class ArmaPcComponent implements OnInit {
       imagen_url: categoria.imagen_url,
       productos_count: categoria.productos_count,
       orden: this.categoriasArmaPc.length + 1,
-      activo: true
+      activo: true,
+      nombre_paso: `Paso ${this.categoriasArmaPc.length + 1}`,
+      descripcion_paso: 'Selecciona un componente de esta categoría',
+      es_requerido: true,
+      compatibles: []
     };
 
     this.categoriasArmaPc.push(nuevaCategoria);
@@ -257,5 +273,147 @@ export class ArmaPcComponent implements OnInit {
 
   onImageError(event: any) {
     event.target.src = 'assets/images/default-category.png';
+  }
+
+  // ====================================
+  // ✅ NUEVOS MÉTODOS PARA GESTIÓN AVANZADA
+  // ====================================
+
+  /**
+   * Abrir panel de configuración avanzada para una categoría
+   */
+  abrirConfiguracionAvanzada(categoria: CategoriaArmaPC) {
+    this.categoriaSeleccionadaParaCompatibilidades = { ...categoria };
+    this.mostrarPanelCompatibilidades = true;
+  }
+
+  /**
+   * Cerrar panel de compatibilidades
+   */
+  cerrarPanelCompatibilidades() {
+    this.mostrarPanelCompatibilidades = false;
+    this.categoriaSeleccionadaParaCompatibilidades = null;
+  }
+
+  /**
+   * Actualizar nombre del paso
+   */
+  actualizarNombrePaso(categoria: CategoriaArmaPC, nuevoNombre: string) {
+    const index = this.categoriasArmaPc.findIndex(c => c.id === categoria.id);
+    if (index !== -1) {
+      this.categoriasArmaPc[index].nombre_paso = nuevoNombre;
+    }
+  }
+
+  /**
+   * Actualizar descripción del paso
+   */
+  actualizarDescripcionPaso(categoria: CategoriaArmaPC, nuevaDescripcion: string) {
+    const index = this.categoriasArmaPc.findIndex(c => c.id === categoria.id);
+    if (index !== -1) {
+      this.categoriasArmaPc[index].descripcion_paso = nuevaDescripcion;
+    }
+  }
+
+  /**
+   * Toggle requerido del paso
+   */
+  toggleRequerido(categoria: CategoriaArmaPC) {
+    const index = this.categoriasArmaPc.findIndex(c => c.id === categoria.id);
+    if (index !== -1) {
+      this.categoriasArmaPc[index].es_requerido = !this.categoriasArmaPc[index].es_requerido;
+    }
+  }
+
+  /**
+   * Toggle compatibilidad entre categorías
+   */
+  toggleCompatibilidad(categoriaPrincipal: CategoriaArmaPC, categoriaCompatible: any) {
+    if (!categoriaPrincipal.compatibles) {
+      categoriaPrincipal.compatibles = [];
+    }
+
+    const index = categoriaPrincipal.compatibles.indexOf(categoriaCompatible.id);
+    if (index > -1) {
+      // Remover compatibilidad
+      categoriaPrincipal.compatibles.splice(index, 1);
+    } else {
+      // Agregar compatibilidad
+      categoriaPrincipal.compatibles.push(categoriaCompatible.id);
+    }
+  }
+
+  /**
+   * Verificar si dos categorías son compatibles
+   */
+  sonCompatibles(categoriaPrincipal: CategoriaArmaPC, categoriaId: number): boolean {
+    return categoriaPrincipal.compatibles?.includes(categoriaId) || false;
+  }
+
+  /**
+   * Guardar configuración avanzada (con pasos y compatibilidades)
+   */
+  async guardarConfiguracionAvanzada() {
+    if (this.categoriasArmaPc.length === 0) {
+      Swal.fire({
+        title: 'Sin categorías',
+        text: 'Debes seleccionar al menos una categoría para Arma tu PC',
+        icon: 'warning',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    this.guardando = true;
+    try {
+      // Primero guardamos la configuración básica con información de pasos
+      await this.armaPcService.guardarConfiguracion(this.categoriasArmaPc).toPromise();
+      
+      // Luego guardamos las compatibilidades para cada categoría
+      for (const categoria of this.categoriasArmaPc) {
+        if (categoria.compatibles && categoria.compatibles.length > 0) {
+          await this.armaPcService.gestionarCompatibilidades(categoria.id, categoria.compatibles).toPromise();
+        }
+      }
+      
+      Swal.fire({
+        title: '¡Configuración guardada!',
+        text: 'Los cambios se han guardado correctamente, incluyendo pasos y compatibilidades',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      
+    } catch (error) {
+      console.error('Error al guardar configuración avanzada:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo guardar la configuración. Inténtalo de nuevo.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    } finally {
+      this.guardando = false;
+    }
+  }
+
+  /**
+   * Cargar compatibilidades existentes
+   */
+  private async cargarCompatibilidades() {
+    try {
+      const response = await this.armaPcService.obtenerCompatibilidades().toPromise();
+      if (response.success) {
+        // Mapear compatibilidades a nuestras categorías
+        response.compatibilidades.forEach((comp: any) => {
+          const categoria = this.categoriasArmaPc.find(c => c.id === comp.id);
+          if (categoria) {
+            categoria.compatibles = comp.compatibles.map((c: any) => c.id);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error al cargar compatibilidades:', error);
+    }
   }
 }

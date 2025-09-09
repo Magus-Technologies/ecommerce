@@ -299,6 +299,14 @@ export class MyAccountComponent implements OnInit, OnDestroy {
     switch (estado.toLowerCase()) {
       case 'pendiente':
         return 'bg-warning-50 text-warning-600';
+      case 'confirmado':
+        return 'bg-info-50 text-info-600';
+      case 'en preparación':
+        return 'bg-primary-50 text-primary-600';
+      case 'en recepción':
+        return 'bg-orange-50 text-orange-600';
+      case 'enviado a provincia':
+        return 'bg-purple-50 text-purple-600';
       case 'procesando':
         return 'bg-info-50 text-info-600';
       case 'enviado':
@@ -433,5 +441,52 @@ export class MyAccountComponent implements OnInit, OnDestroy {
     const limite = new Date(fechaLimite);
     const hoy = new Date();
     return limite < hoy;
+  }
+
+  // ✅ MÉTODOS PARA TRACKING DE PROVINCIA
+  esEnvioAProvincia(pedido: Pedido): boolean {
+    return pedido.forma_envio === 'envio_provincia';
+  }
+
+  formatFormaEnvio(forma: string | null | undefined): string {
+    if (!forma) return 'No especificada';
+    
+    switch (forma.toLowerCase()) {
+      case 'delivery':
+        return 'Delivery';
+      case 'recojo_tienda':
+        return 'Recojo en tienda';
+      case 'envio_provincia':
+        return 'Envío a provincia';
+      default:
+        return forma.replace('_', ' ').charAt(0).toUpperCase() + forma.slice(1);
+    }
+  }
+
+  isTrackingStepCompleted(step: string, currentState: string | undefined): boolean {
+    if (!currentState) return false;
+    
+    const steps = ['Pendiente', 'Confirmado', 'En Recepción', 'Enviado a Provincia', 'Entregado'];
+    const currentIndex = steps.indexOf(currentState);
+    const stepIndex = steps.indexOf(step);
+    
+    return currentIndex > stepIndex;
+  }
+
+  isTrackingStepActive(step: string, currentState: string | undefined): boolean {
+    if (!currentState) return step === 'Pendiente';
+    return step === currentState;
+  }
+
+  getProgressHeight(currentState: string | undefined): number {
+    if (!currentState) return 0;
+    
+    const steps = ['Pendiente', 'Confirmado', 'En Recepción', 'Enviado a Provincia', 'Entregado'];
+    const currentIndex = steps.indexOf(currentState);
+    
+    if (currentIndex === -1) return 0;
+    
+    // Calcular el porcentaje basado en el progreso
+    return ((currentIndex + 1) / steps.length) * 100;
   }
 }

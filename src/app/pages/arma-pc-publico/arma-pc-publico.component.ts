@@ -1,21 +1,24 @@
+// ecommerce-front\src\app\pages\arma-pc-publico\arma-pc-publico.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CategoriasPublicasService } from '../../services/categorias-publicas.service';
+import { CategoriasPublicasService, CategoriaPublica } from '../../services/categorias-publicas.service';
 import { MarcaProducto, ProductoPublico } from '../../types/almacen.types';
 import { ProductosService } from '../../services/productos.service';
 import { CartService } from '../../services/cart.service';
+import { ArmaPcService } from '../../services/arma-pc.service';
 import Swal from 'sweetalert2';
 
-interface CategoriaTemplate {
+interface PasoArmaPc {
   id: number;
-  name: string;
   nombre: string;
-  subcategories: string[];
-  marcas: MarcaProducto[];
-  marcasLoading: boolean;
-  badge: string;
-  badgeClass: string;
-  productos_count?: number;
+  nombre_paso: string;
+  descripcion_paso?: string;
+  es_requerido: boolean;
+  orden: number;
+  productos_count: number;
+  imagen_url?: string;
+  completado: boolean;
+  producto_seleccionado?: ProductoPublico;
 }
 
 interface ProductoSeleccionado {
@@ -32,111 +35,196 @@ interface ProductoSeleccionado {
   styleUrl: './arma-pc-publico.component.scss'
 })
 export class ArmaPcPublicoComponent implements OnInit {
-  categories: CategoriaTemplate[] = [];
-  categoriaArmadoSeleccionada?: number;
-  productosArmado: ProductoPublico[] = [];
-  productosArmadoLoading = false;
+  // ✅ NUEVAS PROPIEDADES PARA SISTEMA DE PASOS
+  pasos: PasoArmaPc[] = [];
+  pasoActual: number = 0;
+  productosDelPasoActual: ProductoPublico[] = [];
+  productosDelPasoLoading = false;
   productosSeleccionados: ProductoSeleccionado[] = [];
   totalCotizacion = 0;
 
   constructor(
     private categoriasService: CategoriasPublicasService,
     private productosService: ProductosService,
-    private cartService: CartService
+    private cartService: CartService,
+    private armaPcService: ArmaPcService
   ) {}
 
   ngOnInit() {
-    this.cargarCategoriasArmaPc();
+    this.cargarPasosArmaPc();
   }
 
-  // Cargar categorías configuradas por el admin para Arma tu PC
-  cargarCategoriasArmaPc(): void {
+  // ✅ CORREGIDO: Cargar pasos configurados por el admin
+  cargarPasosArmaPc(): void {
     this.categoriasService.obtenerCategoriasArmaPc().subscribe({
-      next: (categorias) => {
-        this.categories = categorias.map(categoria => ({
+      next: (categorias: CategoriaPublica[]) => {
+        this.pasos = categorias.map(categoria => ({
           id: categoria.id,
-          name: categoria.nombre,
           nombre: categoria.nombre,
-          subcategories: [],
-          marcas: [],
-          marcasLoading: false,
-          badge: `${categoria.productos_count || 0} productos`,
-          badgeClass: 'bg-gray-100 text-gray-600',
-          productos_count: categoria.productos_count
-        }));
-        console.log('Categorías Arma PC cargadas:', this.categories);
+          nombre_paso: categoria.paso_info?.nombre_paso || `Paso ${categoria.paso_info?.orden || 1}`,
+          descripcion_paso: categoria.paso_info?.descripcion_paso,
+          es_requerido: categoria.paso_info?.es_requerido || true,
+          orden: categoria.paso_info?.orden || 1,
+          productos_count: categoria.productos_count || 0,
+          imagen_url: categoria.imagen_url,
+          completado: false,
+          producto_seleccionado: undefined
+        })).sort((a, b) => a.orden - b.orden);
+        
+        console.log('Pasos Arma PC cargados:', this.pasos);
+        
+        // Cargar productos del primer paso
+        if (this.pasos.length > 0) {
+          this.cargarProductosDelPaso(0);
+        }
       },
       error: (error) => {
-        console.error('Error al cargar categorías Arma PC:', error);
-        this.categories = [];
+        console.error('Error al cargar pasos Arma PC:', error);
+        this.pasos = [];
       },
     });
   }
 
-  // Seleccionar categoría para armado
-  seleccionarCategoriaArmado(categoriaId: number): void {
-    this.categoriaArmadoSeleccionada = categoriaId;
-    this.cargarProductosParaArmado(categoriaId);
-  }
+  // ✅ NUEVO: Cargar productos del paso actual
+  cargarProductosDelPaso(indicePaso: number): void {
+    if (indicePaso < 0 || indicePaso >= this.pasos.length) return;
+    
+    this.pasoActual = indicePaso;
+    this.productosDelPasoLoading = true;
+    
+    const paso = this.pasos[indicePaso];
 
-  // Cargar productos para armado de PC
-  cargarProductosParaArmado(categoriaId: number): void {
-    this.productosArmadoLoading = true;
+    console.log(`🔍 Cargando productos para:`, {
+      paso: indicePaso + 1,
+      categoriaId: paso.id,
+      categoriaNombre: paso.nombre,
+      nombrePaso: paso.nombre_paso
+    });
 
+    // Filtrar por categoría específica del paso
     const filtros = {
-      categoria: categoriaId,
+      categoria: paso.id,
       page: 1
     };
 
     this.productosService.obtenerProductosPublicos(filtros).subscribe({
       next: (response) => {
-        this.productosArmado = response.productos;
-        this.productosArmadoLoading = false;
+        this.productosDelPasoActual = response.productos;
+        this.productosDelPasoLoading = false;
+        
+        console.log(`✅ Productos cargados para "${paso.nombre_paso}":`, {
+          totalProductos: this.productosDelPasoActual.length,
+          categoriaId: paso.id,
+          productos: this.productosDelPasoActual.map(p => ({
+            id: p.id,
+            nombre: p.nombre,
+            categoria_id: p.categoria_id || 'No definido'
+          }))
+        });
       },
       error: (error) => {
-        console.error('Error al cargar productos para armado:', error);
-        this.productosArmadoLoading = false;
-        this.productosArmado = [];
+        console.error(`❌ Error al cargar productos del paso "${paso.nombre_paso}":`, error);
+        this.productosDelPasoLoading = false;
+        this.productosDelPasoActual = [];
       },
     });
   }
 
-  // Seleccionar/deseleccionar producto para armado
+  // ✅ NUEVO: Navegar a paso específico
+  irAPaso(indicePaso: number): void {
+    // Verificar si es un paso válido
+    if (indicePaso < 0 || indicePaso >= this.pasos.length) return;
+    
+    // No permitir saltar a pasos futuros si hay pasos requeridos sin completar
+    for (let i = 0; i < indicePaso; i++) {
+      const paso = this.pasos[i];
+      if (paso.es_requerido && !paso.completado) {
+        Swal.fire({
+          title: 'Paso requerido',
+          text: `Debes completar el paso "${paso.nombre_paso}" antes de continuar`,
+          icon: 'warning',
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
+    }
+
+    this.cargarProductosDelPaso(indicePaso);
+  }
+
+  // ✅ NUEVO: Ir al siguiente paso
+  siguientePaso(): void {
+    const pasoActualObj = this.pasos[this.pasoActual];
+    
+    // Verificar si el paso actual es requerido y no está completado
+    if (pasoActualObj.es_requerido && !pasoActualObj.completado) {
+      Swal.fire({
+        title: 'Selecciona un producto',
+        text: `El paso "${pasoActualObj.nombre_paso}" es requerido. Debes seleccionar un producto para continuar.`,
+        icon: 'warning',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    // Ir al siguiente paso si existe
+    if (this.pasoActual < this.pasos.length - 1) {
+      this.irAPaso(this.pasoActual + 1);
+    }
+  }
+
+  // ✅ NUEVO: Ir al paso anterior
+  pasoAnterior(): void {
+    if (this.pasoActual > 0) {
+      this.irAPaso(this.pasoActual - 1);
+    }
+  }
+
+  // ✅ ACTUALIZADO: Seleccionar producto del paso actual
   toggleProductoArmado(producto: ProductoPublico, event: any): void {
     const isChecked = event.target.checked;
-    const categoriaInfo = this.categories.find(cat => cat.id === this.categoriaArmadoSeleccionada);
+    const pasoActualObj = this.pasos[this.pasoActual];
 
     if (isChecked) {
-      // Verificar si ya hay un producto de esta categoría seleccionado
-      const existeEnCategoria = this.productosSeleccionados.find(
-        p => p.categoria_id === this.categoriaArmadoSeleccionada
+      // Verificar si ya hay un producto de este paso seleccionado
+      const existeEnPaso = this.productosSeleccionados.find(
+        p => p.categoria_id === pasoActualObj.id
       );
 
-      if (existeEnCategoria) {
-        // Reemplazar el producto existente de esta categoría
+      if (existeEnPaso) {
+        // Reemplazar el producto existente de este paso
         const index = this.productosSeleccionados.findIndex(
-          p => p.categoria_id === this.categoriaArmadoSeleccionada
+          p => p.categoria_id === pasoActualObj.id
         );
         this.productosSeleccionados[index] = {
-          categoria_id: this.categoriaArmadoSeleccionada!,
-          categoria_nombre: categoriaInfo?.nombre || '',
+          categoria_id: pasoActualObj.id,
+          categoria_nombre: pasoActualObj.nombre_paso,
           producto: producto,
           cantidad: 1
         };
       } else {
         // Agregar nuevo producto
         this.productosSeleccionados.push({
-          categoria_id: this.categoriaArmadoSeleccionada!,
-          categoria_nombre: categoriaInfo?.nombre || '',
+          categoria_id: pasoActualObj.id,
+          categoria_nombre: pasoActualObj.nombre_paso,
           producto: producto,
           cantidad: 1
         });
       }
+
+      // Marcar paso como completado
+      pasoActualObj.completado = true;
+      pasoActualObj.producto_seleccionado = producto;
+
     } else {
       // Remover producto
       this.productosSeleccionados = this.productosSeleccionados.filter(
         p => p.producto.id !== producto.id
       );
+
+      // Marcar paso como no completado
+      pasoActualObj.completado = false;
+      pasoActualObj.producto_seleccionado = undefined;
     }
 
     this.calcularTotalCotizacion();
@@ -161,9 +249,39 @@ export class ArmaPcPublicoComponent implements OnInit {
     return typeof precio === 'number' ? precio : parseFloat(precio.toString()) || 0;
   }
 
-  // Contar productos seleccionados por categoría
-  getProductosSeleccionadosPorCategoria(categoriaId: number): number {
-    return this.productosSeleccionados.filter(p => p.categoria_id === categoriaId).length;
+  // ✅ NUEVO: Obtener progreso de la configuración
+  getProgresoConfiguracion(): { completados: number; total: number; porcentaje: number } {
+    const completados = this.pasos.filter(p => p.completado).length;
+    const total = this.pasos.length;
+    const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0;
+    
+    return { completados, total, porcentaje };
+  }
+
+  // ✅ NUEVO: Verificar si un paso puede ser accedido
+  puedeAccederAPaso(indicePaso: number): boolean {
+    // Primer paso siempre accesible
+    if (indicePaso === 0) return true;
+    
+    // Verificar pasos requeridos anteriores
+    for (let i = 0; i < indicePaso; i++) {
+      const paso = this.pasos[i];
+      if (paso.es_requerido && !paso.completado) {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  // ✅ NUEVO: Verificar si se puede finalizar configuración  
+  puedeFinalizarConfiguracion(): boolean {
+    return this.pasos.filter(p => p.es_requerido).every(p => p.completado);
+  }
+
+  // ✅ NUEVO: Obtener cantidad de pasos requeridos faltantes
+  getPasosRequeridosFaltantes(): number {
+    return this.pasos.filter(p => p.es_requerido && !p.completado).length;
   }
 
   // Cambiar cantidad de producto seleccionado

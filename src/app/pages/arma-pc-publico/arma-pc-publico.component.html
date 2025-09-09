@@ -1,37 +1,110 @@
 <!-- ========================= Arma PC Section Start =============================== -->
 <section class="py-40">
   <div class="container container-lg">
+    <!-- ✅ NUEVA SECCIÓN: Header con título y progreso -->
+    <div class="row mb-32">
+      <div class="col-12">
+        <div class="text-center mb-32">
+          <h2 class="text-heading fw-bold mb-12">Arma tu PC paso a paso</h2>
+          <p class="text-gray-600 mb-20">Configura tu computadora ideal siguiendo nuestro proceso guiado</p>
+          
+          <!-- ✅ NUEVA: Barra de progreso global -->
+          <div class="progress-container bg-gray-100 rounded-pill p-4 mb-16" style="height: 12px;">
+            <div 
+              class="progress-bar bg-main-600 rounded-pill h-100 transition-all duration-500"
+              [style.width.%]="getProgresoConfiguracion().porcentaje"
+            ></div>
+          </div>
+          <small class="text-gray-500">
+            {{ getProgresoConfiguracion().completados }} de {{ getProgresoConfiguracion().total }} pasos completados
+            ({{ getProgresoConfiguracion().porcentaje }}%)
+          </small>
+        </div>
+
+        <!-- ✅ NUEVO: Tracking horizontal de pasos (como en las imágenes) -->
+        <div class="steps-tracker bg-white border border-gray-100 rounded-12 p-24 mb-32 shadow-sm">
+          <div class="d-flex justify-content-between align-items-center position-relative">
+            <!-- Línea conectora de fondo -->
+            <div class="steps-line position-absolute w-100 h-2 bg-gray-200 top-50 translate-middle-y" style="z-index: 1;"></div>
+            <div 
+              class="steps-line-active position-absolute h-2 bg-main-600 top-50 translate-middle-y transition-all duration-500" 
+              style="z-index: 2;"
+              [style.width.%]="pasos.length > 0 ? ((pasoActual + 1) / pasos.length) * 100 : 0"
+            ></div>
+
+            <!-- Pasos individuales -->
+            <div 
+              *ngFor="let paso of pasos; let i = index"
+              class="step-item text-center position-relative"
+              style="z-index: 3;"
+              [class.completed]="paso.completado"
+              [class.active]="i === pasoActual"
+              [class.disabled]="!puedeAccederAPaso(i)"
+            >
+              <!-- Círculo del paso -->
+              <div 
+                class="step-circle d-inline-flex align-items-center justify-content-center rounded-circle fw-semibold text-sm cursor-pointer transition-all"
+                style="width: 40px; height: 40px;"
+                [ngClass]="{
+                  'bg-main-600 text-white': paso.completado,
+                  'bg-main-600 text-white border-3 border-main-200': i === pasoActual,
+                  'bg-gray-200 text-gray-600': !paso.completado && i !== pasoActual,
+                  'hover-bg-main-100': puedeAccederAPaso(i)
+                }"
+                (click)="puedeAccederAPaso(i) ? irAPaso(i) : null"
+                [title]="paso.descripcion_paso || paso.nombre_paso"
+              >
+                <!-- Ícono de completado -->
+                <i *ngIf="paso.completado" class="ph ph-check text-sm"></i>
+                <!-- Número del paso -->
+                <span *ngIf="!paso.completado">{{ i + 1 }}</span>
+              </div>
+
+              <!-- Información del paso -->
+              <div class="step-info mt-12">
+                <div class="step-title text-sm fw-semibold text-heading">{{ paso.nombre_paso }}</div>
+                <div class="step-subtitle text-xs text-gray-500 mt-4">
+                  {{ paso.productos_count }} productos
+                  <span *ngIf="paso.es_requerido" class="text-danger">*</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="row">
-      <!-- Sidebar Start -->
+      <!-- ✅ MODIFICADO: Sidebar más compacto -->
       <div class="col-lg-3">
         <div class="shop-sidebar">
           <button type="button"
                   class="shop-sidebar__close d-lg-none d-flex w-32 h-32 flex-center border border-gray-100 rounded-circle hover-bg-main-600 position-absolute inset-inline-end-0 me-10 mt-8 hover-text-white hover-border-main-600">
               <i class="ph ph-x"></i>
           </button>
-          <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
-            <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">
-              Categorías de PC
-            </h6>
-            <ul class="max-h-400 overflow-y-auto">
-              <li class="mb-16" *ngFor="let category of categories; let last = last" [ngClass]="{ 'mb-0': last }">
-                <a
-                  href="javascript:void(0)"
-                  (click)="seleccionarCategoriaArmado(category.id)"
-                  class="text-gray-900 hover-text-main-600 cursor-pointer d-block py-8"
-                  [class.fw-bold]="categoriaArmadoSeleccionada === category.id"
-                  [class.text-main-600]="categoriaArmadoSeleccionada === category.id"
-                >
-                  {{ category.name }}
-                  <span 
-                    *ngIf="getProductosSeleccionadosPorCategoria(category.id) > 0"
-                    class="badge bg-main-600 text-white ms-2"
-                  >
-                    {{ getProductosSeleccionadosPorCategoria(category.id) }}
-                  </span>
-                </a>
-              </li>
-            </ul>
+          
+          <!-- ✅ NUEVO: Información del paso actual -->
+          <div class="shop-sidebar__box border border-gray-100 rounded-8 p-24 mb-24" *ngIf="pasos.length > 0">
+            <div class="d-flex align-items-center mb-16">
+              <div class="step-icon bg-main-600 text-white rounded-circle me-12 flex-shrink-0" style="width: 32px; height: 32px;">
+                <i class="ph ph-desktop text-sm" style="margin-left: 9px; margin-top: 9px;"></i>
+              </div>
+              <div>
+                <h6 class="text-md fw-semibold mb-4">{{ pasos[pasoActual]?.nombre_paso }}</h6>
+                <small class="text-gray-500">Paso {{ pasoActual + 1 }} de {{ pasos.length }}</small>
+              </div>
+            </div>
+            
+            <p class="text-gray-600 text-sm mb-16" *ngIf="pasos[pasoActual]?.descripcion_paso">
+              {{ pasos[pasoActual].descripcion_paso }}
+            </p>
+
+            <div class="d-flex align-items-center justify-content-between text-sm">
+              <span class="text-gray-500">{{ pasos[pasoActual]?.productos_count || 0 }} productos disponibles</span>
+              <span *ngIf="pasos[pasoActual]?.es_requerido" class="badge bg-danger-50 text-danger-600 px-8 py-4">
+                Requerido
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -39,48 +112,86 @@
 
       <!-- Content Start -->
       <div class="col-lg-9">
-        <!-- Título Principal al lado de las categorías -->
-        <div class="flex-between flex-wrap mb-32">
+        <!-- ✅ NUEVO: Header del paso actual -->
+        <div class="d-flex justify-content-between align-items-center mb-24" *ngIf="pasos.length > 0">
           <div>
-            <h6 class="text-xl mb-8 fw-semibold">Arma y cotiza tu propia computadora</h6>
-            <p class="text-gray-600 text-sm">Selecciona los componentes perfectos para tu PC ideal</p>
+            <h5 class="text-heading fw-semibold mb-8">{{ pasos[pasoActual]?.nombre_paso }}</h5>
+            <p class="text-gray-600 text-sm mb-0">{{ pasos[pasoActual]?.descripcion_paso || 'Selecciona el componente perfecto para tu configuración' }}</p>
           </div>
           
-          <!-- Filter Button (Mobile Only) -->
-          <button type="button"
-                  class="w-44 h-44 d-lg-none d-flex flex-center border border-gray-100 rounded-6 text-2xl sidebar-btn">
-              <i class="ph-bold ph-funnel"></i>
-          </button>
+          <!-- ✅ NUEVOS: Botones de navegación mejorados -->
+          <div class="d-flex gap-8">
+            <!-- Botón Anterior - Solo visible si no estamos en el primer paso -->
+            <button 
+              type="button"
+              class="btn bg-gray-400 px-16 py-8 rounded-6 fw-medium"
+              (click)="pasoAnterior()"
+              *ngIf="pasoActual > 0"
+              title="Volver al paso anterior"
+            >
+              <i class="ph ph-arrow-left text-sm me-8"></i>
+              Paso Anterior
+            </button>
+            
+            <!-- Botón Siguiente - Cambia según el contexto -->
+            <button 
+              type="button"
+              class="btn px-16 py-8 rounded-6 fw-medium"
+              [ngClass]="{
+                'btn-main': pasoActual < pasos.length - 1,
+                'btn-success': pasoActual === pasos.length - 1 && puedeFinalizarConfiguracion(),
+                'btn-outline-main': pasoActual === pasos.length - 1 && !puedeFinalizarConfiguracion()
+              }"
+              (click)="pasoActual < pasos.length - 1 ? siguientePaso() : null"
+              [disabled]="pasoActual >= pasos.length - 1"
+              [title]="pasoActual < pasos.length - 1 ? 'Avanzar al siguiente paso' : 'Último paso completado'"
+            >
+              <!-- Texto dinámico según el estado -->
+              <span *ngIf="pasoActual < pasos.length - 1">
+                Siguiente Paso
+                <i class="ph ph-arrow-right text-sm ms-8"></i>
+              </span>
+              <span *ngIf="pasoActual === pasos.length - 1 && puedeFinalizarConfiguracion()">
+                <i class="ph ph-check text-sm me-8"></i>
+                Configuración Completa
+              </span>
+              <span *ngIf="pasoActual === pasos.length - 1 && !puedeFinalizarConfiguracion()">
+                <i class="ph ph-info text-sm me-8"></i>
+                Último Paso
+              </span>
+            </button>
+          </div>
         </div>
         
         <div class="row">
           <!-- Columna de productos -->
           <div class="col-lg-8">
-            <!-- Mensaje para seleccionar categoría -->
-            <div *ngIf="!categoriaArmadoSeleccionada" class="text-center py-24">
-              <div class="bg-main-50 rounded-8 py-20 px-16">
-                <span class="w-48 h-48 text-2xl text-main-600 mb-12 mx-auto border border-main-600 border-dashed rounded-circle flex-center">
-                  <i class="ph ph-desktop"></i>
-                </span>
-                <h6 class="mb-8 text-main-600 text-sm">Selecciona una categoría</h6>
-                <p class="text-gray-600 text-xs">Elige una categoría para ver productos disponibles</p>
+            <!-- Estado inicial -->
+            <div *ngIf="pasos.length === 0" class="text-center py-32">
+              <div class="bg-gray-50 rounded-12 py-32 px-24">
+                <div class="spinner-border text-main-600 mb-16"></div>
+                <h6 class="text-heading mb-8">Cargando configuración</h6>
+                <p class="text-gray-500 text-sm mb-0">Preparando el sistema de armado...</p>
               </div>
             </div>
 
-            <!-- Loading productos -->
-            <div *ngIf="productosArmadoLoading" class="text-center py-24">
-              <div class="spinner-border text-main-600" role="status" style="width: 2rem; height: 2rem;">
-                <span class="visually-hidden">Cargando...</span>
+            <!-- Loading productos del paso actual -->
+            <div *ngIf="productosDelPasoLoading" class="text-center py-32">
+              <div class="bg-main-50 rounded-12 py-32 px-24">
+                <div class="spinner-border text-main-600 mb-16" style="width: 2rem; height: 2rem;"></div>
+                <h6 class="text-main-600 mb-8">Cargando productos</h6>
+                <p class="text-gray-600 text-sm">Buscando componentes compatibles...</p>
               </div>
-              <p class="text-gray-600 mt-8 text-xs">Cargando productos...</p>
             </div>
 
-            <!-- Lista de productos -->
-            <div *ngIf="categoriaArmadoSeleccionada && !productosArmadoLoading && productosArmado.length > 0">
-              <div class="list-grid-wrapper grid-view">
-                <div *ngFor="let producto of productosArmado" 
-                     class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2"
-                     [ngClass]="{ 'border-main-600 bg-main-50': isProductoSeleccionado(producto) }">
+            <!-- Lista de productos del paso actual -->
+            <div *ngIf="!productosDelPasoLoading && productosDelPasoActual.length > 0">
+              <!-- ✅ CORREGIDO: Grid responsivo con ancho máximo para evitar cards muy anchos -->
+              <div class="row g-16">
+                <div *ngFor="let producto of productosDelPasoActual" 
+                     class="col-12 col-sm-6 col-md-4 col-lg-6 col-xl-4">
+                  <div class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2"
+                       [ngClass]="{ 'border-main-600 bg-main-50': isProductoSeleccionado(producto) }">
                   
                   <!-- Checkbox -->
                   <div class="custom-checkbox position-absolute" style="top: 12px; left: 12px; z-index: 2;">
@@ -127,29 +238,67 @@
                       <span class="text-gray-600 text-sm">Stock: {{ producto.stock }}</span>
                     </div>
                   </div>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- Mensaje si no hay productos -->
-            <div *ngIf="categoriaArmadoSeleccionada && !productosArmadoLoading && productosArmado.length === 0" class="text-center py-24">
-              <div class="bg-main-50 rounded-8 py-20 px-16">
-                <span class="w-48 h-48 text-2xl text-main-600 mb-12 mx-auto border border-main-600 border-dashed rounded-circle flex-center">
+            <div *ngIf="!productosDelPasoLoading && productosDelPasoActual.length === 0 && pasos.length > 0" class="text-center py-32">
+              <div class="bg-warning-50 border border-warning-200 rounded-12 py-32 px-24">
+                <span class="w-56 h-56 text-2xl text-warning-600 mb-16 mx-auto border border-warning-400 border-dashed rounded-circle flex-center">
                   <i class="ph ph-package"></i>
                 </span>
-                <h6 class="mb-8 text-main-600 text-sm">No hay productos disponibles</h6>
-                <p class="text-gray-600 text-xs">Esta categoría no tiene productos en este momento</p>
+                <h6 class="mb-8 text-warning-700 fw-semibold">Sin productos compatibles</h6>
+                <p class="text-warning-600 text-sm mb-16">
+                  No hay productos disponibles para el paso "{{ pasos[pasoActual]?.nombre_paso }}" con tu selección actual.
+                </p>
+                
+                <!-- Sugerencia de acción -->
+                <div class="d-flex gap-8 justify-content-center">
+                  <button 
+                    type="button"
+                    class="btn btn-outline-warning btn-sm px-16 py-8 rounded-6"
+                    (click)="pasoAnterior()"
+                    *ngIf="pasoActual > 0"
+                  >
+                    <i class="ph ph-arrow-left me-4"></i>
+                    Cambiar selección anterior
+                  </button>
+                  <button 
+                    type="button"
+                    class="btn btn-warning btn-sm px-16 py-8 rounded-6"
+                    (click)="siguientePaso()"
+                    *ngIf="!pasos[pasoActual]?.es_requerido && pasoActual < pasos.length - 1"
+                  >
+                    Saltar paso
+                    <i class="ph ph-arrow-right ms-4"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Columna de resumen -->
           <div class="col-lg-4">
-            <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32 sticky-top" style="top: 20px;">
-              <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">
-                <i class="ph ph-shopping-cart me-8"></i>
-                Mi Configuración
-              </h6>
+            <div class="shop-sidebar__box border border-gray-100 rounded-8 p-24 mb-24 sticky-top" style="top: 20px;">
+              <div class="d-flex align-items-center justify-content-between mb-20">
+                <h6 class="text-lg fw-semibold mb-0">
+                  <i class="ph ph-cpu me-8 text-main-600"></i>
+                  Mi Configuración
+                </h6>
+                <div class="badge bg-main-50 text-main-600 px-8 py-4 text-xs">
+                  {{ getProgresoConfiguracion().completados }}/{{ getProgresoConfiguracion().total }}
+                </div>
+              </div>
+              
+              <!-- Mini progreso -->
+              <div class="progress-mini bg-gray-100 rounded-pill mb-20" style="height: 6px;">
+                <div 
+                  class="progress-bar-mini bg-main-600 rounded-pill h-100 transition-all duration-300"
+                  [style.width.%]="getProgresoConfiguracion().porcentaje"
+                ></div>
+              </div>
 
               <!-- Estado vacío -->
               <div *ngIf="productosSeleccionados.length === 0" class="text-center py-20">
@@ -242,26 +391,43 @@
                 </div>
               </div>
 
-              <!-- Botones de acción -->
+              <!-- ✅ NUEVOS: Botones de acción con estado -->
               <div class="d-grid gap-12">
+                <!-- Botón principal: depende del progreso -->
                 <button
                   type="button"
-                  class="btn btn-main text-white fw-semibold py-12 rounded-8"
+                  class="btn text-white fw-semibold py-12 rounded-8"
+                  [ngClass]="puedeFinalizarConfiguracion() ? 'btn-success' : 'btn-main'"
                   (click)="descargarCotizacion()"
-                  [disabled]="productosSeleccionados.length === 0"
+                  [disabled]="!puedeFinalizarConfiguracion()"
+                  [title]="!puedeFinalizarConfiguracion() ? 'Complete los pasos requeridos para descargar' : 'Descargar cotización completa'"
                 >
-                  <i class="ph ph-download me-8"></i>
-                  Descargar cotización
+                  <i [ngClass]="puedeFinalizarConfiguracion() ? 'ph ph-check' : 'ph ph-download'" class="me-8"></i>
+                  {{ puedeFinalizarConfiguracion() ? 'Descargar cotización completa' : 'Complete la configuración' }}
                 </button>
+                
+                <!-- Botón secundario -->
                 <button
                   type="button"
                   class="btn btn-outline-main fw-semibold py-12 rounded-8"
                   (click)="agregarTodoAlCarrito()"
                   [disabled]="productosSeleccionados.length === 0"
+                  [title]="productosSeleccionados.length === 0 ? 'Seleccione productos para agregar' : 'Agregar productos seleccionados'"
                 >
                   <i class="ph ph-shopping-cart me-8"></i>
                   Agregar al carrito
+                  <span *ngIf="productosSeleccionados.length > 0" class="badge bg-main-600 text-white ms-8">
+                    {{ productosSeleccionados.length }}
+                  </span>
                 </button>
+
+                <!-- Info adicional -->
+                <div class="text-center mt-16" *ngIf="!puedeFinalizarConfiguracion()">
+                  <small class="text-gray-500">
+                    <i class="ph ph-info me-4"></i>
+                    Complete {{ getPasosRequeridosFaltantes() }} paso(s) requerido(s) más
+                  </small>
+                </div>
               </div>
             </div>
           </div>

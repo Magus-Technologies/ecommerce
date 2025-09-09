@@ -11,6 +11,13 @@ export interface CategoriaPublica {
   imagen?: string;
   imagen_url?: string;
   productos_count?: number;
+  // ✅ NUEVAS PROPIEDADES PARA ARMA PC
+  paso_info?: {
+    orden: number;
+    nombre_paso: string;
+    descripcion_paso?: string;
+    es_requerido: boolean;
+  };
 }
 
 @Injectable({
