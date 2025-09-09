@@ -397,16 +397,184 @@
 
                 <!-- Información del pedido -->
                 <div class="row g-16 mb-16">
-                  <div class="col-md-6">
+                  <div class="col-md-4">
                     <div class="flex-align gap-8 text-sm text-gray-600">
                       <i class="ph ph-credit-card"></i>
                       <span>{{ pedido.metodo_pago }}</span>
                     </div>
                   </div>
-                  <div class="col-md-6">
+                  <div class="col-md-4">
                     <div class="flex-align gap-8 text-sm text-gray-600">
                       <i class="ph ph-map-pin"></i>
                       <span>{{ pedido.direccion_envio }}</span>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="flex-align gap-8 text-sm text-gray-600">
+                      <i class="ph ph-truck"></i>
+                      <span class="badge" 
+                            [ngClass]="esEnvioAProvincia(pedido) ? 'bg-warning text-dark' : 'bg-info text-white'">
+                        {{ formatFormaEnvio(pedido.forma_envio) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tracking para pedidos a provincia -->
+                <div *ngIf="esEnvioAProvincia(pedido)" class="border border-warning rounded-12 p-16 mb-16 bg-warning-50">
+                  <div class="flex-align gap-12 mb-12">
+                    <div class="w-24 h-24 bg-warning-600 text-white rounded-circle flex-center">
+                      <i class="ph-bold ph-map-pin text-xs"></i>
+                    </div>
+                    <h6 class="mb-0 text-warning-700">Seguimiento de Envío a Provincia</h6>
+                  </div>
+                  
+                  <!-- Timeline de tracking -->
+                  <div class="position-relative ps-36">
+                    <div class="position-absolute start-0 top-0 bottom-0 w-2 bg-gray-300 rounded-pill" style="left: 12px;"></div>
+                    
+                    <!-- Progreso dinámico -->
+                    <div class="position-absolute start-0 top-0 w-2 bg-warning-600 rounded-pill transition-3" 
+                         style="left: 12px; height: {{ getProgressHeight(pedido.estado_pedido?.nombre) }}%;"></div>
+                         
+                    
+                    <!-- Estados del tracking -->
+                    <div class="tracking-step mb-16" 
+                         [ngClass]="isTrackingStepCompleted('Pendiente', pedido.estado_pedido?.nombre) ? 'completed' : 
+                                   isTrackingStepActive('Pendiente', pedido.estado_pedido?.nombre) ? 'active' : 'pending'">
+                      <div class="flex-align gap-12">
+                        <div class="w-20 h-20 rounded-circle border-2 flex-center position-relative z-1"
+                             [ngClass]="isTrackingStepCompleted('Pendiente', pedido.estado_pedido?.nombre) ? 'bg-success-600 border-success-600' : 
+                                       isTrackingStepActive('Pendiente', pedido.estado_pedido?.nombre) ? 'bg-warning-600 border-warning-600' : 'bg-gray-300 border-gray-300'"
+                             style="margin-left: -36px;">
+                          <i [class]="isTrackingStepCompleted('Pendiente', pedido.estado_pedido?.nombre) ? 'ph-bold ph-check text-white text-xs' : 
+                                     isTrackingStepActive('Pendiente', pedido.estado_pedido?.nombre) ? 'ph-bold ph-clock text-white text-xs' : 'ph-bold ph-circle text-white text-xs'"></i>
+                        </div>
+                        <div>
+                          <h6 class="mb-2 text-sm" 
+                              [ngClass]="isTrackingStepCompleted('Pendiente', pedido.estado_pedido?.nombre) || isTrackingStepActive('Pendiente', pedido.estado_pedido?.nombre) ? 'text-heading' : 'text-gray-500'">
+                            Pedido Recibido
+                          </h6>
+                          <p class="text-xs mb-0" 
+                             [ngClass]="isTrackingStepCompleted('Pendiente', pedido.estado_pedido?.nombre) || isTrackingStepActive('Pendiente', pedido.estado_pedido?.nombre) ? 'text-gray-600' : 'text-gray-400'">
+                            Tu pedido fue registrado exitosamente
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="tracking-step mb-16" 
+                         [ngClass]="isTrackingStepCompleted('Confirmado', pedido.estado_pedido?.nombre) ? 'completed' : 
+                                   isTrackingStepActive('Confirmado', pedido.estado_pedido?.nombre) ? 'active' : 'pending'">
+                      <div class="flex-align gap-12">
+                        <div class="w-20 h-20 rounded-circle border-2 flex-center position-relative z-1"
+                             [ngClass]="isTrackingStepCompleted('Confirmado', pedido.estado_pedido?.nombre) ? 'bg-success-600 border-success-600' : 
+                                       isTrackingStepActive('Confirmado', pedido.estado_pedido?.nombre) ? 'bg-warning-600 border-warning-600' : 'bg-gray-300 border-gray-300'"
+                             style="margin-left: -36px;">
+                          <i [class]="isTrackingStepCompleted('Confirmado', pedido.estado_pedido?.nombre) ? 'ph-bold ph-check text-white text-xs' : 
+                                     isTrackingStepActive('Confirmado', pedido.estado_pedido?.nombre) ? 'ph-bold ph-clock text-white text-xs' : 'ph-bold ph-circle text-white text-xs'"></i>
+                        </div>
+                        <div>
+                          <h6 class="mb-2 text-sm" 
+                              [ngClass]="isTrackingStepCompleted('Confirmado', pedido.estado_pedido?.nombre) || isTrackingStepActive('Confirmado', pedido.estado_pedido?.nombre) ? 'text-heading' : 'text-gray-500'">
+                            Pedido Confirmado
+                          </h6>
+                          <p class="text-xs mb-0" 
+                             [ngClass]="isTrackingStepCompleted('Confirmado', pedido.estado_pedido?.nombre) || isTrackingStepActive('Confirmado', pedido.estado_pedido?.nombre) ? 'text-gray-600' : 'text-gray-400'">
+                            Verificamos stock y confirmamos tu pedido
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="tracking-step mb-16" 
+                         [ngClass]="isTrackingStepCompleted('En Recepción', pedido.estado_pedido?.nombre) ? 'completed' : 
+                                   isTrackingStepActive('En Recepción', pedido.estado_pedido?.nombre) ? 'active' : 'pending'">
+                      <div class="flex-align gap-12">
+                        <div class="w-20 h-20 rounded-circle border-2 flex-center position-relative z-1"
+                             [ngClass]="isTrackingStepCompleted('En Recepción', pedido.estado_pedido?.nombre) ? 'bg-success-600 border-success-600' : 
+                                       isTrackingStepActive('En Recepción', pedido.estado_pedido?.nombre) ? 'bg-warning-600 border-warning-600' : 'bg-gray-300 border-gray-300'"
+                             style="margin-left: -36px;">
+                          <i [class]="isTrackingStepCompleted('En Recepción', pedido.estado_pedido?.nombre) ? 'ph-bold ph-check text-white text-xs' : 
+                                     isTrackingStepActive('En Recepción', pedido.estado_pedido?.nombre) ? 'ph-bold ph-clock text-white text-xs' : 'ph-bold ph-circle text-white text-xs'"></i>
+                        </div>
+                        <div>
+                          <h6 class="mb-2 text-sm" 
+                              [ngClass]="isTrackingStepCompleted('En Recepción', pedido.estado_pedido?.nombre) || isTrackingStepActive('En Recepción', pedido.estado_pedido?.nombre) ? 'text-heading' : 'text-gray-500'">
+                            En Recepción
+                          </h6>
+                          <p class="text-xs mb-0" 
+                             [ngClass]="isTrackingStepCompleted('En Recepción', pedido.estado_pedido?.nombre) || isTrackingStepActive('En Recepción', pedido.estado_pedido?.nombre) ? 'text-gray-600' : 'text-gray-400'">
+                            Tu pedido está siendo preparado para el envío
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="tracking-step mb-16" 
+                         [ngClass]="isTrackingStepCompleted('Enviado a Provincia', pedido.estado_pedido?.nombre) ? 'completed' : 
+                                   isTrackingStepActive('Enviado a Provincia', pedido.estado_pedido?.nombre) ? 'active' : 'pending'">
+                      <div class="flex-align gap-12">
+                        <div class="w-20 h-20 rounded-circle border-2 flex-center position-relative z-1"
+                             [ngClass]="isTrackingStepCompleted('Enviado a Provincia', pedido.estado_pedido?.nombre) ? 'bg-success-600 border-success-600' : 
+                                       isTrackingStepActive('Enviado a Provincia', pedido.estado_pedido?.nombre) ? 'bg-warning-600 border-warning-600' : 'bg-gray-300 border-gray-300'"
+                             style="margin-left: -36px;">
+                          <i [class]="isTrackingStepCompleted('Enviado a Provincia', pedido.estado_pedido?.nombre) ? 'ph-bold ph-check text-white text-xs' : 
+                                     isTrackingStepActive('Enviado a Provincia', pedido.estado_pedido?.nombre) ? 'ph-bold ph-truck text-white text-xs' : 'ph-bold ph-circle text-white text-xs'"></i>
+                        </div>
+                        <div>
+                          <h6 class="mb-2 text-sm" 
+                              [ngClass]="isTrackingStepCompleted('Enviado a Provincia', pedido.estado_pedido?.nombre) || isTrackingStepActive('Enviado a Provincia', pedido.estado_pedido?.nombre) ? 'text-heading' : 'text-gray-500'">
+                            Enviado a Provincia
+                          </h6>
+                          <p class="text-xs mb-0" 
+                             [ngClass]="isTrackingStepCompleted('Enviado a Provincia', pedido.estado_pedido?.nombre) || isTrackingStepActive('Enviado a Provincia', pedido.estado_pedido?.nombre) ? 'text-gray-600' : 'text-gray-400'">
+                            Tu pedido está en camino a {{ pedido.provincia_nombre || 'tu provincia' }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="tracking-step" 
+                         [ngClass]="isTrackingStepCompleted('Entregado', pedido.estado_pedido?.nombre) ? 'completed' : 
+                                   isTrackingStepActive('Entregado', pedido.estado_pedido?.nombre) ? 'active' : 'pending'">
+                      <div class="flex-align gap-12">
+                        <div class="w-20 h-20 rounded-circle border-2 flex-center position-relative z-1"
+                             [ngClass]="isTrackingStepCompleted('Entregado', pedido.estado_pedido?.nombre) ? 'bg-success-600 border-success-600' : 
+                                       isTrackingStepActive('Entregado', pedido.estado_pedido?.nombre) ? 'bg-warning-600 border-warning-600' : 'bg-gray-300 border-gray-300'"
+                             style="margin-left: -36px;">
+                          <i [class]="isTrackingStepCompleted('Entregado', pedido.estado_pedido?.nombre) ? 'ph-bold ph-check text-white text-xs' : 
+                                     isTrackingStepActive('Entregado', pedido.estado_pedido?.nombre) ? 'ph-bold ph-clock text-white text-xs' : 'ph-bold ph-circle text-white text-xs'"></i>
+                        </div>
+                        <div>
+                          <h6 class="mb-2 text-sm" 
+                              [ngClass]="isTrackingStepCompleted('Entregado', pedido.estado_pedido?.nombre) || isTrackingStepActive('Entregado', pedido.estado_pedido?.nombre) ? 'text-heading' : 'text-gray-500'">
+                            Entregado
+                          </h6>
+                          <p class="text-xs mb-0" 
+                             [ngClass]="isTrackingStepCompleted('Entregado', pedido.estado_pedido?.nombre) || isTrackingStepActive('Entregado', pedido.estado_pedido?.nombre) ? 'text-gray-600' : 'text-gray-400'">
+                            Tu pedido fue entregado exitosamente
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Información adicional del tracking -->
+                  <div class="mt-16 pt-16 border-top border-warning-200">
+                    <div class="row g-12 text-xs">
+                      <div class="col-md-6">
+                        <div class="flex-align gap-8">
+                          <i class="ph ph-clock text-warning-600"></i>
+                          <span class="text-gray-600">Última actualización: {{ pedido.updated_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                        </div>
+                      </div>
+                      <div class="col-md-6" *ngIf="pedido.provincia_nombre">
+                        <div class="flex-align gap-8">
+                          <i class="ph ph-map-pin text-warning-600"></i>
+                          <span class="text-gray-600">Destino: {{ pedido.provincia_nombre }}, {{ pedido.departamento_nombre }}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

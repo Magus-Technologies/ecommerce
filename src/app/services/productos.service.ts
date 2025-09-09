@@ -226,6 +226,10 @@ export class ProductosService {
   }): Observable<ProductosPublicosResponse> {
     let params = new HttpParams();
     
+    // ✅ AGREGADO: Soporte para filtro por categoría
+    if (filtros?.categoria) {
+      params = params.set('categoria', filtros.categoria.toString());
+    }
     if (filtros?.seccion) {
       params = params.set('seccion', filtros.seccion.toString());
     }

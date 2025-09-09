@@ -300,6 +300,7 @@ export class ModalDireccionComponent implements OnInit, OnChanges, OnDestroy {
   isLoading = false;
   error = '';
   private lastValidationState: boolean = false; // Para evitar re-renderizaciones constantes
+  private setLoadingInitialData!: (loading: boolean) => void; // Método para controlar listeners
 
   constructor(
     private fb: FormBuilder,
@@ -355,11 +356,14 @@ export class ModalDireccionComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   setupUbigeoListeners(): void {
+    // Variable para controlar cuando se están cargando datos iniciales
+    let isLoadingInitialData = false;
+    
     // Escuchar cambios en departamento
     this.direccionForm
       .get('departamento_id')
       ?.valueChanges.subscribe((departamentoId) => {
-        if (departamentoId) {
+        if (departamentoId && !isLoadingInitialData) {
           this.loadProvincias(departamentoId);
           this.direccionForm.patchValue({
             provincia_id: '',
@@ -370,7 +374,7 @@ export class ModalDireccionComponent implements OnInit, OnChanges, OnDestroy {
           this.distritos = [];
           // Habilitar provincia
           this.direccionForm.get('provincia_id')?.enable();
-        } else {
+        } else if (!departamentoId && !isLoadingInitialData) {
           this.direccionForm.get('provincia_id')?.disable();
           this.direccionForm.get('distrito_id')?.disable();
         }
@@ -381,7 +385,7 @@ export class ModalDireccionComponent implements OnInit, OnChanges, OnDestroy {
       .get('provincia_id')
       ?.valueChanges.subscribe((provinciaId) => {
         const departamentoId = this.direccionForm.get('departamento_id')?.value;
-        if (departamentoId && provinciaId) {
+        if (departamentoId && provinciaId && !isLoadingInitialData) {
           this.loadDistritos(departamentoId, provinciaId);
           this.direccionForm.patchValue({
             distrito_id: '',
@@ -390,7 +394,7 @@ export class ModalDireccionComponent implements OnInit, OnChanges, OnDestroy {
           this.distritos = [];
           // Habilitar distrito
           this.direccionForm.get('distrito_id')?.enable();
-        } else {
+        } else if (!provinciaId && !isLoadingInitialData) {
           this.direccionForm.get('distrito_id')?.disable();
         }
       });
@@ -399,7 +403,7 @@ export class ModalDireccionComponent implements OnInit, OnChanges, OnDestroy {
     this.direccionForm
       .get('distrito_id')
       ?.valueChanges.subscribe((distritoId) => {
-        if (distritoId) {
+        if (distritoId && !isLoadingInitialData) {
           const distrito = this.distritos.find((d) => d.id === distritoId);
           if (distrito) {
             this.direccionForm.patchValue({
@@ -408,6 +412,12 @@ export class ModalDireccionComponent implements OnInit, OnChanges, OnDestroy {
           }
         }
       });
+      
+    // Método para desactivar/activar listeners durante carga inicial
+    this.setLoadingInitialData = (loading: boolean) => {
+      isLoadingInitialData = loading;
+      console.log('🔧 setLoadingInitialData:', loading);
+    };
   }
 
   loadDireccionData(): void {
@@ -510,84 +520,120 @@ export class ModalDireccionComponent implements OnInit, OnChanges, OnDestroy {
           console.log('Cargando provincias para departamento:', chain.departamento.id);
           this.loadProvincias(chain.departamento.id);
 
-          // Cargar distritos inmediatamente después
+          // Cargar distritos y esperar a que se complete la carga
           console.log('Cargando distritos para provincia:', chain.departamento.id, chain.provincia.id);
-          this.loadDistritos(chain.departamento.id, chain.provincia.id);
-
-          // Establecer los valores de los selects después de cargar las listas
-          setTimeout(() => {
-            console.log('=== ESTABLECIENDO VALORES DE SELECTS ===');
-            
-            // IMPORTANTE: Desactivar temporalmente los listeners para evitar que se sobrescriba id_ubigeo
-            this.direccionForm.get('departamento_id')?.disable();
-            this.direccionForm.get('provincia_id')?.disable();
-            this.direccionForm.get('distrito_id')?.disable();
-            
-            // Habilitar los campos antes de establecer valores
-            this.direccionForm.get('provincia_id')?.enable();
-            this.direccionForm.get('distrito_id')?.enable();
-
-            const valores = {
-              departamento_id: chain.departamento.id,
-              provincia_id: chain.provincia.id,
-              distrito_id: chain.distrito.id,
-            };
-            
-            console.log('Valores a establecer en selects:', valores);
-            this.direccionForm.patchValue(valores);
-
-            // IMPORTANTE: Calcular y establecer el ubigeo_id basado en la combinación
-            const distritoSeleccionado = this.distritos.find(d => d.id === chain.distrito.id);
-            
-            if (distritoSeleccionado) {
-              console.log(' Distrito encontrado, estableciendo id_ubigeo:', distritoSeleccionado.id_ubigeo);
-              this.direccionForm.patchValue({
-                id_ubigeo: distritoSeleccionado.id_ubigeo
-              });
-            } else {
-              console.log('❌ No se pudo encontrar el distrito para establecer id_ubigeo');
-              // Fallback: usar el ubigeo_id original
-              this.direccionForm.patchValue({
-                id_ubigeo: ubigeoId
-              });
-            }
-
-            console.log('Formulario actualizado con valores de ubigeo');
-            console.log('Estado del formulario:', {
-              valid: this.direccionForm.valid,
-              id_ubigeo: this.direccionForm.get('id_ubigeo')?.value,
-              departamento_id: this.direccionForm.get('departamento_id')?.value,
-              provincia_id: this.direccionForm.get('provincia_id')?.value,
-              distrito_id: this.direccionForm.get('distrito_id')?.value
-            });
-            
-            // IMPORTANTE: Habilitar departamento después de establecer todos los valores
-            this.direccionForm.get('departamento_id')?.enable();
-            
-            // VERIFICACIÓN FINAL: Asegurar que id_ubigeo no se haya perdido
-            setTimeout(() => {
-              console.log('=== VERIFICACIÓN FINAL ===');
-              console.log('Estado final del formulario:', {
-                valid: this.direccionForm.valid,
-                id_ubigeo: this.direccionForm.get('id_ubigeo')?.value,
-                departamento_id: this.direccionForm.get('departamento_id')?.value,
-                provincia_id: this.direccionForm.get('provincia_id')?.value,
-                distrito_id: this.direccionForm.get('distrito_id')?.value
-              });
+          this.isLoadingDistritos = true;
+          this.ubigeoService.getDistritos(chain.departamento.id, chain.provincia.id).subscribe({
+            next: (distritos) => {
+              this.distritos = distritos;
+              this.isLoadingDistritos = false;
+              console.log('✅ Distritos cargados exitosamente:', distritos.length);
               
-              // Si se perdió el id_ubigeo, restaurarlo
-              if (!this.direccionForm.get('id_ubigeo')?.value) {
-                console.log('⚠️ id_ubigeo se perdió, restaurándolo...');
-                this.direccionForm.patchValue({
-                  id_ubigeo: ubigeoId
+              // Ahora establecer los valores de los selects después de cargar las listas
+              setTimeout(() => {
+                console.log('=== ESTABLECIENDO VALORES DE SELECTS ===');
+                
+                // IMPORTANTE: Desactivar listeners durante la carga inicial
+                this.setLoadingInitialData(true);
+                
+                // Habilitar todos los campos antes de establecer valores
+                this.direccionForm.get('departamento_id')?.enable();
+                this.direccionForm.get('provincia_id')?.enable();
+                this.direccionForm.get('distrito_id')?.enable();
+
+                const valores = {
+                  departamento_id: chain.departamento.id,
+                  provincia_id: chain.provincia.id,
+                  distrito_id: chain.distrito.id,
+                };
+                
+                console.log('Valores a establecer en selects:', valores);
+                this.direccionForm.patchValue(valores);
+
+                // IMPORTANTE: Calcular y establecer el ubigeo_id basado en la combinación
+                const distritoSeleccionado = this.distritos.find(d => d.id === chain.distrito.id);
+                
+                if (distritoSeleccionado) {
+                  console.log('✅ Distrito encontrado, estableciendo id_ubigeo:', distritoSeleccionado.id_ubigeo);
+                  this.direccionForm.patchValue({
+                    id_ubigeo: distritoSeleccionado.id_ubigeo
+                  });
+                } else {
+                  console.log('❌ No se pudo encontrar el distrito para establecer id_ubigeo, usando ubigeo_id original');
+                  // Fallback: usar el ubigeo_id original
+                  this.direccionForm.patchValue({
+                    id_ubigeo: ubigeoId
+                  });
+                }
+
+                console.log('Formulario actualizado con valores de ubigeo');
+                console.log('Estado del formulario:', {
+                  valid: this.direccionForm.valid,
+                  id_ubigeo: this.direccionForm.get('id_ubigeo')?.value,
+                  departamento_id: this.direccionForm.get('departamento_id')?.value,
+                  provincia_id: this.direccionForm.get('provincia_id')?.value,
+                  distrito_id: this.direccionForm.get('distrito_id')?.value
                 });
-                console.log('✅ id_ubigeo restaurado:', this.direccionForm.get('id_ubigeo')?.value);
-              }
-            }, 50);
-            
-            this.direccionForm.updateValueAndValidity();
-            this.cdr.detectChanges();
-          }, 100);
+                
+                // IMPORTANTE: Habilitar departamento después de establecer todos los valores
+                this.direccionForm.get('departamento_id')?.enable();
+                
+                // VERIFICACIÓN FINAL: Asegurar que id_ubigeo no se haya perdido
+                setTimeout(() => {
+                  console.log('=== VERIFICACIÓN FINAL ===');
+                  console.log('Estado final del formulario:', {
+                    valid: this.direccionForm.valid,
+                    id_ubigeo: this.direccionForm.get('id_ubigeo')?.value,
+                    departamento_id: this.direccionForm.get('departamento_id')?.value,
+                    provincia_id: this.direccionForm.get('provincia_id')?.value,
+                    distrito_id: this.direccionForm.get('distrito_id')?.value
+                  });
+                  
+                  // Si se perdió el id_ubigeo, restaurarlo
+                  if (!this.direccionForm.get('id_ubigeo')?.value) {
+                    console.log('⚠️ id_ubigeo se perdió, restaurándolo...');
+                    this.direccionForm.patchValue({
+                      id_ubigeo: ubigeoId
+                    });
+                    console.log('✅ id_ubigeo restaurado:', this.direccionForm.get('id_ubigeo')?.value);
+                  }
+                }, 50);
+                
+                // IMPORTANTE: Reactivar listeners después de establecer todos los valores
+                setTimeout(() => {
+                  this.setLoadingInitialData(false);
+                  console.log('🔧 Listeners reactivados');
+                }, 50);
+                
+                this.direccionForm.updateValueAndValidity();
+                this.cdr.detectChanges();
+              }, 100);
+            },
+            error: (error) => {
+              console.error('Error cargando distritos:', error);
+              this.isLoadingDistritos = false;
+              // Desactivar listeners durante fallback
+              this.setLoadingInitialData(true);
+              
+              // Fallback: usar el ubigeo_id original
+              console.log('Fallback por error: estableciendo id_ubigeo:', ubigeoId);
+              this.direccionForm.patchValue({
+                id_ubigeo: ubigeoId,
+                departamento_id: chain.departamento.id,
+                provincia_id: chain.provincia.id,
+                distrito_id: chain.distrito.id,
+              });
+              this.direccionForm.get('departamento_id')?.enable();
+              this.direccionForm.get('provincia_id')?.enable();
+              this.direccionForm.get('distrito_id')?.enable();
+              
+              // Reactivar listeners después del fallback
+              setTimeout(() => {
+                this.setLoadingInitialData(false);
+                console.log('🔧 Listeners reactivados después del fallback');
+              }, 100);
+            }
+          });
         } else {
           console.error('Respuesta del backend no exitosa:', response);
         }

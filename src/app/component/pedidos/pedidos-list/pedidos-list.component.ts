@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { PedidosService, Pedido, PedidoDetalle, PedidosResponse, CrearPedidoRequest } from '../../../services/pedidos.service';
 import { NgxDatatableModule, ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-pedidos-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, NgxDatatableModule],
+  imports: [CommonModule, RouterModule, FormsModule, NgxDatatableModule],
   template: `
     <div class="container-fluid">
       <!-- Header -->
@@ -171,14 +173,20 @@ import { NgxDatatableModule, ColumnMode, SelectionType, SortType } from '@swimla
               </div>
               <div class="card-body">
                 <div class="row">
-                  <div class="col-md-6">
-                    <p><strong>Nombre:</strong> {{ pedidoSeleccionado?.cliente_nombre }}</p>
-                    <p><strong>Documento:</strong> {{ pedidoSeleccionado?.user_cliente?.numero_documento }}</p>
+                  <div class="col-md-4">
+                    <p><strong>Nombre:</strong> {{ pedidoSeleccionado?.cliente_nombre || pedidoSeleccionado?.user_cliente?.nombres + ' ' + pedidoSeleccionado?.user_cliente?.apellidos }}</p>
+                    <p><strong>Documento:</strong> {{ pedidoSeleccionado?.numero_documento || pedidoSeleccionado?.user_cliente?.numero_documento }}</p>
                     <p><strong>Teléfono:</strong> {{ pedidoSeleccionado?.telefono_contacto }}</p>
                   </div>
-                  <div class="col-md-6">
+                  <div class="col-md-4">
+                    <p><strong>Email:</strong> {{ pedidoSeleccionado?.cliente_email || pedidoSeleccionado?.user_cliente?.email }}</p>
                     <p><strong>Dirección:</strong> {{ pedidoSeleccionado?.direccion_envio }}</p>
-                    <p><strong>Email:</strong> {{ pedidoSeleccionado?.user_cliente?.email }}</p>
+                  </div>
+                  <div class="col-md-4">
+                    <p><strong>Ubicación:</strong> {{ pedidoSeleccionado?.ubicacion_completa || 'No especificada' }}</p>
+                    <p><strong>Departamento:</strong> {{ pedidoSeleccionado?.departamento_nombre || 'No especificado' }}</p>
+                    <p><strong>Provincia:</strong> {{ pedidoSeleccionado?.provincia_nombre || 'No especificada' }}</p>
+                    <p><strong>Distrito:</strong> {{ pedidoSeleccionado?.distrito_nombre || 'No especificado' }}</p>
                   </div>
                 </div>
               </div>
@@ -191,7 +199,7 @@ import { NgxDatatableModule, ColumnMode, SelectionType, SortType } from '@swimla
               </div>
               <div class="card-body">
                 <div class="row">
-                  <div class="col-md-6">
+                  <div class="col-md-4">
                     <p><strong>Fecha:</strong> {{ pedidoSeleccionado?.fecha_pedido | date:'dd/MM/yyyy HH:mm' }}</p>
                     <p><strong>Estado:</strong> 
                       <span class="badge px-12 py-6 rounded-pill fw-medium"
@@ -199,10 +207,22 @@ import { NgxDatatableModule, ColumnMode, SelectionType, SortType } from '@swimla
                         {{ pedidoSeleccionado?.estado_pedido?.nombre || 'PENDIENTE' }}
                       </span>
                     </p>
+                    <p><strong>Tipo de Pedido:</strong> {{ pedidoSeleccionado?.tipo_pedido || 'E-commerce' }}</p>
                   </div>
-                  <div class="col-md-6">
-                    <p><strong>Método Pago:</strong> {{ pedidoSeleccionado?.metodo_pago }}</p>
-                    <p><strong>Observaciones:</strong> {{ pedidoSeleccionado?.observaciones || 'Sin observaciones' }}</p>
+                  <div class="col-md-4">
+                    <p><strong>Método de Pago:</strong> {{ formatMetodoPago(pedidoSeleccionado?.metodo_pago) }}</p>
+                    <p><strong>Forma de Envío:</strong> {{ formatFormaEnvio(pedidoSeleccionado?.forma_envio) }}</p>
+                    <p><strong>Costo de Envío:</strong> S/ {{ pedidoSeleccionado?.costo_envio || '0.00' }}</p>
+                  </div>
+                  <div class="col-md-4">
+                    <p><strong>Subtotal:</strong> S/ {{ pedidoSeleccionado?.subtotal }}</p>
+                    <p><strong>IGV (18%):</strong> S/ {{ pedidoSeleccionado?.igv }}</p>
+                    <p><strong>Total:</strong> <span class="text-success fw-bold">S/ {{ pedidoSeleccionado?.total }}</span></p>
+                  </div>
+                </div>
+                <div class="row" *ngIf="pedidoSeleccionado?.observaciones">
+                  <div class="col-12">
+                    <p><strong>Observaciones:</strong> {{ pedidoSeleccionado?.observaciones }}</p>
                   </div>
                 </div>
               </div>
@@ -267,6 +287,100 @@ import { NgxDatatableModule, ColumnMode, SelectionType, SortType } from '@swimla
         </div>
       </div>
     </div>
+
+    <!-- Modal para Cambiar Estado -->
+    <div class="modal fade" id="cambiarEstadoModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="ph ph-gear me-2"></i>
+              Cambiar Estado - {{ pedidoSeleccionado?.codigo_pedido }}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            
+            <!-- Información del Pedido -->
+            <div class="card mb-3 bg-light">
+              <div class="card-body p-3">
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6 class="fw-semibold mb-2">Información del Pedido:</h6>
+                    <p class="mb-1"><strong>Cliente:</strong> {{ pedidoSeleccionado?.cliente_nombre }}</p>
+                    <p class="mb-1"><strong>Forma de Envío:</strong> 
+                      <span class="badge" 
+                            [class]="(pedidoSeleccionado && esEnvioAProvincia(pedidoSeleccionado)) ? 'bg-warning' : 'bg-info'">
+                        {{ formatFormaEnvio(pedidoSeleccionado?.forma_envio) }}
+                      </span>
+                    </p>
+                  </div>
+                  <div class="col-md-6">
+                    <p class="mb-1"><strong>Estado Actual:</strong> 
+                      <span class="badge px-12 py-6 rounded-pill fw-medium"
+                            [class]="getEstadoBadgeClass(pedidoSeleccionado?.estado_pedido?.nombre)">
+                        {{ pedidoSeleccionado?.estado_pedido?.nombre || 'Sin estado' }}
+                      </span>
+                    </p>
+                    <p class="mb-1"><strong>Total:</strong> S/ {{ pedidoSeleccionado?.total }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Alerta para pedidos a provincia -->
+            <div *ngIf="pedidoSeleccionado && esEnvioAProvincia(pedidoSeleccionado)" class="alert alert-info d-flex align-items-center mb-3">
+              <i class="ph ph-info text-info me-2"></i>
+              <small>
+                <strong>Envío a Provincia:</strong> 
+                Este pedido sigue el flujo especial: 
+                <strong>Pendiente → En Recepción → Enviado a Provincia → Entregado</strong>
+              </small>
+            </div>
+
+            <!-- Selector de Estado -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Nuevo Estado *</label>
+              <select class="form-select" [(ngModel)]="estadoSeleccionado">
+                <option value="">Seleccione un estado...</option>
+                <option *ngFor="let estado of estadosDisponibles" [value]="estado.id">
+                  {{ estado.nombre }} - {{ estado.descripcion }}
+                </option>
+              </select>
+              <div class="form-text">
+                Solo se muestran los estados válidos para este tipo de envío
+              </div>
+            </div>
+
+            <!-- Comentario -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Comentario (Opcional)</label>
+              <textarea class="form-control" 
+                        rows="3" 
+                        [(ngModel)]="comentarioEstado"
+                        placeholder="Agregar comentario sobre el cambio de estado..."></textarea>
+              <div class="form-text">
+                Este comentario será visible en el tracking del cliente
+              </div>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button type="button" 
+                    class="btn btn-primary" 
+                    [disabled]="!estadoSeleccionado || cambiandoEstado"
+                    (click)="confirmarCambioEstado()">
+              <span *ngIf="cambiandoEstado" class="spinner-border spinner-border-sm me-2"></span>
+              <i *ngIf="!cambiandoEstado" class="ph ph-check me-2"></i>
+              {{ cambiandoEstado ? 'Guardando...' : 'Confirmar Cambio' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   `,
   styles: [`
     .table td {
@@ -297,6 +411,12 @@ import { NgxDatatableModule, ColumnMode, SelectionType, SortType } from '@swimla
 export class PedidosListComponent implements OnInit {
   pedidos: Pedido[] = [];
   pedidoSeleccionado: Pedido | null = null;
+  
+  // Para cambio de estado
+  estadosDisponibles: any[] = [];
+  estadoSeleccionado: number | null = null;
+  comentarioEstado: string = '';
+  cambiandoEstado: boolean = false;
   loading = false;
 
   // Configuración para NGX-Datatable
@@ -350,7 +470,13 @@ export class PedidosListComponent implements OnInit {
   }
 
   cambiarEstado(pedido: Pedido): void {
-    console.log('Cambiar estado del pedido:', pedido.id);
+    this.pedidoSeleccionado = pedido;
+    this.loadEstadosDisponibles(pedido.id);
+    const modal = document.getElementById('cambiarEstadoModal');
+    if (modal) {
+      const bootstrapModal = new (window as any).bootstrap.Modal(modal);
+      bootstrapModal.show();
+    }
   }
 
   imprimirPedido(): void {
@@ -365,6 +491,146 @@ export class PedidosListComponent implements OnInit {
         return 'bg-warning-50 text-warning-600';
       case 'procesando':
         return 'bg-info-50 text-info-600';
+      case 'enviado':
+        return 'bg-primary-50 text-primary-600';
+      case 'entregado':
+        return 'bg-success-50 text-success-600';
+      case 'cancelado':
+        return 'bg-danger-50 text-danger-600';
+      default:
+        return 'bg-secondary-50 text-secondary-600';
+    }
+  }
+
+  formatMetodoPago(metodo: string | null | undefined): string {
+    if (!metodo) return 'No especificado';
+    
+    switch (metodo.toLowerCase()) {
+      case 'efectivo':
+        return 'Efectivo';
+      case 'tarjeta':
+        return 'Tarjeta de crédito/débito';
+      case 'transferencia':
+        return 'Transferencia bancaria';
+      case 'yape':
+        return 'Yape';
+      case 'plin':
+        return 'Plin';
+      default:
+        return metodo.charAt(0).toUpperCase() + metodo.slice(1);
+    }
+  }
+
+  formatFormaEnvio(forma: string | null | undefined): string {
+    if (!forma) return 'No especificada';
+    
+    switch (forma.toLowerCase()) {
+      case 'delivery':
+        return 'Delivery';
+      case 'recojo_tienda':
+        return 'Recojo en tienda';
+      case 'envio_provincia':
+        return 'Envío a provincia';
+      default:
+        return forma.replace('_', ' ').charAt(0).toUpperCase() + forma.slice(1);
+    }
+  }
+
+  // Métodos para manejo de estados
+  loadEstadosDisponibles(pedidoId: number): void {
+    this.pedidosService.getEstados(pedidoId).subscribe({
+      next: (response: any) => {
+        this.estadosDisponibles = response.estados || response;
+        console.log('Estados disponibles:', this.estadosDisponibles);
+      },
+      error: (error) => {
+        console.error('Error cargando estados:', error);
+      }
+    });
+  }
+
+  confirmarCambioEstado(): void {
+    if (!this.pedidoSeleccionado || !this.estadoSeleccionado) {
+      return;
+    }
+
+    this.cambiandoEstado = true;
+
+    const data = {
+      estado_pedido_id: this.estadoSeleccionado,
+      comentario: this.comentarioEstado
+    };
+
+    this.pedidosService.cambiarEstado(this.pedidoSeleccionado.id, data).subscribe({
+      next: (response) => {
+        console.log('Estado cambiado exitosamente:', response);
+        
+        // Actualizar el pedido en la lista
+        const index = this.pedidos.findIndex(p => p.id === this.pedidoSeleccionado!.id);
+        if (index !== -1) {
+          this.pedidos[index] = { ...this.pedidos[index], ...response.pedido };
+        }
+
+        // Cerrar modal
+        const modal = document.getElementById('cambiarEstadoModal');
+        if (modal) {
+          const bootstrapModal = (window as any).bootstrap.Modal.getInstance(modal);
+          bootstrapModal?.hide();
+        }
+
+        // Limpiar form
+        this.resetFormEstado();
+
+        // Mostrar mensaje de éxito
+        Swal.fire({
+          title: '¡Éxito!',
+          text: 'Estado del pedido actualizado correctamente',
+          icon: 'success',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#3085d6'
+        });
+      },
+      error: (error) => {
+        console.error('Error cambiando estado:', error);
+        Swal.fire({
+          title: 'Error',
+          text: 'Error al cambiar estado del pedido',
+          icon: 'error',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33'
+        });
+      },
+      complete: () => {
+        this.cambiandoEstado = false;
+      }
+    });
+  }
+
+  resetFormEstado(): void {
+    this.estadoSeleccionado = null;
+    this.comentarioEstado = '';
+    this.estadosDisponibles = [];
+    this.cambiandoEstado = false;
+  }
+
+  esEnvioAProvincia(pedido: Pedido): boolean {
+    return pedido.forma_envio === 'envio_provincia';
+  }
+
+  getEstadoBadgeClassExtended(estado: string | undefined): string {
+    if (!estado) return 'bg-secondary-50 text-secondary-600';
+    
+    switch (estado.toLowerCase()) {
+      case 'pendiente':
+        return 'bg-warning-50 text-warning-600';
+      case 'confirmado':
+        return 'bg-info-50 text-info-600';
+      case 'en preparación':
+        return 'bg-primary-50 text-primary-600';
+      case 'en recepción':
+        return 'bg-orange-50 text-orange-600';
+      case 'enviado a provincia':
+        return 'bg-purple-50 text-purple-600';
       case 'enviado':
         return 'bg-primary-50 text-primary-600';
       case 'entregado':

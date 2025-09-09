@@ -11,6 +11,26 @@ export interface CategoriaArmaPC {
   productos_count?: number;
   orden: number;
   activo: boolean;
+  nombre_paso?: string;
+  descripcion_paso?: string;
+  es_requerido?: boolean;
+  paso_info?: {
+    orden: number;
+    nombre_paso: string;
+    descripcion_paso?: string;
+    es_requerido: boolean;
+  };
+}
+
+export interface CategoriaCompatibilidad {
+  id: number;
+  nombre: string;
+  orden: number;
+  nombre_paso: string;
+  compatibles: Array<{
+    id: number;
+    nombre: string;
+  }>;
 }
 
 export interface ConfiguracionArmaPcResponse {
@@ -57,5 +77,33 @@ export class ArmaPcService {
    */
   obtenerCategoriasPublicas(): Observable<CategoriaArmaPC[]> {
     return this.http.get<CategoriaArmaPC[]>(`${this.baseUrl}/arma-pc/categorias`);
+  }
+
+  // ====================================
+  // ✅ NUEVOS MÉTODOS PARA COMPATIBILIDADES
+  // ====================================
+
+  /**
+   * Obtener categorías compatibles con una categoría específica (público)
+   */
+  obtenerCategoriasCompatibles(categoriaId: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/categorias/${categoriaId}/compatibles`);
+  }
+
+  /**
+   * Obtener configuración completa de compatibilidades (para admin)
+   */
+  obtenerCompatibilidades(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/arma-pc/compatibilidades`);
+  }
+
+  /**
+   * Gestionar compatibilidades entre categorías (para admin)
+   */
+  gestionarCompatibilidades(categoriaPrincipalId: number, categoriasCompatibles: number[]): Observable<any> {
+    return this.http.post(`${this.baseUrl}/arma-pc/compatibilidades`, {
+      categoria_principal_id: categoriaPrincipalId,
+      categorias_compatibles: categoriasCompatibles
+    });
   }
 }

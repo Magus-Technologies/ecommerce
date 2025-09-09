@@ -23,6 +23,19 @@ export interface Pedido {
   updated_at: string;
   cliente_nombre: string;
   tipo_pedido: string;
+  // Nuevos campos del checkout
+  numero_documento?: string | null;
+  cliente_email?: string | null;
+  forma_envio?: string | null;
+  costo_envio?: string | null;
+  departamento_id?: string | null;
+  provincia_id?: string | null;
+  distrito_id?: string | null;
+  departamento_nombre?: string | null;
+  provincia_nombre?: string | null;
+  distrito_nombre?: string | null;
+  ubicacion_completa?: string | null;
+  // Relaciones
   cliente?: any;
   user_cliente?: {
     id: number;
@@ -118,6 +131,30 @@ export class PedidosService {
    */
   crearPedidoEcommerce(pedido: CrearPedidoRequest): Observable<any> {
     return this.http.post(`${environment.apiUrl}/pedidos/ecommerce`, pedido);
+  }
+
+  /**
+   * Obtener estados disponibles para un pedido específico
+   */
+  getEstados(pedidoId?: number): Observable<any> {
+    const url = pedidoId 
+      ? `${environment.apiUrl}/pedidos/estados?pedido_id=${pedidoId}`
+      : `${environment.apiUrl}/pedidos/estados`;
+    return this.http.get(url);
+  }
+
+  /**
+   * Cambiar estado de un pedido con tracking
+   */
+  cambiarEstado(pedidoId: number, data: { estado_pedido_id: number; comentario?: string }): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/pedidos/${pedidoId}/cambiar-estado`, data);
+  }
+
+  /**
+   * Obtener tracking de un pedido
+   */
+  getTrackingPedido(pedidoId: number): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/pedidos/${pedidoId}/tracking`);
   }
 
   /**
