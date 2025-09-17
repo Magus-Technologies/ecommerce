@@ -1,0 +1,216 @@
+<div class="container-fluid px-4 py-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="h3 mb-2 text-gray-800">Gestión de Compras</h1>
+          <p class="mb-0 text-muted">Administra las compras realizadas desde el ecommerce</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Filtros</h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-3 mb-3">
+          <label for="search" class="form-label">Buscar</label>
+          <input
+            type="text"
+            id="search"
+            class="form-control"
+            placeholder="Código, cliente, email..."
+            [(ngModel)]="filtros.search"
+            (keyup.enter)="aplicarFiltros()"
+          />
+        </div>
+        <div class="col-md-3 mb-3">
+          <label for="estado" class="form-label">Estado</label>
+          <select
+            id="estado"
+            class="form-select"
+            [(ngModel)]="filtros.estado_compra_id"
+          >
+            <option value="">Todos los estados</option>
+            <option *ngFor="let estado of estadosCompra" [value]="estado.id">
+              {{ estado.nombre }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-2 mb-3">
+          <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+          <input
+            type="date"
+            id="fecha_inicio"
+            class="form-control"
+            [(ngModel)]="filtros.fecha_inicio"
+          />
+        </div>
+        <div class="col-md-2 mb-3">
+          <label for="fecha_fin" class="form-label">Fecha Fin</label>
+          <input
+            type="date"
+            id="fecha_fin"
+            class="form-control"
+            [(ngModel)]="filtros.fecha_fin"
+          />
+        </div>
+        <div class="col-md-2 mb-3 d-flex align-items-end">
+          <div class="btn-group w-100">
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="aplicarFiltros()"
+            >
+              <i class="ph ph-magnifying-glass me-1"></i>
+              Buscar
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              (click)="limpiarFiltros()"
+            >
+              <i class="ph ph-x me-1"></i>
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-2 text-muted">Cargando compras...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i class="ph ph-warning-circle me-2"></i>
+    {{ error }}
+  </div>
+
+  <!-- Tabla de Compras -->
+  <div *ngIf="!loading && !error" class="card">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">
+        Compras ({{ compras.length }})
+      </h6>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" class="px-4 py-3">Código</th>
+              <th scope="col" class="px-4 py-3">Cliente</th>
+              <th scope="col" class="px-4 py-3">Fecha</th>
+              <th scope="col" class="px-4 py-3">Total</th>
+              <th scope="col" class="px-4 py-3">Estado</th>
+              <th scope="col" class="px-4 py-3">Productos</th>
+              <th scope="col" class="px-4 py-3">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let compra of compras" [class.table-warning]="necesitaAtencion(compra)">
+              <td class="px-4 py-3">
+                <div class="d-flex align-items-center">
+                  <i *ngIf="necesitaAtencion(compra)" class="ph ph-bell text-warning me-2" title="Requiere atención"></i>
+                  <strong>{{ compra.codigo_compra }}</strong>
+                </div>
+                <small class="text-muted" *ngIf="compra.codigo_cotizacion">
+                  Cotización: {{ compra.codigo_cotizacion }}
+                </small>
+              </td>
+              <td class="px-4 py-3">
+                <div>
+                  <strong>{{ compra.cliente_nombre || 'N/A' }}</strong>
+                </div>
+                <small class="text-muted">{{ compra.cliente_email || 'N/A' }}</small>
+                <div class="mt-1" *ngIf="compra.telefono_contacto">
+                  <small class="text-muted">
+                    <i class="ph ph-phone me-1"></i>
+                    {{ compra.telefono_contacto }}
+                  </small>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <div>{{ formatearFecha(compra.fecha_compra) }}</div>
+                <small class="text-muted" *ngIf="compra.fecha_aprobacion">
+                  Aprobada: {{ formatearFecha(compra.fecha_aprobacion) }}
+                </small>
+              </td>
+              <td class="px-4 py-3">
+                <strong class="text-success">S/ {{ formatearPrecio(compra.total) }}</strong>
+                <div class="mt-1">
+                  <small class="text-muted">{{ compra.metodo_pago || 'Sin especificar' }}</small>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <span class="badge rounded-pill px-3 py-2" [ngClass]="getEstadoClass(compra.estado_actual)">
+                  <i [class]="getEstadoIcon(compra.estado_actual)" class="me-1"></i>
+                  {{ compra.estado_actual.nombre }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div>
+                  <strong>{{ compra.detalles_count || 0 }}</strong> productos
+                </div>
+                <small class="text-muted">{{ compra.forma_envio || 'N/A' }}</small>
+              </td>
+              <td class="px-4 py-3">
+                <div class="btn-group" role="group">
+                  <!-- Aprobar -->
+                  <button
+                    *ngIf="compra.estado_actual.nombre === 'Pendiente Aprobación'"
+                    type="button"
+                    class="btn btn-sm btn-success"
+                    (click)="aprobarCompra(compra)"
+                    title="Aprobar compra"
+                  >
+                    <i class="ph ph-check"></i>
+                  </button>
+
+                  <!-- Rechazar -->
+                  <button
+                    *ngIf="compra.estado_actual.nombre === 'Pendiente Aprobación' || compra.estado_actual.nombre === 'Aprobada'"
+                    type="button"
+                    class="btn btn-sm btn-danger"
+                    (click)="rechazarCompra(compra)"
+                    title="Rechazar compra"
+                  >
+                    <i class="ph ph-x"></i>
+                  </button>
+
+                  <!-- Ver detalle -->
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-primary"
+                    title="Ver detalle"
+                  >
+                    <i class="ph ph-eye"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sin resultados -->
+  <div *ngIf="!loading && !error && compras.length === 0" class="text-center py-5">
+    <i class="ph ph-shopping-bag display-1 text-muted"></i>
+    <h5 class="mt-3 text-muted">No se encontraron compras</h5>
+    <p class="text-muted">No hay compras que coincidan con los filtros aplicados.</p>
+  </div>
+</div>

@@ -957,7 +957,7 @@
                 </button>
 
                 <a
-                  [routerLink]="['product-details']"
+                  [routerLink]="['/product-details', producto.id]"
                   class="product-card__thumb flex-center overflow-hidden"
                 >
                   <img
@@ -995,7 +995,7 @@
 
                   <h6 class="title text-lg fw-semibold mt-12 mb-20">
                     <a
-                      [routerLink]="['product-details']"
+                      [routerLink]="['/product-details', 1]"
                       class="link text-line-2"
                       >{{ producto.nombre }}</a
                     >
@@ -1075,7 +1075,7 @@
                 </button>
 
                 <a
-                  [routerLink]="['product-details']"
+                  [routerLink]="['/product-details', producto.id]"
                   class="product-card__thumb flex-center overflow-hidden"
                 >
                   <img
@@ -1113,7 +1113,7 @@
 
                   <h6 class="title text-lg fw-semibold mt-12 mb-20">
                     <a
-                      [routerLink]="['product-details']"
+                      [routerLink]="['/product-details', 1]"
                       class="link text-line-2"
                       >{{ producto.nombre }}</a
                     >
@@ -1530,7 +1530,7 @@
                   <div
                     class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
                   >
-                    <a [routerLink]="['product-details']" class="link"
+                    <a [routerLink]="['/product-details', 1]" class="link"
                       ><img
                         src="assets/images/thumbs/short-product-img5.png"
                         alt=""
@@ -1546,7 +1546,7 @@
                     </div>
                     <h6 class="title text-lg fw-semibold mt-8 mb-8">
                       <a
-                        [routerLink]="['product-details']"
+                        [routerLink]="['/product-details', 1]"
                         class="link text-line-1"
                         >Taylor Farms Broccoli Florets Vegetables</a
                       >
@@ -1570,7 +1570,7 @@
                   <div
                     class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
                   >
-                    <a [routerLink]="['product-details']" class="link"
+                    <a [routerLink]="['/product-details', 1]" class="link"
                       ><img
                         src="assets/images/thumbs/short-product-img5.png"
                         alt=""
@@ -1586,7 +1586,7 @@
                     </div>
                     <h6 class="title text-lg fw-semibold mt-8 mb-8">
                       <a
-                        [routerLink]="['product-details']"
+                        [routerLink]="['/product-details', 1]"
                         class="link text-line-1"
                         >Taylor Farms Broccoli Florets Vegetables</a
                       >
@@ -1634,7 +1634,7 @@
                 <div
                   class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
                 >
-                  <a [routerLink]="['product-details']" class="link">
+                  <a [routerLink]="['/product-details', 1]" class="link">
                     <img
                       [src]="
                         producto.imagen_url ||
@@ -1661,7 +1661,7 @@
                   </div>
                   <h6 class="title text-lg fw-semibold mt-8 mb-8">
                     <a
-                      [routerLink]="['product-details']"
+                      [routerLink]="['/product-details', 1]"
                       class="link text-line-1"
                       >{{ producto.nombre }}</a
                     >

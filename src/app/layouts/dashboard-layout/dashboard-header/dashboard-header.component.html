@@ -6,10 +6,12 @@
       <!-- Left: Mobile menu + Title -->
       <div class="d-flex align-items-center gap-3">
         <!-- Mobile Menu Button -->
-        <button class="btn btn-link d-lg-none p-0 text-dark" 
+        <button class="btn btn-link d-lg-none p-0 text-dark border"
                 (click)="onToggleSidebar()"
-                type="button">
-          <i class="ph ph-list fs-4"></i>
+                type="button"
+                style="min-width: 40px; min-height: 40px; display: flex; align-items: center; justify-content: center;">
+          <!-- Icono hamburguesa con HTML entity -->
+          <span style="font-size: 1.5rem; font-weight: bold; color: #333;">☰</span>
         </button>
         
         <!-- Title -->

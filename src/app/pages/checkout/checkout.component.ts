@@ -7,6 +7,8 @@ import { ShippingComponent } from '../../component/shipping/shipping.component';
 import { CartService, CartItem, CartSummary } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
 import { UbigeoService, Departamento, Provincia, Distrito } from '../../services/ubigeo.service';
+import { CotizacionesService, CrearCotizacionRequest } from '../../services/cotizaciones.service';
+import { ComprasService, CrearCompraRequest } from '../../services/compras.service';
 import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
 
@@ -57,6 +59,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     private cartService: CartService,
     private authService: AuthService,
     private ubigeoService: UbigeoService,
+    private cotizacionesService: CotizacionesService,
+    private comprasService: ComprasService,
     private router: Router
   ) {
     this.initializeForm();
@@ -94,14 +98,16 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   // Verificar si hay items en el carrito
   private checkCartItems(): void {
-    if (this.cartService.isEmpty()) {
-      Swal.fire({
-        title: 'Carrito vacío',
-        text: 'No tienes productos en tu carrito para procesar la compra',
-        icon: 'warning',
-        confirmButtonColor: '#dc3545'
-      }).then(() => {
-        this.router.navigate(['/shop']);
+    if (typeof window !== 'undefined' && this.cartService.isEmpty()) {
+      import('sweetalert2').then(Swal => {
+        Swal.default.fire({
+          title: 'Carrito vacío',
+          text: 'No tienes productos en tu carrito para procesar la compra',
+          icon: 'warning',
+          confirmButtonColor: '#dc3545'
+        }).then(() => {
+          this.router.navigate(['/shop']);
+        });
       });
     }
   }
@@ -260,154 +266,25 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   // Pedir cotización
   pedirCotizacion(): void {
-    if (!this.checkoutForm.valid) {
-      this.markFormGroupTouched();
+    // Verificar si el usuario está autenticado
+    if (!this.isLoggedIn) {
       Swal.fire({
-        title: 'Formulario incompleto',
-        text: 'Por favor complete todos los campos requeridos',
+        title: 'Inicio de sesión requerido',
+        text: 'Debe iniciar sesión para crear una cotización',
         icon: 'warning',
-        confirmButtonColor: '#dc3545'
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Iniciar sesión',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.router.navigate(['/account'], { queryParams: { returnUrl: '/checkout' } });
+        }
       });
       return;
     }
 
-    const formData = this.checkoutForm.value;
-    
-    // Mostrar opciones de cotización
-    Swal.fire({
-      title: 'Cotización Generada',
-      html: `
-        <div class="text-center">
-          <i class="ph ph-file-pdf text-danger mb-3" style="font-size: 4rem;"></i>
-          <h5>Cotización lista</h5>
-          <p class="text-muted">¿Cómo deseas recibir tu cotización?</p>
-        </div>
-      `,
-      showCancelButton: true,
-      showDenyButton: true,
-      confirmButtonText: '<i class="ph ph-download me-2"></i>Descargar PDF',
-      denyButtonText: '<i class="ph ph-envelope me-2"></i>Enviar por Email',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#dc3545',
-      denyButtonColor: '#198754',
-      cancelButtonColor: '#6c757d'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Descargar PDF
-        this.descargarCotizacionPDF(formData);
-      } else if (result.isDenied) {
-        // Enviar por email
-        this.enviarCotizacionPorEmail(formData);
-      }
-    });
-  }
-
-  // Descargar cotización como PDF
-  private descargarCotizacionPDF(formData: any): void {
-    this.procesandoPedido = true;
-    
-    const datosCotizacion = {
-      cliente: formData.cliente,
-      email: formData.email,
-      direccion: formData.direccion,
-      telefono: formData.celular,
-      departamento: formData.departamento,
-      provincia: formData.provincia,
-      distrito: formData.distrito,
-      forma_envio: formData.formaEnvio,
-      tipo_pago: formData.tipoPago,
-      observaciones: formData.observaciones || '',
-      productos: this.cartItems,
-      total: this.getTotalFinal()
-    };
-
-    // Llamar al backend para generar PDF
-    this.cartService.generarCotizacionPDF(datosCotizacion).subscribe({
-      next: (response) => {
-        this.procesandoPedido = false;
-        
-        // Crear blob y descargar
-        const blob = new Blob([response], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `cotizacion-${Date.now()}.pdf`;
-        link.click();
-        window.URL.revokeObjectURL(url);
-        
-        Swal.fire({
-          title: '¡PDF Descargado!',
-          text: 'Tu cotización se ha descargado correctamente',
-          icon: 'success',
-          confirmButtonColor: '#198754'
-        });
-      },
-      error: (error) => {
-        this.procesandoPedido = false;
-        console.error('Error generando PDF:', error);
-        Swal.fire({
-          title: 'Error al generar PDF',
-          text: 'Ocurrió un error al generar tu cotización. Inténtalo de nuevo.',
-          icon: 'error',
-          confirmButtonColor: '#dc3545'
-        });
-      }
-    });
-  }
-
-  // Enviar cotización por email
-  private enviarCotizacionPorEmail(formData: any): void {
-    this.procesandoPedido = true;
-    
-    const datosCotizacion = {
-      cliente: formData.cliente,
-      email: formData.email,
-      direccion: formData.direccion,
-      telefono: formData.celular,
-      departamento: formData.departamento,
-      provincia: formData.provincia,
-      distrito: formData.distrito,
-      forma_envio: formData.formaEnvio,
-      tipo_pago: formData.tipoPago,
-      observaciones: formData.observaciones || '',
-      productos: this.cartItems,
-      total: this.getTotalFinal()
-    };
-
-    // Llamar al backend para enviar por email
-    this.cartService.enviarCotizacionPorEmail(datosCotizacion).subscribe({
-      next: (response) => {
-        this.procesandoPedido = false;
-        
-        Swal.fire({
-          title: '¡Cotización Enviada!',
-          html: `
-            <div class="text-center">
-              <i class="ph ph-envelope text-success mb-3" style="font-size: 4rem;"></i>
-              <h5>Email enviado exitosamente</h5>
-              <p class="text-muted">Tu cotización ha sido enviada a: <strong>${formData.email}</strong></p>
-              <p class="text-sm text-gray-500">Revisa tu bandeja de entrada y carpeta de spam</p>
-            </div>
-          `,
-          icon: 'success',
-          confirmButtonColor: '#198754'
-        });
-      },
-      error: (error) => {
-        this.procesandoPedido = false;
-        console.error('Error enviando email:', error);
-        Swal.fire({
-          title: 'Error al enviar email',
-          text: error.error?.message || 'Ocurrió un error al enviar tu cotización. Inténtalo de nuevo.',
-          icon: 'error',
-          confirmButtonColor: '#dc3545'
-        });
-      }
-    });
-  }
-
-  // Pagar con tarjeta
-  pagarConTarjeta(): void {
     if (!this.checkoutForm.valid) {
       this.markFormGroupTouched();
       Swal.fire({
@@ -420,76 +297,184 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     }
 
     this.procesandoPedido = true;
-
     const formData = this.checkoutForm.value;
-    
+
+    // Preparar datos para la cotización
+    const cotizacionData: CrearCotizacionRequest = {
+      productos: this.cartItems.map(item => ({
+        producto_id: item.id,
+        cantidad: item.cantidad
+      })),
+      cliente_nombre: formData.cliente,
+      cliente_email: formData.email,
+      direccion_envio: formData.direccion,
+      telefono_contacto: formData.celular,
+      forma_envio: formData.formaEnvio,
+      observaciones: formData.observaciones || '',
+      metodo_pago_preferido: formData.tipoPago,
+      costo_envio: this.costoEnvioCalculado,
+      numero_documento: formData.numeroDocumento,
+      departamento_id: formData.departamento,
+      provincia_id: formData.provincia,
+      distrito_id: formData.distrito,
+      departamento_nombre: this.departamentos.find(d => d.id === formData.departamento)?.nombre || '',
+      provincia_nombre: this.provincias.find(p => p.id === formData.provincia)?.nombre || '',
+      distrito_nombre: this.distritos.find(d => d.id === formData.distrito)?.nombre || '',
+      ubicacion_completa: `${this.distritos.find(d => d.id === formData.distrito)?.nombre || ''}, ${this.provincias.find(p => p.id === formData.provincia)?.nombre || ''}, ${this.departamentos.find(d => d.id === formData.departamento)?.nombre || ''}`
+    };
+
+    // Crear cotización en el backend
+    this.cotizacionesService.crearCotizacionEcommerce(cotizacionData).subscribe({
+      next: (response) => {
+        this.procesandoPedido = false;
+
+        if (response.status === 'success') {
+          // Limpiar carrito
+          this.cartService.clearCart();
+
+          Swal.fire({
+            title: '¡Cotización creada exitosamente!',
+            html: `
+              <div class="text-center">
+                <i class="ph ph-check-circle text-success mb-3" style="font-size: 4rem;"></i>
+                <h5>Cotización ${response.codigo_cotizacion}</h5>
+                <p class="text-muted">Tu cotización ha sido registrada exitosamente.</p>
+                <p><strong>Total: S/ ${this.formatPrice(this.getTotalFinal())}</strong></p>
+                <p class="text-sm text-gray-600">Puedes ver el estado de tu cotización en "Mi Cuenta"</p>
+              </div>
+            `,
+            icon: 'success',
+            confirmButtonColor: '#198754',
+            confirmButtonText: 'Ver mis cotizaciones'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.router.navigate(['/my-account']);
+            } else {
+              this.router.navigate(['/shop']);
+            }
+          });
+        }
+      },
+      error: (error) => {
+        this.procesandoPedido = false;
+        console.error('Error creando cotización:', error);
+        Swal.fire({
+          title: 'Error al crear cotización',
+          text: error.error?.message || 'Ocurrió un error al crear tu cotización. Inténtalo de nuevo.',
+          icon: 'error',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
+  }
+
+  // Método para crear compra directa (nuevo método usando ComprasService)
+  private crearCompraDirecta(): void {
+    this.procesandoPedido = true;
+    const formData = this.checkoutForm.value;
+
     // Obtener nombres de ubigeo
     const departamentoNombre = this.departamentos.find(d => d.id === formData.departamento)?.nombre || '';
     const provinciaNombre = this.provincias.find(p => p.id === formData.provincia)?.nombre || '';
     const distritoNombre = this.distritos.find(d => d.id === formData.distrito)?.nombre || '';
-    
-    const datosCheckout = {
-      // Datos básicos
-      metodo_pago: formData.tipoPago,
-      direccion_envio: formData.direccion,
-      telefono_contacto: formData.celular,
-      observaciones: formData.observaciones || '',
-      
-      // Datos adicionales del cliente
-      numero_documento: formData.numeroDocumento,
+
+    // Preparar datos para la compra
+    const compraData: CrearCompraRequest = {
+      productos: this.cartItems.map(item => ({
+        producto_id: item.producto_id,
+        cantidad: item.cantidad
+      })),
       cliente_nombre: formData.cliente,
       cliente_email: formData.email,
-      
-      // Información de envío
+      direccion_envio: formData.direccion,
+      telefono_contacto: formData.celular,
       forma_envio: formData.formaEnvio,
+      metodo_pago: formData.tipoPago,
       costo_envio: this.costoEnvioCalculado,
-      
-      // Ubicación detallada
-      departamento_id: formData.departamento,
-      provincia_id: formData.provincia,  
-      distrito_id: formData.distrito,
-      departamento_nombre: departamentoNombre,
-      provincia_nombre: provinciaNombre,
-      distrito_nombre: distritoNombre,
-      ubicacion_completa: `${distritoNombre}, ${provinciaNombre}, ${departamentoNombre}`
+      numero_documento: formData.numeroDocumento,
+      ubicacion_completa: `${distritoNombre}, ${provinciaNombre}, ${departamentoNombre}`,
+      observaciones: formData.observaciones || ''
     };
 
-    this.cartService.procesarPedido(datosCheckout).subscribe({
+    // Crear compra en el backend
+    this.comprasService.crearCompra(compraData).subscribe({
       next: (response) => {
         this.procesandoPedido = false;
-        
-        Swal.fire({
-          title: '¡Pedido creado exitosamente!',
-          html: `
-            <div class="text-center">
-              <i class="ph ph-check-circle text-success mb-3" style="font-size: 4rem;"></i>
-              <h5>Pedido #${response.pedido?.codigo_pedido || response.codigo_pedido}</h5>
-              <p class="text-muted">Tu pedido ha sido registrado y será procesado pronto.</p>
-              <p><strong>Total: S/ ${this.formatPrice(this.getTotalFinal())}</strong></p>
-            </div>
-          `,
-          icon: 'success',
-          confirmButtonColor: '#198754',
-          confirmButtonText: 'Ver mis pedidos'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            this.router.navigate(['/mis-pedidos']);
-          } else {
-            this.router.navigate(['/shop']);
-          }
-        });
+
+        if (response.status === 'success') {
+          // Limpiar carrito
+          this.cartService.clearCart();
+
+          Swal.fire({
+            title: '¡Compra creada exitosamente!',
+            html: `
+              <div class="text-center">
+                <i class="ph ph-check-circle text-success mb-3" style="font-size: 4rem;"></i>
+                <h5>Compra ${response.codigo_compra}</h5>
+                <p class="text-muted">Tu compra ha sido registrada exitosamente.</p>
+                <p><strong>Total: S/ ${this.formatPrice(this.getTotalFinal())}</strong></p>
+                <p class="text-sm text-gray-600">Puedes ver el estado de tu compra en "Mi Cuenta"</p>
+              </div>
+            `,
+            icon: 'success',
+            confirmButtonColor: '#198754',
+            confirmButtonText: 'Ver mis compras'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.router.navigate(['/my-account/compras']);
+            } else {
+              this.router.navigate(['/shop']);
+            }
+          });
+        }
       },
       error: (error) => {
         this.procesandoPedido = false;
-        console.error('Error al crear pedido:', error);
+        console.error('Error al crear compra:', error);
         Swal.fire({
-          title: 'Error al crear pedido',
-          text: error.error?.message || 'Ocurrió un error al procesar tu pedido. Inténtalo de nuevo.',
+          title: 'Error al crear compra',
+          text: error.error?.message || 'Ocurrió un error al crear tu compra. Inténtalo de nuevo.',
           icon: 'error',
           confirmButtonColor: '#dc3545'
         });
       }
     });
+  }
+
+  // Pagar con tarjeta (crea compra directa)
+  pagarConTarjeta(): void {
+    // Verificar si el usuario está autenticado
+    if (!this.isLoggedIn) {
+      Swal.fire({
+        title: 'Inicio de sesión requerido',
+        text: 'Debe iniciar sesión para proceder con el pago',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Iniciar sesión',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.router.navigate(['/account'], { queryParams: { returnUrl: '/checkout' } });
+        }
+      });
+      return;
+    }
+
+    if (!this.checkoutForm.valid) {
+      this.markFormGroupTouched();
+      Swal.fire({
+        title: 'Formulario incompleto',
+        text: 'Por favor complete todos los campos requeridos',
+        icon: 'warning',
+        confirmButtonColor: '#dc3545'
+      });
+      return;
+    }
+
+    // Crear compra directa para pago con tarjeta
+    this.crearCompraDirecta();
   }
 
   // Submit del formulario

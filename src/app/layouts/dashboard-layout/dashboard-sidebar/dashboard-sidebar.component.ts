@@ -23,7 +23,16 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./dashboard-sidebar.component.scss'],
 })
 export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input() isSidebarOpen = false;
+  @Input()
+  set isSidebarOpen(value: boolean) {
+    console.log('📁 Sidebar recibió isSidebarOpen:', value);
+    this._isSidebarOpen = value;
+  }
+  get isSidebarOpen(): boolean {
+    return this._isSidebarOpen;
+  }
+  private _isSidebarOpen = false;
+
   @Output() sidebarToggled = new EventEmitter<boolean>();
   @Output() sidebarCollapsed = new EventEmitter<boolean>();
 
@@ -38,6 +47,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   puedeVerOfertas = false;
   puedeVerCupones = false;
   puedeVerPedidos = false;
+  puedeVerCompras = false;
   puedeVerReclamos = false;
   puedeVerHorarios = false;
   puedeVerEmpresaInfo = false;
@@ -82,6 +92,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
     this.puedeVerOfertas = this.permissionsService.hasPermission('ofertas.ver');
     this.puedeVerCupones = this.permissionsService.hasPermission('cupones.ver');
     this.puedeVerPedidos = this.permissionsService.hasPermission('pedidos.ver');
+    this.puedeVerCompras = this.permissionsService.hasPermission('compras.ver');
     this.puedeVerReclamos = this.permissionsService.hasPermission('reclamos.ver');
     this.puedeVerHorarios = this.permissionsService.hasPermission('horarios.ver');
     this.puedeVerEmpresaInfo = this.permissionsService.hasPermission('empresa_info.ver');
