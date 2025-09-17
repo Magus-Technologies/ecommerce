@@ -49,6 +49,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   puedeVerPedidos = false;
   puedeVerCompras = false;
   puedeVerReclamos = false;
+  puedeVerMotorizados = false;
   puedeVerHorarios = false;
   puedeVerEmpresaInfo = false;
   puedeVerEmailTemplates = false;
@@ -94,6 +95,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
     this.puedeVerPedidos = this.permissionsService.hasPermission('pedidos.ver');
     this.puedeVerCompras = this.permissionsService.hasPermission('compras.ver');
     this.puedeVerReclamos = this.permissionsService.hasPermission('reclamos.ver');
+    this.puedeVerMotorizados = this.permissionsService.hasPermission('motorizados.ver');  // ← NUEVA LÍNEA
     this.puedeVerHorarios = this.permissionsService.hasPermission('horarios.ver');
     this.puedeVerEmpresaInfo = this.permissionsService.hasPermission('empresa_info.ver');
     this.puedeVerEmailTemplates = this.permissionsService.hasPermission('envio_correos.ver');

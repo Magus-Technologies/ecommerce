@@ -152,4 +152,25 @@ public permissions$: Observable<string[]> = this.permissionsSubject.asObservable
     return this.hasPermission('envio_correos.edit');
   }
 
+  // Métodos específicos para motorizados
+  canViewMotorizados(): boolean {
+    return this.hasPermission('motorizados.ver');
+  }
+
+  canCreateMotorizados(): boolean {
+    return this.hasPermission('motorizados.create');
+  }
+
+  canShowMotorizados(): boolean {
+    return this.hasPermission('motorizados.show');
+  }
+
+  canEditMotorizados(): boolean {
+    return this.hasPermission('motorizados.edit');
+  }
+
+  canDeleteMotorizados(): boolean {
+    return this.hasPermission('motorizados.delete');
+  }
+
 }

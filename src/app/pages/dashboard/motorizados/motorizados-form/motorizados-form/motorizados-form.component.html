@@ -1,0 +1,411 @@
+<div class="usuarios-container">
+  <div class="usuarios-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="page-title">
+          <i class="fas fa-motorcycle"></i>
+          {{isEditMode ? 'Editar Motorizado' : 'Nuevo Motorizado'}}
+        </h1>
+        <p class="page-subtitle">
+          {{isEditMode ? 'Actualiza los datos del motorizado' : 'Registra un nuevo motorizado de delivery'}}
+        </p>
+      </div>
+      <a routerLink="/dashboard/motorizados" class="btn btn-create">
+        <i class="fas fa-arrow-left"></i>
+        Volver a Lista
+      </a>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <form [formGroup]="motorizadoForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+      
+      <!-- Información Personal -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <i class="fas fa-user"></i>
+          Información Personal
+        </h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre Completo *</label>
+            <input 
+              type="text" 
+              formControlName="nombre_completo"
+              class="form-control"
+              [class.error]="isFieldInvalid('nombre_completo')"
+              placeholder="Ingrese nombre completo">
+            <div class="error-message" *ngIf="isFieldInvalid('nombre_completo')">
+              {{getFieldError('nombre_completo')}}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Foto de Perfil</label>
+            <div class="file-upload">
+              <input 
+                type="file" 
+                (change)="onFileSelected($event)"
+                accept="image/*"
+                class="file-input"
+                id="foto-input">
+              <label for="foto-input" class="file-label">
+                <i class="fas fa-camera"></i>
+                {{selectedFileName || 'Seleccionar foto'}}
+              </label>
+            </div>
+            <div class="preview-container" *ngIf="previewUrl">
+              <img [src]="previewUrl" alt="Preview" class="image-preview">
+              <button type="button" (click)="removeImage()" class="remove-btn">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tipo de Documento *</label>
+            <select 
+              formControlName="tipo_documento_id"
+              class="form-control"
+              [class.error]="isFieldInvalid('tipo_documento_id')">
+              <option value="">Seleccione tipo</option>
+              <option *ngFor="let tipo of documentTypes" [value]="tipo.id">
+                {{tipo.nombre}}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('tipo_documento_id')">
+              {{getFieldError('tipo_documento_id')}}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Número de Documento *</label>
+            <input 
+              type="text" 
+              formControlName="numero_documento"
+              class="form-control"
+              [class.error]="isFieldInvalid('numero_documento')"
+              placeholder="Ingrese número de documento">
+            <div class="error-message" *ngIf="isFieldInvalid('numero_documento')">
+              {{getFieldError('numero_documento')}}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Teléfono *</label>
+            <input 
+              type="tel" 
+              formControlName="telefono"
+              class="form-control"
+              [class.error]="isFieldInvalid('telefono')"
+              placeholder="Ingrese teléfono">
+            <div class="error-message" *ngIf="isFieldInvalid('telefono')">
+              {{getFieldError('telefono')}}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Correo Electrónico *</label>
+            <input 
+              type="email" 
+              formControlName="correo"
+              class="form-control"
+              [class.error]="isFieldInvalid('correo')"
+              placeholder="Ingrese correo electrónico">
+            <div class="error-message" *ngIf="isFieldInvalid('correo')">
+              {{getFieldError('correo')}}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Licencia -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <i class="fas fa-id-card"></i>
+          Información de Licencia
+        </h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Número de Licencia *</label>
+            <input 
+              type="text" 
+              formControlName="licencia_numero"
+              class="form-control"
+              [class.error]="isFieldInvalid('licencia_numero')"
+              placeholder="Ingrese número de licencia">
+            <div class="error-message" *ngIf="isFieldInvalid('licencia_numero')">
+              {{getFieldError('licencia_numero')}}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Categoría de Licencia *</label>
+            <select 
+              formControlName="licencia_categoria"
+              class="form-control"
+              [class.error]="isFieldInvalid('licencia_categoria')">
+              <option value="">Seleccione categoría</option>
+              <option *ngFor="let categoria of categoriasLicencia | keyvalue" [value]="categoria.key">
+                {{categoria.value}}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('licencia_categoria')">
+              {{getFieldError('licencia_categoria')}}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dirección -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <i class="fas fa-map-marker-alt"></i>
+          Dirección
+        </h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Departamento *</label>
+            <select 
+              formControlName="departamento"
+              class="form-control"
+              (change)="onDepartamentoChange()"
+              [class.error]="isFieldInvalid('ubigeo')"
+              [compareWith]="compareUbigeo">
+              <option [ngValue]="null">Seleccione departamento</option>
+              <option *ngFor="let depto of departamentos" [ngValue]="depto.id_ubigeo">
+                {{depto.nombre}}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Provincia *</label>
+            <select 
+              formControlName="provincia"
+              class="form-control"
+              (change)="onProvinciaChange()"
+              [disabled]="!provincias.length">
+              <option [ngValue]="null">Seleccione provincia</option>
+              <option *ngFor="let prov of provincias" [ngValue]="prov.id_ubigeo">
+                {{prov.nombre}}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Distrito *</label>
+            <select 
+              formControlName="ubigeo"
+              class="form-control"
+              [class.error]="isFieldInvalid('ubigeo')"
+              [disabled]="!distritos.length">
+              <option [ngValue]="null">Seleccione distrito</option>
+              <option *ngFor="let dist of distritos" [ngValue]="dist.id_ubigeo">
+                {{dist.nombre}}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="isFieldInvalid('ubigeo')">
+              {{getFieldError('ubigeo')}}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label>Dirección Detallada *</label>
+            <textarea 
+              formControlName="direccion_detalle"
+              class="form-control"
+              [class.error]="isFieldInvalid('direccion_detalle')"
+              rows="3"
+              placeholder="Ingrese dirección completa"></textarea>
+            <div class="error-message" *ngIf="isFieldInvalid('direccion_detalle')">
+              {{getFieldError('direccion_detalle')}}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vehículo -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <i class="fas fa-motorcycle"></i>
+          Información del Vehículo
+        </h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Marca *</label>
+            <input 
+              type="text" 
+              formControlName="vehiculo_marca"
+              class="form-control"
+              [class.error]="isFieldInvalid('vehiculo_marca')"
+              placeholder="Ej: Honda, Yamaha">
+            <div class="error-message" *ngIf="isFieldInvalid('vehiculo_marca')">
+              {{getFieldError('vehiculo_marca')}}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Modelo *</label>
+            <input 
+              type="text" 
+              formControlName="vehiculo_modelo"
+              class="form-control"
+              [class.error]="isFieldInvalid('vehiculo_modelo')"
+              placeholder="Ej: CB150, XTZ125">
+            <div class="error-message" *ngIf="isFieldInvalid('vehiculo_modelo')">
+              {{getFieldError('vehiculo_modelo')}}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Año *</label>
+            <input 
+              type="number" 
+              formControlName="vehiculo_ano"
+              class="form-control"
+              [class.error]="isFieldInvalid('vehiculo_ano')"
+              [min]="1950"
+              [max]="currentYear + 1"
+              placeholder="2020">
+            <div class="error-message" *ngIf="isFieldInvalid('vehiculo_ano')">
+              {{getFieldError('vehiculo_ano')}}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cilindraje *</label>
+            <input 
+              type="text" 
+              formControlName="vehiculo_cilindraje"
+              class="form-control"
+              [class.error]="isFieldInvalid('vehiculo_cilindraje')"
+              placeholder="Ej: 150cc, 125cc">
+            <div class="error-message" *ngIf="isFieldInvalid('vehiculo_cilindraje')">
+              {{getFieldError('vehiculo_cilindraje')}}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Placa *</label>
+            <input 
+              type="text" 
+              formControlName="vehiculo_placa"
+              class="form-control"
+              [class.error]="isFieldInvalid('vehiculo_placa')"
+              placeholder="ABC-123"
+              style="text-transform: uppercase">
+            <div class="error-message" *ngIf="isFieldInvalid('vehiculo_placa')">
+              {{getFieldError('vehiculo_placa')}}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Color Principal *</label>
+            <input 
+              type="text" 
+              formControlName="vehiculo_color_principal"
+              class="form-control"
+              [class.error]="isFieldInvalid('vehiculo_color_principal')"
+              placeholder="Ej: Rojo, Azul">
+            <div class="error-message" *ngIf="isFieldInvalid('vehiculo_color_principal')">
+              {{getFieldError('vehiculo_color_principal')}}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Color Secundario</label>
+            <input 
+              type="text" 
+              formControlName="vehiculo_color_secundario"
+              class="form-control"
+              placeholder="Opcional">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Número de Motor *</label>
+            <input 
+              type="text" 
+              formControlName="vehiculo_motor"
+              class="form-control"
+              [class.error]="isFieldInvalid('vehiculo_motor')"
+              placeholder="Ingrese número de motor">
+            <div class="error-message" *ngIf="isFieldInvalid('vehiculo_motor')">
+              {{getFieldError('vehiculo_motor')}}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Número de Chasis *</label>
+            <input 
+              type="text" 
+              formControlName="vehiculo_chasis"
+              class="form-control"
+              [class.error]="isFieldInvalid('vehiculo_chasis')"
+              placeholder="Ingrese número de chasis">
+            <div class="error-message" *ngIf="isFieldInvalid('vehiculo_chasis')">
+              {{getFieldError('vehiculo_chasis')}}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comentarios -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <i class="fas fa-comments"></i>
+          Comentarios Adicionales
+        </h3>
+        
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label>Comentarios</label>
+            <textarea 
+              formControlName="comentario"
+              class="form-control"
+              rows="4"
+              placeholder="Observaciones adicionales (opcional)"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="form-actions">
+        <button type="button" 
+                (click)="onCancel()" 
+                class="btn btn-cancel">
+          <i class="fas fa-times"></i>
+          Cancelar
+        </button>
+        <button type="submit" 
+                [disabled]="motorizadoForm.invalid || isSubmitting"
+                class="btn btn-create">
+          <i class="fas fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+          <i class="fas fa-save" *ngIf="!isSubmitting"></i>
+          {{isSubmitting ? 'Guardando...' : (isEditMode ? 'Actualizar' : 'Registrar')}}
+        </button>
+      </div>
+    </form>
+
+    <div class="loading-overlay" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Cargando datos...</p>
+    </div>
+  </div>
+</div>

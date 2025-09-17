@@ -10,6 +10,8 @@ import { ProductosService } from '../../services/productos.service';
 import { CartService } from '../../services/cart.service';
 import { IndexTwoService } from '../../services/index-two.service';
 import { ProductFilterComponent } from '../../component/product-filter/product-filter.component'; 
+import Swal from 'sweetalert2';
+
 interface CategoriaTemplate {
   id: number;
   name: string;
@@ -213,23 +215,43 @@ export class IndexTwoComponent implements OnInit {
   // Para que funcione, necesitarías importar CartService y añadirlo al constructor.
   // Por simplicidad, lo dejo comentado si no lo tienes configurado aquí.
 
+ // Código antes:
+  // addToCart(producto: ProductoPublico): void {
+  //   if (producto.stock <= 0) {
+
+  // Reemplazar el método addToCart completo por:
   addToCart(producto: ProductoPublico): void {
     if (producto.stock <= 0) {
-      // Swal.fire (o tu sistema de notificaciones)
-      console.warn('Este producto no tiene stock disponible');
+      Swal.fire({
+        title: 'Sin stock',
+        text: 'Este producto no tiene stock disponible',
+        icon: 'warning',
+        confirmButtonColor: '#dc3545'
+      });
       return;
     }
 
-    const success = this.cartService.addToCart(producto, 1); // Asumiendo que CartService está inyectado
-
+    const success = this.cartService.addToCart(producto, 1);
+    
     if (success) {
-      console.log(`${producto.nombre} ha sido agregado a tu carrito`);
-      // Notificación de éxito
+      Swal.fire({
+        title: '¡Producto agregado!',
+        text: `${producto.nombre} ha sido agregado a tu carrito`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end',
+        background: '#f8f9fa',
+        color: '#333'
+      });
     } else {
-      console.error(
-        'No se pudo agregar el producto al carrito. Revisa el stock disponible.'
-      );
-      // Notificación de error
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo agregar el producto al carrito. Revisa el stock disponible.',
+        icon: 'error',
+        confirmButtonColor: '#dc3545'
+      });
     }
   }
 

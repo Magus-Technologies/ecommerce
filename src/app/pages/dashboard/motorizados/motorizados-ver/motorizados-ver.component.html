@@ -1,0 +1,344 @@
+<div class="usuarios-container" *ngIf="!isLoading">
+  <!-- Header -->
+  <div class="usuarios-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="page-title">
+          <i class="fas fa-motorcycle"></i>
+          Detalles del Motorizado
+        </h1>
+        <p class="page-subtitle">Información completa del motorizado registrado</p>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <button type="button" class="btn-edit" (click)="onEdit()" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s ease; text-decoration: none; background-color: #dbeafe; color: #1e40af;">
+          <i class="fas fa-edit"></i>
+          Editar
+        </button>
+        <button type="button" class="btn btn-cancel" (click)="onBack()" style="background-color: #6c757d; color: white; border: 1px solid #6c757d;">
+          <i class="fas fa-arrow-left"></i>
+          Volver
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información del Motorizado -->
+  <div *ngIf="motorizado" class="table-container">
+    
+    <!-- Información Personal -->
+    <div class="table-header">
+      <h2 class="table-title">
+        <i class="fas fa-user"></i>
+        Información Personal
+      </h2>
+      <div class="badge" [class]="getEstadoBadgeClass(motorizado.estado)">
+        <i class="fas" [class.fa-check-circle]="motorizado.estado" [class.fa-times-circle]="!motorizado.estado"></i>
+        {{getEstadoText(motorizado.estado)}}
+      </div>
+    </div>
+
+    <div style="padding: 24px;">
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 32px; align-items: start;">
+        
+        <!-- Foto del Motorizado -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+          <div class="user-avatar" style="width: 120px; height: 120px; font-size: 3rem;">
+            <img *ngIf="motorizado.foto_perfil" 
+                 [src]="motorizado.foto_perfil" 
+                 [alt]="motorizado.nombre_completo"
+                 class="user-avatar-img" 
+                 style="width: 120px; height: 120px;">
+            <span *ngIf="!motorizado.foto_perfil">
+              {{motorizado.nombre_completo?.charAt(0)?.toUpperCase() || 'M'}}
+            </span>
+          </div>
+          <div style="text-align: center;">
+            <div class="badge badge-default">
+              N° {{motorizado.numero_unidad}}
+            </div>
+          </div>
+        </div>
+
+        <!-- Datos Principales -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+          
+          <!-- Columna 1 -->
+          <div>
+            <div class="info-item" style="margin-bottom: 20px;">
+              <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+                <i class="fas fa-user" style="margin-right: 6px;"></i>
+                Nombre Completo
+              </label>
+              <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+                {{motorizado.nombre_completo}}
+              </div>
+            </div>
+
+            <div class="info-item" style="margin-bottom: 20px;">
+              <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+                <i class="fas fa-id-card" style="margin-right: 6px;"></i>
+                Documento
+              </label>
+              <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+                {{getDocumentoCompleto()}}
+              </div>
+            </div>
+
+            <div class="info-item" style="margin-bottom: 20px;">
+              <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+                <i class="fas fa-phone" style="margin-right: 6px;"></i>
+                Teléfono
+              </label>
+              <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+                {{motorizado.telefono}}
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna 2 -->
+          <div>
+            <div class="info-item" style="margin-bottom: 20px;">
+              <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+                <i class="fas fa-envelope" style="margin-right: 6px;"></i>
+                Correo Electrónico
+              </label>
+              <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+                {{motorizado.correo}}
+              </div>
+            </div>
+
+            <div class="info-item" style="margin-bottom: 20px;">
+              <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+                <i class="fas fa-id-badge" style="margin-right: 6px;"></i>
+                N° Licencia
+              </label>
+              <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+                {{motorizado.licencia_numero}}
+              </div>
+            </div>
+
+            <div class="info-item" style="margin-bottom: 20px;">
+              <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+                <i class="fas fa-certificate" style="margin-right: 6px;"></i>
+                Categoría Licencia
+              </label>
+              <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+                {{motorizado.licencia_categoria}}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Información de Dirección -->
+    <div class="table-header" style="border-top: 1px solid var(--border-color);">
+      <h2 class="table-title">
+        <i class="fas fa-map-marker-alt"></i>
+        Información de Dirección
+      </h2>
+    </div>
+
+    <div style="padding: 24px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+        
+        <div class="info-item">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-map" style="margin-right: 6px;"></i>
+            Ubicación
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+            {{motorizado.ubicacion?.nombre || 'No especificada'}}
+          </div>
+        </div>
+
+        <div class="info-item">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-home" style="margin-right: 6px;"></i>
+            Dirección Detalle
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+            {{motorizado.direccion_detalle}}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Información del Vehículo -->
+    <div class="table-header" style="border-top: 1px solid var(--border-color);">
+      <h2 class="table-title">
+        <i class="fas fa-motorcycle"></i>
+        Información del Vehículo
+      </h2>
+    </div>
+
+    <div style="padding: 24px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px;">
+        
+        <div class="info-item">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-industry" style="margin-right: 6px;"></i>
+            Marca
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+            {{motorizado.vehiculo_marca}}
+          </div>
+        </div>
+
+        <div class="info-item">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-car" style="margin-right: 6px;"></i>
+            Modelo
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+            {{motorizado.vehiculo_modelo}}
+          </div>
+        </div>
+
+        <div class="info-item">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-calendar" style="margin-right: 6px;"></i>
+            Año
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+            {{motorizado.vehiculo_ano}}
+          </div>
+        </div>
+
+        <div class="info-item">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-tachometer-alt" style="margin-right: 6px;"></i>
+            Cilindraje
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+            {{motorizado.vehiculo_cilindraje}}
+          </div>
+        </div>
+
+        <div class="info-item">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-id-card-alt" style="margin-right: 6px;"></i>
+            Placa
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500; text-transform: uppercase;">
+            {{motorizado.vehiculo_placa}}
+          </div>
+        </div>
+
+        <div class="info-item">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-palette" style="margin-right: 6px;"></i>
+            Color Principal
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+            {{motorizado.vehiculo_color_principal}}
+          </div>
+        </div>
+
+        <div class="info-item" *ngIf="motorizado.vehiculo_color_secundario">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-palette" style="margin-right: 6px;"></i>
+            Color Secundario
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+            {{motorizado.vehiculo_color_secundario}}
+          </div>
+        </div>
+
+        <div class="info-item">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-cogs" style="margin-right: 6px;"></i>
+            N° Motor
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+            {{motorizado.vehiculo_motor}}
+          </div>
+        </div>
+
+        <div class="info-item">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-barcode" style="margin-right: 6px;"></i>
+            N° Chasis
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+            {{motorizado.vehiculo_chasis}}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Observaciones -->
+    <div class="table-header" style="border-top: 1px solid var(--border-color);" *ngIf="motorizado.comentario">
+      <h2 class="table-title">
+        <i class="fas fa-clipboard"></i>
+        Observaciones
+      </h2>
+    </div>
+
+    <div style="padding: 24px;" *ngIf="motorizado.comentario">
+      <div class="info-item">
+        <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">
+          <i class="fas fa-comment" style="margin-right: 6px;"></i>
+          Comentarios
+        </label>
+        <div style="color: var(--text-primary); font-size: 16px; line-height: 1.5; background-color: #f8fafc; padding: 16px; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+          {{motorizado.comentario}}
+        </div>
+      </div>
+    </div>
+
+    <!-- Información de Registro -->
+    <div class="table-header" style="border-top: 1px solid var(--border-color);">
+      <h2 class="table-title">
+        <i class="fas fa-info-circle"></i>
+        Información de Registro
+      </h2>
+    </div>
+
+    <div style="padding: 24px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+        
+        <div class="info-item">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-user-plus" style="margin-right: 6px;"></i>
+            Registrado Por
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+            {{motorizado.registrado_por?.name || 'Sistema'}}
+          </div>
+        </div>
+
+        <div class="info-item">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-calendar-plus" style="margin-right: 6px;"></i>
+            Fecha de Registro
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+            {{motorizado.created_at | date:'dd/MM/yyyy HH:mm'}}
+          </div>
+        </div>
+
+        <div class="info-item" *ngIf="motorizado.updated_at">
+          <label style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
+            <i class="fas fa-calendar-edit" style="margin-right: 6px;"></i>
+            Última Actualización
+          </label>
+          <div style="color: var(--text-primary); font-size: 16px; font-weight: 500;">
+            {{motorizado.updated_at | date:'dd/MM/yyyy HH:mm'}}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-overlay" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Cargando información del motorizado...</p>
+</div>

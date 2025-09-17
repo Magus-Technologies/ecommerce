@@ -462,6 +462,47 @@ export const routes: Routes = [
         canActivate: [authGuard, permissionGuard],
         data: { permission: 'reclamos.ver' },
       },
+      {
+        path: 'motorizados',
+        loadComponent: () =>
+          import('./pages/dashboard/motorizados/motorizados-list/motorizados-list.component').then(
+            (m) => m.MotorizadosListComponent
+          ),
+        title: 'Gestión de Motorizados',
+        canActivate: [permissionGuard],
+        data: { permission: 'motorizados.ver' },
+      },
+      // Agrega estas rutas justo después:
+      {
+        path: 'motorizados/crear',
+        loadComponent: () =>
+          import('./pages/dashboard/motorizados/motorizados-form/motorizados-form/motorizados-form.component').then(
+            (m) => m.MotorizadosFormComponent
+          ),
+        title: 'Nuevo Motorizado',
+        canActivate: [permissionGuard],
+        data: { permission: 'motorizados.create' },
+      },
+      {
+        path: 'motorizados/ver/:id',
+        loadComponent: () => 
+          import('./pages/dashboard/motorizados/motorizados-ver/motorizados-ver.component').then(
+            m => m.MotorizadosVerComponent
+          ),
+        title: 'Ver Motorizado',
+        canActivate: [permissionGuard],
+        data: { permission: 'motorizados.ver' }
+      },
+      {
+        path: 'motorizados/editar/:id',
+        loadComponent: () =>
+          import('./pages/dashboard/motorizados/motorizados-form/motorizados-form/motorizados-form.component').then(
+            (m) => m.MotorizadosFormComponent
+          ),
+        title: 'Editar Motorizado',
+        canActivate: [permissionGuard],
+        data: { permission: 'motorizados.edit' },
+      },
       // ✅ NUEVO: Arma tu PC
       {
         path: 'arma-pc',

@@ -118,6 +118,7 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Prerender
   },
   {
+
     path: 'my-account/direcciones',
     renderMode: RenderMode.Prerender
   },
@@ -132,5 +133,9 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'my-account/reclamos',
     renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'dashboard/motorizados',
+    renderMode: RenderMode.Server
   }
 ];
