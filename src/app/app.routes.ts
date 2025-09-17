@@ -88,6 +88,45 @@ export const routes: Routes = [
           ),
         title: 'Mi Cuenta',
         canActivate: [authGuard],
+        children: [
+          {
+            path: '',
+            redirectTo: 'direcciones',
+            pathMatch: 'full'
+          },
+          {
+            path: 'direcciones',
+            loadComponent: () =>
+              import('./pages/my-account/direcciones/direcciones.component').then(
+                (m) => m.DireccionesComponent
+              ),
+            title: 'Mis Direcciones'
+          },
+          {
+            path: 'cotizaciones',
+            loadComponent: () =>
+              import('./pages/my-account/cotizaciones/cotizaciones.component').then(
+                (m) => m.CotizacionesComponent
+              ),
+            title: 'Mis Cotizaciones'
+          },
+          {
+            path: 'compras',
+            loadComponent: () =>
+              import('./pages/my-account/compras/compras.component').then(
+                (m) => m.ComprasComponent
+              ),
+            title: 'Mis Compras'
+          },
+          {
+            path: 'reclamos',
+            loadComponent: () =>
+              import('./pages/my-account/reclamos/reclamos.component').then(
+                (m) => m.ReclamosComponent
+              ),
+            title: 'Mis Reclamos'
+          }
+        ]
       },
             {
         path: 'verify-email',
@@ -403,6 +442,15 @@ export const routes: Routes = [
           ).then((m) => m.PedidosListComponent),
         canActivate: [authGuard, permissionGuard],
         data: { permission: 'pedidos.ver' },
+      },
+      {
+        path: 'compras',
+        loadComponent: () =>
+          import(
+            './component/compras/compras-list/compras-list.component'
+          ).then((m) => m.ComprasListComponent),
+        canActivate: [authGuard, permissionGuard],
+        data: { permission: 'compras.ver' },
       },
       {
         path: 'reclamos',

@@ -6,8 +6,9 @@
        (click)="closeSidebar()"></div>
   
   <!-- Sidebar -->
-  <app-dashboard-sidebar 
+  <app-dashboard-sidebar
     [class.show]="isSidebarOpen"
+    [isSidebarOpen]="isSidebarOpen"
     (sidebarToggled)="onSidebarToggle($event)"
     (sidebarCollapsed)="onSidebarCollapse($event)">
   </app-dashboard-sidebar>

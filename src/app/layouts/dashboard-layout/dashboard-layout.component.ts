@@ -72,6 +72,7 @@ ngOnInit(): void {
 
   toggleSidebar(): void {
     this.isSidebarOpen = !this.isSidebarOpen;
+    console.log('🍔 Toggle Sidebar - isSidebarOpen:', this.isSidebarOpen);
   }
 
   closeSidebar(): void {

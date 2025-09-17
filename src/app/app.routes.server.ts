@@ -116,5 +116,21 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'arma-tu-pc',
     renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'my-account/direcciones',
+    renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'my-account/cotizaciones',
+    renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'my-account/compras',
+    renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'my-account/reclamos',
+    renderMode: RenderMode.Prerender
   }
 ];

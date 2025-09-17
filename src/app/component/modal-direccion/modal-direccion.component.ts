@@ -287,6 +287,8 @@ import {
   styles: [],
 })
 export class ModalDireccionComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() show: boolean = false;
+  @Input() mode: 'create' | 'edit' = 'create';
   @Input() direccion: Direccion | null = null;
   @Input() departamentos: Departamento[] = [];
   @Output() direccionGuardada = new EventEmitter<void>();
