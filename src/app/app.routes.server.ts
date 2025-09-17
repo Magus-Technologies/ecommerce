@@ -116,5 +116,9 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'arma-tu-pc',
     renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'dashboard/motorizados',
+    renderMode: RenderMode.Server
   }
 ];
