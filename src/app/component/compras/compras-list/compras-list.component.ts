@@ -120,14 +120,14 @@ import Swal from 'sweetalert2';
             <!-- Columna Estado -->
             <ngx-datatable-column
               name="Estado"
-              prop="estado_actual.nombre"
+              prop="estado_compra.nombre"
               [flexGrow]="1"
             >
               <ng-template let-row="row" ngx-datatable-cell-template>
                 <span class="badge px-12 py-6 rounded-pill fw-medium"
-                      [class]="getEstadoClass(row.estado_actual)">
-                  <i [class]="getEstadoIcon(row.estado_actual)" class="me-1"></i>
-                  {{ row.estado_actual?.nombre || 'Sin estado' }}
+                      [class]="getEstadoClass(row.estado_compra)">
+                  <i [class]="getEstadoIcon(row.estado_compra)" class="me-1"></i>
+                  {{ getEstadoTexto(row.estado_compra) }}
                 </span>
               </ng-template>
             </ngx-datatable-column>
@@ -149,7 +149,7 @@ import Swal from 'sweetalert2';
                   </button>
 
                   <!-- Aprobar -->
-                  <button *ngIf="row.estado_actual?.nombre === 'Pendiente Aprobación'"
+                  <button *ngIf="row.estado_compra?.nombre === 'Pendiente Aprobación'"
                           class="btn bg-success-50 hover-bg-success-100 text-success-600 w-32 h-32 rounded-6 flex-center transition-2"
                           title="Aprobar compra"
                           (click)="aprobarCompra(row)">
@@ -157,7 +157,7 @@ import Swal from 'sweetalert2';
                   </button>
 
                   <!-- Rechazar -->
-                  <button *ngIf="row.estado_actual?.nombre === 'Pendiente Aprobación' || row.estado_actual?.nombre === 'Aprobada'"
+                  <button *ngIf="row.estado_compra?.nombre === 'Pendiente Aprobación' || row.estado_compra?.nombre === 'Aprobada'"
                           class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
                           title="Rechazar compra"
                           (click)="rechazarCompra(row)">
@@ -215,7 +215,7 @@ export class ComprasListComponent implements OnInit {
     { name: 'Cliente', prop: 'cliente_nombre', flexGrow: 2 },
     { name: 'Fecha', prop: 'fecha_compra', flexGrow: 1 },
     { name: 'Total', prop: 'total', flexGrow: 1 },
-    { name: 'Estado', prop: 'estado_actual.nombre', flexGrow: 1 },
+    { name: 'Estado', prop: 'estado_compra.nombre', flexGrow: 1 },
     { name: 'Acciones', prop: 'acciones', flexGrow: 1 }
   ];
 
@@ -302,6 +302,10 @@ export class ComprasListComponent implements OnInit {
 
   getEstadoIcon(estado: any): string {
     return this.comprasService.getEstadoIcon(estado);
+  }
+
+  getEstadoTexto(estado: any): string {
+    return this.comprasService.getEstadoTexto(estado);
   }
 
   necesitaAtencion(compra: Compra): boolean {

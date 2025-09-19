@@ -155,9 +155,9 @@
                 </div>
               </td>
               <td class="px-4 py-3">
-                <span class="badge rounded-pill px-3 py-2" [ngClass]="getEstadoClass(compra.estado_actual)">
-                  <i [class]="getEstadoIcon(compra.estado_actual)" class="me-1"></i>
-                  {{ compra.estado_actual.nombre }}
+                <span class="badge rounded-pill px-3 py-2" [ngClass]="getEstadoClass(compra.estado_compra)">
+                  <i [class]="getEstadoIcon(compra.estado_compra)" class="me-1"></i>
+                  {{ getEstadoTexto(compra.estado_compra) }}
                 </span>
               </td>
               <td class="px-4 py-3">
@@ -170,7 +170,7 @@
                 <div class="btn-group" role="group">
                   <!-- Aprobar -->
                   <button
-                    *ngIf="compra.estado_actual.nombre === 'Pendiente Aprobación'"
+                    *ngIf="compra.estado_compra.nombre === 'Pendiente Aprobación'"
                     type="button"
                     class="btn btn-sm btn-success"
                     (click)="aprobarCompra(compra)"
@@ -181,7 +181,7 @@
 
                   <!-- Rechazar -->
                   <button
-                    *ngIf="compra.estado_actual.nombre === 'Pendiente Aprobación' || compra.estado_actual.nombre === 'Aprobada'"
+                    *ngIf="compra.estado_compra.nombre === 'Pendiente Aprobación' || compra.estado_compra.nombre === 'Aprobada'"
                     type="button"
                     class="btn btn-sm btn-danger"
                     (click)="rechazarCompra(compra)"

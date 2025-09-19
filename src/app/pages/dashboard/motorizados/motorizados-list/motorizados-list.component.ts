@@ -83,6 +83,7 @@ import { PermissionsService } from '../../../../services/permissions.service';
                 <th>Vehículo</th>
                 <th>Placa</th>
                 <th>Estado</th>
+                <th>Usuario</th>
                 <th>Registrado</th>
                 <th>Acciones</th>
               </tr>
@@ -124,6 +125,32 @@ import { PermissionsService } from '../../../../services/permissions.service';
                     {{motorizado.estado ? 'Activo' : 'Inactivo'}}
                   </span>
                 </td>
+                <td>
+                  <div class="user-status-container">
+                    <div *ngIf="motorizado.tiene_usuario; else noUsuario">
+                      <div class="user-info">
+                        <span class="user-badge" [class]="motorizado.estado_usuario ? 'badge badge-activo' : 'badge badge-inactivo'">
+                          <i class="fas fa-user" style="margin-right: 4px;"></i>
+                          {{motorizado.username}}
+                        </span>
+                        <small class="user-status" [style.color]="motorizado.estado_usuario ? '#28a745' : '#dc3545'">
+                          {{motorizado.estado_usuario ? 'Activo' : 'Inactivo'}}
+                        </small>
+                      </div>
+                      <div *ngIf="motorizado.ultimo_login" class="last-login">
+                        <small style="color: #6c757d; font-size: 11px;">
+                          Último acceso: {{formatDate(motorizado.ultimo_login)}}
+                        </small>
+                      </div>
+                    </div>
+                    <ng-template #noUsuario>
+                      <span class="badge badge-default" style="background-color: #6c757d;">
+                        <i class="fas fa-user-slash" style="margin-right: 4px;"></i>
+                        Sin usuario
+                      </span>
+                    </ng-template>
+                  </div>
+                </td>
                 <td class="fecha">{{formatDate(motorizado.created_at)}}</td>
                 <td>
                   <div class="action-buttons">
@@ -145,6 +172,30 @@ import { PermissionsService } from '../../../../services/permissions.service';
                             [title]="motorizado.estado ? 'Desactivar' : 'Activar'">
                       <i [class]="motorizado.estado ? 'fas fa-ban' : 'fas fa-check'"></i>
                     </button>
+                    <!-- Botones de gestión de usuario -->
+                    <button *ngIf="permissionsService.canEditMotorizados() && !motorizado.tiene_usuario"
+                            (click)="crearUsuario(motorizado.id!, motorizado.nombre_completo)"
+                            class="btn-action btn-success"
+                            title="Crear Usuario"
+                            style="background-color: #28a745; border-color: #28a745;">
+                      <i class="fas fa-user-plus"></i>
+                    </button>
+
+                    <button *ngIf="permissionsService.canEditMotorizados() && motorizado.tiene_usuario"
+                            (click)="toggleUsuario(motorizado.id!, motorizado.username || '', motorizado.estado_usuario || false)"
+                            [class]="motorizado.estado_usuario ? 'btn-action btn-warning' : 'btn-action btn-success'"
+                            [title]="motorizado.estado_usuario ? 'Desactivar Usuario' : 'Activar Usuario'">
+                      <i [class]="motorizado.estado_usuario ? 'fas fa-user-lock' : 'fas fa-user-check'"></i>
+                    </button>
+
+                    <button *ngIf="permissionsService.canEditMotorizados() && motorizado.tiene_usuario"
+                            (click)="resetearPassword(motorizado.id!, motorizado.username || '')"
+                            class="btn-action"
+                            title="Resetear Contraseña"
+                            style="background-color: #6f42c1; border-color: #6f42c1; color: white;">
+                      <i class="fas fa-key"></i>
+                    </button>
+
                     <button *ngIf="permissionsService.canDeleteMotorizados()"
                             (click)="eliminarMotorizado(motorizado.id!, motorizado.nombre_completo)"
                             class="btn-action btn-delete"
@@ -275,5 +326,79 @@ export class MotorizadosListComponent implements OnInit {
   formatDate(date: string | undefined): string {
     if (!date) return '';
     return new Date(date).toLocaleDateString('es-ES');
+  }
+
+  // Gestión de usuarios
+  crearUsuario(id: number, nombre: string): void {
+    if (confirm(`¿Crear usuario para ${nombre}?\n\nSe generará una contraseña automáticamente y se enviará al correo del motorizado.\nEl motorizado podrá acceder usando su correo electrónico y la contraseña generada.`)) {
+      this.motorizadosService.crearUsuario(id, {}).subscribe({
+        next: (response) => {
+          if (response.email_enviado) {
+            this.toastr.success(
+              `Usuario creado exitosamente para ${nombre}. Las credenciales han sido enviadas a ${response.credenciales.correo}`,
+              'Usuario Creado',
+              { timeOut: 5000 }
+            );
+          } else {
+            this.toastr.warning(
+              `Usuario creado exitosamente para ${nombre}, pero no se pudo enviar el email. Las credenciales se muestran a continuación. El motorizado debe usar su correo electrónico para acceder.`,
+              'Usuario Creado - Atención',
+              { timeOut: 8000 }
+            );
+            this.mostrarCredenciales(response.credenciales);
+          }
+          this.cargarMotorizados();
+        },
+        error: (error) => {
+          this.toastr.error(error.error?.error || 'Error al crear usuario');
+        }
+      });
+    }
+  }
+
+  toggleUsuario(id: number, username: string, estadoActual: boolean): void {
+    const accion = estadoActual ? 'desactivar' : 'activar';
+    if (confirm(`¿Estás seguro de ${accion} el usuario ${username}?`)) {
+      this.motorizadosService.toggleUsuario(id).subscribe({
+        next: (response) => {
+          this.toastr.success(`Usuario ${accion}do exitosamente`);
+          this.cargarMotorizados();
+        },
+        error: () => {
+          this.toastr.error(`Error al ${accion} usuario`);
+        }
+      });
+    }
+  }
+
+  resetearPassword(id: number, username: string): void {
+    const password = prompt(`Resetear contraseña para ${username}\n\nIngrese nueva contraseña (mínimo 6 caracteres):\n(Dejar vacío para generar automáticamente)`);
+
+    if (password !== null) { // No canceló el prompt
+      const payload = password.trim() ? { password: password.trim() } : {};
+
+      this.motorizadosService.resetearPassword(id, payload).subscribe({
+        next: (response) => {
+          this.toastr.success('Contraseña actualizada exitosamente');
+          this.mostrarCredenciales({ username, password: response.nueva_password });
+        },
+        error: (error) => {
+          this.toastr.error(error.error?.error || 'Error al resetear contraseña');
+        }
+      });
+    }
+  }
+
+  private mostrarCredenciales(credenciales: any): void {
+    const mensaje = `CREDENCIALES DE ACCESO:\n\nCorreo de Acceso: ${credenciales.correo || credenciales.username}\nContraseña: ${credenciales.password}\n\n¡IMPORTANTE! Guarda estas credenciales de forma segura.\nUsa tu correo electrónico para ingresar al sistema.`;
+    alert(mensaje);
+
+    // Copiar al portapapeles
+    const texto = `Correo: ${credenciales.correo || credenciales.username}\nContraseña: ${credenciales.password}`;
+    navigator.clipboard.writeText(texto).then(() => {
+      this.toastr.info('Credenciales copiadas al portapapeles');
+    }).catch(() => {
+      console.warn('No se pudo copiar al portapapeles');
+    });
   }
 }

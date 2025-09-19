@@ -99,6 +99,8 @@ export class AuthService {
 
   private storeAuthData(response: AuthResponse): void {
     localStorage.setItem(this.tokenKey, response.token);
+    localStorage.setItem('user_type', response.tipo_usuario); // Almacenar tipo de usuario
+
     const user: User = {
       id: response.user.id,
       name: response.user.name || response.user.nombre_completo,
@@ -106,13 +108,28 @@ export class AuthService {
       tipo_usuario: response.tipo_usuario,
       roles: Array.isArray(response.user.roles) ? response.user.roles : [],
       permissions: Array.isArray(response.user.permissions) ? response.user.permissions : [],
-      email_verified_at: response.user.email_verified_at
+      email_verified_at: response.user.email_verified_at,
+      // Campos específicos para motorizado
+      motorizado_id: response.user.motorizado_id,
+      username: response.user.username,
+      numero_unidad: response.user.numero_unidad,
+      estadisticas: response.user.estadisticas
     };
+
     localStorage.setItem(this.userKey, JSON.stringify(user));
     this.currentUserSubject.next(user);
-    if (response.tipo_usuario === 'admin' && this.permissionsService) {
-      this.permissionsService.setPermissions([...response.user.permissions]);
+
+    // Configurar permisos según el tipo de usuario
+    if (this.permissionsService) {
+      if (response.tipo_usuario === 'admin') {
+        this.permissionsService.setPermissions([...response.user.permissions]);
+      } else if (response.tipo_usuario === 'motorizado') {
+        this.permissionsService.setPermissions([...response.user.permissions]);
+      }
     }
+
+    // Redirigir según el tipo de usuario
+    this.redirectAfterLogin(response.tipo_usuario);
   }
 
   logout(): Observable<any> {
@@ -133,10 +150,30 @@ export class AuthService {
     if (this.isBrowser) {
       localStorage.removeItem(this.tokenKey);
       localStorage.removeItem(this.userKey);
+      localStorage.removeItem('user_type');
     }
     this.currentUserSubject.next(null);
-    if (this.router.url.includes('/admin') || this.router.url.includes('/account')) {
+
+    // Redirigir según donde esté el usuario
+    if (this.router.url.includes('/admin') || this.router.url.includes('/account') || this.router.url.includes('/motorizado')) {
         this.router.navigate(['/account']);
+    }
+  }
+
+  // Método para redirigir después del login
+  private redirectAfterLogin(tipoUsuario: string): void {
+    switch(tipoUsuario) {
+      case 'admin':
+        this.router.navigate(['/dashboard']);
+        break;
+      case 'cliente':
+        this.router.navigate(['/']);
+        break;
+      case 'motorizado':
+        this.router.navigate(['/motorizado/dashboard']);
+        break;
+      default:
+        this.router.navigate(['/']);
     }
   }
 
@@ -157,6 +194,24 @@ export class AuthService {
 
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
+  }
+
+  // Métodos para verificar tipo de usuario
+  isAdmin(): boolean {
+    return this.getCurrentUser()?.tipo_usuario === 'admin';
+  }
+
+  isCliente(): boolean {
+    return this.getCurrentUser()?.tipo_usuario === 'cliente';
+  }
+
+  isMotorizado(): boolean {
+    return this.getCurrentUser()?.tipo_usuario === 'motorizado';
+  }
+
+  getUserType(): string | null {
+    if (!this.isBrowser) return null;
+    return localStorage.getItem('user_type');
   }
 
   getUserProfile(): Observable<any> {

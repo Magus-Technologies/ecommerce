@@ -32,6 +32,11 @@ export interface Motorizado {
   tipo_documento?: any;
   registrado_por?: any;
   ubicacion?: any;
+  // Propiedades relacionadas con el usuario del motorizado
+  tiene_usuario?: boolean;
+  estado_usuario?: boolean;
+  username?: string;
+  ultimo_login?: string;
 }
 
 @Injectable({
@@ -73,5 +78,18 @@ export class MotorizadosService {
 
   getCategoriasLicencia(): Observable<any> {
     return this.http.get(`${this.apiUrl}/categorias-licencia`);
+  }
+
+  // Nuevos métodos para gestión de usuarios
+  crearUsuario(id: number, data: any = {}): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/crear-usuario`, data);
+  }
+
+  toggleUsuario(id: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${id}/toggle-usuario`, {});
+  }
+
+  resetearPassword(id: number, data: any = {}): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/resetear-password`, data);
   }
 }
