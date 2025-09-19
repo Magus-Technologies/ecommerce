@@ -20,6 +20,8 @@ import { IndexThreeComponent } from './pages/index-three/index-three.component';
 import { IndexLaptopComponent } from './pages/index-laptop/index-laptop.component';
 import { authGuard } from './guards/auth.guard';
 import { permissionGuard } from './guards/permission.guard';
+import { MotorizadoGuard } from './guards/motorizado.guard';
+import { inject } from '@angular/core';
 import { VentasComponent } from './pages/dashboard/ventas/ventas.component';
 import { VentasListComponent } from './pages/dashboard/ventas/ventas-list.component';
 import { NuevaVentaComponent } from './pages/dashboard/ventas/nueva-venta.component';
@@ -535,6 +537,62 @@ export const routes: Routes = [
         data: { permission: 'envio_correos.ver' },
       },
     ],
+  },
+  // ✅ RUTAS PARA MOTORIZADOS (App de Delivery)
+  {
+    path: 'motorizado',
+    loadComponent: () =>
+      import('./layouts/motorizado-layout/motorizado-layout.component').then(
+        (m) => m.MotorizadoLayoutComponent
+      ),
+    canActivate: [MotorizadoGuard],
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./pages/motorizado/dashboard/motorizado-dashboard.component').then(
+            (m) => m.MotorizadoDashboardComponent
+          ),
+        title: 'Dashboard - Motorizado'
+      },
+      {
+        path: 'pedidos',
+        loadComponent: () =>
+          import('./pages/motorizado/pedidos/pedidos-asignados.component').then(
+            (m) => m.PedidosAsignadosComponent
+          ),
+        title: 'Mis Pedidos'
+      },
+      {
+        path: 'perfil',
+        loadComponent: () =>
+          import('./pages/motorizado/perfil/motorizado-perfil.component').then(
+            (m) => m.MotorizadoPerfilComponent
+          ),
+        title: 'Mi Perfil'
+      },
+      {
+        path: 'rutas',
+        loadComponent: () =>
+          import('./pages/motorizado/rutas/motorizado-rutas.component').then(
+            (m) => m.MotorizadoRutasComponent
+          ),
+        title: 'Rutas'
+      },
+      {
+        path: 'historial',
+        loadComponent: () =>
+          import('./pages/motorizado/historial/motorizado-historial.component').then(
+            (m) => m.MotorizadoHistorialComponent
+          ),
+        title: 'Historial'
+      }
+    ]
   },
   {
     path: '',

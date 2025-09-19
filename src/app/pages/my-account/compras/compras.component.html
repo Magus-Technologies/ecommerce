@@ -44,8 +44,8 @@
 
           <!-- Estado y monto -->
           <div class="col-md-4 text-center">
-            <span [class]="'badge px-12 py-6 rounded-pill mb-8 ' + getEstadoCompraClass(compra.estado_actual)">
-              {{ compra.estado_actual?.nombre || 'En proceso' }}
+            <span [class]="'badge px-12 py-6 rounded-pill mb-8 ' + getEstadoCompraClass(compra.estado_compra)">
+              {{ compra.estado_compra?.nombre || 'En proceso' }}
             </span>
             <h6 class="text-heading mb-0">S/ {{ compra.total | number:'1.2-2' }}</h6>
             <p class="text-xs text-gray-500 mb-0">{{ compra.productos?.length || 0 }} productos</p>

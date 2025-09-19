@@ -111,12 +111,25 @@
 
           <div class="form-group">
             <label>Correo Electrónico *</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               formControlName="correo"
               class="form-control"
               [class.error]="isFieldInvalid('correo')"
+              (blur)="onEmailBlur()"
               placeholder="Ingrese correo electrónico">
+
+            <!-- Mensaje de validación de correo -->
+            <div class="email-validation-message" *ngIf="emailMessage"
+                 [class.email-available]="emailValid"
+                 [class.email-taken]="!emailValid"
+                 style="font-size: 12px; margin-top: 5px;">
+              <i class="fas fa-spinner fa-spin" *ngIf="emailChecking"></i>
+              <i class="fas fa-check-circle" *ngIf="!emailChecking && emailValid" style="color: #28a745;"></i>
+              <i class="fas fa-times-circle" *ngIf="!emailChecking && !emailValid" style="color: #dc3545;"></i>
+              {{emailMessage}}
+            </div>
+
             <div class="error-message" *ngIf="isFieldInvalid('correo')">
               {{getFieldError('correo')}}
             </div>

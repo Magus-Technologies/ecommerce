@@ -11,7 +11,7 @@ export interface Compra {
   fecha_compra: string;
   fecha_aprobacion?: string;
   total: number;
-  estado_actual: EstadoCompra;
+  estado_compra: EstadoCompra;
   metodo_pago?: string;
   forma_envio: string;
   direccion_envio: string;
@@ -42,7 +42,7 @@ export interface EstadoCompra {
 export interface CompraDetalle {
   id: number;
   codigo_compra: string;
-  estado_actual: EstadoCompra;
+  estado_compra: EstadoCompra;
   esta_aprobada: boolean;
   puede_cancelarse: boolean;
   tracking: TrackingCompra[];
@@ -378,52 +378,117 @@ export class ComprasService {
   }
 
   /**
+   * Limpiar y corregir texto de estado
+   */
+  private limpiarTextoEstado(texto: string): string {
+    if (!texto) return '';
+
+    // Diccionario de correcciones comunes
+    const correcciones: { [key: string]: string } = {
+      'Pendiente Aprobaci�n': 'Pendiente Aprobación',
+      'Preparaci�n': 'Preparación',
+      'Cancelaci�n': 'Cancelación',
+      'Aprobaci�n': 'Aprobación'
+    };
+
+    // Buscar y corregir el texto completo
+    for (const [incorrecto, correcto] of Object.entries(correcciones)) {
+      if (texto.includes(incorrecto.replace('�', ''))) {
+        return correcto;
+      }
+    }
+
+    // Si no se encuentra corrección específica, limpiar caracteres problemáticos
+    return texto.replace(/�/g, 'ó').replace(/\uFFFD/g, 'ó');
+  }
+
+  /**
    * Obtener clase CSS para el estado
    */
   getEstadoClass(estado: EstadoCompra): string {
-    const clases: { [key: string]: string } = {
-      'Pendiente Aprobación': 'bg-warning-50 text-warning-600',
-      'Aprobada': 'bg-success-50 text-success-600',
-      'Pagada': 'bg-primary-50 text-primary-600',
-      'En Preparación': 'bg-info-50 text-info-600',
-      'Enviada': 'bg-purple-50 text-purple-600',
-      'Entregada': 'bg-success-50 text-success-600',
-      'Cancelada': 'bg-danger-50 text-danger-600',
-      'Rechazada': 'bg-danger-50 text-danger-600'
-    };
+    if (!estado?.nombre) return 'bg-secondary text-white';
 
-    return clases[estado.nombre] || 'bg-secondary-50 text-secondary-600';
+    // Limpiar el texto primero
+    const textoLimpio = this.limpiarTextoEstado(estado.nombre);
+
+    // Normalizar el nombre del estado para comparación
+    const estadoNormalizado = textoLimpio.toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    switch (estadoNormalizado) {
+      case 'pendiente aprobacion':
+        return 'bg-warning text-dark';
+      case 'aprobada':
+        return 'bg-success text-white';
+      case 'pagada':
+        return 'bg-primary text-white';
+      case 'en preparacion':
+        return 'bg-info text-white';
+      case 'enviada':
+        return 'bg-primary text-white';
+      case 'entregada':
+        return 'bg-success text-white';
+      case 'cancelada':
+        return 'bg-danger text-white';
+      case 'rechazada':
+        return 'bg-danger text-white';
+      default:
+        return 'bg-secondary text-white';
+    }
+  }
+
+  /**
+   * Obtener texto limpio del estado para mostrar
+   */
+  getEstadoTexto(estado: EstadoCompra): string {
+    if (!estado?.nombre) return 'Sin estado';
+    return this.limpiarTextoEstado(estado.nombre);
   }
 
   /**
    * Formatear precio
    */
-  formatearPrecio(precio: number): string {
-    return precio.toFixed(2);
+  formatearPrecio(precio: number | string): string {
+    const numericPrice = typeof precio === 'string' ? parseFloat(precio) : precio;
+    return isNaN(numericPrice) ? '0.00' : numericPrice.toFixed(2);
   }
 
   /**
    * Verificar si una compra necesita atención (admin)
    */
   necesitaAtencion(compra: Compra): boolean {
-    return compra.estado_actual.nombre === 'Pendiente Aprobación';
+    if (!compra.estado_compra?.nombre) return false;
+    const estadoNormalizado = compra.estado_compra.nombre.toLowerCase().replace(/[^\w\s]/g, '').trim();
+    return estadoNormalizado === 'pendiente aprobacion';
   }
 
   /**
    * Obtener icono para el estado
    */
   getEstadoIcon(estado: EstadoCompra): string {
-    const iconos: { [key: string]: string } = {
-      'Pendiente Aprobación': 'ph-clock',
-      'Aprobada': 'ph-check-circle',
-      'Pagada': 'ph-credit-card',
-      'En Preparación': 'ph-package',
-      'Enviada': 'ph-truck',
-      'Entregada': 'ph-check-circle-fill',
-      'Cancelada': 'ph-x-circle',
-      'Rechazada': 'ph-x-circle-fill'
-    };
+    if (!estado?.nombre) return 'ph-circle';
 
-    return iconos[estado.nombre] || 'ph-circle';
+    switch (estado.nombre.toLowerCase().replace(/[^\w\s]/g, '').trim()) {
+      case 'pendiente aprobacion':
+        return 'ph-clock';
+      case 'aprobada':
+        return 'ph-check-circle';
+      case 'pagada':
+        return 'ph-credit-card';
+      case 'en preparacion':
+        return 'ph-package';
+      case 'enviada':
+        return 'ph-truck';
+      case 'entregada':
+        return 'ph-check-circle-fill';
+      case 'cancelada':
+        return 'ph-x-circle';
+      case 'rechazada':
+        return 'ph-x-circle-fill';
+      default:
+        return 'ph-circle';
+    }
   }
 }

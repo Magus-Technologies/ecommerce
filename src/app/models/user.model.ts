@@ -5,10 +5,20 @@ export interface User {
   email: string;
   roles: string[];
   permissions: string[];
-   tipo_usuario?: 'admin' | 'cliente';
-  email_verified_at?: string; 
+  tipo_usuario?: 'admin' | 'cliente' | 'motorizado';
+  email_verified_at?: string;
   created_at?: string;
   updated_at?: string;
+
+  // Para motorizados
+  motorizado_id?: number;
+  username?: string;
+  numero_unidad?: string;
+  estadisticas?: {
+    pedidos_asignados?: number;
+    pedidos_entregados?: number;
+    pedidos_pendientes?: number;
+  };
 }
 
 export interface Role {
@@ -26,8 +36,7 @@ export interface LoginRequest {
 export interface AuthResponse {
   status: string;
   message: string;
-
-   tipo_usuario: 'admin' | 'cliente'; // NUEVO
+  tipo_usuario: 'admin' | 'cliente' | 'motorizado';
   user: {
     id: number;
     name?: string;
@@ -36,6 +45,16 @@ export interface AuthResponse {
     roles: string[];
     permissions: string[];
     email_verified_at?: string;
+
+    // Para motorizados
+    motorizado_id?: number;
+    username?: string;
+    numero_unidad?: string;
+    estadisticas?: {
+      pedidos_asignados?: number;
+      pedidos_entregados?: number;
+      pedidos_pendientes?: number;
+    };
   };
   token: string;
 }

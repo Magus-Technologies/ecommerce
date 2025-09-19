@@ -7,6 +7,7 @@ import { MotorizadosService, Motorizado } from '../../../../../services/motoriza
 import { AuthService } from '../../../../../services/auth.service';
 import { UbigeoService } from '../../../../../services/ubigeo.service';
 import { firstValueFrom } from 'rxjs';
+import Swal from 'sweetalert2';
 
 interface UbigeoData {
   provinces: any[];
@@ -138,7 +139,19 @@ interface CategoriaLicencia {
                       formControlName="correo"
                       class="form-control"
                       [class.is-invalid]="isFieldInvalid('correo')"
+                      (blur)="onEmailBlur()"
                       placeholder="correo@ejemplo.com">
+
+                    <!-- Mensaje de validación de correo -->
+                    <div class="email-validation-message" *ngIf="emailMessage"
+                         [style.color]="emailValid ? '#28a745' : '#dc3545'"
+                         style="font-size: 12px; margin-top: 5px;">
+                      <i class="fas fa-spinner fa-spin" *ngIf="emailChecking"></i>
+                      <i class="fas fa-check-circle" *ngIf="!emailChecking && emailValid"></i>
+                      <i class="fas fa-times-circle" *ngIf="!emailChecking && !emailValid"></i>
+                      {{emailMessage}}
+                    </div>
+
                     <div *ngIf="isFieldInvalid('correo')" class="invalid-feedback">
                       {{getFieldError('correo')}}
                     </div>
@@ -469,7 +482,7 @@ interface CategoriaLicencia {
                 Observaciones
               </h2>
             </div>
-            
+
             <div class="form-content">
               <div class="form-row" style="display: flex; flex-wrap: wrap; margin: 0 -10px;">
                 <div class="form-group col-12" style="padding: 0 10px; margin-bottom: 20px;">
@@ -481,6 +494,79 @@ interface CategoriaLicencia {
                     rows="4"
                     placeholder="Ingrese observaciones adicionales sobre el motorizado (opcional)"
                     style="resize: vertical;"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Credentials Section - Solo en modo crear -->
+          <div class="form-section" *ngIf="!isEditMode" style="margin-bottom: 30px; padding: 20px; border: 1px solid #e9ecef; border-radius: 8px; background-color: #fff;">
+            <div class="table-header">
+              <h2 class="table-title">
+                <i class="fas fa-user-lock"></i>
+                Credenciales de Acceso
+              </h2>
+            </div>
+
+            <div class="form-content">
+              <div class="form-row" style="display: flex; flex-wrap: wrap; margin: 0 -10px;">
+                <div class="form-group col-12" style="padding: 0 10px; margin-bottom: 20px;">
+                  <div class="form-check" style="display: flex; align-items: center; gap: 10px;">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="crear_usuario"
+                      formControlName="crear_usuario"
+                      style="margin: 0;">
+                    <label class="form-check-label" for="crear_usuario" style="margin: 0; font-weight: 500;">
+                      <i class="fas fa-key" style="margin-right: 8px; color: #007bff;"></i>
+                      Crear usuario para acceso al sistema de delivery
+                    </label>
+                  </div>
+                  <small class="text-muted" style="margin-left: 30px; display: block; margin-top: 5px;">
+                    El motorizado podrá ingresar al sistema para gestionar sus pedidos asignados
+                  </small>
+                </div>
+              </div>
+
+              <!-- Campos de credenciales -->
+              <div class="credentials-section" *ngIf="motorizadoForm.get('crear_usuario')?.value" style="margin-top: 20px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                <div class="form-row" style="display: flex; flex-wrap: wrap; margin: 0 -10px;">
+                  <div class="form-group col-md-6" style="padding: 0 10px; margin-bottom: 20px;">
+                    <label class="form-label">
+                      <i class="fas fa-envelope" style="margin-right: 8px; color: #007bff;"></i>
+                      Usuario de Acceso
+                    </label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      [value]="motorizadoForm.get('correo')?.value || 'El correo electrónico será el usuario'"
+                      readonly
+                      style="background-color: #e9ecef; color: #6c757d;">
+                    <small class="text-muted">El motorizado usará su correo electrónico para ingresar</small>
+                  </div>
+
+                  <div class="form-group col-md-6" style="padding: 0 10px; margin-bottom: 20px;">
+                    <label for="password" class="form-label">
+                      <i class="fas fa-lock" style="margin-right: 8px; color: #007bff;"></i>
+                      Contraseña
+                    </label>
+                    <input
+                      type="password"
+                      id="password"
+                      formControlName="password"
+                      class="form-control"
+                      placeholder="Dejar vacío para generar automáticamente">
+                    <small class="text-muted">Mínimo 6 caracteres. Se generará automáticamente si no se especifica</small>
+                  </div>
+                </div>
+
+                <div class="alert alert-info" style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                  <i class="fas fa-info-circle" style="color: #0c5460;"></i>
+                  <span style="font-size: 14px;">
+                    Las credenciales se mostrarán una sola vez después de crear el motorizado.
+                    Asegúrate de anotarlas o comunicárselas al motorizado.
+                  </span>
                 </div>
               </div>
             </div>
@@ -506,6 +592,67 @@ interface CategoriaLicencia {
         <div class="spinner"></div>
         <p>Cargando información del motorizado...</p>
       </div>
+
+      <!-- Modal de Credenciales -->
+      <div class="modal-overlay" *ngIf="showCredencialesModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: white; border-radius: 12px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+          <div class="modal-header" style="text-align: center; margin-bottom: 25px;">
+            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #28a745, #20c997); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
+              <i class="fas fa-check" style="color: white; font-size: 24px;"></i>
+            </div>
+            <h3 style="margin: 0; color: #333; font-weight: 600;">¡Motorizado Creado Exitosamente!</h3>
+            <p style="margin: 10px 0 0 0; color: #666;">Se han generado las credenciales de acceso</p>
+          </div>
+
+          <div class="credentials-info" style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 25px; border-left: 4px solid #007bff;">
+            <h4 style="margin: 0 0 15px 0; color: #333; font-size: 16px; font-weight: 600;">
+              <i class="fas fa-key" style="margin-right: 8px; color: #007bff;"></i>
+              Credenciales de Acceso
+            </h4>
+
+            <div class="credential-item" style="margin-bottom: 15px;">
+              <label style="display: block; font-weight: 600; color: #495057; margin-bottom: 5px;">Usuario:</label>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="text" [value]="credencialesGeneradas?.username" readonly
+                       style="flex: 1; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; background-color: #e9ecef; color: #495057; font-family: monospace;">
+              </div>
+            </div>
+
+            <div class="credential-item" style="margin-bottom: 15px;">
+              <label style="display: block; font-weight: 600; color: #495057; margin-bottom: 5px;">Contraseña:</label>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="text" [value]="credencialesGeneradas?.password" readonly
+                       style="flex: 1; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; background-color: #e9ecef; color: #495057; font-family: monospace;">
+              </div>
+            </div>
+
+            <button type="button" (click)="copiarCredenciales()"
+                    style="width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: background-color 0.3s;">
+              <i class="fas fa-copy" style="margin-right: 8px;"></i>
+              Copiar Credenciales
+            </button>
+          </div>
+
+          <div class="alert alert-warning" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 15px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-exclamation-triangle" style="color: #856404; font-size: 18px;"></i>
+            <div style="flex: 1;">
+              <strong style="color: #856404;">¡Importante!</strong>
+              <p style="margin: 5px 0 0 0; color: #856404; font-size: 14px;">
+                Guarda estas credenciales de forma segura. No se mostrarán nuevamente.
+                El motorizado las necesitará para acceder al sistema de delivery.
+              </p>
+            </div>
+          </div>
+
+          <div class="modal-actions" style="display: flex; gap: 10px;">
+            <button type="button" (click)="cerrarModalCredenciales()"
+                    style="flex: 1; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer;">
+              <i class="fas fa-check" style="margin-right: 8px;"></i>
+              Entendido, Continuar
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   `
 })
@@ -526,10 +673,21 @@ export class MotorizadosFormComponent implements OnInit {
   selectedFileName = '';
   previewUrl = '';
 
+  // Credenciales generadas
+  credencialesGeneradas: any = null;
+  numeroUnidadGenerado = '';
+  showCredencialesModal = false;
+
+  // Validación de correo
+  emailMessage = '';
+  emailValid = false;
+  emailChecking = false;
+
   private userId: number | null = null;
   private motorizadoId: number | null = null;
   private cargandoUbigeo = false;
   private addressUbigeoData: UbigeoData = { provinces: [], districts: [] };
+  private motorizadoOriginal: Motorizado | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -578,7 +736,11 @@ export class MotorizadosFormComponent implements OnInit {
       vehiculo_motor: ['', [Validators.required, Validators.maxLength(50)]],
       vehiculo_chasis: ['', [Validators.required, Validators.maxLength(50)]],
     
-      comentario: ['', Validators.maxLength(500)]
+      comentario: ['', Validators.maxLength(500)],
+
+      // Campos para crear usuario
+      crear_usuario: [false],
+      password: ['']
     });
   }
 
@@ -739,11 +901,78 @@ export class MotorizadosFormComponent implements OnInit {
     return 'Campo inválido';
   }
 
+  // Validación de correo duplicado
+  validateEmail(email: string): void {
+    console.log('validateEmail ejecutado con:', email); // Debug
+    if (!email || !this.isValidEmail(email)) {
+      console.log('Email inválido o vacío'); // Debug
+      this.emailMessage = '';
+      this.emailValid = false;
+      return;
+    }
+
+    // Solo validar si no estamos en modo edición o si el email cambió
+    if (this.isEditMode) {
+      const originalEmail = this.motorizadoOriginal?.correo;
+      if (email === originalEmail) {
+        this.emailMessage = '';
+        this.emailValid = true;
+        return;
+      }
+    }
+
+    console.log('Iniciando validación de correo con API...'); // Debug
+    this.emailChecking = true;
+    this.authService.checkEmail(email).subscribe({
+      next: (response) => {
+        console.log('Respuesta de validación:', response); // Debug
+        this.emailChecking = false;
+        this.emailValid = !response.exists;
+        this.emailMessage = response.message;
+      },
+      error: (error) => {
+        console.error('Error al validar correo:', error); // Debug
+        this.emailChecking = false;
+        this.emailValid = false;
+        this.emailMessage = 'Error al validar correo';
+      }
+    });
+  }
+
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  onEmailBlur(): void {
+    const email = this.motorizadoForm.get('correo')?.value;
+    console.log('onEmailBlur ejecutado, email:', email); // Debug
+    if (email) {
+      this.validateEmail(email);
+    }
+  }
+
   async onSubmit(): Promise<void> {
     if (this.motorizadoForm.invalid) {
       this.markFormGroupTouched(this.motorizadoForm);
       this.toastr.warning('Por favor complete todos los campos requeridos');
       return;
+    }
+
+    // Validar correo duplicado antes de enviar
+    const email = this.motorizadoForm.get('correo')?.value;
+    if (email && !this.isEditMode) {
+      // Para nuevos motorizados, validar que el correo no exista
+      try {
+        const emailResponse = await firstValueFrom(this.authService.checkEmail(email));
+        if (emailResponse.exists) {
+          this.toastr.error('Este correo ya está registrado en el sistema');
+          return;
+        }
+      } catch (error) {
+        this.toastr.error('Error al validar el correo');
+        return;
+      }
     }
 
     this.isSubmitting = true;
@@ -760,11 +989,24 @@ export class MotorizadosFormComponent implements OnInit {
       if (this.isEditMode && this.motorizadoId) {
         await firstValueFrom(this.motorizadosService.actualizarMotorizado(this.motorizadoId, formData));
         this.toastr.success('Motorizado actualizado exitosamente');
+        this.router.navigate(['/dashboard/motorizados']);
       } else {
-        await firstValueFrom(this.motorizadosService.crearMotorizado(formData));
-        this.toastr.success('Motorizado creado exitosamente');
+        const response = await firstValueFrom(this.motorizadosService.crearMotorizado(formData));
+
+        // Verificar si se crearon credenciales
+        if (response.usuario_creado && response.credenciales) {
+          this.credencialesGeneradas = response.credenciales;
+          this.mostrarModalCredenciales(response);
+        } else {
+          this.toastr.success('Motorizado creado exitosamente');
+          this.router.navigate(['/dashboard/motorizados']);
+        }
+
+        // Mostrar warning si hubo problema al crear usuario
+        if (response.warning) {
+          this.toastr.warning(response.warning);
+        }
       }
-      this.router.navigate(['/dashboard/motorizados']);
     } catch (error) {
       console.error('Error saving motorizado:', error);
       this.toastr.error('Ocurrió un error al guardar el motorizado');
@@ -811,6 +1053,7 @@ export class MotorizadosFormComponent implements OnInit {
     this.isLoading = true;
     try {
       const motorizado = await firstValueFrom(this.motorizadosService.getMotorizado(id));
+      this.motorizadoOriginal = motorizado; // Guardar referencia original
       this.patchFormWithMotorizadoData(motorizado);
     } catch (error) {
       console.error('Error loading motorizado:', error);
@@ -869,9 +1112,20 @@ export class MotorizadosFormComponent implements OnInit {
 
   onCancel(): void {
     if (this.motorizadoForm.dirty) {
-      if (confirm('¿Está seguro que desea cancelar? Los cambios no guardados se perderán.')) {
-        this.router.navigate(['/dashboard/motorizados']);
-      }
+      Swal.fire({
+        title: '¿Cancelar registro?',
+        text: 'Los cambios no guardados se perderán permanentemente.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'Continuar editando'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.router.navigate(['/dashboard/motorizados']);
+        }
+      });
     } else {
       this.router.navigate(['/dashboard/motorizados']);
     }
@@ -991,5 +1245,28 @@ async loadUbigeoChain(ubigeoId: string): Promise<void> {
   private getProvinciaCode(id_ubigeo: string): string {
     // Asumiendo que el id_ubigeo de la provincia termina en "00"
     return id_ubigeo.substring(2, 4);
+  }
+
+  // Método para mostrar modal de credenciales
+  mostrarModalCredenciales(response: any): void {
+    this.credencialesGeneradas = response.credenciales;
+    this.showCredencialesModal = true;
+  }
+
+  // Cerrar modal y navegar
+  cerrarModalCredenciales(): void {
+    this.showCredencialesModal = false;
+    this.credencialesGeneradas = null;
+    this.router.navigate(['/dashboard/motorizados']);
+  }
+
+  // Copiar credenciales al portapapeles
+  copiarCredenciales(): void {
+    const texto = `Usuario: ${this.credencialesGeneradas.username}\nContraseña: ${this.credencialesGeneradas.password}`;
+    navigator.clipboard.writeText(texto).then(() => {
+      this.toastr.success('Credenciales copiadas al portapapeles');
+    }).catch(() => {
+      this.toastr.error('Error al copiar al portapapeles');
+    });
   }
 }

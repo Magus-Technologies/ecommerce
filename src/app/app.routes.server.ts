@@ -137,5 +137,30 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'dashboard/motorizados',
     renderMode: RenderMode.Server
+  },
+  {
+    path: 'motorizado',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'motorizado/dashboard',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'motorizado/pedidos',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'motorizado/perfil',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'motorizado/rutas',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'motorizado/historial',
+    renderMode: RenderMode.Server
   }
+  
 ];
