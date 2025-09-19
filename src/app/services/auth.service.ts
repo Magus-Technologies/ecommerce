@@ -216,16 +216,20 @@ export class AuthService {
    * Procesar login con Google
    */
   processGoogleAuth(token: string, userData: string): void {
+    console.log('🔧 processGoogleAuth iniciado');
+    console.log('🔧 isBrowser:', this.isBrowser);
+    
     if (!this.isBrowser) return;
     
     try {
-      // Guardar token
+      console.log('💾 Guardando token...');
       localStorage.setItem(this.tokenKey, token);
+      console.log('✅ Token guardado');
       
-      // Parsear datos de usuario
       const googleUserData = JSON.parse(decodeURIComponent(userData));
+      console.log('👤 Datos parseados:', googleUserData);
       
-      // Crear objeto de usuario compatible con el sistema existente
+      // Crear objeto de usuario
       const user: User = {
         id: googleUserData.id,
         name: googleUserData.nombre_completo || (googleUserData.nombres + ' ' + googleUserData.apellidos),
@@ -235,21 +239,30 @@ export class AuthService {
         permissions: googleUserData.permissions || []
       };
       
+      console.log('👤 Usuario creado:', user);
+      
       // Guardar usuario
       localStorage.setItem(this.userKey, JSON.stringify(user));
+      console.log('💾 Usuario guardado en localStorage');
       
-      // Actualizar estado
+      // CRÍTICO: Actualizar estado
+      console.log('🔄 Actualizando currentUserSubject...');
+      console.log('🔄 Valor anterior:', this.currentUserSubject.value);
+      
       this.currentUserSubject.next(user);
-
-      // Sincronizar carrito
-      this.cartService.syncCart().subscribe({
-        next: () => console.log('Sincronización de carrito tras login con Google completada.'),
-        error: (err) => console.error('Fallo la sincronización del carrito en login con Google.', err)
-      });
       
-      console.log('Google auth procesado exitosamente:', user);
+      console.log('🔄 Valor después:', this.currentUserSubject.value);
+      console.log('✅ Estado actualizado');
+
+      // Verificar si el CartService está recibiendo el cambio
+      setTimeout(() => {
+        console.log('🕐 Verificación tardía - Usuario actual:', this.getCurrentUser());
+      }, 100);
+      
+      // resto del código...
+      
     } catch (error) {
-      console.error('Error procesando Google auth:', error);
+      console.error('💥 ERROR en processGoogleAuth:', error);
       this.clearSession();
       throw error;
     }

@@ -38,34 +38,45 @@ export class AppComponent implements OnInit {
 
       // Verificar si hay parámetros de autenticación de Google en la URL
       this.route.queryParams.subscribe(params => {
+        console.log('🔍 TODOS los parámetros:', params);
+        
         const token = params['token'];
         const userData = params['user'];
         const tipoUsuario = params['tipo_usuario'];
+        
+        console.log('📋 Parámetros individuales:', {
+          token: token ? 'EXISTE' : 'NO EXISTE',
+          userData: userData ? 'EXISTE' : 'NO EXISTE',
+          tipoUsuario: tipoUsuario,
+          tokenLength: token?.length,
+          userDataLength: userData?.length
+        });
 
-        // Código existente antes:
         if (token && userData && tipoUsuario === 'cliente') {
           try {
-            // REEMPLAZA desde aquí:
-            // Procesar autenticación de Google usando el método del AuthService
+            console.log('✅ Iniciando processGoogleAuth...');
+            console.log('🎯 Token a procesar:', token);
+            console.log('👤 UserData sin decodificar:', userData);
+            
+            // Intentar decodificar userData antes de pasarlo
+            const decodedUserData = decodeURIComponent(userData);
+            console.log('👤 UserData decodificado:', decodedUserData);
+            
             this.authService.processGoogleAuth(token, userData);
             
-            // Limpiar URL y redirigir
+            console.log('🚀 processGoogleAuth completado, redirigiendo...');
             this.router.navigate(['/'], { replaceUrl: true });
-            console.log('Login con Google exitoso');
-            // HASTA aquí
+            
           } catch (error) {
-            console.error('Error procesando autenticación de Google:', error);
-            this.router.navigate(['/account'], { 
-              queryParams: { error: 'auth_processing_failed' }, 
-              replaceUrl: true 
-            });
+            console.error('❌ ERROR en app.component:', error);
+            // resto del código...
           }
-        }
-
-        // Verificar si hay error de autenticación
-        if (params['error'] === 'google_auth_failed') {
-          console.error('Error en autenticación con Google');
-          this.router.navigate(['/account'], { replaceUrl: true });
+        } else {
+          console.log('⚠️ Condición no cumplida:', {
+            hasToken: !!token,
+            hasUserData: !!userData,
+            tipoUsuario: tipoUsuario
+          });
         }
       });
     }
