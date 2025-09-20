@@ -1,29 +1,35 @@
 import { UsuariosService, Usuario as UsuarioBackend } from '../../../services/usuarios.service';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common'; // 
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { UsuarioModalComponent } from '../usuario-modal/usuario-modal.component';
 import Swal from 'sweetalert2';
 import { environment } from '../../../../environments/environment';
-import { PermissionsService } from '../../../services/permissions.service'; // ← NUEVO
-import { Observable } from 'rxjs'; // ← NUEVO si no existe
-
+import { PermissionsService } from '../../../services/permissions.service';
+import { Observable } from 'rxjs';
+import {
+  NgxDatatableModule,
+  ColumnMode,
+  SelectionType,
+  SortType,
+} from '@swimlane/ngx-datatable';
 
 interface Usuario {
   id: number;
   nombre: string;
   email: string;
   rol: string;
-  estado: 'habilitado' | 'deshabilitado';
+  estado: boolean;
   fechaCreacion: Date;
 }
 
 @Component({
   selector: 'app-usuarios-list',
   standalone: true,
-  imports: [CommonModule, UsuarioModalComponent],
+  imports: [CommonModule, FormsModule, UsuarioModalComponent, NgxDatatableModule],
   templateUrl: './usuarios-list.component.html',
-  styleUrls: ['./usuarios-list.component.scss'] 
+  styleUrls: ['./usuarios-list.component.scss']
 })
 
 export class UsuariosListComponent implements OnInit {
@@ -31,32 +37,37 @@ export class UsuariosListComponent implements OnInit {
   usuarios: Usuario[] = [];
   usuariosBackend: any[] = [];
   loading = false;
- 
+  isLoading = false;
+
+  // Datatable properties
+  pageSize = 10;
+  ColumnMode = ColumnMode;
+  SelectionType = SelectionType;
+  SortType = SortType;
+  selected: Usuario[] = [];
 
   // Modal properties
   showModal = false;
   selectedUsuarioId: number | null = null;
   modalMode: 'view' | 'edit' = 'view';
   canShowUser$!: Observable<boolean>;
-  canEditUser$!: Observable<boolean>;  // ← NUEVO
-  canDeleteUser$!: Observable<boolean>; // ← NUEVO
-  canCreateUser$!: Observable<boolean>; 
+  canEditUser$!: Observable<boolean>;
+  canDeleteUser$!: Observable<boolean>;
+  canCreateUser$!: Observable<boolean>;
 
 constructor(
   private router: Router,
   private usuariosService: UsuariosService,
-  private permissionsService: PermissionsService // ← NUEVO
+  private permissionsService: PermissionsService
 ) {}
 
- ngOnInit(): void {
+ngOnInit(): void {
   this.cargarUsuarios();
-  this.canShowUser$ = this.permissionsService.hasPermissionRealTime('usuarios.show'); // ← NUEVO
-  // ← NUEVO: Agregar estos observables
+  this.canShowUser$ = this.permissionsService.hasPermissionRealTime('usuarios.show');
   this.canEditUser$ = this.permissionsService.hasPermissionRealTime('usuarios.edit');
   this.canDeleteUser$ = this.permissionsService.hasPermissionRealTime('usuarios.delete');
-  this.canCreateUser$ = this.permissionsService.hasPermissionRealTime('usuarios.create'); // ← AGREGADO
+  this.canCreateUser$ = this.permissionsService.hasPermissionRealTime('usuarios.create');
 }
-
 
 // Nuevo método para escuchar cambios de permisos
 private setupPermissionListener(): void {
@@ -78,20 +89,11 @@ private refreshUserPermissions(): void {
   });
 }
 
-// Función para contar usuarios habilitados
-getUsuariosActivos(): number {
-  return this.usuarios.filter(u => u.estado === 'habilitado').length;
-}
-
-
-// Función para contar administradores
-getUsuariosAdministradores(): number {
-  return this.usuarios.filter(u => u.rol === 'Administrador').length;
-}
 
   private cargarUsuarios(): void {
     this.loading = true;
-    
+    this.isLoading = true;
+
     this.usuariosService.obtenerUsuarios().subscribe({
       next: (usuariosBackend: UsuarioBackend[]) => {
         this.usuariosBackend = usuariosBackend; // ← Guardar datos completos
@@ -100,10 +102,11 @@ getUsuariosAdministradores(): number {
           nombre: usuario.name,
           email: usuario.email,
           rol: usuario.roles?.[0]?.name || 'Sin rol',
-          estado: 'habilitado' as const,
+          estado: usuario.is_enabled || false,
           fechaCreacion: new Date(usuario.created_at)
         }));
         this.loading = false;
+        this.isLoading = false;
       },
       error: (error: any) => {
         Swal.fire({
@@ -113,6 +116,7 @@ getUsuariosAdministradores(): number {
           confirmButtonText: 'Aceptar'
         });
         this.loading = false;
+        this.isLoading = false;
       }
     });
   }
@@ -184,18 +188,18 @@ getUsuariosAdministradores(): number {
   getAvatarDisplay(usuario: Usuario): { type: 'image' | 'initial', value: string, color?: string } {
     // Buscar en los datos del backend si hay avatar_url
     const usuarioBackend = this.usuariosBackend?.find(u => u.id === usuario.id);
-    
+
     if (usuarioBackend?.profile?.avatar_url) {
       return {
         type: 'image',
         value: `${environment.baseUrl}${usuarioBackend.profile.avatar_url}`
       };
     }
-    
+
     // Si no hay avatar, mostrar iniciales con color
     const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
     const index = usuario.nombre.charCodeAt(0) % colors.length;
-    
+
     return {
       type: 'initial',
       value: usuario.nombre.charAt(0).toUpperCase(),
@@ -203,7 +207,7 @@ getUsuariosAdministradores(): number {
     };
   }
 
-  
+
   getRolClass(rol: string): string {
     switch (rol.toLowerCase()) {
       case 'administrador':
@@ -217,9 +221,6 @@ getUsuariosAdministradores(): number {
     }
   }
 
-  getEstadoClass(estado: string): string {
-    return estado === 'habilitado' ? 'badge-activo' : 'badge-inactivo';
-  }
 
    trackByUserId(index: number, usuario: Usuario): number {
     return usuario.id;
@@ -238,5 +239,73 @@ getUsuariosAdministradores(): number {
   canDeleteUser(): boolean {
     return this.permissionsService.hasPermission('usuarios.delete');
   }
+
+  // Método para cambiar estado del usuario
+  onCambiarEstado(usuario: Usuario): void {
+    const nuevoEstado = !usuario.estado;
+    const accion = nuevoEstado ? 'habilitar' : 'deshabilitar';
+
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: `¿Deseas ${accion} al usuario ${usuario.nombre}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: `Sí, ${accion}`,
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: nuevoEstado ? '#059669' : '#dc2626'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.usuariosService.cambiarEstado(usuario.id, nuevoEstado).subscribe({
+          next: () => {
+            Swal.fire({
+              title: '¡Actualizado!',
+              text: `El usuario ha sido ${nuevoEstado ? 'habilitado' : 'deshabilitado'} correctamente`,
+              icon: 'success',
+              confirmButtonText: 'Aceptar'
+            });
+            this.cargarUsuarios(); // Recargar la lista
+          },
+          error: (error) => {
+            Swal.fire({
+              title: 'Error',
+              text: 'Error al cambiar el estado del usuario',
+              icon: 'error',
+              confirmButtonText: 'Aceptar'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  getEstadoClass(estado: boolean): string {
+    return estado ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600';
+  }
+
+  canChangeStatus(): boolean {
+    return this.permissionsService.hasPermission('usuarios.edit');
+  }
+
+  // Datatable methods
+  get selectionText(): string {
+    const count = this.selected.length;
+    if (count === 0) {
+      return `Mostrando ${this.usuarios.length} usuarios`;
+    }
+    return `${count} usuario${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'} de ${this.usuarios.length}`;
+  }
+
+  onSelect({ selected }: any): void {
+    this.selected.splice(0, this.selected.length);
+    this.selected.push(...selected);
+  }
+
+  onPageChange(event: any): void {
+    console.log('Page change:', event);
+  }
+
+  displayCheck = (row: any, column?: any, value?: any) => {
+    return true; // Permitir selección de todos los usuarios
+  };
 
 }

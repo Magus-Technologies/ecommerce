@@ -11,6 +11,7 @@ export interface Usuario {
   roles: {
     name: string;
   }[];
+  is_enabled: boolean;
   created_at: string;
   // Agrega otros campos que necesites del backend
 }
@@ -71,5 +72,9 @@ actualizarUsuarioSinArchivo(id: number, userData: any): Observable<any> {
 
   obtenerDistritos(departamentoId: number, provinciaId: number): Observable<any[]> {
     return this.http.get<any[]>(`${environment.apiUrl}/distritos/${departamentoId}/${provinciaId}`);
+  }
+
+  cambiarEstado(id: number, estado: boolean): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${id}/cambiar-estado`, { is_enabled: estado });
   }
 }

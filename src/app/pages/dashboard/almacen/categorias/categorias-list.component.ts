@@ -2,6 +2,7 @@
 import { Component, OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
+import { FormsModule } from '@angular/forms';
 import { AlmacenService } from "../../../../services/almacen.service"
 import { Categoria } from "../../../../types/almacen.types"
 import { CategoriaModalComponent } from "./categoria-modal.component"
@@ -20,9 +21,10 @@ import {
   selector: "app-categorias-list",
   standalone: true,
   imports: [
-    CommonModule, 
-    RouterModule, 
-    CategoriaModalComponent, 
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    CategoriaModalComponent,
     MigrarCategoriaModalComponent,
     NgxDatatableModule
   ],
@@ -43,6 +45,31 @@ import {
 
     <!-- Tabla con NGX-Datatable -->
     <div class="card border-0 shadow-sm rounded-12">
+      <!-- Header de información -->
+      <div class="card-header bg-white border-bottom px-24 py-16" *ngIf="!isLoading && categorias.length > 0">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-16">
+            <span class="text-sm text-gray-600">{{ selectionText }}</span>
+            <div class="d-flex align-items-center gap-8" *ngIf="selected.length > 0">
+              <button class="btn btn-sm btn-outline-danger px-12 py-6">
+                <i class="ph ph-trash me-4"></i>
+                Eliminar seleccionadas
+              </button>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-8">
+            <span class="text-sm fw-medium text-dark">Mostrando</span>
+            <select class="form-select form-select-sm border-gray-300" style="width: auto; min-width: 70px;" [(ngModel)]="pageSize">
+              <option [value]="5">5</option>
+              <option [value]="10">10</option>
+              <option [value]="25">25</option>
+              <option [value]="50">50</option>
+            </select>
+            <span class="text-sm fw-medium text-dark">por página</span>
+          </div>
+        </div>
+      </div>
+
       <div class="card-body p-0">
         <!-- Loading state -->
         <div *ngIf="isLoading" class="text-center py-40">
@@ -53,23 +80,30 @@ import {
         </div>
 
         <!-- Datatable -->
-        <ngx-datatable
-          *ngIf="!isLoading"
-          class="bootstrap categorias-table"
-          [columns]="columns"
-          [rows]="categorias"
-          [columnMode]="ColumnMode.flex"
-          [headerHeight]="45"
-          [footerHeight]="50"
-          [rowHeight]="65"
-          [limit]="10"
-          [scrollbarV]="true"
-          [scrollbarH]="false"
-          [loadingIndicator]="isLoading"
-          [trackByProp]="'id'"
-          [sortType]="SortType.single"
-          [selectionType]="SelectionType.single"
-        >
+        <div class="table-container">
+          <ngx-datatable
+            *ngIf="!isLoading"
+            class="bootstrap categorias-table"
+            [columns]="columns"
+            [rows]="categorias"
+            [columnMode]="ColumnMode.flex"
+            [headerHeight]="50"
+            [footerHeight]="60"
+            [rowHeight]="60"
+            [limit]="pageSize"
+            [scrollbarV]="false"
+            [scrollbarH]="false"
+            [loadingIndicator]="isLoading"
+            [trackByProp]="'id'"
+            [sortType]="SortType.single"
+            [selectionType]="SelectionType.checkbox"
+            [selected]="selected"
+            [selectAllRowsOnPage]="false"
+            [displayCheck]="displayCheck"
+            [externalPaging]="false"
+            (select)="onSelect($event)"
+            (page)="onPageChange($event)"
+          >
           <!-- Columna Imagen -->
           <ngx-datatable-column
             name="Imagen"
@@ -198,7 +232,8 @@ import {
               </div>
             </ng-template>
           </ngx-datatable-column>
-        </ngx-datatable>
+          </ngx-datatable>
+        </div>
 
         <!-- Empty state -->
         <div
@@ -237,12 +272,39 @@ import {
   `,
   styles: [
     `
+      /* Container de la tabla */
+      .table-container {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: visible;
+        min-width: 0;
+      }
+
       /* Configuración base del datatable */
       ::ng-deep .categorias-table {
         box-shadow: none !important;
         border: none !important;
         font-size: 13px;
         width: 100% !important;
+        min-width: 800px !important;
+        overflow: visible !important;
+      }
+
+      /* Eliminar scrollbars del datatable completamente */
+      ::ng-deep .categorias-table .datatable-scroll,
+      ::ng-deep .categorias-table .datatable-body-wrapper,
+      ::ng-deep .categorias-table .datatable-body {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+      }
+
+      /* Forzar ancho de la tabla responsive */
+      ::ng-deep .categorias-table .datatable-header,
+      ::ng-deep .categorias-table .datatable-body,
+      ::ng-deep .categorias-table .datatable-footer {
+        width: 100% !important;
+        min-width: 800px !important;
       }
 
       /* Header de la tabla */
@@ -409,28 +471,130 @@ import {
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
 
-      /* Footer */
+      /* Header mejorado */
+      .card-header {
+        font-size: 13px;
+      }
+
+      .gap-16 {
+        gap: 16px;
+      }
+
+      .gap-8 {
+        gap: 8px;
+      }
+
+      /* Footer personalizado - ELIMINAR SCROLL COMPLETAMENTE */
       ::ng-deep .categorias-table .datatable-footer {
         background-color: #f8f9fa !important;
         border-top: 1px solid #dee2e6 !important;
-        padding: 8px 16px !important;
+        padding: 12px 24px !important;
         font-size: 12px !important;
-        height: 50px !important;
+        height: 60px !important;
+        overflow: visible !important;
+        width: 100% !important;
+        min-width: 800px !important;
       }
 
-      /* Responsive */
+      ::ng-deep .categorias-table .datatable-footer .datatable-pager {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
+      }
+
+      ::ng-deep .categorias-table .datatable-footer .datatable-pager .pager {
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        overflow: visible !important;
+      }
+
+      ::ng-deep .categorias-table .datatable-footer .datatable-pager .pager .pages {
+        display: flex !important;
+        gap: 4px !important;
+        align-items: center !important;
+        overflow: visible !important;
+      }
+
+      /* Eliminar cualquier scroll residual */
+      ::ng-deep .categorias-table .datatable-footer * {
+        overflow: visible !important;
+      }
+
+      /* Media queries para diferentes tamaños de pantalla */
+      @media (max-width: 1199px) {
+        .table-container {
+          overflow-x: auto;
+        }
+
+        ::ng-deep .categorias-table {
+          min-width: 800px !important;
+        }
+
+        ::ng-deep .categorias-table .datatable-header,
+        ::ng-deep .categorias-table .datatable-body,
+        ::ng-deep .categorias-table .datatable-footer {
+          min-width: 800px !important;
+        }
+      }
+
+      @media (min-width: 1200px) and (max-width: 1599px) {
+        ::ng-deep .categorias-table {
+          min-width: 100% !important;
+        }
+
+        .table-container {
+          overflow-x: visible;
+        }
+
+        ::ng-deep .categorias-table .datatable-header,
+        ::ng-deep .categorias-table .datatable-body,
+        ::ng-deep .categorias-table .datatable-footer {
+          min-width: 100% !important;
+        }
+      }
+
+      @media (min-width: 1600px) {
+        ::ng-deep .categorias-table {
+          min-width: 100% !important;
+          width: 100% !important;
+        }
+
+        .table-container {
+          overflow-x: visible;
+        }
+
+        ::ng-deep .categorias-table .datatable-header,
+        ::ng-deep .categorias-table .datatable-body,
+        ::ng-deep .categorias-table .datatable-footer {
+          min-width: 100% !important;
+          width: 100% !important;
+        }
+
+        ::ng-deep .categorias-table .datatable-header-cell,
+        ::ng-deep .categorias-table .datatable-body-cell {
+          padding: 12px 16px !important;
+        }
+      }
+
+      /* Responsive móvil */
       @media (max-width: 768px) {
         ::ng-deep .categorias-table .datatable-header-cell,
         ::ng-deep .categorias-table .datatable-body-cell {
           font-size: 11px !important;
           padding: 6px 4px !important;
         }
-        
+
         .category-name {
           font-size: 12px !important;
           max-width: 150px;
         }
-        
+
         .action-btn {
           width: 20px !important;
           height: 20px !important;
@@ -438,6 +602,16 @@ import {
 
         .action-buttons {
           gap: 2px !important;
+        }
+
+        .card-header {
+          padding: 12px !important;
+        }
+
+        .card-header .d-flex {
+          flex-direction: column !important;
+          gap: 12px !important;
+          align-items: stretch !important;
         }
       }
     `,
@@ -449,14 +623,18 @@ export class CategoriasListComponent implements OnInit {
   categoriaSeleccionada: Categoria | null = null
   categoriaMigracion: Categoria | null = null
 
-  // Configuración para NGX-Datatable
+  // Paginación
+  pageSize = 10;
+  selected: any[] = [];
+
+  // Configuración para NGX-Datatable con flexGrow inteligente
   columns = [
-    { name: 'Imagen', prop: 'imagen_url', flexGrow: 0.5 },
-    { name: 'Nombre', prop: 'nombre', flexGrow: 1.5 },
-    { name: 'Descripción', prop: 'descripcion', flexGrow: 2 },
-    { name: 'Estado', prop: 'activo', flexGrow: 0.8 },
-    { name: 'Fecha Creación', prop: 'created_at', flexGrow: 1 },
-    { name: 'Acciones', prop: 'acciones', flexGrow: 1.5 }
+    { name: 'Imagen', prop: 'imagen_url', flexGrow: 0.3, minWidth: 70, maxWidth: 90 },
+    { name: 'Nombre', prop: 'nombre', flexGrow: 2, minWidth: 150 },
+    { name: 'Descripción', prop: 'descripcion', flexGrow: 3, minWidth: 200 },
+    { name: 'Estado', prop: 'activo', flexGrow: 0.8, minWidth: 70 },
+    { name: 'Fecha Creación', prop: 'created_at', flexGrow: 1.2, minWidth: 120 },
+    { name: 'Acciones', prop: 'acciones', flexGrow: 1.8, minWidth: 160 }
   ];
 
   ColumnMode = ColumnMode;
@@ -617,5 +795,27 @@ export class CategoriasListComponent implements OnInit {
 
   onModalMigracionCerrado(): void {
     this.categoriaMigracion = null
+  }
+
+  // Métodos para manejar selección y paginación
+  onSelect(event: any): void {
+    this.selected = event.selected;
+  }
+
+  onPageChange(event: any): void {
+    console.log('Página cambiada:', event);
+  }
+
+  displayCheck(row: any): boolean {
+    return this.permissionsService.canEditCategorias();
+  }
+
+  get selectionText(): string {
+    const total = this.categorias.length;
+    const selected = this.selected.length;
+    if (selected === 0) {
+      return `${total} categorías en total`;
+    }
+    return `${selected} seleccionada${selected > 1 ? 's' : ''} de ${total}`;
   }
 }

@@ -219,3 +219,21 @@
 .opacity-50 {
   opacity: 0.5;
 }
+
+// Transiciones para el título del sidebar
+.sidebar-title {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.fade-in {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.fade-out {
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+}
