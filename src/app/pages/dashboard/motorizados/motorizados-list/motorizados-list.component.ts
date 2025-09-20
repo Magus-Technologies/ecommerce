@@ -1,235 +1,24 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { MotorizadosService, Motorizado } from '../../../../services/motorizados.service';
 import { PermissionsService } from '../../../../services/permissions.service';
+import {
+  NgxDatatableModule,
+  ColumnMode,
+  SelectionType,
+  SortType,
+} from '@swimlane/ngx-datatable';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-motorizados-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
-  template: `
-    <div class="usuarios-container">
-      <div class="usuarios-header">
-        <div class="header-content">
-          <div class="title-section">
-            <h1 class="page-title">
-              <i class="fas fa-motorcycle"></i>
-              Gestión de Motorizados
-            </h1>
-            <p class="page-subtitle">Administra los motorizados de delivery</p>
-          </div>
-          <a *ngIf="permissionsService.canCreateMotorizados()" 
-             routerLink="/dashboard/motorizados/crear" 
-             class="btn btn-create">
-            <i class="fas fa-plus"></i>
-            Nuevo Motorizado
-          </a>
-        </div>
-      </div>
-
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-icon blue">
-            <i class="fas fa-motorcycle" style="color: white;"></i>
-          </div>
-          <div class="stat-content">
-            <h3>{{estadisticas.total}}</h3>
-            <p>Total Motorizados</p>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon green">
-            <i class="fas fa-check-circle" style="color: white;"></i>
-          </div>
-          <div class="stat-content">
-            <h3>{{estadisticas.activos}}</h3>
-            <p>Activos</p>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon orange">
-            <i class="fas fa-pause-circle" style="color: white;"></i>
-          </div>
-          <div class="stat-content">
-            <h3>{{estadisticas.inactivos}}</h3>
-            <p>Inactivos</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="table-container">
-        <div class="table-header">
-          <h2 class="table-title">Lista de Motorizados</h2>
-          <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input 
-              type="text" 
-              placeholder="Buscar motorizado..."
-              [(ngModel)]="filtroTexto"
-              (input)="filtrarMotorizados()">
-          </div>
-        </div>
-
-        <div class="table-wrapper" *ngIf="!isLoading">
-          <table class="usuarios-table" *ngIf="motorizadosFiltrados.length > 0">
-            <thead>
-              <tr>
-                <th>Motorizado</th>
-                <th>Documento</th>
-                <th>Teléfono</th>
-                <th>Vehículo</th>
-                <th>Placa</th>
-                <th>Estado</th>
-                <th>Usuario</th>
-                <th>Registrado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="table-row" *ngFor="let motorizado of motorizadosFiltrados">
-                <td>
-                  <div class="user-info">
-                    <div class="user-avatar" *ngIf="!motorizado.foto_perfil">
-                      {{motorizado.nombre_completo.substring(0,2).toUpperCase()}}
-                    </div>
-                    <img *ngIf="motorizado.foto_perfil" 
-                         [src]="motorizado.foto_perfil" 
-                         class="user-avatar-img">
-                    <div class="user-details">
-                      <span class="user-name">{{motorizado.nombre_completo}}</span>
-                      <span class="user-id">{{motorizado.numero_unidad}}</span>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <div>
-                    <span class="badge badge-default">{{motorizado.tipo_documento?.nombre}}</span>
-                    <div class="user-id">{{motorizado.numero_documento}}</div>
-                  </div>
-                </td>
-                <td class="email">{{motorizado.telefono}}</td>
-                <td>
-                  <div>
-                    <span class="user-name">{{motorizado.vehiculo_marca}} {{motorizado.vehiculo_modelo}}</span>
-                    <div class="user-id">{{motorizado.vehiculo_ano}} - {{motorizado.vehiculo_cilindraje}}</div>
-                  </div>
-                </td>
-                <td>
-                  <span class="badge badge-default">{{motorizado.vehiculo_placa}}</span>
-                </td>
-                <td>
-                  <span [class]="motorizado.estado ? 'badge badge-activo' : 'badge badge-inactivo'">
-                    {{motorizado.estado ? 'Activo' : 'Inactivo'}}
-                  </span>
-                </td>
-                <td>
-                  <div class="user-status-container">
-                    <div *ngIf="motorizado.tiene_usuario; else noUsuario">
-                      <div class="user-info">
-                        <span class="user-badge" [class]="motorizado.estado_usuario ? 'badge badge-activo' : 'badge badge-inactivo'">
-                          <i class="fas fa-user" style="margin-right: 4px;"></i>
-                          {{motorizado.username}}
-                        </span>
-                        <small class="user-status" [style.color]="motorizado.estado_usuario ? '#28a745' : '#dc3545'">
-                          {{motorizado.estado_usuario ? 'Activo' : 'Inactivo'}}
-                        </small>
-                      </div>
-                      <div *ngIf="motorizado.ultimo_login" class="last-login">
-                        <small style="color: #6c757d; font-size: 11px;">
-                          Último acceso: {{formatDate(motorizado.ultimo_login)}}
-                        </small>
-                      </div>
-                    </div>
-                    <ng-template #noUsuario>
-                      <span class="badge badge-default" style="background-color: #6c757d;">
-                        <i class="fas fa-user-slash" style="margin-right: 4px;"></i>
-                        Sin usuario
-                      </span>
-                    </ng-template>
-                  </div>
-                </td>
-                <td class="fecha">{{formatDate(motorizado.created_at)}}</td>
-                <td>
-                  <div class="action-buttons">
-                    <button *ngIf="permissionsService.canShowMotorizados()"
-                            (click)="verDetalle(motorizado.id!)"
-                            class="btn-action btn-view"
-                            title="Ver detalles">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button *ngIf="permissionsService.canEditMotorizados()"
-                            (click)="editarMotorizado(motorizado.id!)"
-                            class="btn-action btn-edit"
-                            title="Editar">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button *ngIf="permissionsService.canEditMotorizados()"
-                            (click)="toggleEstado(motorizado.id!, motorizado.estado!)"
-                            [class]="motorizado.estado ? 'btn-action btn-delete' : 'btn-action btn-edit'"
-                            [title]="motorizado.estado ? 'Desactivar' : 'Activar'">
-                      <i [class]="motorizado.estado ? 'fas fa-ban' : 'fas fa-check'"></i>
-                    </button>
-                    <!-- Botones de gestión de usuario -->
-                    <button *ngIf="permissionsService.canEditMotorizados() && !motorizado.tiene_usuario"
-                            (click)="crearUsuario(motorizado.id!, motorizado.nombre_completo)"
-                            class="btn-action btn-success"
-                            title="Crear Usuario"
-                            style="background-color: #28a745; border-color: #28a745;">
-                      <i class="fas fa-user-plus"></i>
-                    </button>
-
-                    <button *ngIf="permissionsService.canEditMotorizados() && motorizado.tiene_usuario"
-                            (click)="toggleUsuario(motorizado.id!, motorizado.username || '', motorizado.estado_usuario || false)"
-                            [class]="motorizado.estado_usuario ? 'btn-action btn-warning' : 'btn-action btn-success'"
-                            [title]="motorizado.estado_usuario ? 'Desactivar Usuario' : 'Activar Usuario'">
-                      <i [class]="motorizado.estado_usuario ? 'fas fa-user-lock' : 'fas fa-user-check'"></i>
-                    </button>
-
-                    <button *ngIf="permissionsService.canEditMotorizados() && motorizado.tiene_usuario"
-                            (click)="resetearPassword(motorizado.id!, motorizado.username || '')"
-                            class="btn-action"
-                            title="Resetear Contraseña"
-                            style="background-color: #6f42c1; border-color: #6f42c1; color: white;">
-                      <i class="fas fa-key"></i>
-                    </button>
-
-                    <button *ngIf="permissionsService.canDeleteMotorizados()"
-                            (click)="eliminarMotorizado(motorizado.id!, motorizado.nombre_completo)"
-                            class="btn-action btn-delete"
-                            title="Eliminar">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div class="empty-state" *ngIf="motorizadosFiltrados.length === 0">
-            <div class="empty-icon">
-              <i class="fas fa-motorcycle"></i>
-            </div>
-            <h3>No hay motorizados registrados</h3>
-            <p>Comienza agregando tu primer motorizado</p>
-            <a *ngIf="permissionsService.canCreateMotorizados()" 
-               routerLink="/dashboard/motorizados/crear" 
-               class="btn btn-create">
-              <i class="fas fa-plus"></i>
-              Crear Motorizado
-            </a>
-          </div>
-        </div>
-
-        <div class="loading-overlay" *ngIf="isLoading">
-          <div class="spinner"></div>
-          <p>Cargando motorizados...</p>
-        </div>
-      </div>
-    </div>
-  `
+  imports: [CommonModule, RouterModule, FormsModule, NgxDatatableModule],
+  templateUrl: './motorizados-list.component.html',
+  styleUrls: ['./motorizados-list.component.scss']
 })
 export class MotorizadosListComponent implements OnInit {
   motorizados: Motorizado[] = [];
@@ -237,6 +26,20 @@ export class MotorizadosListComponent implements OnInit {
   filtroTexto = '';
   isLoading = false;
   estadisticas = { total: 0, activos: 0, inactivos: 0 };
+
+  // Datatable properties
+  pageSize = 10;
+  ColumnMode = ColumnMode;
+  SelectionType = SelectionType;
+  SortType = SortType;
+  selected: Motorizado[] = [];
+
+  // Mensajes en español para NGX-Datatable
+  messages = {
+    emptyMessage: 'No se encontraron motorizados',
+    totalMessage: 'total',
+    selectedMessage: 'seleccionados'
+  };
 
   constructor(
     private motorizadosService: MotorizadosService,
@@ -258,7 +61,7 @@ export class MotorizadosListComponent implements OnInit {
         this.calcularEstadisticas();
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         this.toastr.error('Error al cargar motorizados');
         this.isLoading = false;
       }
@@ -276,7 +79,8 @@ export class MotorizadosListComponent implements OnInit {
       motorizado.nombre_completo.toLowerCase().includes(filtro) ||
       motorizado.numero_documento.includes(filtro) ||
       motorizado.vehiculo_placa.toLowerCase().includes(filtro) ||
-      motorizado.numero_unidad.toLowerCase().includes(filtro)
+      motorizado.numero_unidad.toLowerCase().includes(filtro) ||
+      motorizado.telefono.includes(filtro)
     );
   }
 
@@ -294,111 +98,237 @@ export class MotorizadosListComponent implements OnInit {
     this.router.navigate(['/dashboard/motorizados/editar', id]);
   }
 
-  toggleEstado(id: number, estadoActual: boolean): void {
-    const accion = estadoActual ? 'desactivar' : 'activar';
-    if (confirm(`¿Estás seguro de ${accion} este motorizado?`)) {
-      this.motorizadosService.toggleEstado(id).subscribe({
-        next: (response) => {
-          this.toastr.success(`Motorizado ${accion}do exitosamente`);
-          this.cargarMotorizados();
-        },
-        error: () => {
-          this.toastr.error(`Error al ${accion} motorizado`);
-        }
-      });
-    }
+  toggleEstado(motorizado: Motorizado): void {
+    const accion = motorizado.estado ? 'desactivar' : 'activar';
+
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: `¿Deseas ${accion} al motorizado ${motorizado.nombre_completo}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: `Sí, ${accion}`,
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: motorizado.estado ? '#dc2626' : '#059669'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.motorizadosService.toggleEstado(motorizado.id!).subscribe({
+          next: () => {
+            Swal.fire({
+              title: '¡Actualizado!',
+              text: `El motorizado ha sido ${motorizado.estado ? 'desactivado' : 'activado'} correctamente`,
+              icon: 'success',
+              confirmButtonText: 'Aceptar'
+            });
+            this.cargarMotorizados();
+          },
+          error: (error: any) => {
+            Swal.fire({
+              title: 'Error',
+              text: 'Error al cambiar el estado del motorizado',
+              icon: 'error',
+              confirmButtonText: 'Aceptar'
+            });
+          }
+        });
+      }
+    });
   }
 
   eliminarMotorizado(id: number, nombre: string): void {
-    if (confirm(`¿Estás seguro de eliminar al motorizado ${nombre}? Esta acción no se puede deshacer.`)) {
-      this.motorizadosService.eliminarMotorizado(id).subscribe({
-        next: () => {
-          this.toastr.success('Motorizado eliminado exitosamente');
-          this.cargarMotorizados();
-        },
-        error: () => {
-          this.toastr.error('Error al eliminar motorizado');
-        }
-      });
-    }
-  }
-
-  formatDate(date: string | undefined): string {
-    if (!date) return '';
-    return new Date(date).toLocaleDateString('es-ES');
-  }
-
-  // Gestión de usuarios
-  crearUsuario(id: number, nombre: string): void {
-    if (confirm(`¿Crear usuario para ${nombre}?\n\nSe generará una contraseña automáticamente y se enviará al correo del motorizado.\nEl motorizado podrá acceder usando su correo electrónico y la contraseña generada.`)) {
-      this.motorizadosService.crearUsuario(id, {}).subscribe({
-        next: (response) => {
-          if (response.email_enviado) {
-            this.toastr.success(
-              `Usuario creado exitosamente para ${nombre}. Las credenciales han sido enviadas a ${response.credenciales.correo}`,
-              'Usuario Creado',
-              { timeOut: 5000 }
-            );
-          } else {
-            this.toastr.warning(
-              `Usuario creado exitosamente para ${nombre}, pero no se pudo enviar el email. Las credenciales se muestran a continuación. El motorizado debe usar su correo electrónico para acceder.`,
-              'Usuario Creado - Atención',
-              { timeOut: 8000 }
-            );
-            this.mostrarCredenciales(response.credenciales);
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: `¿Deseas eliminar al motorizado ${nombre}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.motorizadosService.eliminarMotorizado(id).subscribe({
+          next: () => {
+            Swal.fire({
+              title: '¡Eliminado!',
+              text: 'El motorizado ha sido eliminado correctamente',
+              icon: 'success',
+              confirmButtonText: 'Aceptar'
+            });
+            this.cargarMotorizados();
+          },
+          error: (error: any) => {
+            Swal.fire({
+              title: 'Error',
+              text: 'Error al eliminar el motorizado',
+              icon: 'error',
+              confirmButtonText: 'Aceptar'
+            });
           }
-          this.cargarMotorizados();
-        },
-        error: (error) => {
-          this.toastr.error(error.error?.error || 'Error al crear usuario');
-        }
-      });
-    }
+        });
+      }
+    });
+  }
+
+  crearUsuario(id: number, nombre: string): void {
+    Swal.fire({
+      title: '¿Crear usuario?',
+      text: `¿Deseas crear un usuario para ${nombre}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, crear',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#059669'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.motorizadosService.crearUsuario(id).subscribe({
+          next: () => {
+            Swal.fire({
+              title: '¡Usuario creado!',
+              text: 'El usuario ha sido creado correctamente. Se han enviado las credenciales por correo.',
+              icon: 'success',
+              confirmButtonText: 'Aceptar'
+            });
+            this.cargarMotorizados();
+          },
+          error: (error: any) => {
+            Swal.fire({
+              title: 'Error',
+              text: 'Error al crear el usuario',
+              icon: 'error',
+              confirmButtonText: 'Aceptar'
+            });
+          }
+        });
+      }
+    });
   }
 
   toggleUsuario(id: number, username: string, estadoActual: boolean): void {
     const accion = estadoActual ? 'desactivar' : 'activar';
-    if (confirm(`¿Estás seguro de ${accion} el usuario ${username}?`)) {
-      this.motorizadosService.toggleUsuario(id).subscribe({
-        next: (response) => {
-          this.toastr.success(`Usuario ${accion}do exitosamente`);
-          this.cargarMotorizados();
-        },
-        error: () => {
-          this.toastr.error(`Error al ${accion} usuario`);
-        }
-      });
-    }
+
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: `¿Deseas ${accion} el usuario ${username}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: `Sí, ${accion}`,
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: estadoActual ? '#dc2626' : '#059669'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.motorizadosService.toggleUsuario(id).subscribe({
+          next: () => {
+            Swal.fire({
+              title: '¡Actualizado!',
+              text: `El usuario ha sido ${estadoActual ? 'desactivado' : 'activado'} correctamente`,
+              icon: 'success',
+              confirmButtonText: 'Aceptar'
+            });
+            this.cargarMotorizados();
+          },
+          error: (error: any) => {
+            Swal.fire({
+              title: 'Error',
+              text: 'Error al cambiar el estado del usuario',
+              icon: 'error',
+              confirmButtonText: 'Aceptar'
+            });
+          }
+        });
+      }
+    });
   }
 
   resetearPassword(id: number, username: string): void {
-    const password = prompt(`Resetear contraseña para ${username}\n\nIngrese nueva contraseña (mínimo 6 caracteres):\n(Dejar vacío para generar automáticamente)`);
-
-    if (password !== null) { // No canceló el prompt
-      const payload = password.trim() ? { password: password.trim() } : {};
-
-      this.motorizadosService.resetearPassword(id, payload).subscribe({
-        next: (response) => {
-          this.toastr.success('Contraseña actualizada exitosamente');
-          this.mostrarCredenciales({ username, password: response.nueva_password });
-        },
-        error: (error) => {
-          this.toastr.error(error.error?.error || 'Error al resetear contraseña');
-        }
-      });
-    }
+    Swal.fire({
+      title: '¿Resetear contraseña?',
+      text: `¿Deseas resetear la contraseña del usuario ${username}? Se enviará una nueva contraseña por correo.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, resetear',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3b82f6'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.motorizadosService.resetearPassword(id).subscribe({
+          next: () => {
+            Swal.fire({
+              title: '¡Contraseña reseteada!',
+              text: 'Se ha enviado la nueva contraseña por correo electrónico',
+              icon: 'success',
+              confirmButtonText: 'Aceptar'
+            });
+          },
+          error: (error: any) => {
+            Swal.fire({
+              title: 'Error',
+              text: 'Error al resetear la contraseña',
+              icon: 'error',
+              confirmButtonText: 'Aceptar'
+            });
+          }
+        });
+      }
+    });
   }
 
-  private mostrarCredenciales(credenciales: any): void {
-    const mensaje = `CREDENCIALES DE ACCESO:\n\nCorreo de Acceso: ${credenciales.correo || credenciales.username}\nContraseña: ${credenciales.password}\n\n¡IMPORTANTE! Guarda estas credenciales de forma segura.\nUsa tu correo electrónico para ingresar al sistema.`;
-    alert(mensaje);
+  formatDate(date: string): string {
+    return new Date(date).toLocaleDateString('es-ES');
+  }
 
-    // Copiar al portapapeles
-    const texto = `Correo: ${credenciales.correo || credenciales.username}\nContraseña: ${credenciales.password}`;
-    navigator.clipboard.writeText(texto).then(() => {
-      this.toastr.info('Credenciales copiadas al portapapeles');
-    }).catch(() => {
-      console.warn('No se pudo copiar al portapapeles');
-    });
+  // Datatable methods
+  get selectionText(): string {
+    const count = this.selected.length;
+    if (count === 0) {
+      return `Mostrando ${this.motorizadosFiltrados.length} motorizados`;
+    }
+    return `${count} motorizado${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'} de ${this.motorizadosFiltrados.length}`;
+  }
+
+  onSelect({ selected }: any): void {
+    this.selected.splice(0, this.selected.length);
+    this.selected.push(...selected);
+  }
+
+  onPageChange(event: any): void {
+    console.log('Page change:', event);
+  }
+
+  onPageSizeChange(): void {
+    this.selected = [];
+  }
+
+  displayCheck = (row: any, column?: any, value?: any) => {
+    return true;
+  };
+
+  // Helper methods para avatares y badges
+  getAvatarDisplay(motorizado: Motorizado): { type: 'image' | 'initial', value: string, color?: string } {
+    if (motorizado.foto_perfil) {
+      return {
+        type: 'image',
+        value: motorizado.foto_perfil
+      };
+    }
+
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+    const index = motorizado.nombre_completo.charCodeAt(0) % colors.length;
+
+    return {
+      type: 'initial',
+      value: motorizado.nombre_completo.substring(0, 2).toUpperCase(),
+      color: colors[index]
+    };
+  }
+
+  getEstadoClass(estado: boolean): string {
+    return estado ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600';
+  }
+
+  canChangeStatus(): boolean {
+    return this.permissionsService.canEditMotorizados();
+  }
+
+  trackByMotorizadoId(index: number, motorizado: Motorizado): number {
+    return motorizado.id!;
   }
 }

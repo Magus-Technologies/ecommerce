@@ -31,78 +31,87 @@ import { filter } from 'rxjs/operators';
       <!-- Navigation Tabs con Filtro Integrado -->
       <div class="card border-0 shadow-sm rounded-12 mb-24">
         <div class="card-body p-0">
-          <div class="d-flex align-items-center justify-content-between">
+          <!-- Contenedor responsivo -->
+          <div class="row g-0">
             <!-- Tabs de navegación -->
-            <nav
-              class="nav nav-tabs border-0 flex-grow-1"
-              id="almacenTabs"
-              role="tablist"
-            >
-              <button
-                class="nav-link px-24 py-16 border-0 text-heading-two fw-medium"
-                [class.active]="activeTab === 'productos'"
-                (click)="navigateToTab('productos')"
-                type="button"
+            <div class="col-12 col-lg-8">
+              <nav
+                class="nav nav-tabs border-0 w-100"
+                id="almacenTabs"
+                role="tablist"
               >
-                <i class="ph ph-package me-8"></i>
-                Productos
-                <span class="badge bg-main-50 text-main-600 ms-8">{{
-                  totalProductos
-                }}</span>
-              </button>
-              <button
-                class="nav-link px-24 py-16 border-0 text-heading-two fw-medium"
-                [class.active]="activeTab === 'categorias'"
-                (click)="navigateToTab('categorias')"
-                type="button"
-              >
-                <i class="ph ph-folder me-8"></i>
-                Categorías
-                <span class="badge bg-main-50 text-main-600 ms-8">{{
-                  totalCategorias
-                }}</span>
-              </button>
-              <button
-                class="nav-link px-24 py-16 border-0 text-heading-two fw-medium"
-                [class.active]="activeTab === 'marcas'"
-                (click)="navigateToTab('marcas')"
-                type="button"
-              >
-                <i class="ph ph-tag me-8"></i>
-                Marcas
-                <span class="badge bg-main-50 text-main-600 ms-8">{{
-                  totalMarcas
-                }}</span>
-              </button>
-            </nav>
+                <button
+                  class="nav-link px-lg-24 px-12 py-16 border-0 text-heading-two fw-medium flex-fill text-center"
+                  [class.active]="activeTab === 'productos'"
+                  (click)="navigateToTab('productos')"
+                  type="button"
+                >
+                  <i class="ph ph-package me-8 d-none d-sm-inline"></i>
+                  <span class="d-none d-sm-inline">Productos</span>
+                  <span class="d-sm-none">Prod.</span>
+                  <span class="badge bg-main-50 text-main-600 ms-8">{{
+                    totalProductos
+                  }}</span>
+                </button>
+                <button
+                  class="nav-link px-lg-24 px-12 py-16 border-0 text-heading-two fw-medium flex-fill text-center"
+                  [class.active]="activeTab === 'categorias'"
+                  (click)="navigateToTab('categorias')"
+                  type="button"
+                >
+                  <i class="ph ph-folder me-8 d-none d-sm-inline"></i>
+                  <span class="d-none d-sm-inline">Categorías</span>
+                  <span class="d-sm-none">Cat.</span>
+                  <span class="badge bg-main-50 text-main-600 ms-8">{{
+                    totalCategorias
+                  }}</span>
+                </button>
+                <button
+                  class="nav-link px-lg-24 px-12 py-16 border-0 text-heading-two fw-medium flex-fill text-center"
+                  [class.active]="activeTab === 'marcas'"
+                  (click)="navigateToTab('marcas')"
+                  type="button"
+                >
+                  <i class="ph ph-tag me-8 d-none d-sm-inline"></i>
+                  <span class="d-none d-sm-inline">Marcas</span>
+                  <span class="d-sm-none">Mar.</span>
+                  <span class="badge bg-main-50 text-main-600 ms-8">{{
+                    totalMarcas
+                  }}</span>
+                </button>
+              </nav>
+            </div>
 
             <!-- Filtro de Sección -->
-            <div class="d-flex align-items-center px-24 py-16 gap-12">
-              <div class="d-flex align-items-center gap-8">
-                <i class="ph ph-funnel text-gray-600"></i>
-                <span class="text-sm text-gray-600">Filtrar por Sección</span>
+            <div class="col-12 col-lg-4">
+              <div class="d-flex align-items-center justify-content-lg-end px-24 py-16 gap-12 border-top border-lg-0 border-start-lg">
+                <div class="d-flex align-items-center gap-8">
+                  <i class="ph ph-funnel text-gray-600"></i>
+                  <span class="text-sm text-gray-600 d-none d-md-inline">Filtrar por Sección</span>
+                  <span class="text-sm text-gray-600 d-md-none">Sección</span>
+                </div>
+                <select
+                  class="form-select form-select-sm border-gray-300 rounded-8 flex-fill"
+                  style="min-width: 120px; max-width: 200px;"
+                  [(ngModel)]="seccionSeleccionada"
+                  (change)="onSeccionChange($event)"
+                >
+                  <option value="" disabled>Seleccionar</option>
+                  <option value="todas">Todas</option>
+                  <option *ngFor="let seccion of secciones" [value]="seccion.id">
+                    {{ seccion.nombre }}
+                  </option>
+                </select>
+                <!-- Botón para agregar/gestionar secciones -->
+                <button
+                  class="btn btn-sm bg-main-600 px-8 py-6 rounded-8 flex-shrink-0"
+                  *ngIf="permissionsService.canViewSecciones()"
+                  (click)="abrirModalSeccion()"
+                  title="Agregar/Gestionar Secciones"
+                >
+                  <i class="ph ph-plus"></i>
+                </button>
               </div>
-              <select
-                class="form-select form-select-sm border-gray-300 rounded-8"
-                style="min-width: 180px;"
-                [(ngModel)]="seccionSeleccionada"
-                (change)="onSeccionChange($event)"
-              >
-                <option value="" disabled>Seleccionar</option>
-                <option value="todas">Todas las secciones</option>
-                <option *ngFor="let seccion of secciones" [value]="seccion.id">
-                  {{ seccion.nombre }}
-                </option>
-              </select>
-              <!-- Botón para agregar/gestionar secciones -->
-              <button
-                class="btn btn-sm bg-main-600 px-8 py-6 rounded-8 ms-8"
-                *ngIf="permissionsService.canViewSecciones()"
-                (click)="abrirModalSeccion()"
-                title="Agregar/Gestionar Secciones"
-              >
-                <i class="ph ph-plus"></i>
-              </button>
             </div>
           </div>
         </div>
@@ -148,6 +157,36 @@ import { filter } from 'rxjs/operators';
       .btn-sm {
         padding: 0.375rem 0.5rem;
         font-size: 0.875rem;
+      }
+
+      /* Estilos responsivos adicionales */
+      @media (max-width: 991.98px) {
+        .border-start-lg {
+          border-left: none !important;
+        }
+        .nav-tabs .nav-link {
+          font-size: 0.875rem;
+        }
+      }
+
+      @media (max-width: 575.98px) {
+        .nav-tabs .nav-link {
+          padding: 0.75rem 0.5rem !important;
+          font-size: 0.8rem;
+        }
+        .px-24 {
+          padding-left: 1rem !important;
+          padding-right: 1rem !important;
+        }
+      }
+
+      @media (min-width: 992px) {
+        .justify-content-lg-end {
+          justify-content: flex-end !important;
+        }
+        .border-start-lg {
+          border-left: 1px solid #dee2e6 !important;
+        }
       }
     `,
   ],

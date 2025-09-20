@@ -1,1 +1,314 @@
-<p>motorizados-list works!</p>
+<div class="border border-gray-100 rounded-16 overflow-hidden bg-white">
+  <!-- Header -->
+  <div class="p-24 p-md-32 border-bottom border-gray-100">
+    <div class="flex-between align-items-center gap-16 flex-wrap">
+      <div>
+        <h4 class="mb-4 text-heading">Gestión de Motorizados</h4>
+        <p class="text-gray-500 mb-0 text-sm">Administra los motorizados de tu plataforma de delivery</p>
+      </div>
+      <button
+        *ngIf="permissionsService.canCreateMotorizados()"
+        class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8 text-sm transition-2"
+        routerLink="/dashboard/motorizados/crear"
+        type="button">
+        <i class="ph ph-plus me-8"></i>
+        Crear Motorizado
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="p-24 p-md-32 border-bottom border-gray-100">
+    <div class="row align-items-center g-16">
+      <div class="col-md-5">
+        <div class="position-relative">
+          <i class="ph ph-magnifying-glass position-absolute start-0 top-50 translate-middle-y ms-12 text-gray-400"></i>
+          <input
+            type="text"
+            [(ngModel)]="filtroTexto"
+            (input)="filtrarMotorizados()"
+            class="form-control ps-40"
+            placeholder="Buscar por nombre, documento, placa o unidad...">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="d-flex align-items-center gap-8">
+          <span class="text-sm fw-medium text-dark">Total:</span>
+          <span class="badge bg-main-50 text-main-600">{{ estadisticas.total }}</span>
+          <span class="text-sm fw-medium text-dark">Activos:</span>
+          <span class="badge bg-success-50 text-success-600">{{ estadisticas.activos }}</span>
+          <span class="text-sm fw-medium text-dark">Inactivos:</span>
+          <span class="badge bg-danger-50 text-danger-600">{{ estadisticas.inactivos }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla con NGX-Datatable -->
+  <div class="card border-0 shadow-sm rounded-12 mx-24 mx-md-32 mb-24 mb-md-32">
+    <!-- Header de información -->
+    <div class="card-header bg-white border-bottom px-24 py-16" *ngIf="!isLoading && motorizadosFiltrados.length > 0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-16">
+          <span class="text-sm text-gray-600">{{ selectionText }}</span>
+          <div class="d-flex align-items-center gap-8" *ngIf="selected.length > 0">
+            <button class="btn btn-sm btn-outline-danger px-12 py-6">
+              <i class="ph ph-trash me-4"></i>
+              Eliminar seleccionados
+            </button>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-8">
+          <span class="text-sm fw-medium text-dark">Mostrando</span>
+          <select class="form-select page-size-select" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+            <option [value]="5">5</option>
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+          </select>
+          <span class="text-sm fw-medium text-dark">por página</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <!-- Loading state -->
+      <div *ngIf="isLoading" class="text-center py-40">
+        <div class="spinner-border text-main-600" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="text-gray-500 mt-12 mb-0">Cargando motorizados...</p>
+      </div>
+
+      <!-- Datatable -->
+      <div class="table-container">
+        <ngx-datatable
+          *ngIf="!isLoading"
+          class="bootstrap motorizados-table"
+          [columns]="[]"
+          [rows]="motorizadosFiltrados"
+          [columnMode]="ColumnMode.flex"
+          [headerHeight]="50"
+          [footerHeight]="60"
+          [rowHeight]="60"
+          [limit]="pageSize"
+          [scrollbarV]="false"
+          [scrollbarH]="false"
+          [loadingIndicator]="isLoading"
+          [trackByProp]="'id'"
+          [sortType]="SortType.single"
+          [selectionType]="SelectionType.checkbox"
+          [selected]="selected"
+          [selectAllRowsOnPage]="false"
+          [displayCheck]="displayCheck"
+          [externalPaging]="false"
+          [messages]="messages"
+          (select)="onSelect($event)"
+          (page)="onPageChange($event)"
+        >
+        <!-- Columna Motorizado -->
+        <ngx-datatable-column
+          name="Motorizado"
+          prop="nombre_completo"
+          [flexGrow]="2"
+          [minWidth]="220"
+          [resizeable]="false"
+        >
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div class="d-flex align-items-center gap-12">
+              <div class="user-avatar"
+                  [style.background-color]="getAvatarDisplay(row).color"
+                  *ngIf="getAvatarDisplay(row).type === 'initial'">
+                {{ getAvatarDisplay(row).value }}
+              </div>
+              <img class="user-avatar-img"
+                  [src]="getAvatarDisplay(row).value"
+                  [alt]="row.nombre_completo"
+                  *ngIf="getAvatarDisplay(row).type === 'image'">
+              <div>
+                <h6 class="mb-0 text-heading text-sm fw-medium">{{ row.nombre_completo }}</h6>
+                <p class="mb-0 text-xs text-gray-500">{{ row.numero_documento }}</p>
+              </div>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <!-- Columna Vehículo -->
+        <ngx-datatable-column
+          name="Vehículo"
+          prop="vehiculo_placa"
+          [flexGrow]="1.5"
+          [minWidth]="160"
+          [resizeable]="false"
+        >
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div>
+              <span class="text-sm fw-medium text-dark">{{ row.vehiculo_placa }}</span>
+              <p class="mb-0 text-xs text-gray-500">{{ row.vehiculo_marca }} {{ row.vehiculo_modelo }}</p>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <!-- Columna Unidad -->
+        <ngx-datatable-column
+          name="Unidad"
+          prop="numero_unidad"
+          [flexGrow]="1"
+          [minWidth]="100"
+          [resizeable]="false"
+        >
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span class="badge bg-main-50 text-main-600 text-sm fw-medium">
+              {{ row.numero_unidad }}
+            </span>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <!-- Columna Teléfono -->
+        <ngx-datatable-column
+          name="Teléfono"
+          prop="telefono"
+          [flexGrow]="1"
+          [minWidth]="120"
+          [resizeable]="false"
+        >
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span class="text-sm fw-medium text-dark">{{ row.telefono }}</span>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <!-- Columna Estado -->
+        <ngx-datatable-column
+          name="Estado"
+          prop="estado"
+          [flexGrow]="1"
+          [minWidth]="140"
+          [resizeable]="false"
+        >
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div class="d-flex align-items-center gap-8">
+              <span class="badge estado-badge estado-width"
+                    [class]="getEstadoClass(row.estado)">
+                {{ row.estado ? 'Activo' : 'Inactivo' }}
+              </span>
+              <button
+                *ngIf="canChangeStatus()"
+                class="btn action-btn toggle-btn"
+                [class.toggle-active]="row.estado"
+                [class.toggle-inactive]="!row.estado"
+                [title]="row.estado ? 'Desactivar motorizado' : 'Activar motorizado'"
+                (click)="toggleEstado(row)">
+                <i class="ph" [class]="row.estado ? 'ph-toggle-right' : 'ph-toggle-left'"></i>
+              </button>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <!-- Columna Fecha Registro -->
+        <ngx-datatable-column
+          name="Fecha Registro"
+          prop="created_at"
+          [flexGrow]="1"
+          [minWidth]="150"
+          [resizeable]="false"
+        >
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span class="text-sm fw-medium text-dark">{{ formatDate(row.created_at) }}</span>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <!-- Columna Usuario -->
+        <ngx-datatable-column
+          name="Usuario"
+          [canAutoResize]="false"
+          [sortable]="false"
+          [width]="120"
+        >
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div class="d-flex align-items-center gap-4">
+              <!-- Crear usuario si no tiene -->
+              <button
+                *ngIf="!row.tiene_usuario"
+                class="w-32 h-32 bg-success-50 hover-bg-success-100 text-success-600 rounded-circle flex-center transition-2"
+                (click)="crearUsuario(row.id, row.nombre_completo)"
+                title="Crear usuario">
+                <i class="ph ph-user-plus"></i>
+              </button>
+
+              <!-- Gestión de usuario existente -->
+              <div *ngIf="row.tiene_usuario" class="d-flex align-items-center gap-4">
+                <!-- Toggle estado usuario -->
+                <button
+                  class="w-32 h-32 rounded-circle flex-center transition-2"
+                  [class]="row.estado_usuario ? 'bg-warning-50 hover-bg-warning-100 text-warning-600' : 'bg-info-50 hover-bg-info-100 text-info-600'"
+                  (click)="toggleUsuario(row.id, row.username, row.estado_usuario)"
+                  [title]="row.estado_usuario ? 'Desactivar usuario' : 'Activar usuario'">
+                  <i class="ph" [class]="row.estado_usuario ? 'ph-user-minus' : 'ph-user-check'"></i>
+                </button>
+
+                <!-- Resetear contraseña -->
+                <button
+                  class="w-32 h-32 bg-secondary-50 hover-bg-secondary-100 text-secondary-600 rounded-circle flex-center transition-2"
+                  (click)="resetearPassword(row.id, row.username)"
+                  title="Resetear contraseña">
+                  <i class="ph ph-key"></i>
+                </button>
+              </div>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <!-- Columna Acciones -->
+        <ngx-datatable-column
+          name="Acciones"
+          [canAutoResize]="false"
+          [sortable]="false"
+          [width]="120"
+        >
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div class="d-flex align-items-center gap-8">
+              <button
+                class="w-32 h-32 bg-main-50 hover-bg-main-100 text-main-600 rounded-circle flex-center transition-2"
+                (click)="verDetalle(row.id)"
+                title="Ver motorizado"
+                *ngIf="permissionsService.canViewMotorizados()">
+                <i class="ph ph-eye"></i>
+              </button>
+              <button
+                class="w-32 h-32 bg-warning-50 hover-bg-warning-100 text-warning-600 rounded-circle flex-center transition-2"
+                (click)="editarMotorizado(row.id)"
+                title="Editar motorizado"
+                *ngIf="permissionsService.canEditMotorizados()">
+                <i class="ph ph-pencil"></i>
+              </button>
+              <button
+                class="w-32 h-32 bg-danger-50 hover-bg-danger-100 text-danger-600 rounded-circle flex-center transition-2"
+                (click)="eliminarMotorizado(row.id, row.nombre_completo)"
+                title="Eliminar motorizado"
+                *ngIf="permissionsService.canDeleteMotorizados()">
+                <i class="ph ph-trash"></i>
+              </button>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+
+        </ngx-datatable>
+      </div>
+
+      <!-- Estado vacío solo cuando no hay motorizados en absoluto -->
+      <div *ngIf="!isLoading && motorizados.length === 0" class="text-center py-60">
+        <div class="w-80 h-80 bg-gray-50 text-gray-400 rounded-circle flex-center mx-auto mb-24">
+          <i class="ph ph-motorcycle text-3xl"></i>
+        </div>
+        <h5 class="text-heading mb-12">No hay motorizados registrados</h5>
+        <p class="text-gray-500 mb-24 max-w-400 mx-auto">
+          Comienza registrando tu primer motorizado para gestionar las entregas.
+        </p>
+        <button class="btn bg-main-600 hover-bg-main-700 text-white rounded-pill px-32 py-12" routerLink="/dashboard/motorizados/crear">
+          <i class="ph-bold ph-plus me-8"></i>
+          Crear Motorizado
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
