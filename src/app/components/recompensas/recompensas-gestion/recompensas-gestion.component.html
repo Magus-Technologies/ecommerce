@@ -1,0 +1,473 @@
+<!-- Dashboard de Estadísticas -->
+<div class="row mb-24" *ngIf="estadisticas && !loadingEstadisticas">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="ph ph-chart-line me-2"></i>
+          Resumen de Recompensas
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Total Recompensas -->
+          <div class="col-md-3 col-sm-6 mb-16">
+            <div class="stat-card">
+              <div class="stat-icon bg-primary">
+                <i class="ph ph-gift"></i>
+              </div>
+              <div class="stat-content">
+                <h3 class="stat-number">{{ estadisticas.resumen.total_recompensas }}</h3>
+                <p class="stat-label">Total Recompensas</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Recompensas Activas -->
+          <div class="col-md-3 col-sm-6 mb-16">
+            <div class="stat-card">
+              <div class="stat-icon bg-success">
+                <i class="ph ph-check-circle"></i>
+              </div>
+              <div class="stat-content">
+                <h3 class="stat-number">{{ estadisticas.resumen.recompensas_activas }}</h3>
+                <p class="stat-label">Activas</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Recompensas Vigentes -->
+          <div class="col-md-3 col-sm-6 mb-16">
+            <div class="stat-card">
+              <div class="stat-icon bg-info">
+                <i class="ph ph-clock"></i>
+              </div>
+              <div class="stat-content">
+                <h3 class="stat-number">{{ estadisticas.resumen.recompensas_vigentes }}</h3>
+                <p class="stat-label">Vigentes</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Tasa de Activación -->
+          <div class="col-md-3 col-sm-6 mb-16">
+            <div class="stat-card">
+              <div class="stat-icon bg-warning">
+                <i class="ph ph-percent"></i>
+              </div>
+              <div class="stat-content">
+                <h3 class="stat-number">{{ estadisticas.resumen.tasa_activacion | number:'1.1-1' }}%</h3>
+                <p class="stat-label">Tasa Activación</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filtros y Búsqueda -->
+<div class="row mb-24">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <form [formGroup]="filtrosForm" (ngModelChange)="onFiltrosChange()">
+          <div class="row g-16">
+            <!-- Búsqueda -->
+            <div class="col-md-4">
+              <label class="form-label">Buscar</label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="ph ph-magnifying-glass"></i>
+                </span>
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Buscar por nombre..."
+                  formControlName="buscar"
+                  (input)="onSearchChange($event)"
+                />
+              </div>
+            </div>
+            
+            <!-- Tipo -->
+            <div class="col-md-2">
+              <label class="form-label">Tipo</label>
+              <select class="form-select" formControlName="tipo">
+                <option value="">Todos</option>
+                <option *ngFor="let tipo of tiposRecompensas" [value]="tipo.value">
+                  {{ tipo.label }}
+                </option>
+              </select>
+            </div>
+            
+            <!-- Estado -->
+            <div class="col-md-2">
+              <label class="form-label">Estado</label>
+              <select class="form-select" formControlName="activo">
+                <option value="">Todos</option>
+                <option value="true">Activas</option>
+                <option value="false">Inactivas</option>
+              </select>
+            </div>
+            
+            <!-- Vigencia -->
+            <div class="col-md-2">
+              <label class="form-label">Vigencia</label>
+              <select class="form-select" formControlName="vigente">
+                <option value="">Todos</option>
+                <option value="true">Vigentes</option>
+                <option value="false">Expiradas</option>
+              </select>
+            </div>
+            
+            <!-- Ordenar por -->
+            <div class="col-md-2">
+              <label class="form-label">Ordenar por</label>
+              <select class="form-select" formControlName="order_by">
+                <option value="created_at">Fecha Creación</option>
+                <option value="nombre">Nombre</option>
+                <option value="fecha_inicio">Fecha Inicio</option>
+                <option value="fecha_fin">Fecha Fin</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="row g-16 mt-16">
+            <!-- Fecha Inicio -->
+            <div class="col-md-3">
+              <label class="form-label">Fecha Inicio</label>
+              <input
+                type="date"
+                class="form-control"
+                formControlName="fecha_inicio"
+              />
+            </div>
+            
+            <!-- Fecha Fin -->
+            <div class="col-md-3">
+              <label class="form-label">Fecha Fin</label>
+              <input
+                type="date"
+                class="form-control"
+                formControlName="fecha_fin"
+              />
+            </div>
+            
+            <!-- Dirección de ordenamiento -->
+            <div class="col-md-2">
+              <label class="form-label">Dirección</label>
+              <select class="form-select" formControlName="order_direction">
+                <option value="desc">Descendente</option>
+                <option value="asc">Ascendente</option>
+              </select>
+            </div>
+            
+            <!-- Elementos por página -->
+            <div class="col-md-2">
+              <label class="form-label">Por página</label>
+              <select class="form-select" (change)="onPerPageChangeChange($event)">
+                <option [value]="15" [selected]="perPage === 15">15</option>
+                <option [value]="25" [selected]="perPage === 25">25</option>
+                <option [value]="50" [selected]="perPage === 50">50</option>
+                <option [value]="100" [selected]="perPage === 100">100</option>
+              </select>
+            </div>
+            
+            <!-- Botón Limpiar -->
+            <div class="col-md-2 d-flex align-items-end">
+              <button
+                type="button"
+                class="btn btn-outline-secondary w-100"
+                (click)="filtrosForm.reset(); onFiltrosChange()"
+              >
+                <i class="ph ph-arrow-clockwise me-2"></i>
+                Limpiar
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Acciones y Lista -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="ph ph-list me-2"></i>
+          Lista de Recompensas
+        </h5>
+        
+        <!-- Botón Crear -->
+        <button
+          *ngIf="puedeCrear"
+          type="button"
+          class="btn btn-primary"
+          (click)="onCrearRecompensa()"
+        >
+          <i class="ph ph-plus me-2"></i>
+          Nueva Recompensa
+        </button>
+      </div>
+      
+      <div class="card-body p-0">
+        <!-- Loading -->
+        <div *ngIf="loading" class="text-center py-48">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="mt-16 text-muted">Cargando recompensas...</p>
+        </div>
+        
+        <!-- Lista de Recompensas -->
+        <div *ngIf="!loading && recompensas.length > 0" class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Recompensa</th>
+                <th>Tipo</th>
+                <th>Período</th>
+                <th>Estado</th>
+                <th>Aplicaciones</th>
+                <th>Creado por</th>
+                <th>Configuración</th>
+                <th width="120">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let recompensa of recompensas">
+                <!-- Información Principal -->
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="me-12">
+                      <i [class]="'ph ' + getTipoIcon(recompensa.tipo) + ' text-primary'"></i>
+                    </div>
+                    <div>
+                      <h6 class="mb-4 fw-semibold">{{ recompensa.nombre }}</h6>
+                      <p class="text-muted small mb-0" *ngIf="recompensa.descripcion">
+                        {{ recompensa.descripcion | slice:0:50 }}{{ recompensa.descripcion.length > 50 ? '...' : '' }}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                
+                <!-- Tipo -->
+                <td>
+                  <span class="badge bg-light text-dark">
+                    {{ recompensa.tipo_nombre }}
+                  </span>
+                </td>
+                
+                <!-- Período -->
+                <td>
+                  <div class="small">
+                    <div class="fw-medium">
+                      {{ recompensa.fecha_inicio | date:'dd/MM/yyyy' }}
+                    </div>
+                    <div class="text-muted">
+                      al {{ recompensa.fecha_fin | date:'dd/MM/yyyy' }}
+                    </div>
+                  </div>
+                </td>
+                
+                <!-- Estado -->
+                <td>
+                  <span [class]="'badge ' + getEstadoBadgeClass(recompensa.activo, recompensa.es_vigente)">
+                    {{ getEstadoText(recompensa.activo, recompensa.es_vigente) }}
+                  </span>
+                </td>
+                
+                <!-- Aplicaciones -->
+                <td>
+                  <div class="text-center">
+                    <span class="fw-semibold">{{ recompensa.total_aplicaciones | number }}</span>
+                  </div>
+                </td>
+                
+                <!-- Creado por -->
+                <td>
+                  <div class="small">
+                    <div class="fw-medium">{{ recompensa.creador.name }}</div>
+                    <div class="text-muted">
+                      {{ recompensa.created_at | date:'dd/MM/yyyy' }}
+                    </div>
+                  </div>
+                </td>
+                
+                <!-- Configuración -->
+                <td>
+                  <div class="d-flex gap-8">
+                    <span 
+                      *ngIf="recompensa.tiene_clientes"
+                      class="badge bg-success"
+                      title="Clientes configurados"
+                    >
+                      <i class="ph ph-users"></i>
+                    </span>
+                    <span 
+                      *ngIf="recompensa.tiene_productos"
+                      class="badge bg-info"
+                      title="Productos configurados"
+                    >
+                      <i class="ph ph-package"></i>
+                    </span>
+                    <span 
+                      *ngIf="recompensa.tiene_configuracion"
+                      class="badge bg-warning"
+                      title="Configuración completa"
+                    >
+                      <i class="ph ph-gear"></i>
+                    </span>
+                  </div>
+                </td>
+                
+                <!-- Acciones -->
+                <td>
+                  <div class="btn-group" role="group">
+                    <!-- Ver Detalle -->
+                    <button
+                      *ngIf="puedeVer"
+                      type="button"
+                      class="btn btn-sm btn-outline-primary"
+                      (click)="onVerDetalle(recompensa)"
+                      title="Ver detalle"
+                    >
+                      <i class="ph ph-eye"></i>
+                    </button>
+                    
+                    <!-- Editar -->
+                    <button
+                      *ngIf="puedeEditar"
+                      type="button"
+                      class="btn btn-sm btn-outline-warning"
+                      (click)="onEditarRecompensa(recompensa)"
+                      title="Editar"
+                    >
+                      <i class="ph ph-pencil"></i>
+                    </button>
+                    
+                    <!-- Activar/Desactivar -->
+                    <button
+                      *ngIf="puedeEditar"
+                      type="button"
+                      [class]="'btn btn-sm ' + (recompensa.activo ? 'btn-outline-danger' : 'btn-outline-success')"
+                      (click)="toggleActivarRecompensa(recompensa)"
+                      [title]="recompensa.activo ? 'Desactivar' : 'Activar'"
+                    >
+                      <i [class]="'ph ' + (recompensa.activo ? 'ph-pause' : 'ph-play')"></i>
+                    </button>
+                    
+                    <!-- Eliminar -->
+                    <button
+                      *ngIf="puedeEliminar"
+                      type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="onEliminarRecompensa(recompensa)"
+                      title="Eliminar"
+                    >
+                      <i class="ph ph-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Sin datos -->
+        <div *ngIf="!loading && recompensas.length === 0" class="text-center py-48">
+          <i class="ph ph-gift text-muted" style="font-size: 3rem;"></i>
+          <h5 class="mt-16 text-muted">No hay recompensas</h5>
+          <p class="text-muted">No se encontraron recompensas con los filtros aplicados.</p>
+          <button
+            *ngIf="puedeCrear"
+            type="button"
+            class="btn btn-primary"
+            (click)="onCrearRecompensa()"
+          >
+            <i class="ph ph-plus me-2"></i>
+            Crear Primera Recompensa
+          </button>
+        </div>
+      </div>
+      
+      <!-- Paginación -->
+      <div *ngIf="paginacion && paginacion.last_page > 1" class="card-footer">
+        <nav aria-label="Paginación de recompensas">
+          <ul class="pagination justify-content-center mb-0">
+            <!-- Página anterior -->
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <button
+                class="page-link"
+                (click)="onPageChange(currentPage - 1)"
+                [disabled]="currentPage === 1"
+              >
+                <i class="ph ph-caret-left"></i>
+              </button>
+            </li>
+            
+            <!-- Páginas -->
+            <li
+              *ngFor="let page of getPageNumbers()"
+              class="page-item"
+              [class.active]="page === currentPage"
+            >
+              <button
+                class="page-link"
+                (click)="onPageChange(page)"
+              >
+                {{ page }}
+              </button>
+            </li>
+            
+            <!-- Página siguiente -->
+            <li class="page-item" [class.disabled]="currentPage === paginacion.last_page">
+              <button
+                class="page-link"
+                (click)="onPageChange(currentPage + 1)"
+                [disabled]="currentPage === paginacion.last_page"
+              >
+                <i class="ph ph-caret-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+        
+        <!-- Información de paginación -->
+        <div class="text-center mt-16">
+          <small class="text-muted">
+            Mostrando {{ paginacion.from }} a {{ paginacion.to }} de {{ paginacion.total }} recompensas
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modales -->
+<app-recompensa-modal
+  *ngIf="showCrearModal || showEditarModal"
+  [recompensa]="recompensaSeleccionada"
+  [tipos]="tiposRecompensas"
+  [isEdit]="showEditarModal"
+  (guardado)="onRecompensaGuardada()"
+  (cancelado)="onModalClosed()"
+></app-recompensa-modal>
+
+<app-recompensa-eliminar-modal
+  *ngIf="showEliminarModal"
+  [recompensa]="recompensaSeleccionada"
+  (eliminado)="onRecompensaEliminada()"
+  (cancelado)="onModalClosed()"
+></app-recompensa-eliminar-modal>
+
+<app-recompensa-detalle-modal
+  *ngIf="showDetalleModal"
+  [recompensa]="recompensaSeleccionada"
+  (cerrado)="onModalClosed()"
+></app-recompensa-detalle-modal>

@@ -7,10 +7,11 @@ import {
   EventEmitter,
   Input,
   HostListener,
-  OnDestroy
+  OnDestroy,
+  inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { PermissionsService } from '../../../services/permissions.service';
 import { Subscription } from 'rxjs';
@@ -53,12 +54,15 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   puedeVerHorarios = false;
   puedeVerEmpresaInfo = false;
   puedeVerEmailTemplates = false;
-  puedeConfigure = false; // ✅ NUEVO: Para Arma tu PC 
+  puedeConfigure = false; // ✅ NUEVO: Para Arma tu PC
+  puedeVerRecompensas = false; // ✅ NUEVO: Para Recompensas 
 
-
+  // Dropdown state
+  showRecompensasDropdown = false;
 
   isDesktop = false;
   private permisosSub: Subscription | null = null;
+  private router = inject(Router);
 
   constructor(
     private authService: AuthService,
@@ -100,6 +104,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
     this.puedeVerEmpresaInfo = this.permissionsService.hasPermission('empresa_info.ver');
     this.puedeVerEmailTemplates = this.permissionsService.hasPermission('envio_correos.ver');
     this.puedeConfigure = this.permissionsService.hasPermission('categorias.edit'); // ✅ NUEVO
+    this.puedeVerRecompensas = this.permissionsService.hasPermission('recompensas.ver'); // ✅ NUEVO
   }
 
   ngAfterViewInit(): void {
@@ -133,6 +138,35 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
       this.isCollapsed = !this.isCollapsed;
       this.sidebarToggled.emit(!this.isCollapsed);
       this.sidebarCollapsed.emit(this.isCollapsed);
+    }
+  }
+
+  toggleRecompensasDropdown(): void {
+    this.showRecompensasDropdown = !this.showRecompensasDropdown;
+  }
+
+  navegarARecompensasSubmodulo(submodulo: string, event: Event): void {
+    // Prevenir el comportamiento por defecto del enlace
+    event.preventDefault();
+    
+    // Cerrar el dropdown
+    this.showRecompensasDropdown = false;
+    
+    // Navegar según el submódulo
+    if (submodulo === 'general') {
+      // Para "Ver Todas", navegar a la página principal de recompensas
+      this.router.navigate(['/dashboard/recompensas']);
+    } else {
+      // Para todos los submódulos, navegar a la ruta específica
+      this.router.navigate(['/dashboard/recompensas', submodulo]);
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.recompensas-dropdown')) {
+      this.showRecompensasDropdown = false;
     }
   }
 }

@@ -1,0 +1,340 @@
+// Estilos para el componente de gestión de recompensas
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+  
+  .stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    
+    i {
+      font-size: 24px;
+      color: white;
+    }
+    
+    &.bg-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    &.bg-success {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    &.bg-info {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    &.bg-warning {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+  }
+  
+  .stat-content {
+    flex: 1;
+    
+    .stat-number {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0;
+      color: #2d3748;
+    }
+    
+    .stat-label {
+      font-size: 14px;
+      color: #718096;
+      margin: 0;
+      font-weight: 500;
+    }
+  }
+}
+
+// Estilos para la tabla
+.table {
+  th {
+    border-top: none;
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 16px 12px;
+  }
+  
+  td {
+    padding: 16px 12px;
+    vertical-align: middle;
+    border-top: 1px solid #111214;
+  }
+  
+  tbody tr {
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background-color: #0c0d0e;
+    }
+  }
+}
+
+// Badges personalizados
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  
+  &.bg-light {
+    background-color: #000000 !important;
+    color: #4a5568 !important;
+    border: 1px solid #08090a;
+  }
+  
+  &.bg-success {
+    background-color: #48bb78 !important;
+  }
+  
+  &.bg-info {
+    background-color: #4299e1 !important;
+  }
+  
+  &.bg-warning {
+    background-color: #ed8936 !important;
+  }
+  
+  &.bg-secondary {
+    background-color: #010202 !important;
+  }
+}
+
+// Botones de acción
+.btn-group {
+  .btn {
+    border-radius: 6px;
+    margin-right: 4px;
+    
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}
+
+// Formulario de filtros
+.form-label {
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.form-control,
+.form-select {
+  border: 1px solid #000000;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+}
+
+.input-group {
+  .input-group-text {
+    background-color: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-right: none;
+    color: #718096;
+  }
+  
+  .form-control {
+    border-left: none;
+    
+    &:focus {
+      border-left: none;
+    }
+  }
+}
+
+// Paginación
+.pagination {
+  .page-link {
+    border: 1px solid #e2e8f0;
+    color: #4a5568;
+    padding: 8px 12px;
+    margin: 0 2px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background-color: #f7fafc;
+      border-color: #cbd5e0;
+    }
+  }
+  
+  .page-item.active .page-link {
+    background-color: #667eea;
+    border-color: #667eea;
+  }
+  
+  .page-item.disabled .page-link {
+    color: #a0aec0;
+    background-color: #f7fafc;
+  }
+}
+
+// Loading spinner
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
+}
+
+// Estados vacíos
+.text-center {
+  &.py-48 {
+    padding: 48px 0;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .stat-card {
+    margin-bottom: 16px;
+    
+    .stat-icon {
+      width: 50px;
+      height: 50px;
+      margin-right: 12px;
+      
+      i {
+        font-size: 20px;
+      }
+    }
+    
+    .stat-content {
+      .stat-number {
+        font-size: 24px;
+      }
+    }
+  }
+  
+  .table-responsive {
+    font-size: 14px;
+  }
+  
+  .btn-group {
+    .btn {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+  }
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeIn 0.3s ease;
+}
+
+// Utilidades
+.g-16 {
+  gap: 16px;
+}
+
+.mb-24 {
+  margin-bottom: 24px;
+}
+
+.mt-16 {
+  margin-top: 16px;
+}
+
+.me-2 {
+  margin-right: 8px;
+}
+
+.me-12 {
+  margin-right: 12px;
+}
+
+.mb-4 {
+  margin-bottom: 4px;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.fw-semibold {
+  font-weight: 600;
+}
+
+.fw-medium {
+  font-weight: 500;
+}
+
+.text-muted {
+  color: #718096 !important;
+}
+
+.text-primary {
+  color: #667eea !important;
+}
+
+.small {
+  font-size: 12px;
+}
+
+// Estilos para badges de estado
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+  
+  &.badge-success {
+    background-color: #10b981;
+    color: white;
+  }
+  
+  &.badge-warning {
+    background-color: #f59e0b;
+    color: white;
+  }
+  
+  &.badge-secondary {
+    background-color: #6b7280;
+    color: white;
+  }
+}

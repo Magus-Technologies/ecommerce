@@ -1,0 +1,349 @@
+<!-- Modal de Detalle -->
+<div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="ph ph-info me-2"></i>
+          Detalle de Recompensa
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="onCerrar()"
+          [disabled]="loading"
+        ></button>
+      </div>
+      
+      <!-- Body -->
+      <div class="modal-body">
+        <!-- Loading -->
+        <div *ngIf="loading" class="text-center py-48">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="mt-16 text-muted">Cargando detalles...</p>
+        </div>
+        
+        <!-- Contenido -->
+        <div *ngIf="!loading && detalle" class="detalle-content">
+          <!-- Información Principal -->
+          <div class="info-principal mb-24">
+            <div class="info-header">
+              <div class="info-icon">
+                <i [class]="'ph ' + getTipoIcon(detalle.recompensa.tipo)"></i>
+              </div>
+              <div class="info-content">
+                <h4 class="info-title">{{ detalle.recompensa.nombre }}</h4>
+                <p class="info-type">{{ detalle.recompensa.tipo_nombre }}</p>
+                <p *ngIf="detalle.recompensa.descripcion" class="info-description">
+                  {{ detalle.recompensa.descripcion }}
+                </p>
+              </div>
+              <div class="info-status">
+                <span [class]="'badge ' + getEstadoBadgeClass(detalle.recompensa.activo, detalle.recompensa.es_vigente)">
+                  {{ getEstadoText(detalle.recompensa.activo, detalle.recompensa.es_vigente) }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- Métricas Rápidas -->
+            <div class="metricas-rapidas">
+              <div class="row">
+                <div class="col-md-3 col-sm-6">
+                  <div class="metrica-card">
+                    <div class="metrica-icon bg-primary">
+                      <i class="ph ph-chart-line"></i>
+                    </div>
+                    <div class="metrica-content">
+                      <h5 class="metrica-number">{{ detalle.recompensa.total_aplicaciones | number }}</h5>
+                      <p class="metrica-label">Aplicaciones</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                  <div class="metrica-card">
+                    <div class="metrica-icon bg-success">
+                      <i class="ph ph-calendar"></i>
+                    </div>
+                    <div class="metrica-content">
+                      <h5 class="metrica-number">{{ getDiasVigencia() }}</h5>
+                      <p class="metrica-label">Días Vigencia</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                  <div class="metrica-card">
+                    <div class="metrica-icon bg-info">
+                      <i class="ph ph-user"></i>
+                    </div>
+                    <div class="metrica-content">
+                      <h5 class="metrica-number">{{ detalle.recompensa.creador.name }}</h5>
+                      <p class="metrica-label">Creado por</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                  <div class="metrica-card">
+                    <div class="metrica-icon bg-warning">
+                      <i class="ph ph-clock"></i>
+                    </div>
+                    <div class="metrica-content">
+                      <h5 class="metrica-number">{{ detalle.recompensa.created_at | date:'dd/MM/yyyy' }}</h5>
+                      <p class="metrica-label">Fecha Creación</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Tabs de Navegación -->
+          <div class="tabs-navigation mb-24">
+            <nav class="nav nav-tabs">
+              <button
+                class="nav-link"
+                [class.active]="activeTab === 'general'"
+                (click)="setActiveTab('general')"
+              >
+                <i class="ph ph-info me-2"></i>
+                Información General
+              </button>
+              <button
+                class="nav-link"
+                [class.active]="activeTab === 'configuracion'"
+                (click)="setActiveTab('configuracion')"
+              >
+                <i class="ph ph-gear me-2"></i>
+                Configuración
+              </button>
+              <button
+                class="nav-link"
+                [class.active]="activeTab === 'historial'"
+                (click)="setActiveTab('historial')"
+              >
+                <i class="ph ph-clock me-2"></i>
+                Historial Reciente
+              </button>
+            </nav>
+          </div>
+          
+          <!-- Contenido de Tabs -->
+          <div class="tab-content">
+            <!-- Tab General -->
+            <div *ngIf="activeTab === 'general'" class="tab-pane active">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="info-section">
+                    <h6 class="section-title">
+                      <i class="ph ph-calendar me-2"></i>
+                      Período de Vigencia
+                    </h6>
+                    <div class="info-card">
+                      <div class="info-item">
+                        <span class="info-label">Fecha de Inicio:</span>
+                        <span class="info-value">{{ detalle.recompensa.fecha_inicio | date:'dd/MM/yyyy HH:mm' }}</span>
+                      </div>
+                      <div class="info-item">
+                        <span class="info-label">Fecha de Fin:</span>
+                        <span class="info-value">{{ detalle.recompensa.fecha_fin | date:'dd/MM/yyyy HH:mm' }}</span>
+                      </div>
+                      <div class="info-item">
+                        <span class="info-label">Duración Total:</span>
+                        <span class="info-value">{{ getDuracionTotal() }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-md-6">
+                  <div class="info-section">
+                    <h6 class="section-title">
+                      <i class="ph ph-chart-bar me-2"></i>
+                      Estadísticas
+                    </h6>
+                    <div class="info-card">
+                      <div class="info-item">
+                        <span class="info-label">Total de Aplicaciones:</span>
+                        <span class="info-value">{{ detalle.recompensa.total_aplicaciones | number }}</span>
+                      </div>
+                      <div class="info-item">
+                        <span class="info-label">Estado Actual:</span>
+                        <span [class]="'badge ' + getEstadoBadgeClass(detalle.recompensa.activo, detalle.recompensa.es_vigente)">
+                          {{ getEstadoText(detalle.recompensa.activo, detalle.recompensa.es_vigente) }}
+                        </span>
+                      </div>
+                      <div class="info-item">
+                        <span class="info-label">Última Actualización:</span>
+                        <span class="info-value">{{ detalle.recompensa.updated_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Tab Configuración -->
+            <div *ngIf="activeTab === 'configuracion'" class="tab-pane active">
+              <div class="row">
+                <!-- Segmentos de Clientes -->
+                <div class="col-md-6 mb-24">
+                  <div class="config-section">
+                    <h6 class="section-title">
+                      <i class="ph ph-users me-2"></i>
+                      Segmentos de Clientes
+                    </h6>
+                    <div class="config-card">
+                      <div *ngIf="detalle.configuracion.clientes.length === 0" class="empty-state">
+                        <i class="ph ph-users text-muted"></i>
+                        <p class="text-muted">No hay segmentos configurados</p>
+                      </div>
+                      <div *ngFor="let cliente of detalle.configuracion.clientes" class="config-item">
+                        <div class="config-item-header">
+                          <i class="ph ph-users-three"></i>
+                          <span class="config-item-title">{{ cliente.segmento_nombre }}</span>
+                        </div>
+                        <div class="config-item-details">
+                          <small class="text-muted">
+                            {{ cliente.es_cliente_especifico ? 'Cliente específico' : 'Segmento general' }}
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Productos/Categorías -->
+                <div class="col-md-6 mb-24">
+                  <div class="config-section">
+                    <h6 class="section-title">
+                      <i class="ph ph-package me-2"></i>
+                      Productos/Categorías
+                    </h6>
+                    <div class="config-card">
+                      <div *ngIf="detalle.configuracion.productos.length === 0" class="empty-state">
+                        <i class="ph ph-package text-muted"></i>
+                        <p class="text-muted">No hay productos configurados</p>
+                      </div>
+                      <div *ngFor="let producto of detalle.configuracion.productos" class="config-item">
+                        <div class="config-item-header">
+                          <i [class]="'ph ' + (producto.tipo_elemento === 'categoria' ? 'ph-folder' : 'ph-package')"></i>
+                          <span class="config-item-title">{{ producto.nombre_elemento }}</span>
+                        </div>
+                        <div class="config-item-details">
+                          <small class="text-muted">
+                            {{ producto.tipo_elemento === 'categoria' ? 'Categoría' : 'Producto específico' }}
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Configuración Específica por Tipo -->
+                <div class="col-12">
+                  <div class="config-section">
+                    <h6 class="section-title">
+                      <i class="ph ph-gear me-2"></i>
+                      Configuración Específica
+                    </h6>
+                    <div class="config-card">
+                      <div *ngIf="detalle.recompensa.tipo === 'puntos' && detalle.configuracion.puntos.length > 0">
+                        <div *ngFor="let punto of detalle.configuracion.puntos" class="config-item">
+                          <div class="config-item-header">
+                            <i class="ph ph-coins"></i>
+                            <span class="config-item-title">Configuración de Puntos</span>
+                          </div>
+                          <div class="config-item-details">
+                            <div class="row">
+                              <div class="col-md-6">
+                                <small class="text-muted">Tipo de Cálculo: {{ punto.tipo_calculo }}</small>
+                              </div>
+                              <div class="col-md-6">
+                                <small class="text-muted">Valor: {{ punto.valor }}</small>
+                              </div>
+                              <div class="col-md-6">
+                                <small class="text-muted">Mínimo Compra: ${{ punto.minimo_compra | number }}</small>
+                              </div>
+                              <div class="col-md-6">
+                                <small class="text-muted">Máximo Puntos: {{ punto.maximo_puntos | number }}</small>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div *ngIf="detalle.configuracion.puntos.length === 0 && 
+                                detalle.configuracion.descuentos.length === 0 && 
+                                detalle.configuracion.envios.length === 0 && 
+                                detalle.configuracion.regalos.length === 0" class="empty-state">
+                        <i class="ph ph-gear text-muted"></i>
+                        <p class="text-muted">No hay configuración específica</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Tab Historial -->
+            <div *ngIf="activeTab === 'historial'" class="tab-pane active">
+              <div class="historial-section">
+                <h6 class="section-title">
+                  <i class="ph ph-clock me-2"></i>
+                  Aplicaciones Recientes
+                </h6>
+                <div class="historial-card">
+                  <div *ngIf="detalle.historial_reciente.length === 0" class="empty-state">
+                    <i class="ph ph-clock text-muted"></i>
+                    <p class="text-muted">No hay aplicaciones recientes</p>
+                  </div>
+                  <div *ngFor="let aplicacion of detalle.historial_reciente" class="historial-item">
+                    <div class="historial-item-header">
+                      <div class="historial-cliente">
+                        <i class="ph ph-user"></i>
+                        <span class="historial-cliente-nombre">{{ aplicacion.cliente }}</span>
+                      </div>
+                      <div class="historial-tiempo">
+                        <small class="text-muted">{{ getTiempoTranscurrido(aplicacion.fecha_aplicacion) }}</small>
+                      </div>
+                    </div>
+                    <div class="historial-item-details">
+                      <div class="row">
+                        <div class="col-md-6">
+                          <small class="text-muted">
+                            <i class="ph ph-coins me-1"></i>
+                            Puntos: {{ aplicacion.puntos_otorgados | number }}
+                          </small>
+                        </div>
+                        <div class="col-md-6">
+                          <small class="text-muted">
+                            <i class="ph ph-gift me-1"></i>
+                            Beneficio: {{ aplicacion.beneficio_aplicado }}
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="onCerrar()"
+        >
+          <i class="ph ph-x me-2"></i>
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

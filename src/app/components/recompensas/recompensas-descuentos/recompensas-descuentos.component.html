@@ -1,0 +1,105 @@
+<!-- Header -->
+<div class="page-header mb-24">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h1 class="page-title">
+        <i class="ph ph-percent me-3"></i>
+        Configuración de Descuentos
+      </h1>
+      <p class="page-subtitle text-muted">
+        Configuración de descuentos como recompensa
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Contenido -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="ph ph-percent me-2"></i>
+          Configuración de Descuentos
+        </h5>
+      </div>
+      <div class="card-body">
+        <div *ngIf="loading" class="text-center py-48">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="mt-16 text-muted">Cargando configuración...</p>
+        </div>
+        
+        <form *ngIf="!loading" [formGroup]="configuracionForm" (ngSubmit)="onSubmitConfiguracion()">
+          <div class="row">
+            <div class="col-md-6">
+              <label class="form-label required">Descuento Porcentaje (%)</label>
+              <input
+                type="number"
+                class="form-control"
+                formControlName="descuento_porcentaje"
+                min="1"
+                max="100"
+                placeholder="10"
+                [disabled]="!puedeEditar || loading"
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label required">Descuento Mínimo ($)</label>
+              <input
+                type="number"
+                class="form-control"
+                formControlName="descuento_minimo"
+                min="1"
+                placeholder="50"
+                [disabled]="!puedeEditar || loading"
+              />
+            </div>
+          </div>
+          
+          <div class="row mt-16">
+            <div class="col-md-6">
+              <label class="form-label required">Descuento Máximo ($)</label>
+              <input
+                type="number"
+                class="form-control"
+                formControlName="descuento_maximo"
+                min="1"
+                placeholder="500"
+                [disabled]="!puedeEditar || loading"
+              />
+            </div>
+            <div class="col-md-6">
+              <div class="form-check mt-24">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  formControlName="activo"
+                  id="activo"
+                  [disabled]="!puedeEditar || loading"
+                />
+                <label class="form-check-label" for="activo">
+                  Sistema de descuentos activo
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row mt-24" *ngIf="puedeEditar">
+            <div class="col-12">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="loading || configuracionForm.invalid"
+              >
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                {{ loading ? 'Guardando...' : 'Guardar Configuración' }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

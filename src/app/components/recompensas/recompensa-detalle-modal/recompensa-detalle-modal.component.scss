@@ -1,0 +1,538 @@
+// Estilos para el modal de detalle de recompensas
+
+.modal {
+  .modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  }
+  
+  .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    border-bottom: none;
+    padding: 20px 24px;
+    
+    .modal-title {
+      font-weight: 600;
+      font-size: 18px;
+      margin: 0;
+      
+      i {
+        font-size: 20px;
+      }
+    }
+    
+    .btn-close {
+      filter: brightness(0) invert(1);
+      opacity: 0.8;
+      
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+  
+  .modal-body {
+    padding: 24px;
+  }
+  
+  .modal-footer {
+    border-top: 1px solid #e2e8f0;
+    padding: 16px 24px;
+    background-color: #f7fafc;
+    border-radius: 0 0 12px 12px;
+  }
+}
+
+// Información principal
+.info-principal {
+  .info-header {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    
+    .info-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 20px;
+      
+      i {
+        color: white;
+        font-size: 24px;
+      }
+    }
+    
+    .info-content {
+      flex: 1;
+      
+      .info-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0 0 8px 0;
+      }
+      
+      .info-type {
+        font-size: 16px;
+        color: #667eea;
+        font-weight: 500;
+        margin: 0 0 12px 0;
+      }
+      
+      .info-description {
+        font-size: 14px;
+        color: #4a5568;
+        line-height: 1.6;
+        margin: 0;
+      }
+    }
+    
+    .info-status {
+      .badge {
+        font-size: 12px;
+        padding: 6px 12px;
+        border-radius: 6px;
+      }
+    }
+  }
+}
+
+// Métricas rápidas
+.metricas-rapidas {
+  .metrica-card {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .metrica-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      
+      i {
+        color: white;
+        font-size: 18px;
+      }
+      
+      &.bg-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      
+      &.bg-success {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      }
+      
+      &.bg-info {
+        background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+      }
+      
+      &.bg-warning {
+        background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+      }
+    }
+    
+    .metrica-content {
+      flex: 1;
+      
+      .metrica-number {
+        font-size: 18px;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0 0 4px 0;
+      }
+      
+      .metrica-label {
+        font-size: 12px;
+        color: #718096;
+        margin: 0;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// Tabs de navegación
+.tabs-navigation {
+  .nav-tabs {
+    border-bottom: 2px solid #e2e8f0;
+    
+    .nav-link {
+      border: none;
+      border-radius: 8px 8px 0 0;
+      padding: 12px 20px;
+      font-weight: 500;
+      color: #718096;
+      background: transparent;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        color: #4a5568;
+        background-color: #f7fafc;
+      }
+      
+      &.active {
+        color: #667eea;
+        background-color: white;
+        border-bottom: 2px solid #667eea;
+      }
+      
+      i {
+        font-size: 16px;
+      }
+    }
+  }
+}
+
+// Contenido de tabs
+.tab-content {
+  .tab-pane {
+    animation: fadeIn 0.3s ease;
+  }
+}
+
+// Secciones de información
+.info-section {
+  margin-bottom: 24px;
+  
+  .section-title {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    
+    i {
+      color: #667eea;
+    }
+  }
+  
+  .info-card {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e2e8f0;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      .info-label {
+        font-weight: 500;
+        color: #4a5568;
+        font-size: 14px;
+      }
+      
+      .info-value {
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// Secciones de configuración
+.config-section {
+  .config-card {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    min-height: 120px;
+    
+    .config-item {
+      padding: 12px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      .config-item-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 4px;
+        
+        i {
+          color: #667eea;
+          margin-right: 8px;
+          font-size: 16px;
+        }
+        
+        .config-item-title {
+          font-weight: 500;
+          color: #2d3748;
+          font-size: 14px;
+        }
+      }
+      
+      .config-item-details {
+        margin-left: 24px;
+      }
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      
+      i {
+        font-size: 32px;
+        margin-bottom: 8px;
+      }
+      
+      p {
+        margin: 0;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// Historial
+.historial-section {
+  .historial-card {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    max-height: 400px;
+    overflow-y: auto;
+    
+    .historial-item {
+      padding: 12px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      .historial-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        
+        .historial-cliente {
+          display: flex;
+          align-items: center;
+          
+          i {
+            color: #667eea;
+            margin-right: 8px;
+            font-size: 16px;
+          }
+          
+          .historial-cliente-nombre {
+            font-weight: 500;
+            color: #2d3748;
+            font-size: 14px;
+          }
+        }
+        
+        .historial-tiempo {
+          small {
+            font-size: 12px;
+          }
+        }
+      }
+      
+      .historial-item-details {
+        margin-left: 24px;
+        
+        small {
+          font-size: 12px;
+          
+          i {
+            color: #718096;
+          }
+        }
+      }
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      
+      i {
+        font-size: 32px;
+        margin-bottom: 8px;
+      }
+      
+      p {
+        margin: 0;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// Botones
+.btn {
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  
+  &.btn-secondary {
+    background-color: #e2e8f0;
+    border-color: #e2e8f0;
+    color: #4a5568;
+    
+    &:hover {
+      background-color: #cbd5e0;
+      border-color: #cbd5e0;
+    }
+  }
+  
+  i {
+    font-size: 16px;
+  }
+}
+
+// Spinner
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
+}
+
+// Utilidades
+.mb-24 {
+  margin-bottom: 24px;
+}
+
+.mb-16 {
+  margin-bottom: 16px;
+}
+
+.mb-12 {
+  margin-bottom: 12px;
+}
+
+.mb-8 {
+  margin-bottom: 8px;
+}
+
+.mb-4 {
+  margin-bottom: 4px;
+}
+
+.mb-2 {
+  margin-bottom: 8px;
+}
+
+.mt-16 {
+  margin-top: 16px;
+}
+
+.me-2 {
+  margin-right: 8px;
+}
+
+.me-1 {
+  margin-right: 4px;
+}
+
+.text-muted {
+  color: #718096 !important;
+}
+
+.small {
+  font-size: 12px;
+}
+
+.py-48 {
+  padding: 48px 0;
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .modal {
+    .modal-dialog {
+      margin: 16px;
+    }
+    
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+      padding: 16px;
+    }
+  }
+  
+  .info-principal {
+    .info-header {
+      flex-direction: column;
+      align-items: flex-start;
+      
+      .info-icon {
+        margin-bottom: 16px;
+        margin-right: 0;
+      }
+      
+      .info-status {
+        margin-top: 16px;
+      }
+    }
+  }
+  
+  .metricas-rapidas {
+    .metrica-card {
+      margin-bottom: 12px;
+    }
+  }
+  
+  .tabs-navigation {
+    .nav-tabs {
+      .nav-link {
+        padding: 8px 12px;
+        font-size: 14px;
+      }
+    }
+  }
+}
