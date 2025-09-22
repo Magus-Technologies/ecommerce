@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy, HostListener, ElementRef, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -10,6 +10,7 @@ import {
   ColumnMode,
   SelectionType,
   SortType,
+  DatatableComponent
 } from '@swimlane/ngx-datatable';
 import Swal from 'sweetalert2';
 
@@ -20,12 +21,18 @@ import Swal from 'sweetalert2';
   templateUrl: './motorizados-list.component.html',
   styleUrls: ['./motorizados-list.component.scss']
 })
-export class MotorizadosListComponent implements OnInit {
+export class MotorizadosListComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild(DatatableComponent) table!: DatatableComponent;
+
   motorizados: Motorizado[] = [];
   motorizadosFiltrados: Motorizado[] = [];
   filtroTexto = '';
   isLoading = false;
   estadisticas = { total: 0, activos: 0, inactivos: 0 };
+
+  private resizeTimeout: any;
+  private resizeObserver!: ResizeObserver;
+  private cleanupListener?: () => void;
 
   // Datatable properties
   pageSize = 10;
@@ -45,11 +52,33 @@ export class MotorizadosListComponent implements OnInit {
     private motorizadosService: MotorizadosService,
     public permissionsService: PermissionsService,
     private toastr: ToastrService,
-    private router: Router
+    private router: Router,
+    private elementRef: ElementRef,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
     this.cargarMotorizados();
+
+    // Escuchar cambios del sidebar para recalcular la tabla
+    const sidebarListener = () => {
+      // Múltiples recálculos inmediatos para Angular 19 + ngx-datatable
+      this.recalcularTabla();
+
+      // Recálculos adicionales para eliminar completamente el lag
+      setTimeout(() => this.recalcularTabla(), 1);
+      setTimeout(() => this.recalcularTabla(), 10);
+      setTimeout(() => this.recalcularTabla(), 50);
+      setTimeout(() => this.recalcularTabla(), 100);
+    };
+
+    window.addEventListener('sidebarChanged', sidebarListener);
+
+    // Limpiar el listener cuando se destruya el componente
+    this.cleanupListener = () => {
+      window.removeEventListener('sidebarChanged', sidebarListener);
+    };
   }
 
   cargarMotorizados(): void {
@@ -60,6 +89,10 @@ export class MotorizadosListComponent implements OnInit {
         this.motorizadosFiltrados = motorizados;
         this.calcularEstadisticas();
         this.isLoading = false;
+        // Force table resize after data is loaded
+        setTimeout(() => {
+          this.forceTableResize();
+        }, 50);
       },
       error: (error: any) => {
         this.toastr.error('Error al cargar motorizados');
@@ -330,5 +363,121 @@ export class MotorizadosListComponent implements OnInit {
 
   trackByMotorizadoId(index: number, motorizado: Motorizado): number {
     return motorizado.id!;
+  }
+
+  ngAfterViewInit(): void {
+    // Force initial table resize after view initialization
+    setTimeout(() => {
+      this.forceTableResize();
+      this.setupResizeObserver();
+
+      // Configuración especial para Angular 19 + ngx-datatable
+      if (this.table) {
+        this.table.trackByProp = 'id';
+        this.cdr.detectChanges();
+      }
+    }, 100);
+  }
+
+  ngOnDestroy(): void {
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
+    if (this.cleanupListener) {
+      this.cleanupListener();
+    }
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onWindowResize(event: any): void {
+    this.debounceTableResize();
+  }
+
+  private debounceTableResize(): void {
+    if (this.resizeTimeout) {
+      clearTimeout(this.resizeTimeout);
+    }
+
+    this.resizeTimeout = setTimeout(() => {
+      this.forceTableResize();
+    }, 250);
+  }
+
+  private forceTableResize(): void {
+    if (this.table) {
+      // Force datatable to recalculate columns
+      this.table.recalculateColumns();
+      this.table.recalculateDims();
+    }
+  }
+
+  // Method to be called when sidebar state changes
+  onSidebarToggle(): void {
+    setTimeout(() => {
+      this.forceTableResize();
+    }, 300); // Wait for sidebar animation to complete
+  }
+
+  private setupResizeObserver(): void {
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          this.debounceTableResize();
+        }
+      });
+
+      // Observe the main container
+      const container = this.elementRef.nativeElement.querySelector('.border.border-gray-100.rounded-16');
+      if (container) {
+        this.resizeObserver.observe(container);
+      }
+
+      // Also observe the table container
+      const tableContainer = this.elementRef.nativeElement.querySelector('.table-container');
+      if (tableContainer) {
+        this.resizeObserver.observe(tableContainer);
+      }
+
+      // Observe the card container
+      const cardContainer = this.elementRef.nativeElement.querySelector('.card.mx-16');
+      if (cardContainer) {
+        this.resizeObserver.observe(cardContainer);
+      }
+    }
+  }
+
+  // Método para recalcular columnas cuando cambia el layout
+  private recalcularTabla(): void {
+    this.ngZone.run(() => {
+      if (this.table) {
+        // Forzar detección de cambios inmediata
+        this.cdr.detectChanges();
+
+        // Recálculos múltiples para ngx-datatable con Angular 19
+        this.table.recalculate();
+        this.table.recalculateColumns();
+        this.table.recalculateDims();
+
+        // Segundo pase después de que Angular procese
+        setTimeout(() => {
+          if (this.table) {
+            this.table.recalculate();
+            this.table.recalculateColumns();
+            this.cdr.detectChanges();
+          }
+        }, 0);
+
+        // Tercer pase para asegurar compatibilidad con Angular 19
+        setTimeout(() => {
+          if (this.table) {
+            this.table.recalculateDims();
+            this.cdr.markForCheck();
+          }
+        }, 10);
+      }
+    });
   }
 }

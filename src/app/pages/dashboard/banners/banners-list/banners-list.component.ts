@@ -1,24 +1,26 @@
 // src/app/pages/dashboard/banners/banners-list/banners-list.component.ts
 
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { BannersService, Banner } from '../../../../services/banner.service';
 import { BannerModalComponent } from '../../../../component/banner-modal/banner-modal.component';
 import { PermissionsService } from '../../../../services/permissions.service';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 import {
   NgxDatatableModule,
   ColumnMode,
   SelectionType,
   SortType,
+  DatatableComponent
 } from '@swimlane/ngx-datatable';
 @Component({
   selector: 'app-banners-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, BannerModalComponent, NgxDatatableModule],
+  imports: [CommonModule, RouterModule, FormsModule, BannerModalComponent, NgxDatatableModule],
   template: `
     <div class="container-fluid">
       <!-- Header -->
@@ -37,6 +39,31 @@ import {
 
       <!-- Tabla de banners -->
       <div class="card border-0 shadow-sm rounded-12">
+        <!-- Header de información -->
+        <div class="card-header bg-white border-bottom px-24 py-16" *ngIf="!isLoading && banners.length > 0">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-16">
+              <span class="text-sm text-gray-600">{{ selectionText }}</span>
+              <div class="d-flex align-items-center gap-8" *ngIf="selected.length > 0">
+                <button class="btn btn-sm btn-outline-danger px-12 py-6">
+                  <i class="ph ph-trash me-4"></i>
+                  Eliminar seleccionados
+                </button>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-8">
+              <span class="text-sm fw-medium text-dark">Mostrando</span>
+              <select class="form-select form-select-sm border-gray-300" style="width: auto; min-width: 60px; font-size: 0.875rem; padding: 4px 8px;" [(ngModel)]="pageSize">
+                <option [value]="5">5</option>
+                <option [value]="10">10</option>
+                <option [value]="25">25</option>
+                <option [value]="50">50</option>
+              </select>
+              <span class="text-sm fw-medium text-dark">por página</span>
+            </div>
+          </div>
+        </div>
+
         <div class="card-body p-0">
           
           <!-- Loading state -->
@@ -49,6 +76,7 @@ import {
 
           <!-- Datatable -->
           <ngx-datatable
+            #table
             *ngIf="!isLoading"
             class="bootstrap banners-table"
             [columns]="columns"
@@ -57,13 +85,19 @@ import {
             [headerHeight]="50"
             [footerHeight]="50"
             [rowHeight]="80"
-            [limit]="10"
-            [scrollbarV]="true"
+            [limit]="pageSize"
+            [scrollbarV]="false"
             [scrollbarH]="false"
             [loadingIndicator]="isLoading"
             [trackByProp]="'id'"
             [sortType]="SortType.single"
-            [selectionType]="SelectionType.single"
+            [selectionType]="SelectionType.checkbox"
+            [selected]="selected"
+            [selectAllRowsOnPage]="false"
+            [displayCheck]="displayCheck"
+            [externalPaging]="false"
+            (select)="onSelect($event)"
+            (page)="onPageChange($event)"
           >
             <!-- Columna Imagen -->
             <ngx-datatable-column
@@ -481,13 +515,20 @@ import {
     }
   `]
 })
-export class BannersListComponent implements OnInit {
+export class BannersListComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild(DatatableComponent) table!: DatatableComponent;
   
   banners: Banner[] = [];
   isLoading = true;
   bannerSeleccionado: Banner | null = null;
   canCreate$!: boolean;
   canEdit$!: boolean;
+
+  private resizeSubscription?: Subscription;
+
+  // Paginación
+  pageSize = 10;
+  selected: any[] = [];
   canDelete$!: boolean;
 
   // Configuración para NGX-Datatable
@@ -507,13 +548,34 @@ export class BannersListComponent implements OnInit {
 
   constructor(
     private bannersService: BannersService,
-    private permissionsService: PermissionsService // 🔥 lo agregas aquí sin borrar el otro
-  ) {}
+    private permissionsService: PermissionsService
+  ) {
+    // Escuchar cambios de resize del window
+    this.resizeSubscription = new Subscription();
+  }
 
   ngOnInit(): void {
     this.cargarBanners();
     // Verificar permisos al inicializar
     this.checkPermissions();
+
+    // Escuchar cambios del sidebar para recalcular la tabla
+    const sidebarListener = () => {
+      // Recálculo inmediato sin setTimeout para respuesta más rápida
+      this.recalcularTabla();
+
+      // Recálculo adicional por si acaso
+      setTimeout(() => {
+        this.recalcularTabla();
+      }, 10);
+    };
+
+    window.addEventListener('sidebarChanged', sidebarListener);
+
+    // Limpiar el listener cuando se destruya el componente
+    this.resizeSubscription?.add(() => {
+      window.removeEventListener('sidebarChanged', sidebarListener);
+    });
   }
 
   // Nuevo método para verificar permisos
@@ -619,6 +681,62 @@ export class BannersListComponent implements OnInit {
 
   onModalCerrado(): void {
     this.bannerSeleccionado = null;
+  }
+
+  // Métodos para manejar selección y paginación
+  onSelect(event: any): void {
+    this.selected = event.selected;
+  }
+
+  onPageChange(event: any): void {
+    console.log('Página cambiada:', event);
+  }
+
+  displayCheck(row: any): boolean {
+    return this.permissionsService.hasPermission('banners.edit');
+  }
+
+  get selectionText(): string {
+    const total = this.banners.length;
+    const selected = this.selected.length;
+    if (selected === 0) {
+      return `${total} banners en total`;
+    }
+    return `${selected} seleccionado${selected > 1 ? 's' : ''} de ${total}`;
+  }
+
+  ngAfterViewInit(): void {
+    // Forzar recalculo después de que la vista esté completamente inicializada
+    setTimeout(() => {
+      if (this.table) {
+        this.table.recalculateColumns();
+      }
+    }, 100);
+  }
+
+  ngOnDestroy(): void {
+    if (this.resizeSubscription) {
+      this.resizeSubscription.unsubscribe();
+    }
+  }
+
+  // Método para recalcular columnas cuando cambia el layout
+  private recalcularTabla(): void {
+    if (this.table) {
+      // Forzar recalculo inmediato
+      this.table.recalculate();
+      this.table.recalculateColumns();
+
+      // Forzar redibujado del DOM
+      this.table.recalculateDims();
+
+      // Detectar cambios para Angular
+      setTimeout(() => {
+        if (this.table) {
+          this.table.recalculate();
+        }
+      }, 1);
+    }
   }
 
 }

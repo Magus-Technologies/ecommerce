@@ -106,6 +106,8 @@ export class AccountComponent implements OnInit {
           this.router.navigate(['/dashboard']);
         } else if (response.tipo_usuario === 'cliente') {
           this.router.navigate(['/']); // E-commerce home
+        } else if (response.tipo_usuario === 'motorizado') {
+          this.router.navigate(['/motorizado/dashboard']); // Dashboard del motorizado
         }
       },
       error: (error) => {

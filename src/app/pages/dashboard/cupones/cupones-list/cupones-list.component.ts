@@ -1,21 +1,24 @@
 // src/app/pages/dashboard/cupones/cupones-list/cupones-list.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { OfertasAdminService, CuponAdmin } from '../../../../services/ofertas-admin.service';
 import { CuponModalComponent } from '../cupon-modal/cupon-modal.component';
 import Swal from 'sweetalert2';
+import { Subscription } from 'rxjs';
 import {
   NgxDatatableModule,
   ColumnMode,
   SelectionType,
   SortType,
+  DatatableComponent
 } from '@swimlane/ngx-datatable';
 
 @Component({
   selector: 'app-cupones-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, CuponModalComponent, NgxDatatableModule],
+  imports: [CommonModule, RouterModule, FormsModule, CuponModalComponent, NgxDatatableModule],
   template: `
     <div class="container-fluid">
       <!-- Header -->
@@ -34,6 +37,31 @@ import {
 
       <!-- Tabla con ngx-datatable -->
       <div class="card border-0 shadow-sm rounded-12">
+        <!-- Header de información -->
+        <div class="card-header bg-white border-bottom px-24 py-16" *ngIf="!isLoading && cupones.length > 0">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-16">
+              <span class="text-sm text-gray-600">{{ selectionText }}</span>
+              <div class="d-flex align-items-center gap-8" *ngIf="selected.length > 0">
+                <button class="btn btn-sm btn-outline-danger px-12 py-6">
+                  <i class="ph ph-trash me-4"></i>
+                  Eliminar seleccionados
+                </button>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-8">
+              <span class="text-sm fw-medium text-dark">Mostrando</span>
+              <select class="form-select form-select-sm border-gray-300" style="width: auto; min-width: 60px; font-size: 0.875rem; padding: 4px 8px;" [(ngModel)]="pageSize">
+                <option [value]="5">5</option>
+                <option [value]="10">10</option>
+                <option [value]="25">25</option>
+                <option [value]="50">50</option>
+              </select>
+              <span class="text-sm fw-medium text-dark">por página</span>
+            </div>
+          </div>
+        </div>
+
         <div class="card-body p-0">
           
           <!-- Loading state -->
@@ -46,6 +74,7 @@ import {
 
           <!-- Datatable -->
           <ngx-datatable
+            #table
             *ngIf="!isLoading"
             class="bootstrap cupones-table"
             [columns]="columns"
@@ -54,19 +83,26 @@ import {
             [headerHeight]="50"
             [footerHeight]="50"
             [rowHeight]="80"
-            [limit]="10"
-            [scrollbarV]="true"
+            [limit]="pageSize"
+            [scrollbarV]="false"
             [scrollbarH]="false"
             [loadingIndicator]="isLoading"
             [trackByProp]="'id'"
             [sortType]="SortType.single"
-            [selectionType]="SelectionType.single"
+            [selectionType]="SelectionType.checkbox"
+            [selected]="selected"
+            [selectAllRowsOnPage]="false"
+            [displayCheck]="displayCheck"
+            [externalPaging]="false"
+            (select)="onSelect($event)"
+            (page)="onPageChange($event)"
           >
             <!-- Columna Código -->
             <ngx-datatable-column
               name="Código"
               prop="codigo"
               [flexGrow]="2.5"
+              [minWidth]="150"
               [sortable]="true"
             >
               <ng-template let-row="row" ngx-datatable-cell-template>
@@ -89,6 +125,7 @@ import {
               name="Descuento"
               prop="valor_descuento"
               [flexGrow]="1"
+              [minWidth]="90"
               [sortable]="true"
             >
               <ng-template let-row="row" ngx-datatable-cell-template>
@@ -111,6 +148,7 @@ import {
               name="Vigencia"
               prop="fecha_inicio"
               [flexGrow]="1.5"
+              [minWidth]="120"
               [sortable]="true"
             >
               <ng-template let-row="row" ngx-datatable-cell-template>
@@ -133,6 +171,7 @@ import {
             <ngx-datatable-column
               name="Usos"
               [flexGrow]="1"
+              [minWidth]="80"
               [sortable]="false"
             >
               <ng-template let-row="row" ngx-datatable-cell-template>
@@ -161,6 +200,7 @@ import {
               name="Estado"
               prop="activo"
               [flexGrow]="0.8"
+              [minWidth]="70"
               [sortable]="true"
             >
               <ng-template let-row="row" ngx-datatable-cell-template>
@@ -175,6 +215,7 @@ import {
             <ngx-datatable-column
               name="Acciones"
               [flexGrow]="1.2"
+              [minWidth]="150"
               [sortable]="false"
               [canAutoResize]="false"
             >
@@ -509,20 +550,27 @@ import {
     }
   `]
 })
-export class CuponesListComponent implements OnInit {
+export class CuponesListComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild(DatatableComponent) table!: DatatableComponent;
   
   cupones: CuponAdmin[] = [];
   isLoading = true;
   cuponSeleccionado: CuponAdmin | null = null;
 
+  private resizeSubscription?: Subscription;
+
+  // Paginación
+  pageSize = 10;
+  selected: any[] = [];
+
   // Configuración para NGX-Datatable
   columns = [
-    { name: 'Código', prop: 'codigo', flexGrow: 2.5 },
-    { name: 'Descuento', prop: 'valor_descuento', flexGrow: 1 },
-    { name: 'Vigencia', prop: 'fecha_inicio', flexGrow: 1.5 },
-    { name: 'Usos', prop: 'usos', flexGrow: 1 },
-    { name: 'Estado', prop: 'activo', flexGrow: 0.8 },
-    { name: 'Acciones', prop: 'acciones', flexGrow: 1.2 }
+    { name: 'Código', prop: 'codigo', flexGrow: 2.5, minWidth: 150 },
+    { name: 'Descuento', prop: 'valor_descuento', flexGrow: 1, minWidth: 90 },
+    { name: 'Vigencia', prop: 'fecha_inicio', flexGrow: 1.5, minWidth: 120 },
+    { name: 'Usos', prop: 'usos', flexGrow: 1, minWidth: 80 },
+    { name: 'Estado', prop: 'activo', flexGrow: 0.8, minWidth: 70 },
+    { name: 'Acciones', prop: 'acciones', flexGrow: 1.2, minWidth: 150 }
   ];
 
   ColumnMode = ColumnMode;
@@ -531,10 +579,31 @@ export class CuponesListComponent implements OnInit {
 
   constructor(
     private ofertasAdminService: OfertasAdminService
-  ) {}
+  ) {
+    // Escuchar cambios de resize del window
+    this.resizeSubscription = new Subscription();
+  }
 
   ngOnInit(): void {
     this.cargarCupones();
+
+    // Escuchar cambios del sidebar para recalcular la tabla
+    const sidebarListener = () => {
+      // Recálculo inmediato sin setTimeout para respuesta más rápida
+      this.recalcularTabla();
+
+      // Recálculo adicional por si acaso
+      setTimeout(() => {
+        this.recalcularTabla();
+      }, 10);
+    };
+
+    window.addEventListener('sidebarChanged', sidebarListener);
+
+    // Limpiar el listener cuando se destruya el componente
+    this.resizeSubscription?.add(() => {
+      window.removeEventListener('sidebarChanged', sidebarListener);
+    });
   }
 
   cargarCupones(): void {
@@ -630,6 +699,62 @@ export class CuponesListComponent implements OnInit {
       return { texto: 'Vigente', class: 'bg-success-50 text-success-600' };
     } else {
       return { texto: 'Expirado', class: 'bg-danger-50 text-danger-600' };
+    }
+  }
+
+  // Métodos para manejar selección y paginación
+  onSelect(event: any): void {
+    this.selected = event.selected;
+  }
+
+  onPageChange(event: any): void {
+    console.log('Página cambiada:', event);
+  }
+
+  displayCheck(row: any): boolean {
+    return true; // Ajustar según permisos si es necesario
+  }
+
+  get selectionText(): string {
+    const total = this.cupones.length;
+    const selected = this.selected.length;
+    if (selected === 0) {
+      return `${total} cupones en total`;
+    }
+    return `${selected} seleccionado${selected > 1 ? 's' : ''} de ${total}`;
+  }
+
+  ngAfterViewInit(): void {
+    // Forzar recalculo después de que la vista esté completamente inicializada
+    setTimeout(() => {
+      if (this.table) {
+        this.table.recalculateColumns();
+      }
+    }, 100);
+  }
+
+  ngOnDestroy(): void {
+    if (this.resizeSubscription) {
+      this.resizeSubscription.unsubscribe();
+    }
+  }
+
+  // Método para recalcular columnas cuando cambia el layout
+  private recalcularTabla(): void {
+    if (this.table) {
+      // Forzar recalculo inmediato
+      this.table.recalculate();
+      this.table.recalculateColumns();
+
+      // Forzar redibujado del DOM
+      this.table.recalculateDims();
+
+      // Detectar cambios para Angular
+      setTimeout(() => {
+        if (this.table) {
+          this.table.recalculate();
+        }
+      }, 1);
     }
   }
 }

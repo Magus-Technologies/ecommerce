@@ -60,12 +60,63 @@
                   </div>
                 </div>
 
-                <!-- Dirección -->
-                <div class="mb-20">
+                <!-- Direcciones Guardadas -->
+                <div class="mb-20" *ngIf="direccionesGuardadas.length > 0">
                   <label class="form-label text-heading fw-medium">
-                    Dirección <span class="text-danger">*</span>
+                    Direcciones Guardadas
                   </label>
-                  <textarea 
+                  <div class="row g-2">
+                    <div class="col-12" *ngFor="let direccion of direccionesGuardadas">
+                      <div class="border border-gray-100 rounded-8 p-12 cursor-pointer hover-bg-main-25 transition-2"
+                           [class.border-main-600]="direccionSeleccionada?.id === direccion.id"
+                           [class.bg-main-25]="direccionSeleccionada?.id === direccion.id"
+                           (click)="seleccionarDireccion(direccion)">
+                        <div class="flex-between align-items-start">
+                          <div class="flex-grow-1">
+                            <div class="flex-align gap-8 mb-4">
+                              <input type="radio"
+                                     [checked]="direccionSeleccionada?.id === direccion.id"
+                                     name="direccionGuardada">
+                              <h6 class="mb-0 text-sm fw-medium">{{ direccion.nombre_destinatario }}</h6>
+                              <span *ngIf="direccion.predeterminada"
+                                    class="bg-success-50 text-success-600 px-6 py-1 rounded-pill text-xs">
+                                Principal
+                              </span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">{{ direccion.direccion_completa }}</p>
+                            <p class="text-xs text-gray-500 mb-0" *ngIf="direccion.ubigeo">
+                              {{ direccion.ubigeo.distrito_nombre }}, {{ direccion.ubigeo.provincia_nombre }}, {{ direccion.ubigeo.departamento_nombre }}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Checkbox para usar dirección personalizada -->
+                  <div class="mt-12">
+                    <div class="form-check">
+                      <input class="form-check-input"
+                             type="checkbox"
+                             [(ngModel)]="usarDireccionPersonalizada"
+                             [ngModelOptions]="{standalone: true}"
+                             (change)="onCambiarTipoDireccion()"
+                             id="usarDireccionPersonalizada">
+                      <label class="form-check-label text-sm" for="usarDireccionPersonalizada">
+                        Usar una dirección diferente
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dirección Manual -->
+                <div class="mb-20" *ngIf="direccionesGuardadas.length === 0 || usarDireccionPersonalizada">
+                  <label class="form-label text-heading fw-medium">
+                    <span *ngIf="direccionesGuardadas.length === 0">Dirección</span>
+                    <span *ngIf="direccionesGuardadas.length > 0">Dirección Personalizada</span>
+                    <span class="text-danger">*</span>
+                  </label>
+                  <textarea
                     class="form-control rounded-8"
                     formControlName="direccion"
                     rows="2"
@@ -122,11 +173,10 @@
                     <label class="form-label text-heading fw-medium">
                       Provincia <span class="text-danger">*</span>
                     </label>
-                    <select 
+                    <select
                       class="form-select rounded-8"
                       formControlName="provincia"
                       (change)="onProvinciaChange()"
-                      [disabled]="!checkoutForm.get('departamento')?.value"
                       [class.is-invalid]="checkoutForm.get('provincia')?.invalid && checkoutForm.get('provincia')?.touched">
                       <option value="">SELECCIONE PROVINCIA (*)</option>
                       <option 
@@ -145,10 +195,10 @@
                     <label class="form-label text-heading fw-medium">
                       Distrito <span class="text-danger">*</span>
                     </label>
-                    <select 
+                    <select
                       class="form-select rounded-8"
                       formControlName="distrito"
-                      [disabled]="!checkoutForm.get('provincia')?.value"
+                      (change)="onDistritoChange()"
                       [class.is-invalid]="checkoutForm.get('distrito')?.invalid && checkoutForm.get('distrito')?.touched">
                       <option value="">SELECCIONE DISTRITO (*)</option>
                       <option 

@@ -119,14 +119,23 @@
             <!-- Información del cliente -->
             <td>
               <div class="user-info">
-                <div class="user-avatar" *ngIf="!cliente.foto">
-                  {{ getInitials(cliente.nombre_completo || cliente.nombres) }}
+                <!-- Avatar con foto si existe -->
+                <div *ngIf="getClientePhotoUrl(cliente); else avatarWithInitials"
+                     #photoContainer>
+                  <img
+                    [src]="getClientePhotoUrl(cliente)"
+                    [alt]="cliente.nombre_completo"
+                    class="user-avatar-img"
+                    (error)="onImageError($event); photoContainer.style.display='none'">
                 </div>
-                <img 
-                  *ngIf="cliente.foto" 
-                  [src]="cliente.foto" 
-                  [alt]="cliente.nombre_completo"
-                  class="user-avatar-img">
+
+                <!-- Avatar con iniciales si no hay foto -->
+                <ng-template #avatarWithInitials>
+                  <div class="user-avatar">
+                    {{ getInitials(cliente.nombre_completo || cliente.nombres) }}
+                  </div>
+                </ng-template>
+
                 <div class="user-details">
                   <strong>{{ cliente.nombre_completo || (cliente.nombres + ' ' + cliente.apellidos) }}</strong>
                   <span class="text-muted small">ID: {{ cliente.id_cliente }}</span>

@@ -5,17 +5,21 @@ import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
+import { ModalFotoComponent } from '../../component/modal-foto/modal-foto.component';
+import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-my-account',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterOutlet],
+  imports: [CommonModule, RouterLink, RouterOutlet, ModalFotoComponent],
   templateUrl: './my-account.component.html',
   styleUrl: './my-account.component.scss'
 })
 export class MyAccountComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   isLoading: boolean = true;
+  showModalFoto: boolean = false;
   private destroy$ = new Subject<void>();
+  private photoUrlCache: string | null = null;
 
   constructor(
     private authService: AuthService,
@@ -124,9 +128,70 @@ export class MyAccountComponent implements OnInit, OnDestroy {
     return name.substring(0, 2).toUpperCase();
   }
 
+  // Método para obtener la URL de la foto de perfil
+  getUserPhotoUrl(): string | null {
+    if (this.photoUrlCache !== null) {
+      return this.photoUrlCache;
+    }
 
+    if (this.currentUser?.tipo_usuario === 'cliente') {
+      const userAny = this.currentUser as any;
+      const photoField = this.currentUser.foto || userAny.foto_url || userAny.profile_photo || userAny.avatar;
 
+      if (photoField) {
+        let finalUrl = photoField;
 
+        if (finalUrl.startsWith('http')) {
+          finalUrl = finalUrl.replace('/storage/clientes//storage/clientes/', '/storage/clientes/');
+        } else {
+          let photoPath = finalUrl;
+          if (photoPath.includes('/storage/clientes//storage/clientes/')) {
+            photoPath = photoPath.replace('/storage/clientes//storage/clientes/', '/storage/clientes/');
+          }
+          finalUrl = `${environment.baseUrl}${photoPath}`;
+        }
 
+        this.photoUrlCache = finalUrl;
+        return finalUrl;
+      }
+    }
 
+    this.photoUrlCache = null;
+    return null;
+  }
+
+  // Método para manejar errores de imagen
+  onImageError(event: any): void {
+    event.target.style.display = 'none';
+  }
+
+  // Método para abrir modal de foto
+  abrirModalFoto(): void {
+    this.showModalFoto = true;
+  }
+
+  // Método para cerrar modal de foto
+  cerrarModalFoto(): void {
+    this.showModalFoto = false;
+  }
+
+  // Método para actualizar foto de perfil
+  onFotoActualizada(): void {
+    this.cerrarModalFoto();
+
+    // Limpiar cache de foto
+    this.photoUrlCache = null;
+
+    // Forzar recarga de datos con un pequeño delay para asegurar que el backend se haya actualizado
+    setTimeout(() => {
+      this.authService.refreshUserData().subscribe({
+        next: () => {
+          this.loadUserData();
+        },
+        error: (error) => {
+          this.loadUserData();
+        }
+      });
+    }, 500);
+  }
 }

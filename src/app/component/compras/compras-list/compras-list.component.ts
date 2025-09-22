@@ -1,222 +1,86 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ComprasService } from '../../../services/compras.service';
 import { Compra } from '../../../services/compras.service';
-import { NgxDatatableModule, ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
+import { NgxDatatableModule, ColumnMode, SelectionType, SortType, DatatableComponent } from '@swimlane/ngx-datatable';
+import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-compras-list',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, NgxDatatableModule],
-  template: `
-    <div class="container-fluid">
-      <!-- Header -->
-      <div class="d-flex justify-content-between align-items-center mb-24">
-        <div>
-          <h4 class="text-heading fw-semibold mb-8">Compras</h4>
-          <p class="text-gray-500 mb-0">Administra todas las compras del ecommerce</p>
-        </div>
-      </div>
-
-      <!-- Tabla de compras -->
-      <div class="card border-0 shadow-sm rounded-12">
-        <div class="card-body p-0">
-
-          <!-- Loading state -->
-          <div *ngIf="loading" class="text-center py-40">
-            <div class="spinner-border text-main-600" role="status">
-              <span class="visually-hidden">Cargando...</span>
-            </div>
-            <p class="text-gray-500 mt-12 mb-0">Cargando compras...</p>
-          </div>
-
-          <!-- Datatable -->
-          <ngx-datatable
-            *ngIf="!loading"
-            class="bootstrap compras-table"
-            [columns]="columns"
-            [rows]="compras"
-            [columnMode]="ColumnMode.flex"
-            [headerHeight]="50"
-            [footerHeight]="50"
-            [rowHeight]="60"
-            [limit]="10"
-            [scrollbarV]="true"
-            [scrollbarH]="false"
-            [loadingIndicator]="loading"
-            [trackByProp]="'id'"
-            [sortType]="SortType.single"
-            [selectionType]="SelectionType.single"
-          >
-            <!-- Columna Código -->
-            <ngx-datatable-column
-              name="Código"
-              prop="codigo_compra"
-              [flexGrow]="1"
-            >
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                <div class="d-flex align-items-center">
-                  <i *ngIf="necesitaAtencion(row)" class="ph ph-bell text-warning me-2" title="Requiere atención"></i>
-                  <strong>{{ row.codigo_compra }}</strong>
-                </div>
-                <small class="text-muted" *ngIf="row.codigo_cotizacion">
-                  Cotización: {{ row.codigo_cotizacion }}
-                </small>
-              </ng-template>
-            </ngx-datatable-column>
-
-            <!-- Columna Cliente -->
-            <ngx-datatable-column
-              name="Cliente"
-              prop="cliente_nombre"
-              [flexGrow]="2"
-            >
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                <div class="d-flex align-items-center">
-                  <div class="avatar-sm me-2">
-                    <div class="avatar-title bg-primary rounded-circle">
-                      {{ getInitials(row.cliente_nombre) }}
-                    </div>
-                  </div>
-                  <div>
-                    <div class="fw-bold">{{ row.cliente_nombre }}</div>
-                    <small class="text-muted">{{ row.cliente_email }}</small>
-                  </div>
-                </div>
-              </ng-template>
-            </ngx-datatable-column>
-
-            <!-- Columna Fecha -->
-            <ngx-datatable-column
-              name="Fecha"
-              prop="fecha_compra"
-              [flexGrow]="1"
-            >
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                {{ formatearFecha(row.fecha_compra) }}
-                <div *ngIf="row.fecha_aprobacion">
-                  <small class="text-muted">Aprobada: {{ formatearFecha(row.fecha_aprobacion) }}</small>
-                </div>
-              </ng-template>
-            </ngx-datatable-column>
-
-            <!-- Columna Total -->
-            <ngx-datatable-column
-              name="Total"
-              prop="total"
-              [flexGrow]="1"
-            >
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                <span class="fw-bold text-success-600">S/ {{ formatearPrecio(row.total) }}</span>
-                <div class="mt-1">
-                  <small class="text-muted">{{ row.metodo_pago || 'Sin especificar' }}</small>
-                </div>
-              </ng-template>
-            </ngx-datatable-column>
-
-            <!-- Columna Estado -->
-            <ngx-datatable-column
-              name="Estado"
-              prop="estado_compra.nombre"
-              [flexGrow]="1"
-            >
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                <span class="badge px-12 py-6 rounded-pill fw-medium"
-                      [class]="getEstadoClass(row.estado_compra)">
-                  <i [class]="getEstadoIcon(row.estado_compra)" class="me-1"></i>
-                  {{ getEstadoTexto(row.estado_compra) }}
-                </span>
-              </ng-template>
-            </ngx-datatable-column>
-
-            <!-- Columna Acciones -->
-            <ngx-datatable-column
-              name="Acciones"
-              [flexGrow]="1"
-              [sortable]="false"
-              [canAutoResize]="false"
-            >
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                <div class="d-flex justify-content-center gap-8">
-                  <!-- Ver detalle -->
-                  <button class="btn bg-main-50 hover-bg-main-100 text-main-600 w-32 h-32 rounded-6 flex-center transition-2"
-                          title="Ver detalle"
-                          (click)="verDetalle(row)">
-                    <i class="ph ph-eye text-sm"></i>
-                  </button>
-
-                  <!-- Aprobar -->
-                  <button *ngIf="row.estado_compra?.nombre === 'Pendiente Aprobación'"
-                          class="btn bg-success-50 hover-bg-success-100 text-success-600 w-32 h-32 rounded-6 flex-center transition-2"
-                          title="Aprobar compra"
-                          (click)="aprobarCompra(row)">
-                    <i class="ph ph-check text-sm"></i>
-                  </button>
-
-                  <!-- Rechazar -->
-                  <button *ngIf="row.estado_compra?.nombre === 'Pendiente Aprobación' || row.estado_compra?.nombre === 'Aprobada'"
-                          class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
-                          title="Rechazar compra"
-                          (click)="rechazarCompra(row)">
-                    <i class="ph ph-x text-sm"></i>
-                  </button>
-                </div>
-              </ng-template>
-            </ngx-datatable-column>
-          </ngx-datatable>
-
-          <!-- Empty state -->
-          <div *ngIf="!loading && compras.length === 0" class="text-center py-40">
-            <i class="ph ph-shopping-bag text-gray-300 text-6xl mb-16"></i>
-            <h6 class="text-heading fw-semibold mb-8">No hay compras</h6>
-            <p class="text-gray-500 mb-16">Aún no se han registrado compras en el sistema</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: "./compras-list.component.html",
   styles: [`
-    .table td {
-      vertical-align: middle;
-    }
-
-    .avatar-sm {
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 600;
-      color: white;
-    }
-
-    .avatar-title {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .user-avatar {
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    ::ng-deep .compras-table {
+      .action-buttons {
+        display: flex !important;
+        gap: 4px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-wrap: nowrap !important;
+      }
+
+      .action-btn {
+        width: 24px !important;
+        height: 24px !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 4px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease !important;
+        font-size: 10px !important;
+        min-width: 24px !important;
+      }
+
+      .details-btn {
+        background-color: #cff4fc !important;
+        color: #087990 !important;
+      }
+
+      .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
     }
   `]
 })
-export class ComprasListComponent implements OnInit {
+export class ComprasListComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('table') table!: DatatableComponent;
+
   compras: Compra[] = [];
   compraSeleccionada: Compra | null = null;
   loading = false;
+  pageSize = 10;
+  private resizeSubscription!: Subscription;
+
+  // Cache para URLs de fotos para evitar regeneración constante
+  private photoUrlCache = new Map<string, string | null>();
 
   // Configuración para NGX-Datatable
   columns = [
-    { name: 'Código', prop: 'codigo_compra', flexGrow: 1 },
-    { name: 'Cliente', prop: 'cliente_nombre', flexGrow: 2 },
-    { name: 'Fecha', prop: 'fecha_compra', flexGrow: 1 },
-    { name: 'Total', prop: 'total', flexGrow: 1 },
-    { name: 'Estado', prop: 'estado_compra.nombre', flexGrow: 1 },
-    { name: 'Acciones', prop: 'acciones', flexGrow: 1 }
+    { name: 'Código', prop: 'codigo_compra', flexGrow: 1.5, minWidth: 200 },
+    { name: 'Cliente', prop: 'cliente_nombre', flexGrow: 2.5, minWidth: 250 },
+    { name: 'Fecha', prop: 'fecha_compra', flexGrow: 1.2, minWidth: 140 },
+    { name: 'Total', prop: 'total', flexGrow: 1, minWidth: 120 },
+    { name: 'Estado', prop: 'estado_compra.nombre', flexGrow: 1.2, minWidth: 130 },
+    { name: 'Acciones', prop: 'acciones', flexGrow: 0.8, minWidth: 120 }
   ];
 
   ColumnMode = ColumnMode;
@@ -229,8 +93,65 @@ export class ComprasListComponent implements OnInit {
     this.cargarCompras();
   }
 
+  ngAfterViewInit(): void {
+    // Escuchar cambios del sidebar para recalcular la tabla
+    const sidebarListener = () => {
+      // Recálculo inmediato sin setTimeout para respuesta más rápida
+      this.recalcularTabla();
+
+      // Recálculo adicional por si acaso
+      setTimeout(() => {
+        this.recalcularTabla();
+      }, 10);
+    };
+
+    window.addEventListener('sidebarChanged', sidebarListener);
+
+    // Escuchar cambios de ventana
+    const resizeListener = () => {
+      this.recalcularTabla();
+    };
+
+    window.addEventListener('resize', resizeListener);
+
+    // Cleanup en destroy
+    this.resizeSubscription = new Subscription();
+    this.resizeSubscription.add(() => {
+      window.removeEventListener('sidebarChanged', sidebarListener);
+      window.removeEventListener('resize', resizeListener);
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.resizeSubscription) {
+      this.resizeSubscription.unsubscribe();
+    }
+  }
+
+  // Método para recalcular columnas cuando cambia el layout
+  private recalcularTabla(): void {
+    if (this.table) {
+      // Forzar recalculo inmediato
+      this.table.recalculate();
+      this.table.recalculateColumns();
+
+      // Forzar redibujado del DOM
+      this.table.recalculateDims();
+
+      // Detectar cambios para Angular
+      setTimeout(() => {
+        if (this.table) {
+          this.table.recalculate();
+        }
+      }, 1);
+    }
+  }
+
   cargarCompras(): void {
     this.loading = true;
+    // Limpiar cache de fotos cuando se recargan las compras
+    this.photoUrlCache.clear();
+
     this.comprasService.obtenerTodasLasCompras().subscribe({
       next: (response) => {
         if (response.status === 'success') {
@@ -248,6 +169,14 @@ export class ComprasListComponent implements OnInit {
   verDetalle(compra: Compra): void {
     this.compraSeleccionada = compra;
     console.log('Ver detalle de compra:', compra.codigo_compra);
+
+    // Activar el modal de Bootstrap
+    const modalElement = document.getElementById('modalDetalleCompra');
+    if (modalElement) {
+      // Usar Bootstrap 5 Modal API
+      const modal = new (window as any).bootstrap.Modal(modalElement);
+      modal.show();
+    }
   }
 
   getInitials(nombre: string): string {
@@ -308,7 +237,100 @@ export class ComprasListComponent implements OnInit {
     return this.comprasService.getEstadoTexto(estado);
   }
 
+  getEstadoTextoCorto(estado: any): string {
+    const textoCompleto = this.comprasService.getEstadoTexto(estado);
+    // Acortar textos largos para que quepan mejor en la tabla
+    const textoCorto: { [key: string]: string } = {
+      'Pendiente Aprobación': 'Pendiente',
+      'Pendiente de Aprobación': 'Pendiente',
+      'Pendiente Pago': 'Pend. Pago',
+      'En Proceso': 'Proceso',
+      'Completada': 'Completa',
+      'Cancelada': 'Cancelada',
+      'Rechazada': 'Rechazada'
+    };
+    return textoCorto[textoCompleto] || textoCompleto;
+  }
+
   necesitaAtencion(compra: Compra): boolean {
     return this.comprasService.necesitaAtencion(compra);
+  }
+
+  getSelectionText(): string {
+    return `${this.compras.length} ${this.compras.length === 1 ? 'compra' : 'compras'}`;
+  }
+
+  // Método para obtener la URL de la foto del cliente
+  getClientePhotoUrl(compra: Compra): string | null {
+    const cacheKey = `compra-${compra.id}-user-${(compra as any).user_cliente_id}`;
+
+    if (this.photoUrlCache.has(cacheKey)) {
+      return this.photoUrlCache.get(cacheKey)!;
+    }
+
+    const compraAny = compra as any;
+    const userCliente = compraAny.user_cliente;
+
+    if (userCliente) {
+      const photoField = userCliente.foto || userCliente.foto_url ||
+                        userCliente.profile_photo || userCliente.avatar ||
+                        userCliente.image;
+
+      if (photoField) {
+        let finalUrl = photoField;
+
+        if (finalUrl.startsWith('http')) {
+          finalUrl = finalUrl.replace('/storage/clientes//storage/clientes/', '/storage/clientes/');
+        } else {
+          let photoPath = finalUrl;
+          if (photoPath.includes('/storage/clientes//storage/clientes/')) {
+            photoPath = photoPath.replace('/storage/clientes//storage/clientes/', '/storage/clientes/');
+          }
+          if (!photoPath.includes('/')) {
+            photoPath = `/storage/clientes/${photoPath}`;
+          }
+          finalUrl = `${environment.baseUrl}${photoPath}`;
+        }
+
+        const result = finalUrl;
+        this.photoUrlCache.set(cacheKey, result);
+        return result;
+      }
+    }
+
+    const photoField = compraAny.cliente_foto || compraAny.cliente_photo ||
+                      compraAny.foto || compraAny.cliente_imagen || compraAny.avatar;
+
+    if (photoField) {
+      let finalUrl = photoField;
+      if (finalUrl.startsWith('http')) {
+        finalUrl = finalUrl.replace('/storage/clientes//storage/clientes/', '/storage/clientes/');
+      } else {
+        let photoPath = finalUrl;
+        if (photoPath.includes('/storage/clientes//storage/clientes/')) {
+          photoPath = photoPath.replace('/storage/clientes//storage/clientes/', '/storage/clientes/');
+        }
+        if (!photoPath.includes('/')) {
+          photoPath = `/storage/clientes/${photoPath}`;
+        }
+        finalUrl = `${environment.baseUrl}${photoPath}`;
+      }
+
+      this.photoUrlCache.set(cacheKey, finalUrl);
+      return finalUrl;
+    }
+
+    this.photoUrlCache.set(cacheKey, null);
+    return null;
+  }
+
+  // Método para manejar errores de imagen
+  onImageError(event: any): void {
+    event.target.style.display = 'none';
+  }
+
+  // TrackBy function para evitar re-renders innecesarios
+  trackByCompraId(index: number, compra: Compra): number {
+    return compra.id;
   }
 }

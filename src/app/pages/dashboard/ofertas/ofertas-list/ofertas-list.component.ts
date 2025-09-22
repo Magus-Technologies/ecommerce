@@ -1,25 +1,29 @@
 // src/app/pages/dashboard/ofertas/ofertas-list/ofertas-list.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { OfertasAdminService, OfertaAdmin } from '../../../../services/ofertas-admin.service';
 import { OfertaModalComponent } from '../oferta-modal/oferta-modal.component';
 import { ProductosOfertaComponent } from '../productos-oferta/productos-oferta.component';
 import Swal from 'sweetalert2';
+import { Subscription } from 'rxjs';
 import {
   NgxDatatableModule,
   ColumnMode,
   SelectionType,
   SortType,
+  DatatableComponent
 } from '@swimlane/ngx-datatable';
 
 @Component({
   selector: 'app-ofertas-list',
   standalone: true,
   imports: [
-    CommonModule, 
-    RouterModule, 
-    OfertaModalComponent, 
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    OfertaModalComponent,
     ProductosOfertaComponent,
     NgxDatatableModule
   ],
@@ -61,6 +65,31 @@ import {
       <div *ngIf="!mostrarProductos">
         <!-- Tabla con NGX-Datatable -->
         <div class="card border-0 shadow-sm rounded-12">
+          <!-- Header de información -->
+          <div class="card-header bg-white border-bottom px-24 py-16" *ngIf="!isLoading && ofertas.length > 0">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center gap-16">
+                <span class="text-sm text-gray-600">{{ selectionText }}</span>
+                <div class="d-flex align-items-center gap-8" *ngIf="selected.length > 0">
+                  <button class="btn btn-sm btn-outline-danger px-12 py-6">
+                    <i class="ph ph-trash me-4"></i>
+                    Eliminar seleccionadas
+                  </button>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-8">
+                <span class="text-sm fw-medium text-dark">Mostrando</span>
+                <select class="form-select form-select-sm border-gray-300" style="width: auto; min-width: 60px; font-size: 0.875rem; padding: 4px 8px;" [(ngModel)]="pageSize">
+                  <option [value]="5">5</option>
+                  <option [value]="10">10</option>
+                  <option [value]="25">25</option>
+                  <option [value]="50">50</option>
+                </select>
+                <span class="text-sm fw-medium text-dark">por página</span>
+              </div>
+            </div>
+          </div>
+
           <div class="card-body p-0">
             
             <!-- Loading state -->
@@ -73,6 +102,7 @@ import {
 
             <!-- Datatable -->
             <ngx-datatable
+              #table
               *ngIf="!isLoading"
               class="bootstrap ofertas-table"
               [columns]="columns"
@@ -81,19 +111,26 @@ import {
               [headerHeight]="50"
               [footerHeight]="50"
               [rowHeight]="80"
-              [limit]="10"
-              [scrollbarV]="true"
+              [limit]="pageSize"
+              [scrollbarV]="false"
               [scrollbarH]="false"
               [loadingIndicator]="isLoading"
               [trackByProp]="'id'"
               [sortType]="SortType.single"
-              [selectionType]="SelectionType.single"
+              [selectionType]="SelectionType.checkbox"
+              [selected]="selected"
+              [selectAllRowsOnPage]="false"
+              [displayCheck]="displayCheck"
+              [externalPaging]="false"
+              (select)="onSelect($event)"
+              (page)="onPageChange($event)"
             >
               <!-- Columna Oferta -->
               <ngx-datatable-column
                 name="Oferta"
                 prop="titulo"
                 [flexGrow]="2.5"
+                [minWidth]="180"
                 [sortable]="true"
               >
                 <ng-template let-row="row" ngx-datatable-cell-template>
@@ -125,6 +162,7 @@ import {
                 name="Descuento"
                 prop="valor_descuento"
                 [flexGrow]="1"
+                [minWidth]="90"
                 [sortable]="true"
               >
                 <ng-template let-row="row" ngx-datatable-cell-template>
@@ -144,6 +182,7 @@ import {
                 name="Fechas"
                 prop="fecha_inicio"
                 [flexGrow]="1.5"
+                [minWidth]="120"
                 [sortable]="true"
               >
                 <ng-template let-row="row" ngx-datatable-cell-template>
@@ -166,6 +205,7 @@ import {
               <ngx-datatable-column
                 name="Productos"
                 [flexGrow]="1"
+                [minWidth]="80"
                 [sortable]="false"
               >
                 <ng-template let-row="row" ngx-datatable-cell-template>
@@ -186,6 +226,7 @@ import {
               <ngx-datatable-column
                 name="Configuración"
                 [flexGrow]="1.2"
+                [minWidth]="100"
                 [sortable]="false"
               >
                 <ng-template let-row="row" ngx-datatable-cell-template>
@@ -216,6 +257,7 @@ import {
                 name="Estado"
                 prop="activo"
                 [flexGrow]="0.8"
+                [minWidth]="70"
                 [sortable]="true"
               >
                 <ng-template let-row="row" ngx-datatable-cell-template>
@@ -230,6 +272,7 @@ import {
               <ngx-datatable-column
                 name="Acciones"
                 [flexGrow]="1.2"
+                [minWidth]="150"
                 [sortable]="false"
                 [canAutoResize]="false"
               >
@@ -645,25 +688,32 @@ import {
     }
   `]
 })
-export class OfertasListComponent implements OnInit {
+export class OfertasListComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild(DatatableComponent) table!: DatatableComponent;
   
   ofertas: OfertaAdmin[] = [];
   isLoading = true;
   ofertaParaEditar: OfertaAdmin | null = null;
-  
+
   // Propiedades para gestión de productos
   mostrarProductos = false;
   ofertaSeleccionada: OfertaAdmin | null = null;
 
+  private resizeSubscription?: Subscription;
+
+  // Paginación
+  pageSize = 10;
+  selected: any[] = [];
+
   // Configuración para NGX-Datatable
   columns = [
-    { name: 'Oferta', prop: 'titulo', flexGrow: 2.5 },
-    { name: 'Descuento', prop: 'valor_descuento', flexGrow: 1 },
-    { name: 'Fechas', prop: 'fecha_inicio', flexGrow: 1.5 },
-    { name: 'Productos', prop: 'productos', flexGrow: 1 },
-    { name: 'Configuración', prop: 'configuracion', flexGrow: 1.2 },
-    { name: 'Estado', prop: 'activo', flexGrow: 0.8 },
-    { name: 'Acciones', prop: 'acciones', flexGrow: 1.2 }
+    { name: 'Oferta', prop: 'titulo', flexGrow: 2.5, minWidth: 180 },
+    { name: 'Descuento', prop: 'valor_descuento', flexGrow: 1, minWidth: 90 },
+    { name: 'Fechas', prop: 'fecha_inicio', flexGrow: 1.5, minWidth: 120 },
+    { name: 'Productos', prop: 'productos', flexGrow: 1, minWidth: 80 },
+    { name: 'Configuración', prop: 'configuracion', flexGrow: 1.2, minWidth: 100 },
+    { name: 'Estado', prop: 'activo', flexGrow: 0.8, minWidth: 70 },
+    { name: 'Acciones', prop: 'acciones', flexGrow: 1.2, minWidth: 150 }
   ];
 
   ColumnMode = ColumnMode;
@@ -672,10 +722,31 @@ export class OfertasListComponent implements OnInit {
 
   constructor(
     private ofertasAdminService: OfertasAdminService
-  ) {}
+  ) {
+    // Escuchar cambios de resize del window
+    this.resizeSubscription = new Subscription();
+  }
 
   ngOnInit(): void {
     this.cargarOfertas();
+
+    // Escuchar cambios del sidebar para recalcular la tabla
+    const sidebarListener = () => {
+      // Recálculo inmediato sin setTimeout para respuesta más rápida
+      this.recalcularTabla();
+
+      // Recálculo adicional por si acaso
+      setTimeout(() => {
+        this.recalcularTabla();
+      }, 10);
+    };
+
+    window.addEventListener('sidebarChanged', sidebarListener);
+
+    // Limpiar el listener cuando se destruya el componente
+    this.resizeSubscription?.add(() => {
+      window.removeEventListener('sidebarChanged', sidebarListener);
+    });
   }
 
   cargarOfertas(): void {
@@ -904,6 +975,62 @@ export class OfertasListComponent implements OnInit {
       return { texto: 'Activa', class: 'bg-success-50 text-success-600' };
     } else {
       return { texto: 'Expirada', class: 'bg-danger-50 text-danger-600' };
+    }
+  }
+
+  // Métodos para manejar selección y paginación
+  onSelect(event: any): void {
+    this.selected = event.selected;
+  }
+
+  onPageChange(event: any): void {
+    console.log('Página cambiada:', event);
+  }
+
+  displayCheck(row: any): boolean {
+    return true; // Ajustar según permisos si es necesario
+  }
+
+  get selectionText(): string {
+    const total = this.ofertas.length;
+    const selected = this.selected.length;
+    if (selected === 0) {
+      return `${total} ofertas en total`;
+    }
+    return `${selected} seleccionada${selected > 1 ? 's' : ''} de ${total}`;
+  }
+
+  ngAfterViewInit(): void {
+    // Forzar recalculo después de que la vista esté completamente inicializada
+    setTimeout(() => {
+      if (this.table) {
+        this.table.recalculateColumns();
+      }
+    }, 100);
+  }
+
+  ngOnDestroy(): void {
+    if (this.resizeSubscription) {
+      this.resizeSubscription.unsubscribe();
+    }
+  }
+
+  // Método para recalcular columnas cuando cambia el layout
+  private recalcularTabla(): void {
+    if (this.table) {
+      // Forzar recalculo inmediato
+      this.table.recalculate();
+      this.table.recalculateColumns();
+
+      // Forzar redibujado del DOM
+      this.table.recalculateDims();
+
+      // Detectar cambios para Angular
+      setTimeout(() => {
+        if (this.table) {
+          this.table.recalculate();
+        }
+      }, 1);
     }
   }
 }

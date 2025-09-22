@@ -37,9 +37,30 @@
         <!-- ✅ Tarjeta de información del usuario -->
         <div class="border border-gray-100 hover-border-main-600 rounded-16 overflow-hidden bg-white mb-24 text-center transition-2">
           <div class="p-32">
-            <!-- Avatar dinámico -->
-            <div class="w-80 h-80 bg-main-50 text-main-600 rounded-circle flex-center mx-auto mb-16 fw-bold text-xl">
-              {{ getUserInitials() }}
+            <!-- Avatar con foto o icono de upload -->
+            <div class="position-relative mx-auto mb-16" style="width: 80px; height: 80px;">
+              <!-- Foto de perfil si existe -->
+              <div *ngIf="getUserPhotoUrl(); else avatarWithInitials"
+                   class="w-80 h-80 rounded-circle overflow-hidden border border-gray-200">
+                <img [src]="getUserPhotoUrl()"
+                     [alt]="getUserName()"
+                     class="w-100 h-100 object-cover"
+                     (error)="onImageError($event)">
+              </div>
+
+              <!-- Avatar con iniciales si no hay foto -->
+              <ng-template #avatarWithInitials>
+                <div class="w-80 h-80 bg-main-50 text-main-600 rounded-circle flex-center fw-bold text-xl">
+                  {{ getUserInitials() }}
+                </div>
+              </ng-template>
+
+              <!-- Botón de upload superpuesto -->
+              <button class="position-absolute bottom-0 end-0 w-24 h-24 bg-white border border-gray-200 rounded-circle flex-center shadow-sm hover-bg-main-50 transition-2"
+                      (click)="abrirModalFoto()"
+                      title="Cambiar foto de perfil">
+                <i class="ph ph-camera text-main-600 text-sm"></i>
+              </button>
             </div>
             <!-- Nombre dinámico -->
             <h5 class="mb-8 text-heading">Hola, {{ getUserName() }}</h5>
@@ -143,3 +164,10 @@
     </div>
   </div>
 </div>
+
+<!-- Modal de Foto -->
+<app-modal-foto
+  [isVisible]="showModalFoto"
+  (onClose)="cerrarModalFoto()"
+  (onFotoActualizada)="onFotoActualizada()">
+</app-modal-foto>

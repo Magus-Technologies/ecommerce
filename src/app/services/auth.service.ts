@@ -230,6 +230,26 @@ export class AuthService {
       })
     );
   }
+
+  // Método para refrescar los datos del usuario
+  refreshUserData(): Observable<any> {
+    return this.getUserProfile().pipe(
+      tap((response: any) => {
+        if (response && response.user) {
+          const updatedUser = response.user;
+          // Mantener el tipo de usuario actual
+          updatedUser.tipo_usuario = this.getCurrentUser()?.tipo_usuario;
+
+          localStorage.setItem('current_user', JSON.stringify(updatedUser));
+          this.currentUserSubject.next(updatedUser);
+        }
+      }),
+      catchError(error => {
+        console.error('Error al refrescar datos del usuario:', error);
+        return throwError(() => error);
+      })
+    );
+  }
   
   register(registerData: any): Observable<any> {
     return this.http.post<any>(`${environment.apiUrl}/register`, registerData);
