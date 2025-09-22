@@ -1,5 +1,5 @@
 // src\app\pages\dashboard\almacen\marcas\marcas-list.component.ts
-import { Component, OnInit } from "@angular/core"
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
 import { FormsModule } from '@angular/forms';
@@ -9,11 +9,13 @@ import { SeccionFilterService } from '../../../../services/seccion-filter.servic
 import { PermissionsService } from '../../../../services/permissions.service';
 import { MarcaModalComponent } from "./marca-modal.component"
 import Swal from "sweetalert2"
+import { Subscription } from 'rxjs';
 import {
   NgxDatatableModule,
   ColumnMode,
   SelectionType,
   SortType,
+  DatatableComponent 
 } from '@swimlane/ngx-datatable';
 
 @Component({
@@ -57,7 +59,7 @@ import {
           </div>
           <div class="d-flex align-items-center gap-8">
             <span class="text-sm fw-medium text-dark">Mostrando</span>
-            <select class="form-select form-select-sm border-gray-300" style="width: auto; min-width: 70px;" [(ngModel)]="pageSize">
+            <select class="form-select form-select-sm border-gray-300" style="width: auto; min-width: 60px; font-size: 0.875rem; padding: 4px 8px;" [(ngModel)]="pageSize">
               <option [value]="5">5</option>
               <option [value]="10">10</option>
               <option [value]="25">25</option>
@@ -80,6 +82,7 @@ import {
         <!-- Datatable -->
         <div class="table-container">
           <ngx-datatable
+            #table
             *ngIf="!isLoading"
             class="bootstrap marcas-table"
             [columns]="columns"
@@ -253,13 +256,15 @@ import {
   `,
   styles: [
     `
-      /* Container de la tabla */
-      .table-container {
-        width: 100%;
-        overflow-x: auto;
-        overflow-y: visible;
-        min-width: 0;
-      }
+     /* Container de la tabla */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  min-width: 0;
+  transition: all 0.2s ease-in-out;
+}
+
 
       /* Configuración base del datatable */
       ::ng-deep .marcas-table {
@@ -269,6 +274,7 @@ import {
         width: 100% !important;
         min-width: 800px !important;
         overflow: visible !important;
+        transition: width 0.2s ease-in-out, min-width 0.2s ease-in-out;
       }
 
       /* Eliminar scrollbars del datatable completamente */
@@ -406,6 +412,8 @@ import {
         align-items: center !important;
         justify-content: center !important;
         flex-wrap: nowrap !important;
+        width: 100% !important;
+        min-width: 80px !important;
       }
 
       .action-btn {
@@ -417,9 +425,10 @@ import {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        transition: all 0.2s ease !important;
+        transition: none !important;
         font-size: 10px !important;
         min-width: 24px !important;
+        flex-shrink: 0 !important;
       }
 
       .toggle-btn.toggle-active {
@@ -443,8 +452,7 @@ import {
       }
 
       .action-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        opacity: 0.8;
       }
 
       /* Header mejorado */
@@ -593,10 +601,15 @@ import {
     `,
   ],
 })
-export class MarcasListComponent implements OnInit {
+export class MarcasListComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild(DatatableComponent) table!: DatatableComponent;
+  
   marcas: MarcaProducto[] = []
   isLoading = true
   marcaSeleccionada: MarcaProducto | null = null
+  
+  private resizeSubscription?: Subscription;
+
 
   // Paginación
   pageSize = 10;
@@ -616,20 +629,44 @@ export class MarcasListComponent implements OnInit {
   SelectionType = SelectionType;
   SortType = SortType;
 
-  constructor(
-    private almacenService: AlmacenService,
-    private seccionFilterService: SeccionFilterService,
-    public permissionsService: PermissionsService
-  ) {}
+constructor(
+  private almacenService: AlmacenService,
+  private seccionFilterService: SeccionFilterService,
+  public permissionsService: PermissionsService
+) {
+  // Escuchar cambios de resize del window
+  this.resizeSubscription = new Subscription();
+}
 
-  ngOnInit(): void {
-    this.cargarMarcas()
-    
-    // Suscribirse a cambios de sección
-    this.seccionFilterService.seccionSeleccionada$.subscribe(seccionId => {
-      this.cargarMarcas();
-    });
-  }
+
+ngOnInit(): void {
+  this.cargarMarcas()
+  
+  // Suscribirse a cambios de sección
+  this.seccionFilterService.seccionSeleccionada$.subscribe(seccionId => {
+    this.cargarMarcas();
+  });
+
+// Escuchar cambios del sidebar para recalcular la tabla
+const sidebarListener = () => {
+  // Recálculo inmediato sin setTimeout para respuesta más rápida
+  this.recalcularTabla();
+  
+  // Recálculo adicional por si acaso
+  setTimeout(() => {
+    this.recalcularTabla();
+  }, 10);
+};
+
+  
+  window.addEventListener('sidebarChanged', sidebarListener);
+  
+  // Limpiar el listener cuando se destruya el componente
+  this.resizeSubscription?.add(() => {
+    window.removeEventListener('sidebarChanged', sidebarListener);
+  });
+}
+
 
   cargarMarcas(): void {
     this.isLoading = true
@@ -776,4 +813,39 @@ export class MarcasListComponent implements OnInit {
     }
     return `${selected} seleccionada${selected > 1 ? 's' : ''} de ${total}`;
   }
+  ngAfterViewInit(): void {
+  // Forzar recalculo después de que la vista esté completamente inicializada
+  setTimeout(() => {
+    if (this.table) {
+      this.table.recalculateColumns();
+    }
+  }, 100);
+}
+
+ngOnDestroy(): void {
+  if (this.resizeSubscription) {
+    this.resizeSubscription.unsubscribe();
+  }
+}
+
+// Método para recalcular columnas cuando cambia el layout
+private recalcularTabla(): void {
+  if (this.table) {
+    // Forzar recalculo inmediato
+    this.table.recalculate();
+    this.table.recalculateColumns();
+    
+    // Forzar redibujado del DOM
+    this.table.recalculateDims();
+    
+    // Detectar cambios para Angular
+    setTimeout(() => {
+      if (this.table) {
+        this.table.recalculate();
+      }
+    }, 1);
+  }
+}
+
+
 }

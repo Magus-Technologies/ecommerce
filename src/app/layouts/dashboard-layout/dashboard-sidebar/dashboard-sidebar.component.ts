@@ -37,6 +37,10 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   @Output() sidebarCollapsed = new EventEmitter<boolean>();
 
   isCollapsed = false;
+  isEcommerceOpen = false;
+  isUsuariosOpen = false;
+  isOperacionesOpen = false;
+  isAlmacenOpen = false;
   esSuperadmin = false;
   
   // Permisos
@@ -135,4 +139,20 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
       this.sidebarCollapsed.emit(this.isCollapsed);
     }
   }
+  toggleEcommerce(): void {
+  this.isEcommerceOpen = !this.isEcommerceOpen;
+}
+
+toggleUsuarios(): void {
+  this.isUsuariosOpen = !this.isUsuariosOpen;
+}
+
+toggleOperaciones(): void {
+  this.isOperacionesOpen = !this.isOperacionesOpen;
+}
+
+toggleAlmacen(): void {
+  this.isAlmacenOpen = !this.isAlmacenOpen;
+}
+
 }

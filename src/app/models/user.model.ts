@@ -10,6 +10,10 @@ export interface User {
   created_at?: string;
   updated_at?: string;
 
+  // Para clientes - foto de perfil
+  foto_url?: string;
+  foto?: string;
+
   // Para motorizados
   motorizado_id?: number;
   username?: string;
@@ -45,6 +49,10 @@ export interface AuthResponse {
     roles: string[];
     permissions: string[];
     email_verified_at?: string;
+
+    // Para clientes - foto de perfil
+    foto_url?: string;
+    foto?: string;
 
     // Para motorizados
     motorizado_id?: number;

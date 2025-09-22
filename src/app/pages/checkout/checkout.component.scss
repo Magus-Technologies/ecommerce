@@ -203,9 +203,45 @@
 // Hover effects
 .card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   }
+}
+
+// Estilos para direcciones guardadas
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.hover-bg-main-25:hover {
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.bg-main-25 {
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.border-main-600 {
+  border-color: #2563eb !important;
+}
+
+.transition-2 {
+  transition: all 0.2s ease;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-align {
+  display: flex;
+  align-items: center;
+}
+
+.flex-grow-1 {
+  flex-grow: 1;
 }

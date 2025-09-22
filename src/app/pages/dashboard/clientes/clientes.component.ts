@@ -6,12 +6,13 @@ import { Router } from '@angular/router';
 import { ClienteService } from '../../../services/cliente.service';
 import { PermissionsService } from '../../../services/permissions.service';
 import { Subject, takeUntil } from 'rxjs';
-import { 
-  Cliente, 
-  ClientesFiltros, 
-  EstadisticasGenerales 
+import {
+  Cliente,
+  ClientesFiltros,
+  EstadisticasGenerales
 } from '../../../models/cliente.model';
 import { ClienteEditModalComponent } from '../../../components/cliente-edit-modal/cliente-edit-modal.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-clientes',
@@ -196,7 +197,12 @@ export class ClientesComponent implements OnInit, OnDestroy {
       this.clientes[index] = clienteActualizado;
     }
     this.cerrarModalEditar();
-    this.cargarEstadisticas(); // Recargar estadísticas por si cambió el estado
+
+    // Recargar toda la lista para asegurar que se obtengan las fotos actualizadas
+    setTimeout(() => {
+      this.cargarClientes();
+      this.cargarEstadisticas(); // Recargar estadísticas por si cambió el estado
+    }, 500);
   }
 
   toggleEstado(cliente: Cliente): void {
@@ -289,11 +295,42 @@ export class ClientesComponent implements OnInit, OnDestroy {
     const date = new Date(fecha);
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'Hoy';
     if (diffDays === 1) return 'Ayer';
     if (diffDays < 30) return `Hace ${diffDays} días`;
     if (diffDays < 365) return `Hace ${Math.floor(diffDays / 30)} meses`;
     return `Hace ${Math.floor(diffDays / 365)} años`;
+  }
+
+  // Método para obtener la URL completa de la foto de perfil
+  getClientePhotoUrl(cliente: Cliente): string | null {
+    if (!cliente.foto) {
+      return null;
+    }
+
+    let finalUrl = cliente.foto;
+
+    if (finalUrl.startsWith('http')) {
+      finalUrl = finalUrl.replace('/storage/clientes//storage/clientes/', '/storage/clientes/');
+      return finalUrl;
+    }
+
+    let photoPath = finalUrl;
+    if (photoPath.includes('/storage/clientes//storage/clientes/')) {
+      photoPath = photoPath.replace('/storage/clientes//storage/clientes/', '/storage/clientes/');
+    }
+
+    if (photoPath.split('/storage/clientes/').length > 2) {
+      const parts = photoPath.split('/storage/clientes/');
+      photoPath = '/storage/clientes/' + parts[parts.length - 1];
+    }
+
+    return `${environment.baseUrl}${photoPath}`;
+  }
+
+  // Método para manejar errores de imagen
+  onImageError(event: any): void {
+    event.target.style.display = 'none';
   }
 }

@@ -19,8 +19,8 @@
 
   <!-- Filtros -->
   <div class="p-24 p-md-32 border-bottom border-gray-100">
-    <div class="row align-items-center g-16">
-      <div class="col-md-5">
+    <div class="row g-16">
+      <div class="col-12 col-md-6 col-lg-7">
         <div class="position-relative">
           <i class="ph ph-magnifying-glass position-absolute start-0 top-50 translate-middle-y ms-12 text-gray-400"></i>
           <input
@@ -31,21 +31,28 @@
             placeholder="Buscar por nombre, documento, placa o unidad...">
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="d-flex align-items-center gap-8">
-          <span class="text-sm fw-medium text-dark">Total:</span>
-          <span class="badge bg-main-50 text-main-600">{{ estadisticas.total }}</span>
-          <span class="text-sm fw-medium text-dark">Activos:</span>
-          <span class="badge bg-success-50 text-success-600">{{ estadisticas.activos }}</span>
-          <span class="text-sm fw-medium text-dark">Inactivos:</span>
-          <span class="badge bg-danger-50 text-danger-600">{{ estadisticas.inactivos }}</span>
+      <div class="col-12 col-md-6 col-lg-5">
+        <!-- Estadísticas en layout responsive -->
+        <div class="d-flex align-items-center justify-content-start justify-content-md-end flex-wrap gap-8">
+          <div class="d-flex align-items-center gap-4">
+            <span class="text-sm fw-medium text-dark">Total:</span>
+            <span class="badge bg-main-50 text-main-600">{{ estadisticas.total }}</span>
+          </div>
+          <div class="d-flex align-items-center gap-4">
+            <span class="text-sm fw-medium text-dark">Activos:</span>
+            <span class="badge bg-success-50 text-success-600">{{ estadisticas.activos }}</span>
+          </div>
+          <div class="d-flex align-items-center gap-4">
+            <span class="text-sm fw-medium text-dark">Inactivos:</span>
+            <span class="badge bg-danger-50 text-danger-600">{{ estadisticas.inactivos }}</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Tabla con NGX-Datatable -->
-  <div class="card border-0 shadow-sm rounded-12 mx-24 mx-md-32 mb-24 mb-md-32">
+  <div class="card border-0 shadow-sm rounded-12 mx-16 mb-24">
     <!-- Header de información -->
     <div class="card-header bg-white border-bottom px-24 py-16" *ngIf="!isLoading && motorizadosFiltrados.length > 0">
       <div class="d-flex justify-content-between align-items-center">
@@ -60,7 +67,7 @@
         </div>
         <div class="d-flex align-items-center gap-8">
           <span class="text-sm fw-medium text-dark">Mostrando</span>
-          <select class="form-select page-size-select" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+          <select class="form-select form-select-sm border-gray-300" style="width: auto; min-width: 60px; font-size: 0.875rem; padding: 4px 8px;" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
             <option [value]="5">5</option>
             <option [value]="10">10</option>
             <option [value]="25">25</option>
@@ -81,8 +88,9 @@
       </div>
 
       <!-- Datatable -->
-      <div class="table-container">
+      <div class="table-container overflow-auto">
         <ngx-datatable
+          #table
           *ngIf="!isLoading"
           class="bootstrap motorizados-table"
           [columns]="[]"
@@ -93,7 +101,7 @@
           [rowHeight]="60"
           [limit]="pageSize"
           [scrollbarV]="false"
-          [scrollbarH]="false"
+          [scrollbarH]="true"
           [loadingIndicator]="isLoading"
           [trackByProp]="'id'"
           [sortType]="SortType.single"

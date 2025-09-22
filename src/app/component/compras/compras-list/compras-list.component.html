@@ -1,216 +1,245 @@
-<div class="container-fluid px-4 py-4">
-  <!-- Header -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <h1 class="h3 mb-2 text-gray-800">Gestión de Compras</h1>
-          <p class="mb-0 text-muted">Administra las compras realizadas desde el ecommerce</p>
-        </div>
+<div class="d-flex justify-content-between align-items-center mb-24">
+  <div>
+    <h5 class="text-heading fw-semibold mb-8">Listado de Compras</h5>
+    <p class="text-gray-500 mb-0">Administra todas las compras del ecommerce</p>
+  </div>
+</div>
+
+<!-- Tabla con NGX-Datatable -->
+<div class="card border-0 shadow-sm rounded-12">
+  <!-- Header de información -->
+  <div class="card-header bg-white border-bottom px-24 py-16" *ngIf="!loading && compras.length > 0">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-16">
+        <span class="text-sm text-gray-600">{{ getSelectionText() }}</span>
+      </div>
+      <div class="d-flex align-items-center gap-8">
+        <span class="text-sm fw-medium text-dark">Mostrando</span>
+        <select class="form-select form-select-sm border-gray-300" style="width: auto; min-width: 60px; font-size: 0.875rem; padding: 4px 8px;" [(ngModel)]="pageSize">
+          <option [value]="5">5</option>
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+        </select>
+        <span class="text-sm fw-medium text-dark">por página</span>
       </div>
     </div>
   </div>
 
-  <!-- Filtros -->
-  <div class="card mb-4">
-    <div class="card-header py-3">
-      <h6 class="m-0 font-weight-bold text-primary">Filtros</h6>
+  <div class="card-body p-0">
+    <!-- Loading state -->
+    <div *ngIf="loading" class="text-center py-40">
+      <div class="spinner-border text-main-600" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="text-gray-500 mt-12 mb-0">Cargando compras...</p>
     </div>
-    <div class="card-body">
-      <div class="row">
-        <div class="col-md-3 mb-3">
-          <label for="search" class="form-label">Buscar</label>
-          <input
-            type="text"
-            id="search"
-            class="form-control"
-            placeholder="Código, cliente, email..."
-            [(ngModel)]="filtros.search"
-            (keyup.enter)="aplicarFiltros()"
-          />
-        </div>
-        <div class="col-md-3 mb-3">
-          <label for="estado" class="form-label">Estado</label>
-          <select
-            id="estado"
-            class="form-select"
-            [(ngModel)]="filtros.estado_compra_id"
-          >
-            <option value="">Todos los estados</option>
-            <option *ngFor="let estado of estadosCompra" [value]="estado.id">
-              {{ estado.nombre }}
-            </option>
-          </select>
-        </div>
-        <div class="col-md-2 mb-3">
-          <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
-          <input
-            type="date"
-            id="fecha_inicio"
-            class="form-control"
-            [(ngModel)]="filtros.fecha_inicio"
-          />
-        </div>
-        <div class="col-md-2 mb-3">
-          <label for="fecha_fin" class="form-label">Fecha Fin</label>
-          <input
-            type="date"
-            id="fecha_fin"
-            class="form-control"
-            [(ngModel)]="filtros.fecha_fin"
-          />
-        </div>
-        <div class="col-md-2 mb-3 d-flex align-items-end">
-          <div class="btn-group w-100">
-            <button
-              type="button"
-              class="btn btn-primary"
-              (click)="aplicarFiltros()"
-            >
-              <i class="ph ph-magnifying-glass me-1"></i>
-              Buscar
-            </button>
-            <button
-              type="button"
-              class="btn btn-outline-secondary"
-              (click)="limpiarFiltros()"
-            >
-              <i class="ph ph-x me-1"></i>
-              Limpiar
-            </button>
-          </div>
-        </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!loading && compras.length === 0" class="text-center py-40">
+      <i class="ph ph-shopping-cart text-gray-400" style="font-size: 3rem;"></i>
+      <h6 class="text-gray-600 mt-16 mb-8">No hay compras registradas</h6>
+      <p class="text-gray-500 mb-0">Aún no se han realizado compras en el sistema</p>
+    </div>
+
+    <!-- Datatable -->
+    <div class="table-container overflow-auto" *ngIf="!loading && compras.length > 0">
+      <ngx-datatable
+        #table
+        class="bootstrap compras-table"
+        [columns]="[]"
+        [rows]="compras"
+        [columnMode]="ColumnMode.flex"
+        [headerHeight]="50"
+        [footerHeight]="60"
+        [rowHeight]="60"
+        [limit]="pageSize"
+        [scrollbarV]="false"
+        [scrollbarH]="true"
+        [loadingIndicator]="loading"
+        [trackByProp]="'id'"
+        [sortType]="SortType.single"
+        [selectionType]="SelectionType.single"
+        [externalPaging]="false"
+      >
+        <!-- Columna Código -->
+        <ngx-datatable-column
+          name="Código"
+          prop="codigo_compra"
+          [flexGrow]="1.5"
+          [minWidth]="200"
+          [resizeable]="false"
+          [sortable]="true">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div class="compra-code">
+              <div class="d-flex align-items-center">
+                <i *ngIf="necesitaAtencion(row)" class="ph ph-bell text-warning me-8" title="Requiere atención"></i>
+                <span class="fw-medium text-dark">{{ row.codigo_compra }}</span>
+              </div>
+              <small class="text-gray-500" *ngIf="row.codigo_cotizacion">
+                Cotización: {{ row.codigo_cotizacion }}
+              </small>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <!-- Columna Cliente -->
+        <ngx-datatable-column
+          name="Cliente"
+          prop="cliente_nombre"
+          [flexGrow]="2.5"
+          [minWidth]="250"
+          [resizeable]="false"
+          [sortable]="true">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div class="cliente-info d-flex align-items-center">
+              <ng-container *ngIf="getClientePhotoUrl(row) as photoUrl; else avatarWithInitials">
+                <!-- Avatar con foto si existe -->
+                <div class="me-12" #photoContainer>
+                  <img
+                    [src]="photoUrl"
+                    [alt]="row.cliente_nombre"
+                    class="user-avatar-img"
+                    (error)="onImageError($event); photoContainer.style.display='none'">
+                </div>
+              </ng-container>
+
+              <!-- Avatar con iniciales si no hay foto -->
+              <ng-template #avatarWithInitials>
+                <div class="user-avatar bg-main-50 text-white me-12">
+                  {{ getInitials(row.cliente_nombre) }}
+                </div>
+              </ng-template>
+
+              <div>
+                <h6 class="mb-0 text-heading text-sm fw-medium">{{ row.cliente_nombre }}</h6>
+                <p class="mb-0 text-xs text-gray-500">{{ row.cliente_email }}</p>
+              </div>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <!-- Columna Fecha -->
+        <ngx-datatable-column
+          name="Fecha"
+          prop="fecha_compra"
+          [flexGrow]="1.2"
+          [minWidth]="140"
+          [resizeable]="false"
+          [sortable]="true">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div class="fecha-info">
+              <span class="text-sm fw-medium text-dark">{{ formatearFecha(row.fecha_compra) }}</span>
+              <div *ngIf="row.fecha_aprobacion">
+                <p class="mb-0 text-xs text-gray-500">Aprobada: {{ formatearFecha(row.fecha_aprobacion) }}</p>
+              </div>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <!-- Columna Total -->
+        <ngx-datatable-column
+          name="Total"
+          prop="total"
+          [flexGrow]="1"
+          [minWidth]="120"
+          [resizeable]="false"
+          [sortable]="true">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div class="total-info">
+              <span class="text-sm fw-semibold text-success">{{ formatearPrecio(row.total) }}</span>
+              <div>
+                <p class="mb-0 text-xs text-gray-500">{{ row.metodo_pago || 'Sin especificar' }}</p>
+              </div>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <!-- Columna Estado -->
+        <ngx-datatable-column
+          name="Estado"
+          prop="estado_compra"
+          [flexGrow]="1.2"
+          [minWidth]="130"
+          [resizeable]="false"
+          [sortable]="true">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div class="d-flex justify-content-center">
+              <span class="badge px-8 py-4 rounded-pill fw-medium text-xs" [ngClass]="getEstadoClass(row.estado_compra)" style="min-width: 85px;">
+                <i [class]="getEstadoIcon(row.estado_compra)" class="me-4"></i>
+                {{ getEstadoTextoCorto(row.estado_compra) }}
+              </span>
+            </div>
+            <div *ngIf="necesitaAtencion(row)" class="mt-4 text-center">
+              <small class="text-warning">
+                <i class="ph ph-warning me-4"></i>
+                Requiere atención
+              </small>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+
+        <!-- Columna Acciones -->
+        <ngx-datatable-column
+          name="Acciones"
+          prop="acciones"
+          [flexGrow]="0.8"
+          [minWidth]="120"
+          [resizeable]="false"
+          [sortable]="false"
+          [canAutoResize]="false">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <div class="action-buttons">
+              <!-- Ver detalle -->
+              <button
+                class="btn action-btn details-btn"
+                (click)="verDetalle(row)"
+                title="Ver detalle">
+                <i class="ph ph-eye"></i>
+              </button>
+
+              <!-- Aprobar compra -->
+              <button
+                *ngIf="row.estado_compra?.nombre === 'Pendiente Aprobación'"
+                class="btn action-btn bg-success-50 hover-bg-success-100 text-success-600"
+                (click)="aprobarCompra(row)"
+                title="Aprobar compra">
+                <i class="ph ph-check"></i>
+              </button>
+
+              <!-- Rechazar compra -->
+              <button
+                *ngIf="row.estado_compra?.nombre === 'Pendiente Aprobación' || row.estado_compra?.nombre === 'Aprobada'"
+                class="btn action-btn bg-danger-50 hover-bg-danger-100 text-danger-600"
+                (click)="rechazarCompra(row)"
+                title="Rechazar compra">
+                <i class="ph ph-x"></i>
+              </button>
+            </div>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de detalle (placeholder) -->
+<div class="modal fade" id="modalDetalleCompra" tabindex="-1" *ngIf="compraSeleccionada">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalle de Compra</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Código:</strong> {{ compraSeleccionada.codigo_compra }}</p>
+        <p><strong>Cliente:</strong> {{ compraSeleccionada.cliente_nombre }}</p>
+        <p><strong>Total:</strong> {{ formatearPrecio(compraSeleccionada.total) }}</p>
+        <p><strong>Estado:</strong> {{ getEstadoTexto(compraSeleccionada.estado_compra) }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
       </div>
     </div>
-  </div>
-
-  <!-- Loading -->
-  <div *ngIf="loading" class="text-center py-4">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Cargando...</span>
-    </div>
-    <p class="mt-2 text-muted">Cargando compras...</p>
-  </div>
-
-  <!-- Error -->
-  <div *ngIf="error" class="alert alert-danger" role="alert">
-    <i class="ph ph-warning-circle me-2"></i>
-    {{ error }}
-  </div>
-
-  <!-- Tabla de Compras -->
-  <div *ngIf="!loading && !error" class="card">
-    <div class="card-header py-3">
-      <h6 class="m-0 font-weight-bold text-primary">
-        Compras ({{ compras.length }})
-      </h6>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead class="table-light">
-            <tr>
-              <th scope="col" class="px-4 py-3">Código</th>
-              <th scope="col" class="px-4 py-3">Cliente</th>
-              <th scope="col" class="px-4 py-3">Fecha</th>
-              <th scope="col" class="px-4 py-3">Total</th>
-              <th scope="col" class="px-4 py-3">Estado</th>
-              <th scope="col" class="px-4 py-3">Productos</th>
-              <th scope="col" class="px-4 py-3">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let compra of compras" [class.table-warning]="necesitaAtencion(compra)">
-              <td class="px-4 py-3">
-                <div class="d-flex align-items-center">
-                  <i *ngIf="necesitaAtencion(compra)" class="ph ph-bell text-warning me-2" title="Requiere atención"></i>
-                  <strong>{{ compra.codigo_compra }}</strong>
-                </div>
-                <small class="text-muted" *ngIf="compra.codigo_cotizacion">
-                  Cotización: {{ compra.codigo_cotizacion }}
-                </small>
-              </td>
-              <td class="px-4 py-3">
-                <div>
-                  <strong>{{ compra.cliente_nombre || 'N/A' }}</strong>
-                </div>
-                <small class="text-muted">{{ compra.cliente_email || 'N/A' }}</small>
-                <div class="mt-1" *ngIf="compra.telefono_contacto">
-                  <small class="text-muted">
-                    <i class="ph ph-phone me-1"></i>
-                    {{ compra.telefono_contacto }}
-                  </small>
-                </div>
-              </td>
-              <td class="px-4 py-3">
-                <div>{{ formatearFecha(compra.fecha_compra) }}</div>
-                <small class="text-muted" *ngIf="compra.fecha_aprobacion">
-                  Aprobada: {{ formatearFecha(compra.fecha_aprobacion) }}
-                </small>
-              </td>
-              <td class="px-4 py-3">
-                <strong class="text-success">S/ {{ formatearPrecio(compra.total) }}</strong>
-                <div class="mt-1">
-                  <small class="text-muted">{{ compra.metodo_pago || 'Sin especificar' }}</small>
-                </div>
-              </td>
-              <td class="px-4 py-3">
-                <span class="badge rounded-pill px-3 py-2" [ngClass]="getEstadoClass(compra.estado_compra)">
-                  <i [class]="getEstadoIcon(compra.estado_compra)" class="me-1"></i>
-                  {{ getEstadoTexto(compra.estado_compra) }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <div>
-                  <strong>{{ compra.detalles_count || 0 }}</strong> productos
-                </div>
-                <small class="text-muted">{{ compra.forma_envio || 'N/A' }}</small>
-              </td>
-              <td class="px-4 py-3">
-                <div class="btn-group" role="group">
-                  <!-- Aprobar -->
-                  <button
-                    *ngIf="compra.estado_compra.nombre === 'Pendiente Aprobación'"
-                    type="button"
-                    class="btn btn-sm btn-success"
-                    (click)="aprobarCompra(compra)"
-                    title="Aprobar compra"
-                  >
-                    <i class="ph ph-check"></i>
-                  </button>
-
-                  <!-- Rechazar -->
-                  <button
-                    *ngIf="compra.estado_compra.nombre === 'Pendiente Aprobación' || compra.estado_compra.nombre === 'Aprobada'"
-                    type="button"
-                    class="btn btn-sm btn-danger"
-                    (click)="rechazarCompra(compra)"
-                    title="Rechazar compra"
-                  >
-                    <i class="ph ph-x"></i>
-                  </button>
-
-                  <!-- Ver detalle -->
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-primary"
-                    title="Ver detalle"
-                  >
-                    <i class="ph ph-eye"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Sin resultados -->
-  <div *ngIf="!loading && !error && compras.length === 0" class="text-center py-5">
-    <i class="ph ph-shopping-bag display-1 text-muted"></i>
-    <h5 class="mt-3 text-muted">No se encontraron compras</h5>
-    <p class="text-muted">No hay compras que coincidan con los filtros aplicados.</p>
   </div>
 </div>

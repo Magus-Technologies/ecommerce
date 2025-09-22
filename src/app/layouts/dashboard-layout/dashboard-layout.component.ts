@@ -61,19 +61,37 @@ ngOnInit(): void {
     }
   }
 
-  // ✅ Nuevo método para manejar el colapso
-  onSidebarCollapse(isCollapsed: boolean): void {
-    this.isSidebarCollapsed = isCollapsed;
-  }
+onSidebarCollapse(isCollapsed: boolean): void {
+  this.isSidebarCollapsed = isCollapsed;
+
+  // Emitir inmediatamente para evitar espacio en blanco
+  window.dispatchEvent(new Event('sidebarChanged'));
+
+  // Emitir al final de la animación para el ajuste fino
+  setTimeout(() => {
+    window.dispatchEvent(new Event('sidebarChanged'));
+  }, 320);
+}
+
+toggleSidebar(): void {
+  this.isSidebarOpen = !this.isSidebarOpen;
+  console.log('🍔 Toggle Sidebar - isSidebarOpen:', this.isSidebarOpen);
+
+  // Emitir inmediatamente para evitar espacio en blanco
+  window.dispatchEvent(new Event('sidebarChanged'));
+
+  // Emitir al final de la animación para el ajuste fino
+  setTimeout(() => {
+    window.dispatchEvent(new Event('sidebarChanged'));
+  }, 320);
+}
+
 
   onSidebarToggle(isOpen: boolean): void {
     this.isSidebarOpen = isOpen;
   }
 
-  toggleSidebar(): void {
-    this.isSidebarOpen = !this.isSidebarOpen;
-    console.log('🍔 Toggle Sidebar - isSidebarOpen:', this.isSidebarOpen);
-  }
+
 
   closeSidebar(): void {
     if (!this.isDesktop) {

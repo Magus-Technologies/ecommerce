@@ -1,5 +1,5 @@
 // src\app\pages\dashboard\almacen\categorias\categorias-list.component.ts
-import { Component, OnInit } from "@angular/core"
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { RouterModule } from "@angular/router"
 import { FormsModule } from '@angular/forms';
@@ -10,11 +10,13 @@ import { MigrarCategoriaModalComponent } from "../migrar-categoria-modal/migrar-
 import { SeccionFilterService } from '../../../../services/seccion-filter.service';
 import { PermissionsService } from '../../../../services/permissions.service';
 import Swal from "sweetalert2"
+import { Subscription } from 'rxjs';
 import {
   NgxDatatableModule,
   ColumnMode,
   SelectionType,
   SortType,
+  DatatableComponent
 } from '@swimlane/ngx-datatable';
 
 @Component({
@@ -59,7 +61,7 @@ import {
           </div>
           <div class="d-flex align-items-center gap-8">
             <span class="text-sm fw-medium text-dark">Mostrando</span>
-            <select class="form-select form-select-sm border-gray-300" style="width: auto; min-width: 70px;" [(ngModel)]="pageSize">
+            <select class="form-select form-select-sm border-gray-300" style="width: auto; min-width: 60px; font-size: 0.875rem; padding: 4px 8px;" [(ngModel)]="pageSize">
               <option [value]="5">5</option>
               <option [value]="10">10</option>
               <option [value]="25">25</option>
@@ -82,6 +84,7 @@ import {
         <!-- Datatable -->
         <div class="table-container">
           <ngx-datatable
+            #table
             *ngIf="!isLoading"
             class="bootstrap categorias-table"
             [columns]="columns"
@@ -617,11 +620,14 @@ import {
     `,
   ],
 })
-export class CategoriasListComponent implements OnInit {
+export class CategoriasListComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild(DatatableComponent) table!: DatatableComponent;
   categorias: Categoria[] = []
   isLoading = true
   categoriaSeleccionada: Categoria | null = null
   categoriaMigracion: Categoria | null = null
+
+  private resizeSubscription?: Subscription;
 
   // Paginación
   pageSize = 10;
@@ -634,7 +640,7 @@ export class CategoriasListComponent implements OnInit {
     { name: 'Descripción', prop: 'descripcion', flexGrow: 3, minWidth: 200 },
     { name: 'Estado', prop: 'activo', flexGrow: 0.8, minWidth: 70 },
     { name: 'Fecha Creación', prop: 'created_at', flexGrow: 1.2, minWidth: 120 },
-    { name: 'Acciones', prop: 'acciones', flexGrow: 1.8, minWidth: 160 }
+    { name: 'Acciones', prop: 'acciones', flexGrow: 1.5, minWidth: 150 }
   ];
 
   ColumnMode = ColumnMode;
@@ -645,13 +651,35 @@ export class CategoriasListComponent implements OnInit {
     private almacenService: AlmacenService,
     private seccionFilterService: SeccionFilterService,
     public permissionsService: PermissionsService
-  ) {}
+  ) {
+    // Escuchar cambios de resize del window
+    this.resizeSubscription = new Subscription();
+  }
 
   ngOnInit(): void {
     this.cargarCategorias()
+
     // Suscribirse a cambios de sección
     this.seccionFilterService.seccionSeleccionada$.subscribe(seccionId => {
       this.cargarCategorias();
+    });
+
+    // Escuchar cambios del sidebar para recalcular la tabla
+    const sidebarListener = () => {
+      // Recálculo inmediato sin setTimeout para respuesta más rápida
+      this.recalcularTabla();
+
+      // Recálculo adicional por si acaso
+      setTimeout(() => {
+        this.recalcularTabla();
+      }, 10);
+    };
+
+    window.addEventListener('sidebarChanged', sidebarListener);
+
+    // Limpiar el listener cuando se destruya el componente
+    this.resizeSubscription?.add(() => {
+      window.removeEventListener('sidebarChanged', sidebarListener);
     });
   }
 
@@ -817,5 +845,39 @@ export class CategoriasListComponent implements OnInit {
       return `${total} categorías en total`;
     }
     return `${selected} seleccionada${selected > 1 ? 's' : ''} de ${total}`;
+  }
+
+  ngAfterViewInit(): void {
+    // Forzar recalculo después de que la vista esté completamente inicializada
+    setTimeout(() => {
+      if (this.table) {
+        this.table.recalculateColumns();
+      }
+    }, 100);
+  }
+
+  ngOnDestroy(): void {
+    if (this.resizeSubscription) {
+      this.resizeSubscription.unsubscribe();
+    }
+  }
+
+  // Método para recalcular columnas cuando cambia el layout
+  private recalcularTabla(): void {
+    if (this.table) {
+      // Forzar recalculo inmediato
+      this.table.recalculate();
+      this.table.recalculateColumns();
+
+      // Forzar redibujado del DOM
+      this.table.recalculateDims();
+
+      // Detectar cambios para Angular
+      setTimeout(() => {
+        if (this.table) {
+          this.table.recalculate();
+        }
+      }, 1);
+    }
   }
 }

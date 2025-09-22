@@ -42,6 +42,46 @@
           <span *ngIf="!isCollapsed" class="fw-medium">Inicio</span>
         </a>
       </li>
+          <!-- ✅ NUEVO: Módulo Gestión de Usuarios -->
+<li *ngIf="puedeVerClientes || puedeVerUsuarios || puedeVerMotorizados" class="mb-8">
+  <a 
+    (click)="toggleUsuarios()"
+    class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500 cursor-pointer"
+  >
+    <i class="ph ph-users-three text-xl flex-shrink-0"></i>
+    <span *ngIf="!isCollapsed" class="fw-medium">Gestión Usuarios</span>
+    <i *ngIf="!isCollapsed" class="ph text-sm ms-auto transition-2"
+       [class.ph-caret-right]="!isUsuariosOpen"
+       [class.ph-caret-down]="isUsuariosOpen"></i>
+  </a>
+  
+  <!-- Submódulos -->
+  <ul *ngIf="isUsuariosOpen && !isCollapsed" class="list-style-none p-0 ms-28 mt-8 submenu">
+    <li class="mb-4" *ngIf="puedeVerUsuarios">
+      <a routerLink="/dashboard/usuarios" routerLinkActive="active"
+         class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+        <i class="ph ph-user-gear text-lg flex-shrink-0"></i>
+        <span class="fw-medium">Usuarios</span>
+      </a>
+    </li>
+    
+    <li class="mb-4" *ngIf="puedeVerClientes">
+      <a routerLink="/dashboard/clientes" routerLinkActive="active"
+         class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+        <i class="ph ph-users text-lg flex-shrink-0"></i>
+        <span class="fw-medium">Clientes</span>
+      </a>
+    </li>
+    
+    <li class="mb-4" *ngIf="puedeVerMotorizados">
+      <a routerLink="/dashboard/motorizados" routerLinkActive="active"
+         class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+        <i class="ph ph-motorcycle text-lg flex-shrink-0"></i>
+        <span class="fw-medium">Motorizados</span>
+      </a>
+    </li>
+  </ul>
+</li>
       <!-- ventas -->
       <li class="mb-8">
         <a
@@ -53,41 +93,49 @@
           <span *ngIf="!isCollapsed" class="fw-medium">Ventas</span>
         </a>
       </li>
-      <!-- Almacen -->
+      <!-- ✅ NUEVO: Módulo Almacén -->
       <li class="mb-8">
         <a
-          routerLink="/dashboard/almacen"
-          routerLinkActive="active"
-          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
+          (click)="toggleAlmacen()"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500 cursor-pointer"
         >
           <i class="ph ph-package text-xl flex-shrink-0"></i>
-          <span *ngIf="!isCollapsed" class="fw-medium">Almacen</span>
+          <span *ngIf="!isCollapsed" class="fw-medium">Almacén</span>
+          <i *ngIf="!isCollapsed" class="ph text-sm ms-auto transition-2"
+             [class.ph-caret-right]="!isAlmacenOpen"
+             [class.ph-caret-down]="isAlmacenOpen"></i>
         </a>
+
+        <!-- Submódulos -->
+        <ul *ngIf="isAlmacenOpen && !isCollapsed" class="list-style-none p-0 ms-28 mt-8 submenu">
+          <li class="mb-4">
+            <a routerLink="/dashboard/almacen" routerLinkActive="active"
+               [routerLinkActiveOptions]="{ exact: true }"
+               class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+              <i class="ph ph-archive-box text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Productos</span>
+            </a>
+          </li>
+
+          <li class="mb-4">
+            <a routerLink="/dashboard/almacen/categorias" routerLinkActive="active"
+               class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+              <i class="ph ph-tree-structure text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Categorías</span>
+            </a>
+          </li>
+
+          <li class="mb-4">
+            <a routerLink="/dashboard/almacen/marcas" routerLinkActive="active"
+               class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+              <i class="ph ph-tag text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Marcas</span>
+            </a>
+          </li>
+        </ul>
       </li>
 
-      <!-- ✅ NUEVO: Ofertas y Promociones -->
-      <li *ngIf="puedeVerOfertas" class="mb-8">
-        <a
-          routerLink="/dashboard/ofertas"
-          routerLinkActive="active"
-          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
-        >
-          <i class="ph ph-tag text-xl flex-shrink-0"></i>
-          <span *ngIf="!isCollapsed" class="fw-medium">Ofertas</span>
-        </a>
-      </li>
-
-      <!-- ✅ NUEVO: Cupones -->
-      <li *ngIf="puedeVerCupones" class="mb-8">
-        <a
-          routerLink="/dashboard/cupones"
-          routerLinkActive="active"
-          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
-        >
-          <i class="ph ph-ticket text-xl flex-shrink-0"></i>
-          <span *ngIf="!isCollapsed" class="fw-medium">Cupones</span>
-        </a>
-      </li>
+    
 
       <!-- ✅ NUEVO: Arma tu PC -->
       <li *ngIf="puedeConfigure" class="mb-8">
@@ -113,44 +161,58 @@
         </a>
       </li>
 
-      <!-- banners -->
-      <li class="mb-8">
-        <a
-          *ngIf="puedeVerBanners"
-          routerLink="/dashboard/banners"
-          routerLinkActive="active"
-          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
-        >
-          <i class="ph ph-image text-xl flex-shrink-0"></i>
-          <span *ngIf="!isCollapsed" class="fw-medium">Banners</span>
-        </a>
-      </li>
-      <!-- banners promocional -->
-      <li class="mb-8">
-        <a
-          *ngIf="puedeVerBanners_promocionales"
-          routerLink="/dashboard/banners-promocionales"
-          routerLinkActive="active"
-          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
-        >
-          <i class="ph ph-image text-xl flex-shrink-0"></i>
-          <span *ngIf="!isCollapsed" class="fw-medium"
-            >Banners Promocionales</span
-          >
-        </a>
-      </li>
+     <!-- ✅ NUEVO: Módulo E-commerce -->
+<li class="mb-8">
+  <a 
+    (click)="toggleEcommerce()"
+    class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500 cursor-pointer"
+  >
+    <i class="ph ph-storefront text-xl flex-shrink-0"></i>
+    <span *ngIf="!isCollapsed" class="fw-medium">E-commerce</span>
+    <i *ngIf="!isCollapsed" class="ph text-sm ms-auto transition-2"
+       [class.ph-caret-right]="!isEcommerceOpen"
+       [class.ph-caret-down]="isEcommerceOpen"></i>
+  </a>
+  
+  <!-- Submódulos -->
+  <ul *ngIf="isEcommerceOpen && !isCollapsed" class="list-style-none p-0 ms-28 mt-8 submenu">
+    <li class="mb-4" *ngIf="puedeVerBanners">
+      <a routerLink="/dashboard/banners" routerLinkActive="active"
+         class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+        <i class="ph ph-image text-lg flex-shrink-0"></i>
+        <span class="fw-medium">Banners</span>
+      </a>
+    </li>
+    
+    <li class="mb-4" *ngIf="puedeVerBanners_promocionales">
+      <a routerLink="/dashboard/banners-promocionales" routerLinkActive="active"
+         class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+        <i class="ph ph-image text-lg flex-shrink-0"></i>
+        <span class="fw-medium">Banners Promocionales</span>
+      </a>
+    </li>
+    
+    <li class="mb-4" *ngIf="puedeVerOfertas">
+      <a routerLink="/dashboard/ofertas" routerLinkActive="active"
+         class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+        <i class="ph ph-tag text-lg flex-shrink-0"></i>
+        <span class="fw-medium">Ofertas</span>
+      </a>
+    </li>
+    
+    <li class="mb-4" *ngIf="puedeVerCupones">
+      <a routerLink="/dashboard/cupones" routerLinkActive="active"
+         class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+        <i class="ph ph-ticket text-lg flex-shrink-0"></i>
+        <span class="fw-medium">Cupones</span>
+      </a>
+    </li>
+  </ul>
+</li>
 
-      <!-- Clientes -->
-      <li *ngIf="puedeVerClientes" class="mb-8">
-        <a
-          routerLink="/dashboard/clientes"
-          routerLinkActive="active"
-          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
-        >
-          <i class="ph ph-users text-xl flex-shrink-0"></i>
-          <span *ngIf="!isCollapsed" class="fw-medium">Clientes</span>
-        </a>
-      </li>
+
+ 
+
 
       <!-- Agrega esta sección después de la sección de Clientes -->
       <!-- Pedidos -->
@@ -189,28 +251,6 @@
         </a>
       </li>
 
-      <li *ngIf="puedeVerMotorizados" class="mb-8">
-        <a
-          routerLink="/dashboard/motorizados"
-          routerLinkActive="active"
-          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
-        >
-          <i class="ph ph-motorcycle text-xl flex-shrink-0"></i>
-          <span *ngIf="!isCollapsed" class="fw-medium">Motorizados</span>
-        </a>
-      </li>
-
-      <!-- Usuarios (solo con permiso usuarios.ver) -->
-      <li *ngIf="puedeVerUsuarios" class="mb-8">
-        <a
-          routerLink="/dashboard/usuarios"
-          routerLinkActive="active"
-          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500"
-        >
-          <i class="ph ph-user-gear text-xl flex-shrink-0"></i>
-          <span *ngIf="!isCollapsed" class="fw-medium">Usuarios</span>
-        </a>
-      </li>
 
       <!-- Permisos (gestión de roles) -->
       <li *ngIf="esSuperadmin" class="mb-8">

@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { BreadcrumbComponent } from '../../component/breadcrumb/breadcrumb.component';
 import { ShippingComponent } from '../../component/shipping/shipping.component';
 import { CartService, CartItem, CartSummary } from '../../services/cart.service';
@@ -9,16 +9,18 @@ import { AuthService } from '../../services/auth.service';
 import { UbigeoService, Departamento, Provincia, Distrito } from '../../services/ubigeo.service';
 import { CotizacionesService, CrearCotizacionRequest } from '../../services/cotizaciones.service';
 import { ComprasService, CrearCompraRequest } from '../../services/compras.service';
+import { DireccionesService, Direccion } from '../../services/direcciones.service';
 import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-checkout',
   imports: [
-    CommonModule, 
-    RouterLink, 
-    ReactiveFormsModule, 
-    BreadcrumbComponent, 
+    CommonModule,
+    RouterLink,
+    ReactiveFormsModule,
+    FormsModule,
+    BreadcrumbComponent,
     ShippingComponent
   ],
   templateUrl: './checkout.component.html',
@@ -44,6 +46,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   procesandoPedido = false;
   isLoggedIn = false;
 
+  // Direcciones guardadas
+  direccionesGuardadas: Direccion[] = [];
+  direccionSeleccionada: Direccion | null = null;
+  usarDireccionPersonalizada = false;
+
   // Costos de envío
   costoEnvio = {
     delivery: 30.00,    // Delivery en Lima
@@ -61,6 +68,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     private ubigeoService: UbigeoService,
     private cotizacionesService: CotizacionesService,
     private comprasService: ComprasService,
+    private direccionesService: DireccionesService,
     private router: Router
   ) {
     this.initializeForm();
@@ -69,8 +77,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.checkCartItems();
     this.loadCartData();
-    this.loadUbigeoData();
     this.checkAuthStatus();
+    // Cargar ubigeo primero, luego direcciones
+    this.loadUbigeoData().then(() => {
+      this.loadDireccionesGuardadas();
+    });
   }
 
   ngOnDestroy(): void {
@@ -86,8 +97,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       direccion: ['', [Validators.required]],
       celular: ['', [Validators.required, Validators.pattern('^[9][0-9]{8}$')]],
       departamento: ['', [Validators.required]],
-      provincia: ['', [Validators.required]],
-      distrito: ['', [Validators.required]],
+      provincia: [{value: '', disabled: true}, [Validators.required]],
+      distrito: [{value: '', disabled: true}, [Validators.required]],
       formaEnvio: ['', [Validators.required]],
       tipoPago: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
@@ -131,14 +142,18 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   // Cargar datos de ubigeo
-  private loadUbigeoData(): void {
-    this.ubigeoService.getDepartamentos().subscribe({
-      next: (departamentos) => {
-        this.departamentos = departamentos;
-      },
-      error: (error) => {
-        console.error('Error cargando departamentos:', error);
-      }
+  private loadUbigeoData(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.ubigeoService.getDepartamentos().subscribe({
+        next: (departamentos) => {
+          this.departamentos = departamentos;
+          resolve();
+        },
+        error: (error) => {
+          console.error('Error cargando departamentos:', error);
+          reject(error);
+        }
+      });
     });
   }
 
@@ -200,55 +215,39 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     }, 1500);
   }
 
-  // Cambios en ubigeo
-  onDepartamentoChange(): void {
-    const departamentoId = this.checkoutForm.get('departamento')?.value;
-    
-    if (departamentoId) {
-      this.ubigeoService.getProvincias(departamentoId).subscribe({
-        next: (provincias) => {
-          this.provincias = provincias;
-          this.distritos = [];
-          this.checkoutForm.patchValue({
-            provincia: '',
-            distrito: ''
-          });
-        },
-        error: (error) => {
-          console.error('Error cargando provincias:', error);
-        }
-      });
-    } else {
-      this.provincias = [];
-      this.distritos = [];
-    }
+  // Método eliminado - ahora está como async al final del archivo
+
+  // Método eliminado - ahora está como async al final del archivo
+
+  // Cambio en distrito
+  onDistritoChange(): void {
+    this.checkForLimaDelivery();
   }
 
-  onProvinciaChange(): void {
+  // Método para verificar si es Lima-Lima-Lima y setear delivery automáticamente
+  private checkForLimaDelivery(): void {
     const departamentoId = this.checkoutForm.get('departamento')?.value;
     const provinciaId = this.checkoutForm.get('provincia')?.value;
-    
-    if (departamentoId && provinciaId) {
-      this.ubigeoService.getDistritos(departamentoId, provinciaId).subscribe({
-        next: (distritos) => {
-          this.distritos = distritos;
-          this.checkoutForm.patchValue({
-            distrito: ''
-          });
-        },
-        error: (error) => {
-          console.error('Error cargando distritos:', error);
-        }
+    const distritoId = this.checkoutForm.get('distrito')?.value;
+
+    // Encontrar los nombres de departamento, provincia y distrito
+    const departamentoNombre = this.departamentos.find(d => d.id === departamentoId)?.nombre?.toLowerCase();
+    const provinciaNombre = this.provincias.find(p => p.id === provinciaId)?.nombre?.toLowerCase();
+    const distritoNombre = this.distritos.find(d => d.id === distritoId)?.nombre?.toLowerCase();
+
+    // Si es Lima, Lima, Lima (cualquier distrito de Lima)
+    if (departamentoNombre === 'lima' && provinciaNombre === 'lima') {
+      this.checkoutForm.patchValue({
+        formaEnvio: 'delivery'
       });
-    } else {
-      this.distritos = [];
+      this.costoEnvioCalculado = this.costoEnvio.delivery;
     }
   }
 
   // Cambio en forma de envío
   onFormaEnvioChange(): void {
     const formaEnvio = this.checkoutForm.get('formaEnvio')?.value;
-    
+
     switch (formaEnvio) {
       case 'delivery':
         this.costoEnvioCalculado = this.costoEnvio.delivery;
@@ -511,11 +510,161 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   formatPrice(price: number | string | null | undefined): string {
     const numPrice = typeof price === 'number' ? price : parseFloat(String(price || 0));
-    
+
     if (isNaN(numPrice)) {
       return '0.00';
     }
-    
+
     return numPrice.toFixed(2);
+  }
+
+  // ==========================================
+  // MÉTODOS PARA DIRECCIONES GUARDADAS
+  // ==========================================
+
+  // Cargar direcciones guardadas del usuario
+  private loadDireccionesGuardadas(): void {
+    if (this.isLoggedIn) {
+      this.direccionesService.obtenerDirecciones()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            if (response.status === 'success') {
+              this.direccionesGuardadas = response.direcciones || [];
+
+              // Seleccionar automáticamente la dirección predeterminada
+              const direccionPredeterminada = this.direccionesGuardadas.find(d => d.predeterminada);
+              if (direccionPredeterminada && !this.usarDireccionPersonalizada) {
+                this.seleccionarDireccion(direccionPredeterminada);
+              }
+            }
+          },
+          error: (error) => {
+            console.error('Error al cargar direcciones:', error);
+          }
+        });
+    }
+  }
+
+  // Seleccionar una dirección guardada
+  seleccionarDireccion(direccion: Direccion): void {
+    this.direccionSeleccionada = direccion;
+    this.usarDireccionPersonalizada = false;
+
+    // Autocompletar el formulario con los datos de la dirección
+    this.checkoutForm.patchValue({
+      nombreCliente: direccion.nombre_destinatario,
+      direccion: direccion.direccion_completa,
+      celular: direccion.telefono || ''
+    });
+
+    // Si la dirección tiene ubigeo, autocompletar departamento, provincia, distrito
+    if (direccion.ubigeo) {
+      console.log('Seleccionando dirección con ubigeo:', direccion.ubigeo);
+      console.log('Departamentos disponibles:', this.departamentos.length);
+
+      const departamento = this.departamentos.find(d => d.nombre === direccion.ubigeo?.departamento_nombre);
+      if (departamento) {
+        console.log('Departamento encontrado:', departamento);
+        this.checkoutForm.patchValue({ departamento: departamento.id });
+        this.onDepartamentoChange().then(() => {
+          const provincia = this.provincias.find(p => p.nombre === direccion.ubigeo?.provincia_nombre);
+          if (provincia) {
+            console.log('Provincia encontrada:', provincia);
+            this.checkoutForm.patchValue({ provincia: provincia.id });
+            this.onProvinciaChange().then(() => {
+              const distrito = this.distritos.find(d => d.nombre === direccion.ubigeo?.distrito_nombre);
+              if (distrito) {
+                console.log('Distrito encontrado:', distrito);
+                this.checkoutForm.patchValue({ distrito: distrito.id });
+                this.onDistritoChange();
+              }
+            });
+          } else {
+            console.log('Provincia no encontrada:', direccion.ubigeo?.provincia_nombre, 'en', this.provincias);
+          }
+        });
+      } else {
+        console.log('Departamento no encontrado:', direccion.ubigeo?.departamento_nombre, 'en', this.departamentos);
+      }
+    }
+  }
+
+  // Cambiar tipo de dirección (guardada vs personalizada)
+  onCambiarTipoDireccion(): void {
+    if (this.usarDireccionPersonalizada) {
+      this.direccionSeleccionada = null;
+      // Limpiar campos relacionados con dirección
+      this.checkoutForm.patchValue({
+        direccion: '',
+        departamento: '',
+        provincia: '',
+        distrito: ''
+      });
+      this.provincias = [];
+      this.distritos = [];
+    } else {
+      // Si hay una dirección predeterminada, seleccionarla
+      const direccionPredeterminada = this.direccionesGuardadas.find(d => d.predeterminada);
+      if (direccionPredeterminada) {
+        this.seleccionarDireccion(direccionPredeterminada);
+      }
+    }
+  }
+
+  // Modificar métodos de ubicación para que retornen Promise
+  async onDepartamentoChange(): Promise<void> {
+    const departamentoId = this.checkoutForm.get('departamento')?.value;
+
+    if (departamentoId) {
+      try {
+        const provincias = await this.ubigeoService.getProvincias(departamentoId).toPromise();
+        this.provincias = provincias || [];
+        this.checkoutForm.patchValue({
+          provincia: '',
+          distrito: ''
+        });
+        this.distritos = [];
+
+        // Habilitar provincia
+        this.checkoutForm.get('provincia')?.enable();
+      } catch (error) {
+        console.error('Error cargando provincias:', error);
+      }
+    } else {
+      this.provincias = [];
+      this.distritos = [];
+
+      // Deshabilitar provincia y distrito
+      this.checkoutForm.get('provincia')?.disable();
+      this.checkoutForm.get('distrito')?.disable();
+    }
+  }
+
+  async onProvinciaChange(): Promise<void> {
+    const departamentoId = this.checkoutForm.get('departamento')?.value;
+    const provinciaId = this.checkoutForm.get('provincia')?.value;
+
+    if (departamentoId && provinciaId) {
+      try {
+        const distritos = await this.ubigeoService.getDistritos(departamentoId, provinciaId).toPromise();
+        this.distritos = distritos || [];
+        this.checkoutForm.patchValue({
+          distrito: ''
+        });
+
+        // Habilitar distrito
+        this.checkoutForm.get('distrito')?.enable();
+
+        this.checkForLimaDelivery();
+      } catch (error) {
+        console.error('Error cargando distritos:', error);
+      }
+    } else {
+      this.distritos = [];
+
+      // Deshabilitar distrito
+      this.checkoutForm.get('distrito')?.disable();
+    }
   }
 }

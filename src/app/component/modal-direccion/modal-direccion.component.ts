@@ -44,7 +44,7 @@ import {
             <button
               type="button"
               class="btn-close"
-              data-bs-dismiss="modal"
+              (click)="cerrarModal()"
             ></button>
           </div>
 
@@ -247,7 +247,7 @@ import {
             <button
               type="button"
               class="btn bg-gray-100 hover-bg-gray-200 text-gray-600 px-16 py-8 rounded-8"
-              data-bs-dismiss="modal"
+              (click)="cerrarModal()"
             >
               Cancelar
             </button>
@@ -271,14 +271,6 @@ import {
                   : 'Guardar'
               }}
             </button>
-            
-            <!-- Indicador de debug -->
-            <div class="mt-8 text-xs text-gray-500">
-              <strong>Debug:</strong> 
-              Form válido: {{ direccionForm.valid }} | 
-              isFormValid(): {{ isFormValid() }} | 
-              Ubigeo: {{ direccionForm.get('id_ubigeo')?.value || 'No establecido' }}
-            </div>
           </div>
         </div>
       </div>
@@ -293,6 +285,7 @@ export class ModalDireccionComponent implements OnInit, OnChanges, OnDestroy {
   @Input() departamentos: Departamento[] = [];
   @Output() direccionGuardada = new EventEmitter<void>();
   @Output() modalCerrado = new EventEmitter<void>();
+  @Output() cerrar = new EventEmitter<void>();
 
   direccionForm: FormGroup;
   provincias: Provincia[] = [];
@@ -343,7 +336,16 @@ export class ModalDireccionComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges): void {
     console.log('🔄 ngOnChanges ejecutándose...', changes);
-    
+
+    // Manejar cambios en la propiedad 'show' para mostrar/ocultar el modal
+    if (changes['show']) {
+      if (this.show) {
+        this.mostrarModal();
+      } else {
+        this.ocultarModal();
+      }
+    }
+
     if (changes['direccion'] && this.direccionForm) {
       console.log('✅ Cambio detectado en dirección, llamando a loadDireccionData');
       this.loadDireccionData();
@@ -777,15 +779,59 @@ forceUpdate(): void {
     });
   }
 
-  private cerrarModal(): void {
-    this.isLoading = false;
+  private mostrarModal(): void {
+    setTimeout(() => {
+      const modal = document.getElementById('modalDireccion');
+      if (modal) {
+        // Verificar si Bootstrap está disponible
+        if (typeof (window as any).bootstrap !== 'undefined') {
+          const bootstrapModal = new (window as any).bootstrap.Modal(modal, {
+            backdrop: 'static',
+            keyboard: false
+          });
+          bootstrapModal.show();
+        } else {
+          // Fallback: mostrar modal manualmente
+          modal.style.display = 'block';
+          modal.classList.add('show');
+          document.body.classList.add('modal-open');
+
+          // Agregar backdrop manualmente
+          const backdrop = document.createElement('div');
+          backdrop.classList.add('modal-backdrop', 'fade', 'show');
+          backdrop.id = 'modal-backdrop-direccion';
+          document.body.appendChild(backdrop);
+        }
+      }
+    }, 50);
+  }
+
+  private ocultarModal(): void {
     const modal = document.getElementById('modalDireccion');
     if (modal) {
-      const bootstrapModal = (window as any).bootstrap.Modal.getInstance(modal);
-      if (bootstrapModal) {
-        bootstrapModal.hide();
+      if (typeof (window as any).bootstrap !== 'undefined') {
+        const bootstrapModal = (window as any).bootstrap.Modal.getInstance(modal);
+        if (bootstrapModal) {
+          bootstrapModal.hide();
+        }
+      } else {
+        // Fallback: ocultar modal manualmente
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+        document.body.classList.remove('modal-open');
+
+        // Remover backdrop manual
+        const backdrop = document.getElementById('modal-backdrop-direccion');
+        if (backdrop) {
+          backdrop.remove();
+        }
       }
     }
-    this.modalCerrado.emit();
+  }
+
+  cerrarModal(): void {
+    this.isLoading = false;
+    this.ocultarModal();
+    this.cerrar.emit();
   }
 }
