@@ -57,10 +57,10 @@ export class EmailVerificationComponent implements OnInit {
           this.router.navigate(['/account']);
         }, 3000);
       } else if (params['already_verified'] === 'true') {
-        this.setMessage('Tu cuenta ya está verificada. Puedes iniciar sesión.', 'info');
-        setTimeout(() => {
-          this.router.navigate(['/account']);
-        }, 3000);
+        // Ya no mostrar mensaje aquí, se maneja en account
+        this.router.navigate(['/account'], { 
+          queryParams: { already_verified: 'true', email: params['email'] } 
+        });
       } else if (params['error']) {
         if (params['error'] === 'invalid_link') {
           this.setMessage('El enlace de verificación no es válido', 'error');

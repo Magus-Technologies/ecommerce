@@ -48,13 +48,29 @@ export class AccountComponent implements OnInit {
   }
 
   // Verificar si hay mensajes de verificación exitosa y errores de Google auth
-  this.route.queryParams.subscribe((params: any) => {
-    if (params['verified'] === 'true') {
-      this.showSuccessToast('¡Cuenta verificada exitosamente! Ya puedes iniciar sesión');
-      this.clearQueryParams();
-    } else if (params['already_verified'] === 'true') {
-      this.showInfoToast('Tu cuenta ya estaba verificada anteriormente');
-      this.clearQueryParams();
+this.route.queryParams.subscribe((params: any) => {
+  if (params['verified'] === 'true') {
+    this.showSuccessToast('¡Cuenta verificada exitosamente! Ingresa tu contraseña para continuar');
+    
+    // Autocompletar email si viene en la URL
+    if (params['email']) {
+      this.loginForm.patchValue({
+        email: params['email']
+      });
+    }
+    
+    this.clearQueryParams();
+  } else if (params['already_verified'] === 'true') {
+    this.showSuccessToast('¡Cuenta verificada exitosamente! Ingresa tu contraseña para continuar');
+    
+    // Autocompletar email si viene en la URL
+    if (params['email']) {
+      this.loginForm.patchValue({
+        email: params['email']
+      });
+    }
+    
+    this.clearQueryParams();
     } else if (params['error'] === 'auth_processing_failed') {
       this.loginError = 'Error procesando la autenticación con Google. Inténtalo de nuevo.';
     } else if (params['error'] === 'google_auth_failed') {
