@@ -301,7 +301,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     // Preparar datos para la cotización
     const cotizacionData: CrearCotizacionRequest = {
       productos: this.cartItems.map(item => ({
-        producto_id: item.id,
+        producto_id: item.producto_id,
         cantidad: item.cantidad
       })),
       cliente_nombre: formData.cliente,
