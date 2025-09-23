@@ -10,6 +10,7 @@ import { BreadcrumbComponent } from "../../component/breadcrumb/breadcrumb.compo
 import { ShippingComponent } from "../../component/shipping/shipping.component"
 import { AlmacenService } from "../../services/almacen.service"
 import { CartService } from "../../services/cart.service"
+import { CartNotificationService } from "../../services/cart-notification.service"
 import Swal from "sweetalert2"
 import { environment } from "../../../environments/environment"
 import { DomSanitizer, SafeHtml } from "@angular/platform-browser"
@@ -50,6 +51,7 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     private router: Router,
     private almacenService: AlmacenService,
     private cartService: CartService,
+    private cartNotificationService: CartNotificationService,
     private sanitizer: DomSanitizer,
   ) {
     this.isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
@@ -190,7 +192,20 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
 
     this.cartService.addToCart(this.producto, this.cantidad).subscribe({
       next: () => {
-        Swal.fire({ title: "¡Producto agregado!", text: `${this.cantidad} ${this.cantidad === 1 ? "unidad" : "unidades"} de \"${this.producto.nombre}\" agregadas al carrito`, icon: "success", timer: 2000, showConfirmButton: false, toast: true, position: "top-end" });
+        // Preparar imagen del producto
+        let productImage = this.imagenPrincipal || 'assets/images/thumbs/product-default.png';
+
+        // Usar productos relacionados como sugeridos
+        const suggestedProducts = this.productosRelacionados.slice(0, 3);
+
+        // Mostrar notificación llamativa estilo Coolbox
+        this.cartNotificationService.showProductAddedNotification(
+          this.producto.nombre,
+          Number(this.producto.precio_venta || this.producto.precio || 0),
+          productImage,
+          this.cantidad,
+          suggestedProducts
+        );
       },
       error: (err) => {
         Swal.fire({ title: "Error", text: err.message || "No se pudo agregar el producto al carrito", icon: "error", confirmButtonColor: "#dc3545" });
@@ -210,7 +225,22 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     }
     this.cartService.addToCart(producto, 1).subscribe({
       next: () => {
-        Swal.fire({ title: "¡Producto agregado!", text: `\"${producto.nombre}\" agregado al carrito`, icon: "success", timer: 2000, showConfirmButton: false, toast: true, position: "top-end" });
+        // Preparar imagen del producto
+        let productImage = producto.imagen_url || producto.imagen || 'assets/images/thumbs/product-default.png';
+
+        // Usar otros productos relacionados como sugeridos (excluyendo el que se acaba de agregar)
+        const suggestedProducts = this.productosRelacionados
+          .filter(p => p.id !== producto.id)
+          .slice(0, 3);
+
+        // Mostrar notificación llamativa estilo Coolbox
+        this.cartNotificationService.showProductAddedNotification(
+          producto.nombre,
+          Number(producto.precio_venta || producto.precio || 0),
+          productImage,
+          1,
+          suggestedProducts
+        );
       },
       error: (err) => {
         Swal.fire({ title: "Error", text: err.message || "No se pudo agregar el producto al carrito", icon: "error", confirmButtonColor: "#dc3545" });

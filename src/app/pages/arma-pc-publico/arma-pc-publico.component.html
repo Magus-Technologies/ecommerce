@@ -5,31 +5,21 @@
     <div class="row mb-32">
       <div class="col-12">
         <div class="text-center mb-32">
-          <h2 class="text-heading fw-bold mb-12">Arma tu PC paso a paso</h2>
-          <p class="text-gray-600 mb-20">Configura tu computadora ideal siguiendo nuestro proceso guiado</p>
-          
-          <!-- ✅ NUEVA: Barra de progreso global -->
-          <div class="progress-container bg-gray-100 rounded-pill p-4 mb-16" style="height: 12px;">
-            <div 
-              class="progress-bar bg-main-600 rounded-pill h-100 transition-all duration-500"
-              [style.width.%]="getProgresoConfiguracion().porcentaje"
-            ></div>
-          </div>
-          <small class="text-gray-500">
-            {{ getProgresoConfiguracion().completados }} de {{ getProgresoConfiguracion().total }} pasos completados
-            ({{ getProgresoConfiguracion().porcentaje }}%)
-          </small>
+          <h5 class="text-heading fw-semibold mb-24" style="font-size: 1.25rem;">Arma tu PC paso a paso</h5>
         </div>
 
         <!-- ✅ NUEVO: Tracking horizontal de pasos (como en las imágenes) -->
         <div class="steps-tracker bg-white border border-gray-100 rounded-12 p-24 mb-32 shadow-sm">
           <div class="d-flex justify-content-between align-items-center position-relative">
             <!-- Línea conectora de fondo -->
-            <div class="steps-line position-absolute w-100 h-2 bg-gray-200 top-50 translate-middle-y" style="z-index: 1;"></div>
-            <div 
-              class="steps-line-active position-absolute h-2 bg-main-600 top-50 translate-middle-y transition-all duration-500" 
-              style="z-index: 2;"
-              [style.width.%]="pasos.length > 0 ? ((pasoActual + 1) / pasos.length) * 100 : 0"
+            <div
+              class="steps-line position-absolute h-2 bg-gray-200 top-50 translate-middle-y"
+              style="z-index: 1; left: 20px; right: 20px; width: calc(100% - 40px);">
+            </div>
+            <div
+              class="steps-line-active position-absolute h-2 bg-main-600 top-50 translate-middle-y transition-all duration-500"
+              style="z-index: 2; left: 20px;"
+              [style.width]="pasos.length > 0 ? 'calc(' + (((pasoActual + 1) / pasos.length) * 100) + '% - 40px)' : '0'"
             ></div>
 
             <!-- Pasos individuales -->

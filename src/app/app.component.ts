@@ -5,28 +5,44 @@ import { RouterOutlet } from '@angular/router';
 import * as AOS from 'aos';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from './services/auth.service';
+import { CartNotificationService, CartNotificationData } from './services/cart-notification.service';
+import { CartNotificationComponent } from './components/cart-notification/cart-notification.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, CartNotificationComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
   title = 'marketpro';
   private isBrowser: boolean;
+  cartNotificationData: CartNotificationData = {
+    isVisible: false,
+    productName: '',
+    productPrice: 0,
+    productImage: '',
+    quantity: 1,
+    suggestedProducts: []
+  };
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private router: Router,
     private route: ActivatedRoute,
-    private authService: AuthService
+    private authService: AuthService,
+    private cartNotificationService: CartNotificationService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   async ngOnInit() {
+    // Suscribirse a las notificaciones del carrito
+    this.cartNotificationService.notification$.subscribe(data => {
+      this.cartNotificationData = data;
+    });
+
     if (this.isBrowser) {
       if (isPlatformBrowser(this.platformId)) {
         AOS.init({
@@ -80,5 +96,18 @@ export class AppComponent implements OnInit {
         }
       });
     }
+  }
+
+  onCartNotificationClose() {
+    this.cartNotificationService.hideNotification();
+  }
+
+  onViewCart() {
+    this.cartNotificationService.hideNotification();
+    this.router.navigate(['/cart']);
+  }
+
+  onSuggestedProductSelect(product: any) {
+    this.router.navigate(['/product-details', product.id]);
   }
 }
