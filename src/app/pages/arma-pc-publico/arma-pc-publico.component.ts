@@ -5,6 +5,7 @@ import { CategoriasPublicasService, CategoriaPublica } from '../../services/cate
 import { MarcaProducto, ProductoPublico } from '../../types/almacen.types';
 import { ProductosService } from '../../services/productos.service';
 import { CartService } from '../../services/cart.service';
+import { CartNotificationService } from '../../services/cart-notification.service';
 import { ArmaPcService } from '../../services/arma-pc.service';
 import Swal from 'sweetalert2';
 
@@ -47,6 +48,7 @@ export class ArmaPcPublicoComponent implements OnInit {
     private categoriasService: CategoriasPublicasService,
     private productosService: ProductosService,
     private cartService: CartService,
+    private cartNotificationService: CartNotificationService,
     private armaPcService: ArmaPcService
   ) {}
 
@@ -309,16 +311,39 @@ export class ArmaPcPublicoComponent implements OnInit {
     }
 
     let productosAgregados = 0;
-    this.productosSeleccionados.forEach(item => {
-      const success = this.cartService.addToCart(item.producto, item.cantidad);
-      if (success) {
-        productosAgregados++;
-      }
-    });
+    let totalProductos = this.productosSeleccionados.length;
 
-    if (productosAgregados > 0) {
-      alert(`${productosAgregados} productos agregados al carrito`);
-    }
+    // Agregar cada producto al carrito
+    this.productosSeleccionados.forEach((item, index) => {
+      this.cartService.addToCart(item.producto, item.cantidad).subscribe({
+        next: () => {
+          productosAgregados++;
+
+          // Si es el último producto agregado, mostrar notificación
+          if (productosAgregados === totalProductos) {
+            // Preparar imagen del primer producto como referencia
+            let productImage = this.productosSeleccionados[0].producto.imagen_principal || 'assets/images/thumbs/product-default.png';
+
+            // Mostrar notificación con resumen de configuración
+            this.cartNotificationService.showProductAddedNotification(
+              `Configuración PC (${productosAgregados} productos)`,
+              this.totalCotizacion,
+              productImage,
+              productosAgregados,
+              [] // Sin productos sugeridos en este caso
+            );
+          }
+        },
+        error: (err) => {
+          Swal.fire({
+            title: 'Error',
+            text: `Error al agregar "${item.producto.nombre}": ${err.message || 'Error desconocido'}`,
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+          });
+        }
+      });
+    });
   }
 
   // Descargar cotización como PDF

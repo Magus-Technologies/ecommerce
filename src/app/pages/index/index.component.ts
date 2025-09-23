@@ -27,6 +27,7 @@ import { MarcaProducto, ProductoPublico } from '../../types/almacen.types';
 import { CartService } from '../../services/cart.service';
 import { WishlistService } from '../../services/wishlist.service';
 import { AuthService } from '../../services/auth.service';
+import { CartNotificationService } from '../../services/cart-notification.service';
 
 import Swal from 'sweetalert2';
 import {
@@ -261,7 +262,8 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     private authService: AuthService,
     private ofertasService: OfertasService,
     private cdr: ChangeDetectorRef,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private cartNotificationService: CartNotificationService
   ) {
     // ✅ VERIFICAR SI ESTAMOS EN EL NAVEGADOR
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -522,19 +524,29 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.cartService.addToCart(product, 1).subscribe({
       next: () => {
-        Swal.fire({
-          title: '¡Producto agregado!',
-          text: `${
-            product.name || product.title || product.nombre
-          } ha sido agregado a tu carrito`,
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false,
-          toast: true,
-          position: 'top-end',
-          background: '#f8f9fa',
-          color: '#333',
-        });
+        // Preparar imagen del producto
+        let productImage = '';
+        if (product.imagen_url) {
+          productImage = product.imagen_url;
+        } else if (product.imagen_principal) {
+          productImage = product.imagen_principal;
+        } else {
+          productImage = 'assets/images/thumbs/product-default.png';
+        }
+
+        // Obtener productos sugeridos (primeros 3 productos diferentes al actual)
+        const suggestedProducts = this.productosFiltrados
+          .filter(p => p.id !== product.id)
+          .slice(0, 3);
+
+        // Mostrar notificación llamativa estilo Coolbox
+        this.cartNotificationService.showProductAddedNotification(
+          product.name || product.title || product.nombre,
+          Number(product.precio_venta || product.precio || 0),
+          productImage,
+          1,
+          suggestedProducts
+        );
       },
       error: (err) => {
         Swal.fire({

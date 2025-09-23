@@ -8,8 +8,9 @@ import { MarcaProducto, ProductoPublico } from '../../types/almacen.types';
 import { AlmacenService } from '../../services/almacen.service';
 import { ProductosService } from '../../services/productos.service';
 import { CartService } from '../../services/cart.service';
+import { CartNotificationService } from '../../services/cart-notification.service';
 import { IndexTwoService } from '../../services/index-two.service';
-import { ProductFilterComponent } from '../../component/product-filter/product-filter.component'; 
+import { ProductFilterComponent } from '../../component/product-filter/product-filter.component';
 import Swal from 'sweetalert2';
 
 interface CategoriaTemplate {
@@ -59,6 +60,7 @@ export class IndexTwoComponent implements OnInit {
     private route: ActivatedRoute, // ✅ NUEVO
     private router: Router, // ✅ NUEVO
     private cartService: CartService,
+    private cartNotificationService: CartNotificationService,
     private indexTwoService: IndexTwoService,
   ) {}
 
@@ -231,28 +233,34 @@ export class IndexTwoComponent implements OnInit {
       return;
     }
 
-    const success = this.cartService.addToCart(producto, 1);
-    
-    if (success) {
-      Swal.fire({
-        title: '¡Producto agregado!',
-        text: `${producto.nombre} ha sido agregado a tu carrito`,
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false,
-        toast: true,
-        position: 'top-end',
-        background: '#f8f9fa',
-        color: '#333'
-      });
-    } else {
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudo agregar el producto al carrito. Revisa el stock disponible.',
-        icon: 'error',
-        confirmButtonColor: '#dc3545'
-      });
-    }
+    this.cartService.addToCart(producto, 1).subscribe({
+      next: () => {
+        // Preparar imagen del producto
+        let productImage = producto.imagen_principal || 'assets/images/thumbs/product-default.png';
+
+        // Obtener productos sugeridos (primeros 3 productos diferentes al actual)
+        const suggestedProducts = this.productos
+          .filter(p => p.id !== producto.id)
+          .slice(0, 3);
+
+        // Mostrar notificación llamativa estilo Coolbox
+        this.cartNotificationService.showProductAddedNotification(
+          producto.nombre,
+          Number(producto.precio || 0),
+          productImage,
+          1,
+          suggestedProducts
+        );
+      },
+      error: (err) => {
+        Swal.fire({
+          title: 'Error',
+          text: err.message || 'No se pudo agregar el producto al carrito',
+          icon: 'error',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
   }
 
   onFiltersApplied(filters: any) {
