@@ -302,92 +302,13 @@ export const routes: Routes = [
         canActivate: [permissionGuard],
         data: { permission: 'usuarios.ver' },
       },
-      //  RUTA DE RECOMPENSAS - GESTIÓN PRINCIPAL
+      // ✅ MÓDULO DE RECOMPENSAS - NUEVO SISTEMA COMPLETO
       {
         path: 'recompensas',
-        loadComponent: () =>
-          import('./components/recompensas/recompensas-gestion/recompensas-gestion.component').then(
-            (m) => m.RecompensasGestionComponent
+        loadChildren: () =>
+          import('./pages/dashboard/recompensas/recompensas.module').then(
+            (m) => m.RecompensasModule
           ),
-        title: 'Gestión de Recompensas',
-        canActivate: [permissionGuard],
-        data: { permission: 'recompensas.ver' },
-      },
-      // ✅ SUBMÓDULOS DE RECOMPENSAS - Implementados
-      //  SUBMÓDULO: Gestión de Segmentos
-      {
-        path: 'recompensas/segmentos',
-        loadComponent: () =>
-          import('./components/recompensas/recompensas-segmentos/recompensas-segmentos.component').then(
-            (m) => m.RecompensasSegmentosComponent
-          ),
-        title: 'Gestión de Segmentos',
-        canActivate: [permissionGuard],
-        data: { permission: 'recompensas.ver' },
-      },
-      // SUBMÓDULO: Analytics Avanzados
-      {
-        path: 'recompensas/analytics',
-        loadComponent: () =>
-          import('./components/recompensas/recompensas-analytics/recompensas-analytics.component').then(
-            (m) => m.RecompensasAnalyticsComponent
-          ),
-        title: 'Analytics Avanzados',
-        canActivate: [permissionGuard],
-        data: { permission: 'recompensas.ver' },
-      },
-      // SUBMÓDULO: Gestión de Productos y Categorías
-      {
-        path: 'recompensas/productos',
-        loadComponent: () =>
-          import('./components/recompensas/recompensas-productos/recompensas-productos.component').then(
-            (m) => m.RecompensasProductosComponent
-          ),
-        title: 'Gestión de Productos y Categorías',
-        canActivate: [permissionGuard],
-        data: { permission: 'recompensas.ver' },
-      },
-      // SUBMÓDULO: Configuración de Puntos
-      {
-        path: 'recompensas/puntos',
-        loadComponent: () =>
-          import('./components/recompensas/recompensas-puntos/recompensas-puntos.component').then(
-            (m) => m.RecompensasPuntosComponent
-          ),
-        title: 'Configuración de Puntos',
-        canActivate: [permissionGuard],
-        data: { permission: 'recompensas.ver' },
-      },
-      // SUBMÓDULO: Configuración de Descuentos
-      {
-        path: 'recompensas/descuentos',
-        loadComponent: () =>
-          import('./components/recompensas/recompensas-descuentos/recompensas-descuentos.component').then(
-            (m) => m.RecompensasDescuentosComponent
-          ),
-        title: 'Configuración de Descuentos',
-        canActivate: [permissionGuard],
-        data: { permission: 'recompensas.ver' },
-      },
-      // SUBMÓDULO: Configuración de Envíos
-      {
-        path: 'recompensas/envios',
-        loadComponent: () =>
-          import('./components/recompensas/recompensas-envios/recompensas-envios.component').then(
-            (m) => m.RecompensasEnviosComponent
-          ),
-        title: 'Configuración de Envíos',
-        canActivate: [permissionGuard],
-        data: { permission: 'recompensas.ver' },
-      },
-      // SUBMÓDULO: Configuración de Regalos
-      {
-        path: 'recompensas/regalos',
-        loadComponent: () =>
-          import('./components/recompensas/recompensas-regalos/recompensas-regalos.component').then(
-            (m) => m.RecompensasRegalosComponent
-          ),
-        title: 'Configuración de Regalos',
         canActivate: [permissionGuard],
         data: { permission: 'recompensas.ver' },
       },

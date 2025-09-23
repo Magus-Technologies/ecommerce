@@ -1,0 +1,395 @@
+<div class="recompensas-analytics-container">
+  <!-- Header del Analytics -->
+  <div class="analytics-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="mb-1">
+          <i class="fas fa-chart-line me-2 text-primary"></i>
+          Analytics de Recompensas
+        </h2>
+        <p class="text-muted mb-0">Análisis detallado del rendimiento de las recompensas</p>
+      </div>
+      <div class="d-flex gap-2">
+        <div class="dropdown">
+          <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-calendar-alt me-2"></i>
+            {{ periodoSeleccionado }}
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" (click)="cambiarPeriodo('7_dias')">Últimos 7 días</a></li>
+            <li><a class="dropdown-item" (click)="cambiarPeriodo('30_dias')">Últimos 30 días</a></li>
+            <li><a class="dropdown-item" (click)="cambiarPeriodo('90_dias')">Últimos 90 días</a></li>
+            <li><a class="dropdown-item" (click)="cambiarPeriodo('este_mes')">Este mes</a></li>
+            <li><a class="dropdown-item" (click)="cambiarPeriodo('mes_anterior')">Mes anterior</a></li>
+            <li><a class="dropdown-item" (click)="cambiarPeriodo('este_ano')">Este año</a></li>
+          </ul>
+        </div>
+        <button class="btn btn-outline-secondary" (click)="exportarReporte()">
+          <i class="fas fa-download me-2"></i>
+          Exportar
+        </button>
+        <button class="btn btn-primary" (click)="actualizarDatos()">
+          <i class="fas fa-sync-alt me-2"></i>
+          Actualizar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen General -->
+  <div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h6 class="card-title text-white-50">Recompensas Activas</h6>
+              <h3 class="mb-0">{{ analytics?.dashboard?.resumen_general?.total_recompensas_activas || 0 }}</h3>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-magic fa-2x opacity-75"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h6 class="card-title text-white-50">Clientes Beneficiados</h6>
+              <h3 class="mb-0">{{ analytics?.dashboard?.resumen_general?.total_clientes_beneficiados || 0 }}</h3>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-users fa-2x opacity-75"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+      <div class="card bg-warning text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h6 class="card-title text-white-50">Valor Total Beneficios</h6>
+              <h3 class="mb-0">{{ (analytics?.dashboard?.resumen_general?.valor_total_beneficios || 0) | currency:'PEN':'symbol':'1.0-0' }}</h3>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-coins fa-2x opacity-75"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+      <div class="card bg-info text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h6 class="card-title text-white-50">Tasa de Conversión</h6>
+              <h3 class="mb-0">{{ analytics?.dashboard?.resumen_general?.conversion_rate_promedio || 0 }}%</h3>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-chart-line fa-2x opacity-75"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos Principales -->
+  <div class="row g-4 mb-4">
+    <div class="col-xl-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-chart-area me-2"></i>
+            Rendimiento de Recompensas
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas #rendimientoChart></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-chart-pie me-2"></i>
+            Distribución por Tipo
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas #distribucionChart></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Métricas Detalladas -->
+  <div class="row g-4 mb-4">
+    <div class="col-xl-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-trophy me-2"></i>
+            Top Recompensas
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Recompensa</th>
+                  <th>Tipo</th>
+                  <th>Aplicaciones</th>
+                  <th>Conversión</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let recompensa of analytics?.dashboard?.metricas_principales?.top_recompensas">
+                  <td>
+                    <div>
+                      <strong>{{ recompensa.nombre }}</strong>
+                      <br>
+                      <small class="text-muted">ID: {{ recompensa.id }}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary">{{ recompensa.tipo | titlecase }}</span>
+                  </td>
+                  <td>{{ recompensa.aplicaciones }}</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="progress me-2" style="width: 60px; height: 8px;">
+                        <div class="progress-bar" [style.width.%]="recompensa.conversion_rate"></div>
+                      </div>
+                      <span class="small">{{ recompensa.conversion_rate }}%</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-users me-2"></i>
+            Clientes Más Activos
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Email</th>
+                  <th>Recompensas</th>
+                  <th>Valor Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let cliente of analytics?.dashboard?.metricas_principales?.clientes_mas_activos">
+                  <td>
+                    <div>
+                      <strong>{{ cliente.nombre }}</strong>
+                      <br>
+                      <small class="text-muted">ID: {{ cliente.id }}</small>
+                    </div>
+                  </td>
+                  <td>{{ cliente.email }}</td>
+                  <td>{{ cliente.total_recompensas }}</td>
+                  <td>{{ cliente.valor_beneficios | currency:'PEN':'symbol':'1.0-0' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tendencias y Comparativas -->
+  <div class="row g-4 mb-4">
+    <div class="col-xl-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-chart-line me-2"></i>
+            Tendencias de Uso
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas #tendenciasChart></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-balance-scale me-2"></i>
+            Comparativa Mensual
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas #comparativaChart></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Análisis por Segmentos -->
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-layer-group me-2"></i>
+            Análisis por Segmentos de Clientes
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4" *ngFor="let segmento of analytics?.segmentos?.analisis_segmentos">
+              <div class="card border">
+                <div class="card-body text-center">
+                  <h6 class="card-title">{{ segmento.segmento }}</h6>
+                  <div class="mb-2">
+                    <span class="badge bg-primary">{{ segmento.metricas.total_clientes }} clientes</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>{{ segmento.metricas.aplicaciones }}</strong>
+                    <br>
+                    <small class="text-muted">aplicaciones</small>
+                  </div>
+                  <div class="mb-2">
+                    <strong>{{ segmento.metricas.conversion_rate }}%</strong>
+                    <br>
+                    <small class="text-muted">tasa de conversión</small>
+                  </div>
+                  <div class="progress" style="height: 6px;">
+                    <div class="progress-bar" [style.width.%]="segmento.metricas.conversion_rate"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Análisis por Productos -->
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-box me-2"></i>
+            Análisis por Productos
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Categoría</th>
+                  <th>Recompensas Asociadas</th>
+                  <th>Ventas con Recompensa</th>
+                  <th>Impacto en Ventas</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let producto of analytics?.productos?.analisis_productos">
+                  <td>
+                    <div>
+                      <strong>{{ producto.producto }}</strong>
+                      <br>
+                      <small class="text-muted">{{ producto.categoria }}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge bg-secondary">{{ producto.categoria }}</span>
+                  </td>
+                  <td>{{ producto.metricas.veces_recompensado }}</td>
+                  <td>{{ producto.metricas.valor_total_recompensado | currency:'PEN':'symbol':'1.0-0' }}</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="progress me-2" style="width: 80px; height: 8px;">
+                        <div class="progress-bar bg-success" [style.width.%]="producto.metricas.conversion_rate"></div>
+                      </div>
+                      <span class="small">{{ producto.metricas.conversion_rate }}%</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alertas y Recomendaciones -->
+  <div class="row g-4" *ngIf="analytics?.dashboard?.alertas?.length || analytics?.dashboard?.recomendaciones?.length">
+    <div class="col-md-6" *ngIf="analytics?.dashboard?.alertas?.length">
+      <div class="card border-warning">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Alertas
+          </h5>
+        </div>
+        <div class="card-body">
+          <div *ngFor="let alerta of analytics?.dashboard?.alertas">
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+              <strong>{{ alerta.titulo }}</strong>
+              <p class="mb-0">{{ alerta.mensaje }}</p>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6" *ngIf="analytics?.dashboard?.recomendaciones?.length">
+      <div class="card border-info">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-lightbulb me-2"></i>
+            Recomendaciones
+          </h5>
+        </div>
+        <div class="card-body">
+          <div *ngFor="let recomendacion of analytics?.dashboard?.recomendaciones">
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+              <strong>{{ recomendacion.titulo }}</strong>
+              <p class="mb-0">{{ recomendacion.descripcion }}</p>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

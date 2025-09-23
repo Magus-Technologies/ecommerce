@@ -153,12 +153,15 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
     this.showRecompensasDropdown = false;
     
     // Navegar según el submódulo
-    if (submodulo === 'general') {
-      // Para "Ver Todas", navegar a la página principal de recompensas
-      this.router.navigate(['/dashboard/recompensas']);
+    if (submodulo === 'crear') {
+      // Navegar al wizard de creación
+      this.router.navigate(['/dashboard/recompensas/crear']);
+    } else if (submodulo === 'lista') {
+      // Navegar a la lista de recompensas
+      this.router.navigate(['/dashboard/recompensas/lista']);
     } else {
-      // Para todos los submódulos, navegar a la ruta específica
-      this.router.navigate(['/dashboard/recompensas', submodulo]);
+      // Por defecto, navegar a la lista
+      this.router.navigate(['/dashboard/recompensas']);
     }
   }
 

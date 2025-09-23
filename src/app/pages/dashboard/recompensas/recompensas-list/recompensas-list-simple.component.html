@@ -1,0 +1,661 @@
+<div class="recompensas-list-container">
+  <!-- Header con acciones principales -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">
+        <i class="fas fa-gift me-2 text-primary"></i>
+        Gestión de Recompensas
+      </h2>
+      <p class="text-muted mb-0">Administra y configura las recompensas para tus clientes</p>
+    </div>
+    <div class="d-flex gap-2">
+      <!-- Botones de exportación -->
+      <div class="btn-group" role="group">
+        <button class="btn btn-outline-success" (click)="exportarExcel()" title="Exportar a Excel">
+          <i class="fas fa-file-excel me-2"></i>
+          Excel
+        </button>
+        <button class="btn btn-outline-danger" (click)="exportarPDF()" title="Exportar a PDF">
+          <i class="fas fa-file-pdf me-2"></i>
+          PDF
+        </button>
+      </div>
+      <!-- Botón crear recompensa -->
+      <button class="btn btn-primary" (click)="crearRecompensa()">
+        <i class="fas fa-plus me-2"></i>
+        Crear Recompensa
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">
+        <i class="fas fa-filter me-2"></i>
+        Filtros de Búsqueda
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Buscar</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Nombre, descripción..."
+            [(ngModel)]="filtros.buscar"
+            (keyup)="onBuscarChange()"
+            (keyup.enter)="aplicarFiltros()"
+          >
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" [(ngModel)]="filtros.tipo" (change)="onTipoChange()">
+            <option value="">Todos</option>
+            <option *ngFor="let tipo of tiposRecompensa" [value]="tipo.value || tipo">
+              {{ safeString(tipo) | titlecase }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Estado</label>
+          <select class="form-select" [(ngModel)]="filtros.estado" (change)="onEstadoChange()">
+            <option value="">Todos</option>
+            <option value="activa">Activas</option>
+            <option value="pausada">Pausadas</option>
+            <option value="programada">Programadas</option>
+            <option value="expirada">Expiradas</option>
+            <option value="cancelada">Canceladas</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Vigencia</label>
+          <select class="form-select" [(ngModel)]="filtros.vigente" (change)="onVigenciaChange()">
+            <option value="">Todos</option>
+            <option [value]="true">Vigentes</option>
+            <option [value]="false">Expiradas</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Fecha Desde</label>
+          <input 
+            type="date" 
+            class="form-control" 
+            [(ngModel)]="filtros.fecha_inicio"
+            (change)="onFechaChange()"
+          >
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+          <div class="btn-group w-100">
+            <button class="btn btn-primary" (click)="aplicarFiltros()">
+              <i class="fas fa-search"></i>
+            </button>
+            <button class="btn btn-outline-secondary" (click)="limpiarFiltros()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="row g-3 mt-2">
+        <div class="col-md-2">
+          <label class="form-label">Fecha Hasta</label>
+          <input 
+            type="date" 
+            class="form-control" 
+            [(ngModel)]="filtros.fecha_fin"
+            (change)="onFechaChange()"
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Indicador de filtros activos -->
+  <div *ngIf="tieneFiltrosActivos()" class="mb-3">
+    <div class="alert alert-info d-flex justify-content-between align-items-center">
+      <div>
+        <i class="fas fa-filter me-2"></i>
+        <strong>Filtros activos:</strong>
+        <span *ngIf="filtros.buscar" class="badge bg-primary me-1">Búsqueda: "{{ filtros.buscar }}"</span>
+        <span *ngIf="filtros.tipo" class="badge bg-secondary me-1">Tipo: {{ safeString(filtros.tipo) | titlecase }}</span>
+        <span *ngIf="filtros.estado" class="badge bg-info me-1">
+          Estado: {{ getEstadoLabel(filtros.estado) }}
+        </span>
+        <span *ngIf="filtros.fecha_inicio" class="badge bg-warning me-1">Desde: {{ filtros.fecha_inicio }}</span>
+        <span *ngIf="filtros.fecha_fin" class="badge bg-warning me-1">Hasta: {{ filtros.fecha_fin }}</span>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary" (click)="limpiarFiltros()">
+        <i class="fas fa-times me-1"></i>
+        Limpiar
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabla de recompensas -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="fas fa-list me-2"></i>
+        Lista de Recompensas
+        <span class="badge bg-primary ms-2">{{ totalElements }}</span>
+      </h5>
+      <div class="d-flex align-items-center gap-2">
+        <span class="text-muted small">Mostrar:</span>
+        <select class="form-select form-select-sm" style="width: auto;" [(ngModel)]="pageSize" (change)="cargarRecompensas()">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+        </select>
+        <div class="btn-group btn-group-sm" role="group">
+          <button type="button" 
+                  class="btn btn-outline-primary" 
+                  [class.active]="vistaCompacta"
+                  (click)="cambiarVista(true)"
+                  title="Vista Compacta">
+            <i class="fas fa-compress"></i>
+          </button>
+          <button type="button" 
+                  class="btn btn-outline-primary" 
+                  [class.active]="!vistaCompacta"
+                  (click)="cambiarVista(false)"
+                  title="Vista Expandida">
+            <i class="fas fa-expand"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0" [class.table-sm]="vistaCompacta">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 60px;">ID</th>
+              <th style="width: 200px;">Nombre</th>
+              <th style="width: 100px;">Tipo</th>
+              <th style="width: 100px;">Estado</th>
+              <th style="width: 100px;">Inicio</th>
+              <th style="width: 100px;">Fin</th>
+              <th style="width: 80px;">Clientes</th>
+              <th style="width: 80px;">Productos</th>
+              <th style="width: 100px;">Valor</th>
+              <th style="width: 120px;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="10" class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2 text-muted">Cargando recompensas...</p>
+              </td>
+            </tr>
+            <tr *ngIf="!loading && recompensas.length === 0">
+              <td colspan="10" class="text-center py-4">
+                <div class="empty-state">
+                  <i class="fas fa-gift fa-3x text-muted mb-3"></i>
+                  <h5 class="text-muted">No hay recompensas</h5>
+                  <p class="text-muted">No se encontraron recompensas con los filtros aplicados.</p>
+                  <button class="btn btn-primary" (click)="crearRecompensa()">
+                    <i class="fas fa-plus me-2"></i>
+                    Crear Primera Recompensa
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngFor="let recompensa of recompensas; trackBy: trackByRecompensaId">
+              <td>
+                <span class="fw-medium">#{{ recompensa.id }}</span>
+              </td>
+              <td>
+                <div *ngIf="vistaCompacta" class="text-truncate" style="max-width: 180px;" [title]="recompensa.nombre">
+                  <strong class="d-block">{{ recompensa.nombre | slice:0:20 }}{{ recompensa.nombre.length > 20 ? '...' : '' }}</strong>
+                  <small class="text-muted">{{ recompensa.descripcion | slice:0:30 }}{{ recompensa.descripcion.length > 30 ? '...' : '' }}</small>
+                </div>
+                <div *ngIf="!vistaCompacta">
+                  <strong>{{ recompensa.nombre }}</strong>
+                  <br>
+                  <small class="text-muted">{{ recompensa.descripcion | slice:0:50 }}{{ recompensa.descripcion.length > 50 ? '...' : '' }}</small>
+                </div>
+              </td>
+              <td>
+                <span *ngIf="vistaCompacta" class="badge bg-secondary">{{ (recompensa.tipo || '') | titlecase }}</span>
+                <div *ngIf="!vistaCompacta" class="d-flex align-items-center">
+                  <i [class]="getTipoIcon(recompensa.tipo) + ' ' + getTipoColor(recompensa.tipo) + ' me-2'"></i>
+                  <span class="fw-medium">{{ (recompensa.tipo || '') | titlecase }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="getEstadoClass(getEstadoReal(recompensa))">
+                  {{ vistaCompacta ? ((getEstadoReal(recompensa) || '') | slice:0:3 | uppercase) : ((getEstadoReal(recompensa) || '') | titlecase) }}
+                </span>
+              </td>
+              <td>
+                <span class="text-muted">{{ formatearFecha(recompensa.fecha_inicio) | slice:0:(vistaCompacta ? 5 : 10) }}</span>
+              </td>
+              <td>
+                <span class="text-muted">{{ formatearFecha(recompensa.fecha_fin) | slice:0:(vistaCompacta ? 5 : 10) }}</span>
+              </td>
+              <td class="text-center">
+                <span *ngIf="vistaCompacta" class="badge bg-info">{{ recompensa.total_clientes_aplicables || 0 }}</span>
+                <span *ngIf="!vistaCompacta" class="fw-medium">{{ formatearNumero(recompensa.total_clientes_aplicables || 0) }}</span>
+              </td>
+              <td class="text-center">
+                <span *ngIf="vistaCompacta" class="badge bg-warning">{{ recompensa.total_productos_aplicables || 0 }}</span>
+                <span *ngIf="!vistaCompacta" class="fw-medium">{{ formatearNumero(recompensa.total_productos_aplicables || 0) }}</span>
+              </td>
+              <td>
+                <span class="fw-medium text-success">{{ formatearMoneda(calcularValorEstimado(recompensa)) }}</span>
+              </td>
+              <td>
+                <div class="d-flex gap-1 justify-content-center">
+                  <button class="btn btn-sm btn-primary" (click)="verDetalle(recompensa)" title="Ver detalle">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn btn-sm btn-secondary" (click)="editarRecompensa(recompensa)" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button 
+                    class="btn btn-sm" 
+                    [ngClass]="getEstadoReal(recompensa) === 'activa' ? 'btn-warning' : 'btn-success'"
+                    (click)="cambiarEstadoRecompensa(recompensa)"
+                    [title]="getEstadoReal(recompensa) === 'activa' ? 'Pausar' : 'Activar'"
+                    [disabled]="loading"
+                  >
+                    <i *ngIf="!loading" [class]="getEstadoReal(recompensa) === 'activa' ? 'fas fa-pause' : 'fas fa-play'"></i>
+                    <i *ngIf="loading" class="fas fa-spinner fa-spin"></i>
+                  </button>
+                  <button class="btn btn-sm btn-info" (click)="duplicarRecompensa(recompensa)" title="Duplicar">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                  <button class="btn btn-sm btn-danger" (click)="eliminarRecompensa(recompensa)" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- Paginación -->
+    <div class="card-footer" *ngIf="totalPages > 1">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="text-muted">
+          Mostrando {{ (currentPage * pageSize) + 1 }} a {{ Math.min((currentPage + 1) * pageSize, totalElements) }} de {{ totalElements }} resultados
+        </div>
+        <nav>
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 0">
+              <button class="page-link" (click)="previousPage()" [disabled]="currentPage === 0">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+            </li>
+            <li class="page-item" *ngFor="let page of getPages()" [class.active]="page === currentPage">
+              <button class="page-link" (click)="goToPage(page)">
+                {{ page + 1 }}
+              </button>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+              <button class="page-link" (click)="nextPage()" [disabled]="currentPage === totalPages - 1">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Detalle de Recompensa -->
+  <div class="modal fade" [class.show]="mostrarModalDetalle" [style.display]="mostrarModalDetalle ? 'block' : 'none'" 
+       tabindex="-1" role="dialog" aria-labelledby="modalDetalleLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalDetalleLabel">
+            <i class="fas fa-gift me-2 text-primary"></i>
+            Detalle de Recompensa
+          </h5>
+          <button type="button" class="btn-close" (click)="cerrarModalDetalle()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Loading -->
+          <div *ngIf="cargandoDetalle" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2 text-muted">Cargando detalles de la recompensa...</p>
+          </div>
+
+          <!-- Error -->
+          <div *ngIf="errorDetalle && !cargandoDetalle" class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            {{ errorDetalle }}
+          </div>
+
+          <!-- Contenido del detalle -->
+          <div *ngIf="detalleRecompensa && !cargandoDetalle && !errorDetalle">
+            <!-- Header con información básica -->
+            <div class="row mb-4">
+              <div class="col-md-8">
+                <h4 class="mb-2">{{ detalleRecompensa.nombre }}</h4>
+                <p class="text-muted mb-3">{{ detalleRecompensa.descripcion }}</p>
+                <div class="d-flex flex-wrap gap-2">
+                  <span class="badge bg-primary">{{ (detalleRecompensa.tipo || '') | titlecase }}</span>
+                  <span class="badge" [ngClass]="getEstadoClass(getEstadoReal(detalleRecompensa))">
+                    {{ (getEstadoReal(detalleRecompensa) || '') | titlecase }}
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-4 text-end">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="card-title text-muted">Valor Estimado</h6>
+                    <h4 class="text-success mb-0">{{ formatearMoneda(calcularValorEstimado(detalleRecompensa)) }}</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información de fechas -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h6 class="card-title">
+                      <i class="fas fa-calendar-alt me-2 text-primary"></i>
+                      Fechas de Vigencia
+                    </h6>
+                    <div class="row">
+                      <div class="col-6">
+                        <small class="text-muted">Fecha de Inicio</small>
+                        <p class="mb-0 fw-medium">{{ formatearFecha(detalleRecompensa.fecha_inicio) }}</p>
+                      </div>
+                      <div class="col-6">
+                        <small class="text-muted">Fecha de Fin</small>
+                        <p class="mb-0 fw-medium">{{ formatearFecha(detalleRecompensa.fecha_fin) }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h6 class="card-title">
+                      <i class="fas fa-chart-bar me-2 text-info"></i>
+                      Estadísticas
+                    </h6>
+                    <div class="row">
+                      <div class="col-6">
+                        <small class="text-muted">Clientes</small>
+                        <p class="mb-0 fw-medium">{{ formatearNumero(detalleRecompensa.total_clientes_aplicables || 0) }}</p>
+                      </div>
+                      <div class="col-6">
+                        <small class="text-muted">Productos</small>
+                        <p class="mb-0 fw-medium">{{ formatearNumero(detalleRecompensa.total_productos_aplicables || 0) }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Configuración específica del tipo -->
+            <div class="row mb-4" *ngIf="detalleRecompensa.configuracion">
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h6 class="card-title mb-0">
+                      <i class="fas fa-cogs me-2"></i>
+                      Configuración de {{ (detalleRecompensa.tipo || '') | titlecase }}
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div *ngIf="detalleRecompensa.tipo === 'puntos' && detalleRecompensa.configuracion.puntos">
+                      <div class="row">
+                        <div class="col-md-4">
+                          <small class="text-muted">Puntos por Compra</small>
+                          <p class="mb-0 fw-medium">{{ detalleRecompensa.configuracion.puntos.puntos_por_compra || 0 }}</p>
+                        </div>
+                        <div class="col-md-4">
+                          <small class="text-muted">Puntos por Monto</small>
+                          <p class="mb-0 fw-medium">{{ detalleRecompensa.configuracion.puntos.puntos_por_monto || 0 }}</p>
+                        </div>
+                        <div class="col-md-4">
+                          <small class="text-muted">Puntos por Registro</small>
+                          <p class="mb-0 fw-medium">{{ detalleRecompensa.configuracion.puntos.puntos_registro || 0 }}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div *ngIf="detalleRecompensa.tipo === 'descuento' && detalleRecompensa.configuracion.descuento">
+                      <div class="row">
+                        <div class="col-md-4">
+                          <small class="text-muted">Tipo de Descuento</small>
+                          <p class="mb-0 fw-medium">{{ (detalleRecompensa.configuracion?.descuento?.tipo_descuento || '') | titlecase }}</p>
+                        </div>
+                        <div class="col-md-4">
+                          <small class="text-muted">Valor</small>
+                          <p class="mb-0 fw-medium">{{ detalleRecompensa.configuracion.descuento.valor_descuento || 0 }}%</p>
+                        </div>
+                        <div class="col-md-4">
+                          <small class="text-muted">Compra Mínima</small>
+                          <p class="mb-0 fw-medium">{{ formatearMoneda(detalleRecompensa.configuracion.descuento.compra_minima || 0) }}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div *ngIf="detalleRecompensa.tipo === 'envio_gratis' && detalleRecompensa.configuracion.envio">
+                      <div class="row">
+                        <div class="col-md-6">
+                          <small class="text-muted">Compra Mínima</small>
+                          <p class="mb-0 fw-medium">{{ formatearMoneda(detalleRecompensa.configuracion.envio.minimo_compra || 0) }}</p>
+                        </div>
+                        <div class="col-md-6">
+                          <small class="text-muted">Zonas Aplicables</small>
+                          <p class="mb-0 fw-medium">{{ detalleRecompensa.configuracion.envio.zonas_aplicables?.length || 0 }} zonas</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div *ngIf="detalleRecompensa.tipo === 'regalo' && detalleRecompensa.configuracion.regalo">
+                      <div class="row">
+                        <div class="col-md-6">
+                          <small class="text-muted">Compra Mínima</small>
+                          <p class="mb-0 fw-medium">{{ formatearMoneda(detalleRecompensa.configuracion.regalo.minimo_compra || 0) }}</p>
+                        </div>
+                        <div class="col-md-6">
+                          <small class="text-muted">Productos Regalo</small>
+                          <p class="mb-0 fw-medium">{{ detalleRecompensa.configuracion.regalo.productos_regalo?.length || 0 }} productos</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Historial reciente -->
+            <div class="row" *ngIf="detalleRecompensa.historial_reciente && detalleRecompensa.historial_reciente.length > 0">
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h6 class="card-title mb-0">
+                      <i class="fas fa-history me-2"></i>
+                      Historial Reciente
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="timeline">
+                      <div *ngFor="let evento of detalleRecompensa.historial_reciente" class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                          <h6 class="timeline-title">{{ evento.accion }}</h6>
+                          <p class="timeline-text">{{ evento.descripcion }}</p>
+                          <small class="text-muted">{{ formatearFecha(evento.fecha) }}</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cerrarModalDetalle()">
+            <i class="fas fa-times me-2"></i>
+            Cerrar
+          </button>
+          <button type="button" class="btn btn-primary" (click)="editarRecompensa(recompensaSeleccionada!)" *ngIf="recompensaSeleccionada">
+            <i class="fas fa-edit me-2"></i>
+            Editar Recompensa
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Edición de Recompensa -->
+  <div class="modal fade" [class.show]="mostrarModalEditar" [style.display]="mostrarModalEditar ? 'block' : 'none'" 
+       tabindex="-1" role="dialog" aria-labelledby="modalEditarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalEditarLabel">
+            <i class="fas fa-edit me-2 text-primary"></i>
+            Editar Recompensa
+          </h5>
+          <button type="button" class="btn-close" (click)="cerrarModalEditar()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Loading -->
+          <div *ngIf="cargandoEdicion" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2 text-muted">Cargando datos de la recompensa...</p>
+          </div>
+
+          <!-- Error -->
+          <div *ngIf="errorEdicion && !cargandoEdicion" class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            {{ errorEdicion }}
+          </div>
+
+          <!-- Formulario de edición -->
+          <form *ngIf="recompensaEditando && !cargandoEdicion && !errorEdicion" (ngSubmit)="guardarEdicion()">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Nombre de la Recompensa *</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="recompensaEditando.nombre"
+                  name="nombre"
+                  placeholder="Ej: Puntos por Compra"
+                  required
+                >
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Tipo de Recompensa *</label>
+                <select class="form-select" [(ngModel)]="recompensaEditando.tipo" name="tipo" required>
+                  <option value="puntos">Puntos</option>
+                  <option value="descuento">Descuento</option>
+                  <option value="envio_gratis">Envío Gratis</option>
+                  <option value="regalo">Regalo</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Descripción *</label>
+                <textarea 
+                  class="form-control" 
+                  [(ngModel)]="recompensaEditando.descripcion"
+                  name="descripcion"
+                  rows="3"
+                  placeholder="Describe los beneficios de esta recompensa..."
+                  required
+                ></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Fecha de Inicio *</label>
+                <input 
+                  type="date" 
+                  class="form-control" 
+                  [(ngModel)]="recompensaEditando.fecha_inicio"
+                  name="fecha_inicio"
+                  required
+                >
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Fecha de Fin *</label>
+                <input 
+                  type="date" 
+                  class="form-control" 
+                  [(ngModel)]="recompensaEditando.fecha_fin"
+                  name="fecha_fin"
+                  required
+                >
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Estado</label>
+                <select class="form-select" [(ngModel)]="recompensaEditando.estado" name="estado">
+                  <option *ngFor="let estado of estadosRecompensa" [value]="estado.value">
+                    {{ estado.label }}
+                  </option>
+                  <option *ngIf="estadosRecompensa.length === 0" value="programada">Programada</option>
+                  <option *ngIf="estadosRecompensa.length === 0" value="activa">Activa</option>
+                  <option *ngIf="estadosRecompensa.length === 0" value="pausada">Pausada</option>
+                  <option *ngIf="estadosRecompensa.length === 0" value="cancelada">Cancelada</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cerrarModalEditar()">
+            <i class="fas fa-times me-2"></i>
+            Cancelar
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-primary" 
+            (click)="guardarEdicion()"
+            [disabled]="cargandoEdicion || !recompensaEditando"
+          >
+            <i class="fas fa-save me-2" *ngIf="!cargandoEdicion"></i>
+            <span class="spinner-border spinner-border-sm me-2" *ngIf="cargandoEdicion"></span>
+            {{ cargandoEdicion ? 'Guardando...' : 'Guardar Cambios' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backdrop del modal -->
+  <div class="modal-backdrop fade" [class.show]="mostrarModalDetalle || mostrarModalEditar" *ngIf="mostrarModalDetalle || mostrarModalEditar"></div>
+
+  <!-- Notificaciones -->
+  <div class="notificacion-container" *ngIf="mostrarNotificacion">
+    <div class="alert alert-dismissible fade show" 
+         [ngClass]="{
+           'alert-success': tipoNotificacion === 'success',
+           'alert-danger': tipoNotificacion === 'error',
+           'alert-info': tipoNotificacion === 'info'
+         }"
+         role="alert">
+      <div class="d-flex align-items-center">
+        <i class="fas me-2" 
+           [ngClass]="{
+             'fa-check-circle': tipoNotificacion === 'success',
+             'fa-exclamation-triangle': tipoNotificacion === 'error',
+             'fa-info-circle': tipoNotificacion === 'info'
+           }"></i>
+        <span>{{ mensajeNotificacion }}</span>
+      </div>
+      <button type="button" class="btn-close" (click)="cerrarNotificacion()" aria-label="Close"></button>
+    </div>
+  </div>
+</div>

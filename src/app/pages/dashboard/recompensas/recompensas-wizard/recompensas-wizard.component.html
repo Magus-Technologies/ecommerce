@@ -1,0 +1,284 @@
+<div class="recompensas-wizard-container">
+  <!-- Header del Wizard -->
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+      <i class="fas fa-magic me-2 text-primary"></i>
+      {{ esEdicion ? 'Editar' : 'Crear' }} Recompensa
+    </h1>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" (click)="cancelar()">
+        <i class="fas fa-times me-2"></i>Cancelar
+      </button>
+    </div>
+  </div>
+
+  <!-- Progreso del Wizard -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="progress mb-3" style="height: 8px;">
+        <div class="progress-bar bg-primary" role="progressbar" [style.width.%]="getProgreso()"></div>
+      </div>
+      <div class="row text-center">
+        <div class="col" *ngFor="let paso of [1,2,3,4,5]; let i = index">
+          <div class="d-flex flex-column align-items-center">
+            <div class="rounded-circle d-flex align-items-center justify-content-center mb-2" 
+                 [class]="paso <= pasoActual ? 'bg-primary text-white' : 'bg-light text-muted'"
+                 style="width: 40px; height: 40px;">
+              <i [class]="paso < pasoActual ? 'fas fa-check' : 'fas fa-' + (i + 1)"></i>
+            </div>
+            <small class="fw-medium">{{ getPasoLabel(paso) }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido del Wizard -->
+  <div class="card">
+    <div class="card-body">
+      <!-- Mensaje de error -->
+      <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        {{ error }}
+        <button type="button" class="btn-close" (click)="error = null" aria-label="Close"></button>
+      </div>
+      <!-- Paso 1: Datos Generales -->
+      <div *ngIf="pasoActual === 1">
+        <h4 class="mb-4">
+          <i class="fas fa-info-circle me-2 text-primary"></i>
+          Datos Generales
+        </h4>
+        <form [formGroup]="datosGeneralesForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Nombre de la Recompensa *</label>
+              <input type="text" class="form-control" formControlName="nombre" 
+                     placeholder="Ej: Puntos por Compra">
+              <div *ngIf="datosGeneralesForm.get('nombre')?.invalid && datosGeneralesForm.get('nombre')?.touched" 
+                   class="text-danger small">
+                El nombre es requerido (mínimo 3 caracteres)
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Tipo de Recompensa *</label>
+              <select class="form-select" formControlName="tipo" (change)="onTipoChange()">
+                <option *ngFor="let tipo of tiposRecompensa" [value]="tipo.value">
+                  {{ tipo.label }}
+                </option>
+              </select>
+              <!-- Descripción del tipo seleccionado -->
+              <div *ngIf="getTipoSeleccionado()" class="mt-2">
+                <div class="alert alert-info py-2">
+                  <i class="fas fa-info-circle me-2"></i>
+                  <small>{{ getTipoSeleccionado()?.descripcion }}</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Descripción *</label>
+              <textarea class="form-control" formControlName="descripcion" rows="3"
+                        placeholder="Describe los beneficios de esta recompensa..."></textarea>
+              <div *ngIf="datosGeneralesForm.get('descripcion')?.invalid && datosGeneralesForm.get('descripcion')?.touched" 
+                   class="text-danger small">
+                La descripción es requerida (mínimo 10 caracteres)
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fecha de Inicio *</label>
+              <input type="date" class="form-control" formControlName="fecha_inicio">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fecha de Fin *</label>
+              <input type="date" class="form-control" formControlName="fecha_fin">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Estado Inicial</label>
+              <select class="form-select" formControlName="estado">
+                <option *ngFor="let estado of estadosRecompensa" [value]="estado.value">
+                  {{ estado.label }}
+                </option>
+                <option *ngIf="estadosRecompensa.length === 0" value="programada">Programada (Borrador)</option>
+                <option *ngIf="estadosRecompensa.length === 0" value="activa">Activa</option>
+              </select>
+              <div class="form-text">
+                <small class="text-muted">
+                  <i class="fas fa-info-circle me-1"></i>
+                  Si seleccionas "Programada", la recompensa se creará como borrador y podrás activarla después.
+                </small>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Paso 2: Segmentación -->
+      <div *ngIf="pasoActual === 2">
+        <app-recompensas-segmentos-clientes
+          (segmentacionChange)="onSegmentacionChange($event)">
+        </app-recompensas-segmentos-clientes>
+      </div>
+
+      <!-- Paso 3: Productos y Categorías -->
+      <div *ngIf="pasoActual === 3">
+        <app-recompensas-productos-categorias
+          (productosCategoriasChange)="onProductosCategoriasChange($event)">
+        </app-recompensas-productos-categorias>
+      </div>
+
+      <!-- Paso 4: Configuración -->
+      <div *ngIf="pasoActual === 4">
+        <!-- Configuración para Puntos -->
+        <div *ngIf="datosGeneralesForm.get('tipo')?.value === 'puntos'">
+          <app-recompensas-configuracion-puntos
+            [configuracionInicial]="configuracionPuntos"
+            (configuracionChange)="onConfiguracionPuntosChange($event)">
+          </app-recompensas-configuracion-puntos>
+        </div>
+
+        <!-- Configuración para otros tipos -->
+        <div *ngIf="datosGeneralesForm.get('tipo')?.value !== 'puntos'">
+          <h4 class="mb-4">
+            <i class="fas fa-cog me-2 text-primary"></i>
+            Configuración de {{ getTipoLabel(datosGeneralesForm.get('tipo')?.value) }}
+          </h4>
+          <form [formGroup]="configuracionForm">
+            <div class="row g-3">
+              <!-- Configuración para Descuento -->
+              <div *ngIf="datosGeneralesForm.get('tipo')?.value === 'descuento'" class="col-12">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h6 class="card-title">Configuración de Descuento</h6>
+                    <div class="row g-3">
+                      <div class="col-md-4">
+                        <label class="form-label">Tipo de Descuento</label>
+                        <select class="form-select" formControlName="tipo_descuento">
+                          <option value="porcentaje">Porcentaje</option>
+                          <option value="cantidad_fija">Cantidad Fija</option>
+                        </select>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Valor del Descuento</label>
+                        <input type="number" class="form-control" formControlName="valor_descuento" min="0">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Compra Mínima</label>
+                        <input type="number" class="form-control" formControlName="compra_minima" min="0">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Configuración para Envío Gratis -->
+              <div *ngIf="datosGeneralesForm.get('tipo')?.value === 'envio_gratis'" class="col-12">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h6 class="card-title">Configuración de Envío Gratis</h6>
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label class="form-label">Compra Mínima</label>
+                        <input type="number" class="form-control" formControlName="minimo_compra_envio" min="0">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Zonas Aplicables</label>
+                        <select class="form-select" multiple>
+                          <option value="lima">Lima</option>
+                          <option value="provincias">Provincias</option>
+                          <option value="nacional">Nacional</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Configuración para Regalo -->
+              <div *ngIf="datosGeneralesForm.get('tipo')?.value === 'regalo'" class="col-12">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h6 class="card-title">Configuración de Regalo</h6>
+                    <div class="alert alert-warning">
+                      <i class="fas fa-exclamation-triangle me-2"></i>
+                      <strong>Nota:</strong> La configuración de regalos requiere selección de productos específicos.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Paso 5: Resumen -->
+      <div *ngIf="pasoActual === 5">
+        <h4 class="mb-4">
+          <i class="fas fa-check-circle me-2 text-success"></i>
+          Resumen de la Recompensa
+        </h4>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="mb-0">Información General</h6>
+              </div>
+              <div class="card-body">
+                <p><strong>Nombre:</strong> {{ wizard.datos_generales.nombre }}</p>
+                <p><strong>Tipo:</strong> {{ getTipoLabel(wizard.datos_generales.tipo) }}</p>
+                <p><strong>Descripción:</strong> {{ wizard.datos_generales.descripcion }}</p>
+                <p><strong>Fecha Inicio:</strong> {{ wizard.datos_generales.fecha_inicio }}</p>
+                <p><strong>Fecha Fin:</strong> {{ wizard.datos_generales.fecha_fin }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="mb-0">Configuración</h6>
+              </div>
+              <div class="card-body">
+                <p><strong>Segmentación:</strong> {{ wizard.segmentacion.tipo_segmentacion | titlecase }}</p>
+                <p><strong>Productos:</strong> {{ wizard.productos.tipo_asignacion | titlecase }}</p>
+                <p><strong>Estado:</strong> 
+                  <span class="badge" [class]="wizard.resumen.configuracion_completa ? 'bg-success' : 'bg-warning'">
+                    {{ wizard.resumen.configuracion_completa ? 'Completa' : 'Incompleta' }}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de Navegación -->
+      <div class="d-flex justify-content-between mt-4">
+        <button class="btn btn-outline-secondary" 
+                (click)="pasoAnterior()" 
+                [disabled]="pasoActual === 1">
+          <i class="fas fa-arrow-left me-2"></i>Anterior
+        </button>
+        
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-primary" (click)="guardarBorrador()">
+            <i class="fas fa-save me-2"></i>Guardar Borrador
+          </button>
+          
+          <button *ngIf="pasoActual < totalPasos" 
+                  class="btn btn-primary" 
+                  (click)="siguientePaso()"
+                  [disabled]="!validarPasoActual()">
+            Siguiente<i class="fas fa-arrow-right ms-2"></i>
+          </button>
+          
+          <button *ngIf="pasoActual === totalPasos" 
+                  class="btn btn-success" 
+                  (click)="activarRecompensa()"
+                  [disabled]="!validarWizardCompleto() || loading">
+            <i class="fas fa-check me-2" *ngIf="!loading"></i>
+            <span class="spinner-border spinner-border-sm me-2" *ngIf="loading"></span>
+            {{ loading ? 'Activando...' : 'Activar Recompensa' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

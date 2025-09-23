@@ -1,15 +1,6 @@
-// Modelos para el submódulo de Gestión de Productos y Categorías
 
-export interface ProductoRecompensa {
-  id: number;
-  producto_id: number;
-  categoria_id: number;
-  puntos_por_unidad: number;
-  puntos_por_precio: number;
-  activo: boolean;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
-}
+
+import { RecompensaProducto } from './recompensa.model';
 
 export interface ProductoInfo {
   id: number;

@@ -89,95 +89,76 @@
         </a>
       </li>
 
-      <!-- ✅ NUEVO: Recompensas con Dropdown -->
+      <!-- ✅ Recompensas con Botón Desplegable -->
       <li *ngIf="puedeVerRecompensas" class="mb-8 recompensas-dropdown">
         <div class="nav-item-dropdown">
-          <!-- Botón principal -->
+          <!-- Botón Principal Desplegable -->
           <button
             type="button"
-            class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500 w-100 border-0 bg-transparent"
+            class="recompensas-toggle-btn"
             (click)="toggleRecompensasDropdown()"
             [class.active]="showRecompensasDropdown"
           >
-            <i class="ph ph-gift text-xl flex-shrink-0"></i>
-            <span *ngIf="!isCollapsed" class="fw-medium flex-grow-1 text-start">Recompensas</span>
+            <i class="ph ph-gift text-xl"></i>
+            <span *ngIf="!isCollapsed" class="fw-bold text-lg">Recompensas</span>
             <i *ngIf="!isCollapsed" class="ph ph-caret-down text-sm transition-2" [class.rotate-180]="showRecompensasDropdown"></i>
           </button>
           
-          <!-- Menú desplegable -->
-          <div *ngIf="showRecompensasDropdown && !isCollapsed" class="dropdown-menu-custom">
+          <!-- Menú Desplegable (solo visible cuando está expandido) -->
+          <div *ngIf="showRecompensasDropdown && !isCollapsed" class="recompensas-menu">
+            <!-- Dashboard -->
             <a
-              href="#"
-              class="dropdown-item-custom"
-              (click)="navegarARecompensasSubmodulo('analytics', $event)"
+              routerLink="/dashboard/recompensas/dashboard"
+              routerLinkActive="active"
+              class="recompensas-item"
+              (click)="showRecompensasDropdown = false"
             >
-              <i class="ph ph-chart-line"></i>
-              <span>Analytics</span>
+              <i class="ph ph-gauge text-lg"></i>
+              <span>Dashboard</span>
             </a>
             
+            <!-- Crear Recompensa -->
             <a
-              href="#"
-              class="dropdown-item-custom"
-              (click)="navegarARecompensasSubmodulo('segmentos', $event)"
+              routerLink="/dashboard/recompensas/crear"
+              routerLinkActive="active"
+              class="recompensas-item"
+              (click)="showRecompensasDropdown = false"
             >
-              <i class="ph ph-users-three"></i>
-              <span>Segmentos</span>
+              <i class="ph ph-plus-circle text-lg"></i>
+              <span>Crear Recompensa</span>
             </a>
             
+            <!-- Gestionar -->
             <a
-              href="#"
-              class="dropdown-item-custom"
-              (click)="navegarARecompensasSubmodulo('productos', $event)"
+              routerLink="/dashboard/recompensas/lista"
+              routerLinkActive="active"
+              class="recompensas-item"
+              (click)="showRecompensasDropdown = false"
             >
-              <i class="ph ph-package"></i>
-              <span>Productos</span>
+              <i class="ph ph-gear text-lg"></i>
+              <span>Gestionar</span>
             </a>
             
+            <!-- Análisis -->
             <a
-              href="#"
-              class="dropdown-item-custom"
-              (click)="navegarARecompensasSubmodulo('puntos', $event)"
+              routerLink="/dashboard/recompensas/analytics"
+              routerLinkActive="active"
+              class="recompensas-item"
+              (click)="showRecompensasDropdown = false"
             >
-              <i class="ph ph-coins"></i>
-              <span>Puntos</span>
+              <i class="ph ph-chart-line text-lg"></i>
+              <span>Análisis</span>
             </a>
             
+            <!-- Auditoría -->
             <a
-              href="#"
-              class="dropdown-item-custom"
-              (click)="navegarARecompensasSubmodulo('descuentos', $event)"
+              routerLink="/dashboard/recompensas/auditoria"
+              routerLinkActive="active"
+              class="recompensas-item"
+              (click)="showRecompensasDropdown = false"
             >
-              <i class="ph ph-percent"></i>
-              <span>Descuentos</span>
-            </a>
-            
-            <a
-              href="#"
-              class="dropdown-item-custom"
-              (click)="navegarARecompensasSubmodulo('envios', $event)"
-            >
-              <i class="ph ph-truck"></i>
-              <span>Envíos</span>
-            </a>
-            
-            <a
-              href="#"
-              class="dropdown-item-custom"
-              (click)="navegarARecompensasSubmodulo('regalos', $event)"
-            >
-              <i class="ph ph-gift"></i>
-              <span>Regalos</span>
-            </a>
-            
-            <div class="dropdown-divider-custom"></div>
-            
-            <a
-              href="#"
-              class="dropdown-item-custom"
-              (click)="navegarARecompensasSubmodulo('general', $event)"
-            >
-              <i class="ph ph-list"></i>
-              <span>Ver Todas</span>
+              <i class="ph ph-arrow-clockwise text-lg"></i>
+              <span>Auditoría</span>
             </a>
           </div>
         </div>

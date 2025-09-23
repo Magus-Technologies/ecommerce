@@ -1,0 +1,267 @@
+<div class="recompensas-auditoria-container">
+  <!-- Header del Auditoría -->
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+      <i class="fas fa-history me-2 text-primary"></i>
+      Auditoría de Recompensas
+    </h1>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" (click)="exportarAuditoria()">
+        <i class="fas fa-download me-2"></i>Exportar
+      </button>
+      <button class="btn btn-primary" (click)="actualizarDatos()">
+        <i class="fas fa-sync-alt me-2"></i>Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros de Auditoría -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">
+        <i class="fas fa-filter me-2"></i>
+        Filtros de Auditoría
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Buscar</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Usuario, acción, detalles..."
+            [(ngModel)]="filtros.buscar"
+            (keyup.enter)="aplicarFiltros()"
+          >
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Acción</label>
+          <select class="form-select" [(ngModel)]="filtros.accion">
+            <option value="">Todas</option>
+            <option *ngFor="let accion of tiposAccion" [value]="accion">
+              {{ accion | titlecase }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Usuario</label>
+          <select class="form-select" [(ngModel)]="filtros.usuario_id">
+            <option value="">Todos</option>
+            <option *ngFor="let usuario of usuarios" [value]="usuario.id">
+              {{ usuario.nombre }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Fecha Desde</label>
+          <input 
+            type="date" 
+            class="form-control" 
+            [(ngModel)]="filtros.fecha_desde"
+          >
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Fecha Hasta</label>
+          <input 
+            type="date" 
+            class="form-control" 
+            [(ngModel)]="filtros.fecha_hasta"
+          >
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+          <div class="btn-group w-100">
+            <button class="btn btn-primary" (click)="aplicarFiltros()">
+              <i class="fas fa-search"></i>
+            </button>
+            <button class="btn btn-outline-secondary" (click)="limpiarFiltros()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen de Auditoría -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h6 class="card-title text-white-50">Total Acciones</h6>
+              <h3 class="mb-0">{{ resumen?.total_acciones || 0 }}</h3>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-history fa-2x opacity-75"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h6 class="card-title text-white-50">Usuarios Activos</h6>
+              <h3 class="mb-0">{{ resumen?.usuarios_mas_activos?.length || 0 }}</h3>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-users fa-2x opacity-75"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-warning text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h6 class="card-title text-white-50">Recompensas Afectadas</h6>
+              <h3 class="mb-0">{{ resumen?.recompensas_mas_modificadas?.length || 0 }}</h3>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-gift fa-2x opacity-75"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-info text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h6 class="card-title text-white-50">Período</h6>
+              <h6 class="mb-0">{{ getPeriodoTexto() }}</h6>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-calendar-alt fa-2x opacity-75"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Auditoría -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="fas fa-list me-2"></i>
+        Historial de Acciones
+        <span class="badge bg-primary ms-2">{{ totalElements }}</span>
+      </h5>
+      <div class="d-flex align-items-center gap-2">
+        <span class="text-muted small">Mostrar:</span>
+        <select class="form-select form-select-sm" style="width: auto;" [(ngModel)]="pageSize" (change)="cargarAuditoria()">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Usuario</th>
+              <th>Acción</th>
+              <th>Recompensa</th>
+              <th>Detalles</th>
+              <th>IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="7" class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2 text-muted">Cargando auditoría...</p>
+              </td>
+            </tr>
+            <tr *ngIf="!loading && auditoria.length === 0">
+              <td colspan="7" class="text-center py-4">
+                <div class="empty-state">
+                  <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                  <h5 class="text-muted">No hay registros de auditoría</h5>
+                  <p class="text-muted">No se encontraron registros con los filtros aplicados.</p>
+                </div>
+              </td>
+            </tr>
+            <tr *ngFor="let registro of auditoria">
+              <td>
+                <span class="fw-medium">#{{ registro.id }}</span>
+              </td>
+              <td>
+                <div>
+                  <span class="fw-medium">{{ formatearFecha(registro.fecha_accion) }}</span>
+                  <br>
+                  <small class="text-muted">{{ formatearHora(registro.fecha_accion) }}</small>
+                </div>
+              </td>
+              <td>
+                <div>
+                  <strong>{{ registro.usuario_nombre }}</strong>
+                  <br>
+                  <small class="text-muted">{{ registro.usuario_email }}</small>
+                </div>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="getAccionClass(registro.accion)">
+                  <i [class]="getAccionIcon(registro.accion) + ' me-1'"></i>
+                  {{ registro.accion | titlecase }}
+                </span>
+              </td>
+              <td>
+                <span class="fw-medium">#{{ registro.recompensa_id }}</span>
+              </td>
+              <td>
+                <span class="text-muted">{{ registro.detalles | slice:0:50 }}{{ registro.detalles.length > 50 ? '...' : '' }}</span>
+              </td>
+              <td>
+                <small class="text-muted">{{ registro.ip_address }}</small>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- Paginación -->
+    <div class="card-footer" *ngIf="totalPages > 1">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="text-muted">
+          Mostrando {{ (currentPage * pageSize) + 1 }} a {{ Math.min((currentPage + 1) * pageSize, totalElements) }} de {{ totalElements }} resultados
+        </div>
+        <nav>
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 0">
+              <button class="page-link" (click)="previousPage()" [disabled]="currentPage === 0">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+            </li>
+            <li class="page-item" *ngFor="let page of getPages()" [class.active]="page === currentPage">
+              <button class="page-link" (click)="goToPage(page)">
+                {{ page + 1 }}
+              </button>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+              <button class="page-link" (click)="nextPage()" [disabled]="currentPage === totalPages - 1">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
