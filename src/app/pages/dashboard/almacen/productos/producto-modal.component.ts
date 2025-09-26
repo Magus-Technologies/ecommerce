@@ -492,22 +492,31 @@ export class ProductoModalComponent implements OnInit, OnChanges {
 
   ngOnChanges(): void {
     if (this.producto) {
+      console.log('ngOnChanges - Cargando producto para edición:', this.producto);
+
       this.productoForm.patchValue({
-        nombre: this.producto.nombre,
-        descripcion: this.producto.descripcion,
-        codigo_producto: this.producto.codigo_producto,
-        categoria_id: this.producto.categoria_id,
+        nombre: this.producto.nombre || '',
+        descripcion: this.producto.descripcion || '',
+        codigo_producto: this.producto.codigo_producto || '',
+        categoria_id: this.producto.categoria_id || '',
         marca_id: this.producto.marca_id || '',
-        precio_compra: this.producto.precio_compra,
-        precio_venta: this.producto.precio_venta,
-        stock: this.producto.stock,
-        stock_minimo: this.producto.stock_minimo,
-        activo: this.producto.activo,
-        destacado: this.producto.destacado,  // <- AGREGAR ESTA LÍNEA
-        mostrar_igv: this.producto.mostrar_igv
+        precio_compra: this.producto.precio_compra || '',
+        precio_venta: this.producto.precio_venta || '',
+        stock: this.producto.stock || 0,
+        stock_minimo: this.producto.stock_minimo || 5,
+        activo: Boolean(this.producto.activo),
+        destacado: Boolean(this.producto.destacado),
+        mostrar_igv: this.producto.mostrar_igv !== undefined ? Boolean(this.producto.mostrar_igv) : true
       });
+
       this.imagePreview = this.producto.imagen_url || null;
+      this.selectedImage = null; // Limpiar imagen seleccionada al cargar producto existente
+      this.clearImageValidation();
+
+      console.log('Formulario cargado con valores:', this.productoForm.value);
     } else {
+      console.log('ngOnChanges - Creando nuevo producto');
+
       this.productoForm.reset({
         nombre: '',
         descripcion: '',
@@ -519,9 +528,10 @@ export class ProductoModalComponent implements OnInit, OnChanges {
         stock: '',
         stock_minimo: 5,
         activo: true,
-        destacado: false,  // <- AGREGAR ESTA LÍNEA
+        destacado: false,
         mostrar_igv: true
       });
+
       this.imagePreview = null;
       this.selectedImage = null;
       this.clearImageValidation();

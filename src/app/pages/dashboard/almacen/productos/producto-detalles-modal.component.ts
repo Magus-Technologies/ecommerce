@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from "@angular/core"
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, OnDestroy } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from "@angular/forms"
 import { QuillModule } from 'ngx-quill'
@@ -110,20 +110,22 @@ import { Producto } from "../../../../types/almacen.types"
                       </div>
                       
                       <div formArrayName="especificaciones">
-                        <div *ngFor="let spec of especificaciones.controls; let i = index" 
+                        <div *ngFor="let spec of especificaciones.controls; let i = index"
                              [formGroupName]="i" class="row mb-12 align-items-end">
                           <div class="col-md-4">
-                            <input type="text" class="form-control" 
+                            <input type="text" class="form-control"
                                    formControlName="nombre" placeholder="Nombre (ej: Marca)">
                           </div>
                           <div class="col-md-6">
-                            <input type="text" class="form-control" 
+                            <input type="text" class="form-control"
                                    formControlName="valor" placeholder="Valor (ej: Samsung)">
                           </div>
-                          <div class="col-md-2">
-                            <button type="button" class="btn btn-sm btn-danger w-100" 
-                                    (click)="eliminarEspecificacion(i)">
-                              <i class="ph ph-trash"></i>
+                          <div class="col-md-2 d-flex justify-content-center">
+                            <button type="button" class="btn btn-sm btn-danger rounded-circle"
+                                    style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                    (click)="eliminarEspecificacion(i)"
+                                    title="Eliminar especificación">
+                              <i class="ph ph-trash text-xs"></i>
                             </button>
                           </div>
                         </div>
@@ -172,20 +174,22 @@ import { Producto } from "../../../../types/almacen.types"
                       </div>
                       
                       <div formArrayName="caracteristicas_tecnicas">
-                        <div *ngFor="let carac of caracteristicasTecnicas.controls; let i = index" 
+                        <div *ngFor="let carac of caracteristicasTecnicas.controls; let i = index"
                              [formGroupName]="i" class="row mb-12 align-items-end">
                           <div class="col-md-4">
-                            <input type="text" class="form-control" 
+                            <input type="text" class="form-control"
                                    formControlName="caracteristica" placeholder="Característica (ej: Procesador)">
                           </div>
                           <div class="col-md-6">
-                            <input type="text" class="form-control" 
+                            <input type="text" class="form-control"
                                    formControlName="detalle" placeholder="Detalle (ej: Intel Core i7-12700H)">
                           </div>
-                          <div class="col-md-2">
-                            <button type="button" class="btn btn-sm btn-danger w-100" 
-                                    (click)="eliminarCaracteristicaTecnica(i)">
-                              <i class="ph ph-trash"></i>
+                          <div class="col-md-2 d-flex justify-content-center">
+                            <button type="button" class="btn btn-sm btn-danger rounded-circle"
+                                    style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                    (click)="eliminarCaracteristicaTecnica(i)"
+                                    title="Eliminar característica">
+                              <i class="ph ph-trash text-xs"></i>
                             </button>
                           </div>
                         </div>
@@ -203,17 +207,29 @@ import { Producto } from "../../../../types/almacen.types"
                       </div>
                       
                       <div formArrayName="videos">
-                        <div *ngFor="let video of videos.controls; let i = index" 
+                        <div *ngFor="let video of videos.controls; let i = index"
                              class="row mb-12 align-items-end">
-                          <div class="col-md-10">
-                            <input type="url" class="form-control" 
-                                   [formControlName]="i" 
-                                   placeholder="https://youtube.com/watch?v=...">
+                          <div class="col-md-8">
+                            <input type="url" class="form-control"
+                                   [formControlName]="i"
+                                   placeholder="https://youtube.com/watch?v=..."
+                                   (input)="onVideoUrlChange(i, $event)">
                           </div>
-                          <div class="col-md-2">
-                            <button type="button" class="btn btn-sm btn-danger w-100" 
-                                    (click)="eliminarVideo(i)">
-                              <i class="ph ph-trash"></i>
+                          <div class="col-md-2 d-flex justify-content-center gap-8">
+                            <button type="button" class="btn btn-sm btn-info rounded-circle"
+                                    style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                    (click)="previewVideo(video.value)"
+                                    [disabled]="!isValidVideoUrl(video.value)"
+                                    title="Preview del video">
+                              <i class="ph ph-play text-xs"></i>
+                            </button>
+                          </div>
+                          <div class="col-md-2 d-flex justify-content-center">
+                            <button type="button" class="btn btn-sm btn-danger rounded-circle"
+                                    style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                    (click)="eliminarVideo(i)"
+                                    title="Eliminar video">
+                              <i class="ph ph-trash text-xs"></i>
                             </button>
                           </div>
                         </div>
@@ -240,13 +256,27 @@ import { Producto } from "../../../../types/almacen.types"
                         <div class="col-md-3" *ngFor="let imagen of imagenesPreview; let i = index">
                           <div class="position-relative border rounded-8 p-8">
                             <img [src]="imagen" class="w-100 rounded-6" style="height: 150px; object-fit: cover;">
-                            <button type="button" 
+                            <button type="button"
                                     class="btn btn-sm btn-danger position-absolute top-0 end-0 m-8"
                                     (click)="eliminarImagenPreview(i)">
                               <i class="ph ph-x text-xs"></i>
                             </button>
                           </div>
                         </div>
+                      </div>
+
+                      <!-- Recomendaciones de imagen -->
+                      <div class="mt-16">
+                        <small class="text-gray-500 text-xs d-block">
+                          <strong>Formatos:</strong> JPG, PNG, GIF (máx. 2MB por imagen)
+                        </small>
+                        <small class="text-info text-xs d-block mt-4">
+                          <i class="ph ph-lightbulb me-4"></i>
+                          <strong>Tamaño recomendado:</strong> 400x400px (cuadrado) para mejor visualización
+                        </small>
+                        <small class="text-warning text-xs d-block mt-4">
+                          ⚠️ Imágenes muy anchas o altas pueden verse deformadas en la tienda
+                        </small>
                       </div>
                       
                       <!-- Imágenes existentes -->
@@ -274,8 +304,9 @@ import { Producto } from "../../../../types/almacen.types"
           </div>
           
           <div class="modal-footer border-0 pt-0">
-            <button type="button" 
+            <button type="button"
                     class="btn bg-gray-100 hover-bg-gray-200 text-gray-600 px-16 py-8 rounded-8"
+                    (click)="cancelarYCerrar()"
                     data-bs-dismiss="modal">
               Cancelar
             </button>
@@ -325,7 +356,7 @@ import { Producto } from "../../../../types/almacen.types"
     }
   `]
 })
-export class ProductoDetallesModalComponent implements OnInit, OnChanges {
+export class ProductoDetallesModalComponent implements OnInit, OnChanges, OnDestroy {
   @Input() producto: Producto | null = null
   @Output() detallesGuardados = new EventEmitter<void>()
   @Output() modalCerrado = new EventEmitter<void>()
@@ -371,17 +402,76 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    // No inicializar campos por defecto aquí, se hará en cargarDetallesProducto
+    // Configurar listener para el modal
+    this.setupModalEventListeners()
+  }
+
+  ngOnDestroy(): void {
+    // Limpiar eventos al destruir el componente
+    this.removeModalEventListeners()
+  }
+
+  private setupModalEventListeners(): void {
+    const modal = document.getElementById('modalDetallesProducto')
+    if (modal) {
+      // Listener para cuando el modal se oculta
+      modal.addEventListener('hidden.bs.modal', () => {
+        console.log('Modal de detalles cerrado - limpiando datos')
+        this.resetFormulario()
+        this.modalCerrado.emit()
+      })
+    }
+  }
+
+  private removeModalEventListeners(): void {
+    const modal = document.getElementById('modalDetallesProducto')
+    if (modal) {
+      modal.removeEventListener('hidden.bs.modal', () => {})
+    }
   }
 
   ngOnChanges(): void {
     if (this.producto) {
       console.log('ngOnChanges - producto:', this.producto);
+
+      // LIMPIAR INMEDIATAMENTE antes de cargar datos del servidor
+      this.limpiarDatosInmediatamente();
+
       this.cargarDetallesProducto()
     } else {
       // Si no hay producto, resetear formulario
       this.resetFormulario()
     }
+  }
+
+  private limpiarDatosInmediatamente(): void {
+    console.log('🧹 Limpiando datos inmediatamente al cambiar producto');
+
+    // Limpiar imágenes inmediatamente (lo más importante)
+    this.imagenesPreview = []
+    this.imagenesSeleccionadas = []
+    this.imagenesExistentes = []
+
+    // Limpiar formulario inmediatamente
+    this.detallesForm.patchValue({
+      descripcion_detallada: '',
+      instrucciones_uso: '',
+      garantia: '',
+      politicas_devolucion: '',
+      largo: '',
+      ancho: '',
+      alto: '',
+      peso: ''
+    });
+
+    // Limpiar arrays inmediatamente
+    this.especificaciones.clear()
+    this.caracteristicasTecnicas.clear()
+    this.videos.clear()
+
+    // Agregar elementos por defecto para UX
+    this.agregarEspecificacion()
+    this.agregarCaracteristicaTecnica()
   }
 
   private resetFormulario(): void {
@@ -457,6 +547,61 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges {
     this.videos.removeAt(index)
   }
 
+  // Métodos para preview de videos
+  onVideoUrlChange(index: number, event: any): void {
+    const url = event.target.value;
+    // Solo para logging, la validación se hace en isValidVideoUrl
+    console.log(`Video ${index} URL changed:`, url);
+  }
+
+  isValidVideoUrl(url: string): boolean {
+    if (!url || url.trim() === '') return false;
+
+    // Validar URLs de YouTube
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)[a-zA-Z0-9_-]{11}/;
+    return youtubeRegex.test(url);
+  }
+
+  previewVideo(url: string): void {
+    if (!this.isValidVideoUrl(url)) {
+      alert('URL de video no válida. Asegúrate de usar una URL de YouTube válida.');
+      return;
+    }
+
+    // Convertir URL a formato embed
+    const embedUrl = this.getYouTubeEmbedUrl(url);
+
+    // Abrir en una nueva ventana pequeña para preview
+    const width = 800;
+    const height = 450;
+    const left = (screen.width - width) / 2;
+    const top = (screen.height - height) / 2;
+
+    window.open(
+      embedUrl,
+      'VideoPreview',
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
+    );
+  }
+
+  private getYouTubeEmbedUrl(url: string): string {
+    // Extraer el ID del video de diferentes formatos de URL de YouTube
+    const regexes = [
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
+    ];
+
+    for (const regex of regexes) {
+      const match = url.match(regex);
+      if (match) {
+        return `https://www.youtube.com/embed/${match[1]}`;
+      }
+    }
+
+    return url; // Si no coincide, devolver la URL original
+  }
+
   // Métodos para imágenes
   onImagenesSelected(event: any): void {
     const files = Array.from(event.target.files) as File[]
@@ -502,13 +647,8 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges {
         console.log('Respuesta detalles:', response);
         const detalles = response.detalles
 
-        // Siempre limpiar arrays primero
-        this.especificaciones.clear()
-        this.caracteristicasTecnicas.clear()
-        this.videos.clear()
-        this.imagenesPreview = []
-        this.imagenesSeleccionadas = []
-        this.imagenesExistentes = []
+        // Los datos ya se limpiaron en limpiarDatosInmediatamente()
+        // Solo necesitamos cargar los nuevos datos
 
         if (detalles) {
           // Cargar datos básicos
@@ -530,12 +670,39 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges {
           }
 
           if (dimensiones) {
+            // Si las dimensiones están como array (formato anterior: [largo, ancho, alto, peso])
+            if (Array.isArray(dimensiones) && dimensiones.length >= 4) {
+              this.detallesForm.patchValue({
+                largo: dimensiones[0] || '',
+                ancho: dimensiones[1] || '',
+                alto: dimensiones[2] || '',
+                peso: dimensiones[3] || ''
+              });
+              console.log('Dimensiones cargadas desde array:', {
+                largo: dimensiones[0],
+                ancho: dimensiones[1],
+                alto: dimensiones[2],
+                peso: dimensiones[3]
+              });
+            }
+            // Si las dimensiones están como objeto (formato nuevo: {largo, ancho, alto, peso})
+            else if (typeof dimensiones === 'object' && !Array.isArray(dimensiones)) {
+              this.detallesForm.patchValue({
+                largo: dimensiones.largo || '',
+                ancho: dimensiones.ancho || '',
+                alto: dimensiones.alto || '',
+                peso: dimensiones.peso || ''
+              });
+              console.log('Dimensiones cargadas desde objeto:', dimensiones);
+            }
+          } else {
+            // Si no hay dimensiones, limpiar campos de dimensiones
             this.detallesForm.patchValue({
-              largo: dimensiones.largo || '',
-              ancho: dimensiones.ancho || '',
-              alto: dimensiones.alto || '',
-              peso: dimensiones.peso || ''
-            })
+              largo: '',
+              ancho: '',
+              alto: '',
+              peso: ''
+            });
           }
 
           // Cargar especificaciones
@@ -601,9 +768,8 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges {
           // Cargar imágenes existentes
           this.imagenesExistentes = detalles.imagenes_url || []
         } else {
-          // Si no hay detalles, agregar campos por defecto
-          this.agregarEspecificacion()
-          this.agregarCaracteristicaTecnica()
+          // Si no hay detalles, ya se limpiaron en limpiarDatosInmediatamente()
+          console.log('No hay detalles - los datos ya están limpios');
         }
 
         console.log('Detalles cargados exitosamente');
@@ -634,13 +800,15 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges {
     formData.append('garantia', this.detallesForm.get('garantia')?.value || '')
     formData.append('politicas_devolucion', this.detallesForm.get('politicas_devolucion')?.value || '')
 
-    // Dimensiones
+    // Dimensiones - asegurar que se guarden como objeto
     const dimensiones = {
       largo: this.detallesForm.get('largo')?.value || null,
       ancho: this.detallesForm.get('ancho')?.value || null,
       alto: this.detallesForm.get('alto')?.value || null,
       peso: this.detallesForm.get('peso')?.value || null
     }
+
+    console.log('Guardando dimensiones:', dimensiones);
     formData.append('dimensiones', JSON.stringify(dimensiones))
 
     // Especificaciones
@@ -678,8 +846,18 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges {
     })
   }
 
+  cancelarYCerrar(): void {
+    console.log('Cancelando y cerrando modal de detalles')
+    this.resetFormulario()
+    this.modalCerrado.emit()
+  }
+
   private cerrarModal(): void {
     this.isLoading = false
+
+    // Limpiar formulario y datos al cerrar
+    this.resetFormulario()
+
     const modal = document.getElementById("modalDetallesProducto")
     if (modal) {
       const bootstrapModal = (window as any).bootstrap.Modal.getInstance(modal)

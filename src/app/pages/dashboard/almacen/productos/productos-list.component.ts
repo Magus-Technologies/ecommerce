@@ -902,21 +902,31 @@ export class ProductosListComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   editarProducto(producto: Producto): void {
-    this.productoSeleccionado = producto;
-    const modal = document.getElementById('modalCrearProducto');
-    if (modal) {
-      const bootstrapModal = new (window as any).bootstrap.Modal(modal);
-      bootstrapModal.show();
-    }
+    console.log('Editando producto:', producto);
+    this.productoSeleccionado = { ...producto }; // Crear copia para evitar problemas de referencia
+
+    // Esperar un tick antes de abrir el modal para asegurar que los datos se carguen
+    setTimeout(() => {
+      const modal = document.getElementById('modalCrearProducto');
+      if (modal) {
+        const bootstrapModal = new (window as any).bootstrap.Modal(modal);
+        bootstrapModal.show();
+      }
+    }, 10);
   }
 
   gestionarDetalles(producto: Producto): void {
-    this.productoSeleccionado = producto;
-    const modal = document.getElementById('modalDetallesProducto');
-    if (modal) {
-      const bootstrapModal = new (window as any).bootstrap.Modal(modal);
-      bootstrapModal.show();
-    }
+    console.log('Gestionando detalles de producto:', producto);
+    this.productoSeleccionado = { ...producto }; // Crear copia para evitar problemas de referencia
+
+    // Esperar un tick antes de abrir el modal para asegurar que los datos se carguen
+    setTimeout(() => {
+      const modal = document.getElementById('modalDetallesProducto');
+      if (modal) {
+        const bootstrapModal = new (window as any).bootstrap.Modal(modal);
+        bootstrapModal.show();
+      }
+    }, 10);
   }
 
   eliminarProducto(producto: Producto): void {
@@ -992,6 +1002,7 @@ export class ProductosListComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   onModalCerrado(): void {
+    console.log('Modal cerrado - limpiando producto seleccionado');
     this.productoSeleccionado = null;
   }
 

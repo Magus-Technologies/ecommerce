@@ -35,53 +35,110 @@
                     <div class="col-xl-6">
                         <div class="product-details__left">
 
-                            <!-- ✅ NUEVO LAYOUT VERTICAL PARA IMÁGENES CON ZOOM DINÁMICO -->
-                            <div class="product-details__images-container" *ngIf="imagenesProducto.length > 0">
+                            <!-- ✅ NUEVO LAYOUT VERTICAL PARA IMÁGENES Y VIDEOS CON ZOOM DINÁMICO -->
+                            <div class="product-details__images-container" *ngIf="imagenesProducto.length > 0 || videosProducto.length > 0">
                                 <!-- Thumbnails verticales a la izquierda -->
-                                <div class="product-details__thumbnails" *ngIf="imagenesProducto.length > 1">
-                                    <div 
+                                <div class="product-details__thumbnails" *ngIf="(imagenesProducto.length + videosProducto.length) > 1">
+                                    <!-- Thumbnails de imágenes -->
+                                    <div
                                         class="product-details__thumbnail"
                                         [class.active]="imagen === imagenPrincipal"
                                         *ngFor="let imagen of imagenesProducto; trackBy: trackByImageUrl"
                                         (click)="cambiarImagenPrincipal(imagen)">
-                                        <img 
-                                            [src]="imagen" 
+                                        <img
+                                            [src]="imagen"
                                             [alt]="producto.nombre"
                                             (error)="onImageError($event)"
                                             loading="lazy">
                                     </div>
+
+                                    <!-- Thumbnails de videos -->
+                                    <div
+                                        class="product-details__thumbnail video-thumbnail"
+                                        *ngFor="let video of videosProducto; let i = index"
+                                        title="Video demostrativo">
+                                        <div class="video-thumbnail-content">
+                                            <img
+                                                [src]="getYouTubeThumbnail(video)"
+                                                [alt]="'Video ' + (i + 1) + ' de ' + producto.nombre"
+                                                (error)="onImageError($event)"
+                                                loading="lazy"
+                                                (click)="mostrarVideo(video)">
+                                            <div class="video-play-overlay" (click)="mostrarVideoEnModal(video)">
+                                                <i class="ph ph-play-circle"></i>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <!-- Imagen principal con zoom dinámico -->
+                                <!-- Contenido principal (imagen o video) -->
                                 <div class="product-details__main-image">
-                                    <div 
-                                        class="product-details__main-image-container border border-gray-100 rounded-16"
-                                        [class.zoom-active]="isZoomActive"
-                                        [class.mobile-zoom]="isMobileZoom"
-                                        (mouseenter)="onMouseEnterImage($event)"
-                                        (mouseleave)="onMouseLeaveImage($event)"
-                                        (mousemove)="onMouseMoveImage($event)"
-                                        (click)="toggleMobileZoom()"
-                                        #imageContainer>
-                                        
-                                        <!-- Indicador de zoom -->
-                                        <div class="zoom-indicator" [class.show]="isZoomActive || isMobileZoom">
-                                            {{ isMobileZoom ? 'Toca para alejar' : 'Zoom activo' }}
-                                        </div>
-                                        
-                                        <img 
-                                            *ngIf="imagenPrincipal; else noImage"
-                                            [src]="imagenPrincipal" 
-                                            [alt]="producto.nombre"
-                                            (error)="onImageError($event)"
-                                            #zoomImage>
-                                        
-                                        <ng-template #noImage>
-                                            <div class="product-details__no-image">
-                                                <i class="ph ph-image" style="font-size: 3rem;"></i>
-                                                <span class="ms-3">Sin imagen disponible</span>
+                                    <div class="product-details__main-image-container border border-gray-100 rounded-16 position-relative">
+
+                                        <!-- Mostrar imagen -->
+                                        <div *ngIf="contenidoPrincipal.tipo === 'imagen'"
+                                             [class.zoom-active]="isZoomActive"
+                                             [class.mobile-zoom]="isMobileZoom"
+                                             (mouseenter)="onMouseEnterImage($event)"
+                                             (mouseleave)="onMouseLeaveImage($event)"
+                                             (mousemove)="onMouseMoveImage($event)"
+                                             (click)="toggleMobileZoom()"
+                                             #imageContainer>
+
+                                            <!-- Indicador de zoom -->
+                                            <div class="zoom-indicator" [class.show]="isZoomActive || isMobileZoom">
+                                                {{ isMobileZoom ? 'Toca para alejar' : 'Zoom activo' }}
                                             </div>
-                                        </ng-template>
+
+                                            <!-- Botones de navegación -->
+                                            <div *ngIf="obtenerTotalContenidos() > 1" class="navigation-buttons">
+                                                <button
+                                                    class="nav-btn nav-btn-prev"
+                                                    (click)="anteriorContenido()"
+                                                    title="Contenido anterior">
+                                                    <i class="ph ph-caret-left"></i>
+                                                </button>
+                                                <button
+                                                    class="nav-btn nav-btn-next"
+                                                    (click)="siguienteContenido()"
+                                                    title="Siguiente contenido">
+                                                    <i class="ph ph-caret-right"></i>
+                                                </button>
+                                            </div>
+
+                                            <!-- Contador de contenido -->
+                                            <div *ngIf="obtenerTotalContenidos() > 1" class="content-counter">
+                                                {{ obtenerIndiceActual() }} / {{ obtenerTotalContenidos() }}
+                                            </div>
+
+                                            <img
+                                                *ngIf="contenidoPrincipal.url; else noImage"
+                                                [src]="contenidoPrincipal.url"
+                                                [alt]="producto.nombre"
+                                                (error)="onImageError($event)"
+                                                #zoomImage>
+
+                                            <ng-template #noImage>
+                                                <div class="product-details__no-image">
+                                                    <i class="ph ph-image" style="font-size: 3rem;"></i>
+                                                    <span class="ms-3">Sin imagen disponible</span>
+                                                </div>
+                                            </ng-template>
+                                        </div>
+
+                                        <!-- Mostrar video -->
+                                        <div *ngIf="contenidoPrincipal.tipo === 'video'" class="product-details__video-container">
+                                            <iframe
+                                                [src]="getYouTubeEmbedUrl(contenidoPrincipal.url) | trustUrl"
+                                                frameborder="0"
+                                                allowfullscreen
+                                                class="product-details__video-iframe">
+                                            </iframe>
+                                            <div class="video-info-overlay">
+                                                <i class="ph ph-video me-2"></i>
+                                                Video demostrativo
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -675,6 +732,29 @@
         </div>
     </div>
 </section>
+
+<!-- Modal de Video -->
+<div *ngIf="showVideoModal" class="video-modal-overlay" (click)="cerrarVideoModal()">
+    <div class="video-modal-container" (click)="$event.stopPropagation()">
+        <div class="video-modal-header">
+            <h5 class="video-modal-title">
+                <i class="ph ph-video me-2"></i>
+                Video Demostrativo - {{ producto?.nombre }}
+            </h5>
+            <button class="video-modal-close" (click)="cerrarVideoModal()">
+                <i class="ph ph-x"></i>
+            </button>
+        </div>
+        <div class="video-modal-body">
+            <iframe
+                [src]="currentVideoUrl | trustUrl"
+                frameborder="0"
+                allowfullscreen
+                class="video-modal-iframe">
+            </iframe>
+        </div>
+    </div>
+</div>
 
 <!-- ========================== Similar Product Start ============================= -->
 <section class="new-arrival pb-80" *ngIf="productosRelacionados.length > 0">
