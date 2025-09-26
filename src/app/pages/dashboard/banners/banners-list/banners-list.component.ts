@@ -171,8 +171,8 @@ export class BannersListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   toggleEstado(banner: Banner): void {
-    this.bannersService.actualizarBanner(banner.id, { 
-      activo: !banner.activo 
+    this.bannersService.actualizarBanner(banner.id, {
+      activo: !banner.activo
     }).subscribe({
       next: () => {
         this.cargarBanners();
@@ -181,6 +181,21 @@ export class BannersListComponent implements OnInit, AfterViewInit, OnDestroy {
         console.error('Error al actualizar banner:', error);
       }
     });
+  }
+
+  // ✅ MÉTODOS PARA HOVER EN GALERÍA
+  showOverlay(event: any): void {
+    const overlay = event.currentTarget.querySelector('.banner-overlay');
+    if (overlay) {
+      overlay.style.opacity = '1';
+    }
+  }
+
+  hideOverlay(event: any): void {
+    const overlay = event.currentTarget.querySelector('.banner-overlay');
+    if (overlay) {
+      overlay.style.opacity = '0';
+    }
   }
 
   onBannerGuardado(): void {
