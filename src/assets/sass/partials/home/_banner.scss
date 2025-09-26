@@ -20,19 +20,44 @@
     width: 100vw; /* ✅ ANCHO COMPLETO DE LA PANTALLA */
     /* ✅ REMOVIENDO MÁSCARAS Y FONDOS FIJOS */
     background: transparent;
+
+    /* ✅ ALTURA RESPONSIVE MEJORADA */
+    min-height: 450px;
+
+    // Altura optimizada para diferentes pantallas
+    @include xxl-screen {
+        min-height: 400px;
+    }
+    @include xl-screen {
+        min-height: 350px;
+    }
+    @include lg-screen {
+        min-height: 300px;
+    }
+    @include md-screen {
+        min-height: 280px;
+    }
     @include sm-screen {
+        min-height: 250px; /* ✅ ALTURA REDUCIDA EN MÓVIL */
         -webkit-mask-image: none;
         mask-image: none;
         background-image: url(../../../images/bg/banner-fondo.png);
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        overflow: unset !important;
+        overflow: hidden !important; /* ✅ CAMBIO: hidden para evitar overflow */
     }
+    @include msm-screen {
+        min-height: 200px; /* ✅ ALTURA AÚN MÁS REDUCIDA EN PANTALLAS MUY PEQUEÑAS */
+    }
+    @include xsm-screen {
+        min-height: 180px; /* ✅ ALTURA MÍNIMA PARA MÓVILES PEQUEÑOS */
+    }
+
     &__content {
         max-width: 852px;
         @include xxl-screen {
-            max-width: 750px;   
+            max-width: 750px;
         }
     }
     &__thumb {
@@ -43,7 +68,6 @@
             }
         }
     }
- 
 }
 
 .banner-slider__inner {
@@ -182,6 +206,122 @@
     }
     #banner-next {
         right: 20px;
+    }
+}
+
+/* ✅ MEJORAS ESPECÍFICAS PARA IMÁGENES DEL BANNER EN MÓVIL */
+.banner {
+    .slide {
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+
+            /* ✅ OPTIMIZACIÓN ESPECÍFICA PARA MÓVIL */
+            @include sm-screen {
+                object-fit: cover;
+                object-position: center center;
+                min-height: 250px;
+                max-height: 250px;
+            }
+            @include msm-screen {
+                min-height: 200px;
+                max-height: 200px;
+                object-position: center top; /* ✅ ENFOQUE EN LA PARTE SUPERIOR EN PANTALLAS PEQUEÑAS */
+            }
+            @include xsm-screen {
+                min-height: 180px;
+                max-height: 180px;
+                object-position: center top;
+            }
+        }
+    }
+
+    /* ✅ CONTENEDOR DE SLIDE ESPECÍFICO */
+    .banner-item .w-100 {
+        @include sm-screen {
+            height: 250px !important;
+        }
+        @include msm-screen {
+            height: 200px !important;
+        }
+        @include xsm-screen {
+            height: 180px !important;
+        }
+    }
+
+    /* ✅ CAROUSEL ESPECÍFICO */
+    .carousel {
+        @include sm-screen {
+            height: 250px;
+        }
+        @include msm-screen {
+            height: 200px;
+        }
+        @include xsm-screen {
+            height: 180px;
+        }
+    }
+}
+
+/* ✅ NUEVAS CLASES RESPONSIVAS PARA BANNER */
+.banner-responsive-container {
+    height: 450px; /* Altura por defecto */
+
+    @include xxl-screen {
+        height: 400px;
+    }
+    @include xl-screen {
+        height: 350px;
+    }
+    @include lg-screen {
+        height: 300px;
+    }
+    @include md-screen {
+        height: 280px;
+    }
+    @include sm-screen {
+        height: 250px !important;
+    }
+    @include msm-screen {
+        height: 200px !important;
+    }
+    @include xsm-screen {
+        height: 180px !important;
+    }
+}
+
+.banner-responsive-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+
+    /* ✅ OPTIMIZACIÓN ESPECÍFICA PARA CADA BREAKPOINT */
+    @include xxl-screen {
+        object-position: center center;
+    }
+    @include xl-screen {
+        object-position: center center;
+    }
+    @include lg-screen {
+        object-position: center center;
+    }
+    @include md-screen {
+        object-position: center center;
+    }
+    @include sm-screen {
+        object-position: center center;
+        object-fit: cover; /* ✅ ASEGURAR COVER EN MÓVIL */
+    }
+    @include msm-screen {
+        object-position: center top; /* ✅ ENFOQUE SUPERIOR EN PANTALLAS PEQUEÑAS */
+        object-fit: cover;
+    }
+    @include xsm-screen {
+        object-position: center top;
+        object-fit: cover;
     }
 }
 

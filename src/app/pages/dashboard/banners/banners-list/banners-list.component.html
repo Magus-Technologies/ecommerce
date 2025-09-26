@@ -5,9 +5,11 @@
           <h4 class="text-heading fw-semibold mb-8"> Banners</h4>
           <p class="text-gray-500 mb-0">Administra los banners del sitio web</p>
         </div>
-        <button *ngIf="canCreate$" class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
-                data-bs-toggle="modal" 
-                data-bs-target="#modalCrearBanner">
+      <button *ngIf="canCreate$" class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
+        data-bs-toggle="modal" 
+        data-bs-target="#modalCrearBanner"
+        (click)="abrirNuevoModal()"
+        >
           <i class="ph ph-plus me-8"></i>
           Nuevo Banner
         </button>

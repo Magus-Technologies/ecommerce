@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { CotizacionesService, Cotizacion } from '../../../services/cotizaciones.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-cotizaciones',
@@ -57,22 +58,166 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
   }
 
   convertirACompra(cotizacion: Cotizacion): void {
-    if (confirm(`¿Deseas convertir la cotización ${cotizacion.codigo_cotizacion} en una compra?`)) {
-      console.log('Convirtiendo cotización a compra:', cotizacion);
+    Swal.fire({
+      title: '¿Convertir a compra?',
+      text: `¿Deseas convertir la cotización ${cotizacion.codigo_cotizacion} en una compra?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#198754',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, convertir',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        console.log('Convirtiendo cotización a compra:', cotizacion);
 
-      this.cotizacionesService.convertirACompra(cotizacion.id).subscribe({
-        next: (response) => {
-          if (response.status === 'success') {
-            alert('¡Cotización convertida a compra exitosamente!');
-            this.cargarCotizaciones(); // Recargar la lista
+        this.cotizacionesService.convertirACompra(cotizacion.id).subscribe({
+          next: (response) => {
+            if (response.status === 'success') {
+              Swal.fire({
+                title: '¡Éxito!',
+                text: 'Cotización convertida a compra exitosamente',
+                icon: 'success',
+                confirmButtonColor: '#198754'
+              });
+              this.cargarCotizaciones(); // Recargar la lista
+            }
+          },
+          error: (error) => {
+            console.error('Error convirtiendo cotización:', error);
+            Swal.fire({
+              title: 'Error',
+              text: 'Error al convertir la cotización. Inténtalo de nuevo.',
+              icon: 'error',
+              confirmButtonColor: '#dc3545'
+            });
           }
-        },
-        error: (error) => {
-          console.error('Error convirtiendo cotización:', error);
-          alert('Error al convertir la cotización. Inténtalo de nuevo.');
-        }
-      });
-    }
+        });
+      }
+    });
+  }
+
+  pedirCotizacion(cotizacion: Cotizacion): void {
+    Swal.fire({
+      title: '¿Solicitar procesamiento?',
+      html: `
+        <div class="text-start">
+          <p><strong>Cotización:</strong> ${cotizacion.codigo_cotizacion}</p>
+          <p><strong>Total:</strong> S/ ${cotizacion.total}</p>
+          <p class="text-info mt-3">
+            <i class="ph ph-info-circle"></i>
+            Se notificará al administrador para que procese tu cotización y te contacte pronto.
+          </p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#0dcaf0',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, solicitar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        console.log('Solicitando procesamiento de cotización:', cotizacion);
+
+        // Mostrar loading
+        Swal.fire({
+          title: 'Enviando solicitud...',
+          text: 'Por favor espera mientras notificamos al administrador',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        this.cotizacionesService.pedirCotizacion(cotizacion.id).subscribe({
+          next: (response) => {
+            if (response.status === 'success') {
+              Swal.fire({
+                title: '¡Solicitud enviada!',
+                text: 'Hemos notificado al administrador. Te contactaremos pronto.',
+                icon: 'success',
+                confirmButtonColor: '#198754'
+              });
+              this.cargarCotizaciones(); // Recargar la lista
+            }
+          },
+          error: (error) => {
+            console.error('Error solicitando cotización:', error);
+            Swal.fire({
+              title: 'Error',
+              text: 'Error al enviar la solicitud. Inténtalo de nuevo.',
+              icon: 'error',
+              confirmButtonColor: '#dc3545'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  eliminarCotizacion(cotizacion: Cotizacion): void {
+    Swal.fire({
+      title: '¿Eliminar cotización?',
+      html: `
+        <div class="text-start">
+          <p><strong>Cotización:</strong> ${cotizacion.codigo_cotizacion}</p>
+          <p><strong>Total:</strong> S/ ${cotizacion.total}</p>
+          <p class="text-warning mt-3">
+            <i class="ph ph-warning-circle"></i>
+            Esta acción no se puede deshacer y se perderán todos los datos de la cotización.
+          </p>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        console.log('Eliminando cotización:', cotizacion);
+
+        // Mostrar loading
+        Swal.fire({
+          title: 'Eliminando...',
+          text: 'Por favor espera mientras eliminamos tu cotización',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        this.cotizacionesService.eliminarCotizacion(cotizacion.id).subscribe({
+          next: (response) => {
+            if (response.status === 'success') {
+              Swal.fire({
+                title: '¡Eliminada!',
+                text: 'La cotización ha sido eliminada exitosamente',
+                icon: 'success',
+                confirmButtonColor: '#198754'
+              });
+              this.cargarCotizaciones(); // Recargar la lista
+            }
+          },
+          error: (error) => {
+            console.error('Error eliminando cotización:', error);
+            Swal.fire({
+              title: 'Error',
+              text: 'Error al eliminar la cotización. Inténtalo de nuevo.',
+              icon: 'error',
+              confirmButtonColor: '#dc3545'
+            });
+          }
+        });
+      }
+    });
   }
 
   formatearFecha(fecha: string): string {
