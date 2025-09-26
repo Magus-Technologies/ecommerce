@@ -51,7 +51,9 @@
         <!-- ✅ GALERÍA DE BANNERS -->
         <div class="row" *ngIf="!isLoading && banners.length > 0">
           <div class="col-md-6 col-xl-4 mb-24" *ngFor="let banner of banners">
-            <div class="banner-preview-card card border-0 shadow-sm rounded-12 overflow-hidden position-relative hover-shadow-lg transition-all">
+            <div class="banner-preview-card card border-0 shadow-sm rounded-12 overflow-hidden position-relative hover-shadow-lg transition-all"
+                 (mouseenter)="showOverlay($event)"
+                 (mouseleave)="hideOverlay($event)">
 
               <!-- Badge de orden -->
               <div class="position-absolute top-12 start-12 z-3">
@@ -87,15 +89,18 @@
                   <div class="d-flex gap-8">
                     <!-- Ver enlace -->
                     <a [href]="banner.enlace_url" target="_blank"
-                       class="btn btn-sm bg-white text-dark rounded-pill px-12 py-6"
+                       class="btn btn-sm text-white rounded-pill px-12 py-6 shadow-sm"
+                       style="background-color: var(--info-600); border: none;"
                        title="Ver enlace">
                       <i class="ph ph-arrow-square-out"></i>
                     </a>
 
                     <!-- Toggle estado -->
                     <button *ngIf="canEdit$"
-                            class="btn btn-sm rounded-pill px-12 py-6"
-                            [class]="banner.activo ? 'bg-warning text-dark' : 'bg-success text-white'"
+                            class="btn btn-sm rounded-pill px-12 py-6 shadow-sm"
+                            [style]="banner.activo ?
+                              'background-color: var(--warning-600); color: var(--neutral-900); border: none;' :
+                              'background-color: var(--success-600); color: white; border: none;'"
                             [title]="banner.activo ? 'Desactivar' : 'Activar'"
                             (click)="toggleEstado(banner)">
                       <i class="ph" [class]="banner.activo ? 'ph-eye-slash' : 'ph-eye'"></i>
@@ -103,7 +108,8 @@
 
                     <!-- Editar -->
                     <button *ngIf="canEdit$"
-                            class="btn btn-sm bg-primary text-white rounded-pill px-12 py-6"
+                            class="btn btn-sm text-white rounded-pill px-12 py-6 shadow-sm"
+                            style="background-color: var(--main-600); border: none;"
                             title="Editar banner"
                             (click)="editarBanner(banner)">
                       <i class="ph ph-pencil"></i>
@@ -111,7 +117,8 @@
 
                     <!-- Eliminar -->
                     <button *ngIf="canDelete$"
-                            class="btn btn-sm bg-danger text-white rounded-pill px-12 py-6"
+                            class="btn btn-sm text-white rounded-pill px-12 py-6 shadow-sm"
+                            style="background-color: var(--danger-600); border: none;"
                             title="Eliminar banner"
                             (click)="eliminarBanner(banner.id)">
                       <i class="ph ph-trash"></i>

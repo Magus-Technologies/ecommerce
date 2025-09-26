@@ -1,9 +1,9 @@
 <!-- src/app/pages/index/index.component.html -->
 <!-- ============================ Banner Section Start =============================== -->
-<div class="banner py-40">
-  <div class="container container-lg">
+<div class="banner w-100 p-0">
     <div
-      class="banner-item bg-white rounded-16 overflow-hidden position-relative shadow-sm"
+      class="banner-item position-relative overflow-hidden w-100"
+      style="padding: 0; margin: 0;"
     >
       <a
         href="#featureSection"
@@ -17,24 +17,23 @@
 
       <!-- ✅ SIN IMAGEN DE FONDO - Solo banners dinámicos -->
 
-      <div class="flex-align">
-        <button
-          type="button"
-          id="banner-prev"
-          class="banner-nav-btn flex-center rounded-circle box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
-          (click)="anteriorSlide()"
-        >
-          <i class="ph ph-caret-left"></i>
-        </button>
-        <button
-          type="button"
-          id="banner-next"
-          class="banner-nav-btn flex-center rounded-circle box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
-          (click)="siguienteSlide()"
-        >
-          <i class="ph ph-caret-right"></i>
-        </button>
-      </div>
+      <!-- ✅ BOTONES DE NAVEGACIÓN CON ESTILOS CORRECTOS -->
+      <button
+        type="button"
+        id="banner-prev"
+        class="banner-nav-btn flex-center rounded-circle box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
+        (click)="anteriorSlide()"
+      >
+        <i class="ph ph-caret-left"></i>
+      </button>
+      <button
+        type="button"
+        id="banner-next"
+        class="banner-nav-btn flex-center rounded-circle box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
+        (click)="siguienteSlide()"
+      >
+        <i class="ph ph-caret-right"></i>
+      </button>
 
       <!-- ✅ BANNERS DINÁMICOS -->
       <ngx-slick-carousel
@@ -48,12 +47,10 @@
       >
         <!-- Estado de carga -->
         <div ngxSlickItem *ngIf="isLoadingBanners" class="slide">
-          <div class="banner-slider h-100">
-            <div class="banner-slider__item h-100" style="min-height: 400px">
-              <div class="w-100 h-100 d-flex align-items-center justify-content-center">
-                <div class="placeholder-glow w-100 h-100">
-                  <span class="placeholder col-12 h-100 rounded-16"></span>
-                </div>
+          <div class="w-100" style="height: 450px;">
+            <div class="w-100 h-100 d-flex align-items-center justify-content-center">
+              <div class="placeholder-glow w-100 h-100">
+                <span class="placeholder col-12 h-100"></span>
               </div>
             </div>
           </div>
@@ -61,30 +58,28 @@
 
         <!-- ✅ BANNERS ESTILO MERCADO LIBRE - Solo imagen clickeable -->
         <div ngxSlickItem *ngFor="let banner of bannersDinamicos" class="slide">
-          <div class="banner-slider h-100">
-            <div class="banner-slider__item h-100">
-              <!-- ✅ BANNER OCUPA TODO EL ESPACIO DISPONIBLE -->
-              <a
-                [routerLink]="[banner.enlace_url]"
-                class="d-block w-100 h-100 position-relative overflow-hidden rounded-16 banner-link"
-                style="transition: transform 0.3s ease, box-shadow 0.3s ease; min-height: 400px;"
-                (mouseenter)="onBannerHover($event, true)"
-                (mouseleave)="onBannerHover($event, false)"
-              >
-                <img
-                  [src]="banner.imagen_url || 'assets/images/banner-placeholder.jpg'"
-                  [alt]="'Banner ' + banner.orden"
-                  (error)="onImageError($event)"
-                  class="w-100 h-100"
-                  style="object-fit: cover; object-position: center; transition: transform 0.3s ease;"
-                />
+          <div class="w-100" style="height: 450px;">
+            <!-- ✅ BANNER OCUPA TODO EL ESPACIO DISPONIBLE -->
+            <a
+              [routerLink]="[banner.enlace_url]"
+              class="d-block w-100 h-100 position-relative overflow-hidden banner-link"
+              style="transition: transform 0.3s ease, box-shadow 0.3s ease;"
+              (mouseenter)="onBannerHover($event, true)"
+              (mouseleave)="onBannerHover($event, false)"
+            >
+              <img
+                [src]="banner.imagen_url || 'assets/images/banner-placeholder.jpg'"
+                [alt]="'Banner ' + banner.orden"
+                (error)="onImageError($event)"
+                class="w-100 h-100"
+                style="object-fit: cover; object-position: center; transition: transform 0.3s ease;"
+              />
 
-                <!-- Overlay hover sutil -->
-                <div class="banner-overlay position-absolute top-0 start-0 w-100 h-100"
-                     style="background: rgba(0,0,0,0); transition: background 0.3s ease; pointer-events: none;">
-                </div>
-              </a>
-            </div>
+              <!-- Overlay hover sutil -->
+              <div class="banner-overlay position-absolute top-0 start-0 w-100 h-100"
+                   style="background: rgba(0,0,0,0); transition: background 0.3s ease; pointer-events: none;">
+              </div>
+            </a>
           </div>
         </div>
 
@@ -94,40 +89,33 @@
           *ngIf="!isLoadingBanners && bannersDinamicos.length === 0"
           class="slide"
         >
-          <div class="banner-slider">
-            <div class="banner-slider__item" style="min-height: 400px">
-              <div
-                class="banner-slider__inner flex-center position-relative px-40 py-60"
+          <div class="w-100 d-flex align-items-center justify-content-center" style="height: 450px; background: linear-gradient(135deg, var(--main-600) 0%, var(--main-800) 100%);">
+            <div class="text-center text-white px-4">
+              <span
+                class="d-inline-block bg-white bg-opacity-20 backdrop-blur px-16 py-8 rounded-pill text-sm fw-semibold mb-16"
               >
-                <div class="text-center" style="z-index: 2">
-                  <span
-                    class="d-inline-block bg-main-50 text-main-600 px-16 py-8 rounded-pill text-sm fw-semibold mb-16"
-                  >
-                    Descuento por apertura
-                  </span>
-                  <h1
-                    class="text-white fw-bold mb-24"
-                    style="font-size: 2.5rem; line-height: 1.2"
-                  >
-                    Pedidos en la tienda en tecnología con descuentos
-                  </h1>
-                  <a
-                    [routerLink]="['shop']"
-                    class="btn btn-main d-inline-flex align-items-center rounded-pill gap-8 px-24 py-12 fw-semibold"
-                  >
-                    Ir a la tienda
-                    <span class="icon text-xl d-flex">
-                      <i class="ph ph-shopping-cart-simple"></i>
-                    </span>
-                  </a>
-                </div>
-              </div>
+                Descuento por apertura
+              </span>
+              <h1
+                class="fw-bold mb-24"
+                style="font-size: 2.5rem; line-height: 1.2"
+              >
+                Pedidos en la tienda en tecnología con descuentos
+              </h1>
+              <a
+                [routerLink]="['shop']"
+                class="btn btn-light d-inline-flex align-items-center rounded-pill gap-8 px-24 py-12 fw-semibold"
+              >
+                Ir a la tienda
+                <span class="icon text-xl d-flex">
+                  <i class="ph ph-shopping-cart-simple"></i>
+                </span>
+              </a>
             </div>
           </div>
         </div>
       </ngx-slick-carousel>
     </div>
-  </div>
 </div>
 <!-- ============================ Banner Section End =============================== -->
 <!-- ============================ Inicio de la sección de funciones =============================== -->

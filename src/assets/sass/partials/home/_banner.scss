@@ -1,7 +1,7 @@
 // src\assets\sass\partials\home\_banner.scss
 /* ============================== Banner Css Start ========================== */
 .banner {
-    margin-top: 32px;
+    margin-top: 0; /* ✅ SIN MARGEN SUPERIOR */
     @include sm-screen {
         margin-bottom: 32px;
     }
@@ -15,18 +15,11 @@
 
 .banner-item {
     position: relative;
-    padding-block-start: 80px;
-    padding-block-end: 140px;
-    padding-inline-start: clampCal(16, 142, 992, 1599);
-    padding-inline-end: clampCal(16, 76, 992, 1599);
-    -webkit-mask-image: url(../../../images/bg/banner-bg2.png);
-    mask-image: url(../../../images/bg/banner-bg2.png);
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    background: #E9FFFF;
-    mask-position: top;
-    mask-size: 100% 100%;
-    gap: clampCal(24, 72);
+    padding: 0; /* ✅ SIN PADDING */
+    margin: 0;  /* ✅ SIN MARGIN */
+    width: 100vw; /* ✅ ANCHO COMPLETO DE LA PANTALLA */
+    /* ✅ REMOVIENDO MÁSCARAS Y FONDOS FIJOS */
+    background: transparent;
     @include sm-screen {
         -webkit-mask-image: none;
         mask-image: none;
