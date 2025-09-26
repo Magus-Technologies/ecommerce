@@ -104,6 +104,27 @@ export class PedidosService {
   }
 
   /**
+   * Obtener lista unificada de pedidos y cotizaciones
+   */
+  getPedidosYCotizaciones(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/pedidos/todos-incluyendo-cotizaciones`);
+  }
+
+  /**
+   * Obtener todas las cotizaciones (para admin)
+   */
+  getAllCotizaciones(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/cotizaciones`);
+  }
+
+  /**
+   * Cambiar estado de una cotización
+   */
+  cambiarEstadoCotizacion(cotizacionId: number, data: { estado_cotizacion_id: number; comentario?: string }): Observable<any> {
+    return this.http.patch(`${environment.apiUrl}/cotizaciones/${cotizacionId}/estado`, data);
+  }
+
+  /**
    * Obtener pedido por ID
    */
   getPedido(id: number): Observable<Pedido> {

@@ -58,7 +58,7 @@
 
         <!-- ✅ BANNERS ESTILO MERCADO LIBRE - Solo imagen clickeable -->
         <div ngxSlickItem *ngFor="let banner of bannersDinamicos" class="slide">
-          <div class="w-100" style="height: 450px;">
+          <div class="w-100 banner-responsive-container">
             <!-- ✅ BANNER OCUPA TODO EL ESPACIO DISPONIBLE -->
             <a
               [routerLink]="[banner.enlace_url]"
@@ -71,7 +71,7 @@
                 [src]="banner.imagen_url || 'assets/images/banner-placeholder.jpg'"
                 [alt]="'Banner ' + banner.orden"
                 (error)="onImageError($event)"
-                class="w-100 h-100"
+                class="w-100 h-100 banner-responsive-img"
                 style="object-fit: cover; object-position: center; transition: transform 0.3s ease;"
               />
 
@@ -552,7 +552,7 @@
               <div class="product-card__content p-sm-2 w-100">
                 <h6 class="title text-lg fw-semibold my-12">
                   <a
-                    [routerLink]="['/product-details']"
+                    [routerLink]="['/product-details' , product.id]"
                     class="link text-line-2"
                     >{{ product.nombre }}</a
                   >

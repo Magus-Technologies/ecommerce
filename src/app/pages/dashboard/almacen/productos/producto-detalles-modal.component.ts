@@ -371,15 +371,42 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    // Inicializar con algunos campos por defecto
-    this.agregarEspecificacion()
-    this.agregarCaracteristicaTecnica()
+    // No inicializar campos por defecto aquí, se hará en cargarDetallesProducto
   }
 
   ngOnChanges(): void {
     if (this.producto) {
+      console.log('ngOnChanges - producto:', this.producto);
       this.cargarDetallesProducto()
+    } else {
+      // Si no hay producto, resetear formulario
+      this.resetFormulario()
     }
+  }
+
+  private resetFormulario(): void {
+    this.detallesForm.reset({
+      descripcion_detallada: '',
+      instrucciones_uso: '',
+      garantia: '',
+      politicas_devolucion: '',
+      largo: '',
+      ancho: '',
+      alto: '',
+      peso: ''
+    })
+
+    // Limpiar arrays
+    this.especificaciones.clear()
+    this.caracteristicasTecnicas.clear()
+    this.videos.clear()
+    this.imagenesPreview = []
+    this.imagenesSeleccionadas = []
+    this.imagenesExistentes = []
+
+    // Agregar elementos por defecto
+    this.agregarEspecificacion()
+    this.agregarCaracteristicaTecnica()
   }
 
   // Getters para FormArrays
@@ -468,10 +495,21 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges {
   cargarDetallesProducto(): void {
     if (!this.producto) return
 
+    console.log('Cargando detalles para producto ID:', this.producto.id);
+
     this.almacenService.obtenerDetallesProducto(this.producto.id).subscribe({
       next: (response) => {
+        console.log('Respuesta detalles:', response);
         const detalles = response.detalles
-        
+
+        // Siempre limpiar arrays primero
+        this.especificaciones.clear()
+        this.caracteristicasTecnicas.clear()
+        this.videos.clear()
+        this.imagenesPreview = []
+        this.imagenesSeleccionadas = []
+        this.imagenesExistentes = []
+
         if (detalles) {
           // Cargar datos básicos
           this.detallesForm.patchValue({
@@ -482,19 +520,36 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges {
           })
 
           // Cargar dimensiones
-          if (detalles.dimensiones) {
+          let dimensiones = detalles.dimensiones;
+          if (typeof dimensiones === 'string') {
+            try {
+              dimensiones = JSON.parse(dimensiones);
+            } catch (e) {
+              dimensiones = null;
+            }
+          }
+
+          if (dimensiones) {
             this.detallesForm.patchValue({
-              largo: detalles.dimensiones.largo || '',
-              ancho: detalles.dimensiones.ancho || '',
-              alto: detalles.dimensiones.alto || '',
-              peso: detalles.dimensiones.peso || ''
+              largo: dimensiones.largo || '',
+              ancho: dimensiones.ancho || '',
+              alto: dimensiones.alto || '',
+              peso: dimensiones.peso || ''
             })
           }
 
           // Cargar especificaciones
-          this.especificaciones.clear()
-          if (detalles.especificaciones && detalles.especificaciones.length > 0) {
-            detalles.especificaciones.forEach((spec: any) => {
+          let especificaciones = detalles.especificaciones;
+          if (typeof especificaciones === 'string') {
+            try {
+              especificaciones = JSON.parse(especificaciones);
+            } catch (e) {
+              especificaciones = null;
+            }
+          }
+
+          if (especificaciones && Array.isArray(especificaciones) && especificaciones.length > 0) {
+            especificaciones.forEach((spec: any) => {
               const group = this.fb.group({
                 nombre: [spec.nombre || ''],
                 valor: [spec.valor || '']
@@ -506,9 +561,17 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges {
           }
 
           // Cargar características técnicas
-          this.caracteristicasTecnicas.clear()
-          if (detalles.caracteristicas_tecnicas && detalles.caracteristicas_tecnicas.length > 0) {
-            detalles.caracteristicas_tecnicas.forEach((carac: any) => {
+          let caracteristicasTecnicas = detalles.caracteristicas_tecnicas;
+          if (typeof caracteristicasTecnicas === 'string') {
+            try {
+              caracteristicasTecnicas = JSON.parse(caracteristicasTecnicas);
+            } catch (e) {
+              caracteristicasTecnicas = null;
+            }
+          }
+
+          if (caracteristicasTecnicas && Array.isArray(caracteristicasTecnicas) && caracteristicasTecnicas.length > 0) {
+            caracteristicasTecnicas.forEach((carac: any) => {
               const group = this.fb.group({
                 caracteristica: [carac.caracteristica || ''],
                 detalle: [carac.detalle || '']
@@ -520,19 +583,39 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges {
           }
 
           // Cargar videos
-          this.videos.clear()
-          if (detalles.videos && detalles.videos.length > 0) {
-            detalles.videos.forEach((video: string) => {
+          let videos = detalles.videos;
+          if (typeof videos === 'string') {
+            try {
+              videos = JSON.parse(videos);
+            } catch (e) {
+              videos = null;
+            }
+          }
+
+          if (videos && Array.isArray(videos) && videos.length > 0) {
+            videos.forEach((video: string) => {
               this.videos.push(this.fb.control(video))
             })
           }
 
           // Cargar imágenes existentes
           this.imagenesExistentes = detalles.imagenes_url || []
+        } else {
+          // Si no hay detalles, agregar campos por defecto
+          this.agregarEspecificacion()
+          this.agregarCaracteristicaTecnica()
         }
+
+        console.log('Detalles cargados exitosamente');
       },
       error: (error) => {
         console.error('Error al cargar detalles:', error)
+        // En caso de error, agregar campos por defecto
+        this.especificaciones.clear()
+        this.caracteristicasTecnicas.clear()
+        this.videos.clear()
+        this.agregarEspecificacion()
+        this.agregarCaracteristicaTecnica()
       }
     })
   }

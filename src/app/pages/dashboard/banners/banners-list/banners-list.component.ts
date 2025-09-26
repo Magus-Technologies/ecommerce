@@ -122,6 +122,10 @@ export class BannersListComponent implements OnInit, AfterViewInit, OnDestroy {
       bootstrapModal.show();
     }
   }
+  abrirNuevoModal(): void { 
+    this.bannerSeleccionado = null;
+
+  }
 
   eliminarBanner(id: number): void {
     Swal.fire({

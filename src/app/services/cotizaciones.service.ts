@@ -206,6 +206,46 @@ export class CotizacionesService {
   }
 
   /**
+   * Eliminar cotización
+   */
+  eliminarCotizacion(id: number): Observable<ApiResponse<any>> {
+    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/cotizaciones/${id}`)
+      .pipe(
+        tap(response => {
+          if (response.status === 'success') {
+            console.log('✅ Cotización eliminada:', id);
+            // Refrescar las cotizaciones automáticamente
+            this.obtenerMisCotizaciones().subscribe();
+          }
+        }),
+        catchError(error => {
+          console.error('❌ Error eliminando cotización:', error);
+          throw error;
+        })
+      );
+  }
+
+  /**
+   * Pedir/Solicitar procesamiento de cotización (notifica al admin)
+   */
+  pedirCotizacion(id: number): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/cotizaciones/${id}/pedir`, {})
+      .pipe(
+        tap(response => {
+          if (response.status === 'success') {
+            console.log('✅ Solicitud de cotización enviada:', id);
+            // Refrescar las cotizaciones para actualizar el estado
+            this.obtenerMisCotizaciones().subscribe();
+          }
+        }),
+        catchError(error => {
+          console.error('❌ Error enviando solicitud de cotización:', error);
+          throw error;
+        })
+      );
+  }
+
+  /**
    * Obtener tracking de una cotización
    */
   obtenerTrackingCotizacion(id: number): Observable<ApiResponse<CotizacionDetalle>> {
