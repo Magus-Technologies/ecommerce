@@ -302,6 +302,16 @@ export const routes: Routes = [
         canActivate: [permissionGuard],
         data: { permission: 'usuarios.ver' },
       },
+      // ✅ MÓDULO DE RECOMPENSAS - NUEVO SISTEMA COMPLETO
+      {
+        path: 'recompensas',
+        loadChildren: () =>
+          import('./pages/dashboard/recompensas/recompensas.module').then(
+            (m) => m.RecompensasModule
+          ),
+        canActivate: [permissionGuard],
+        data: { permission: 'recompensas.ver' },
+      },
       // ✅ RUTAS DE ALMACÉN CORREGIDAS
       {
         path: 'almacen',

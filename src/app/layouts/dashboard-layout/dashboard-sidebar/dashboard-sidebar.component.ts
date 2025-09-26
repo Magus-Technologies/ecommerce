@@ -7,10 +7,11 @@ import {
   EventEmitter,
   Input,
   HostListener,
-  OnDestroy
+  OnDestroy,
+  inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { PermissionsService } from '../../../services/permissions.service';
 import { Subscription } from 'rxjs';
@@ -57,12 +58,15 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   puedeVerHorarios = false;
   puedeVerEmpresaInfo = false;
   puedeVerEmailTemplates = false;
-  puedeConfigure = false; // ✅ NUEVO: Para Arma tu PC 
+  puedeConfigure = false; // ✅ NUEVO: Para Arma tu PC
+  puedeVerRecompensas = false; // ✅ NUEVO: Para Recompensas 
 
-
+  // Dropdown state
+  showRecompensasDropdown = false;
 
   isDesktop = false;
   private permisosSub: Subscription | null = null;
+  private router = inject(Router);
 
   constructor(
     private authService: AuthService,
@@ -104,6 +108,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
     this.puedeVerEmpresaInfo = this.permissionsService.hasPermission('empresa_info.ver');
     this.puedeVerEmailTemplates = this.permissionsService.hasPermission('envio_correos.ver');
     this.puedeConfigure = this.permissionsService.hasPermission('categorias.edit'); // ✅ NUEVO
+    this.puedeVerRecompensas = this.permissionsService.hasPermission('recompensas.ver'); // ✅ NUEVO
   }
 
   ngAfterViewInit(): void {
@@ -155,4 +160,36 @@ toggleAlmacen(): void {
   this.isAlmacenOpen = !this.isAlmacenOpen;
 }
 
+
+  toggleRecompensasDropdown(): void {
+    this.showRecompensasDropdown = !this.showRecompensasDropdown;
+  }
+
+  navegarARecompensasSubmodulo(submodulo: string, event: Event): void {
+    // Prevenir el comportamiento por defecto del enlace
+    event.preventDefault();
+    
+    // Cerrar el dropdown
+    this.showRecompensasDropdown = false;
+    
+    // Navegar según el submódulo
+    if (submodulo === 'crear') {
+      // Navegar al wizard de creación
+      this.router.navigate(['/dashboard/recompensas/crear']);
+    } else if (submodulo === 'lista') {
+      // Navegar a la lista de recompensas
+      this.router.navigate(['/dashboard/recompensas/lista']);
+    } else {
+      // Por defecto, navegar a la lista
+      this.router.navigate(['/dashboard/recompensas']);
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.recompensas-dropdown')) {
+      this.showRecompensasDropdown = false;
+    }
+  }
 }

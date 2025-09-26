@@ -1,0 +1,239 @@
+<div class="configuracion-puntos-container">
+  <h4 class="mb-4">
+    <i class="fas fa-coins me-2 text-warning"></i>
+    Configuración de Puntos
+  </h4>
+
+  <div class="row g-4">
+    <!-- Configuración Principal -->
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0">Configuración de Puntos</h6>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <!-- Puntos por Compra -->
+            <div class="col-md-6">
+              <label class="form-label">Puntos por Compra</label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  [(ngModel)]="configuracion.puntos_por_compra"
+                  (ngModelChange)="onConfiguracionChange()"
+                  min="0" 
+                  placeholder="0">
+                <span class="input-group-text">pts</span>
+              </div>
+              <small class="text-muted">Puntos fijos otorgados por cada compra</small>
+            </div>
+
+            <!-- Puntos por Monto -->
+            <div class="col-md-6">
+              <label class="form-label">Puntos por Monto</label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  [(ngModel)]="configuracion.puntos_por_monto"
+                  (ngModelChange)="onConfiguracionChange()"
+                  min="0" 
+                  placeholder="0">
+                <span class="input-group-text">pts</span>
+              </div>
+              <small class="text-muted">Puntos adicionales basados en el monto</small>
+            </div>
+
+            <!-- Puntos por Registro -->
+            <div class="col-md-6">
+              <label class="form-label">Puntos por Registro</label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  [(ngModel)]="configuracion.puntos_registro"
+                  (ngModelChange)="onConfiguracionChange()"
+                  min="0" 
+                  placeholder="0">
+                <span class="input-group-text">pts</span>
+              </div>
+              <small class="text-muted">Puntos otorgados al registrarse</small>
+            </div>
+
+            <!-- Tipo de Cálculo -->
+            <div class="col-md-6">
+              <label class="form-label">Tipo de Cálculo</label>
+              <select 
+                class="form-select" 
+                [(ngModel)]="configuracion.tipo_calculo"
+                (ngModelChange)="onConfiguracionChange()">
+                <option *ngFor="let tipo of tiposCalculo" [value]="tipo.value">
+                  {{ tipo.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Valor del Cálculo -->
+            <div class="col-md-6">
+              <label class="form-label">Valor del Cálculo</label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  [(ngModel)]="configuracion.valor"
+                  (ngModelChange)="onConfiguracionChange()"
+                  min="0" 
+                  step="0.01"
+                  placeholder="0">
+                <span class="input-group-text">
+                  {{ configuracion.tipo_calculo === 'porcentaje' ? '%' : 'pts' }}
+                </span>
+              </div>
+              <small class="text-muted">
+                {{ configuracion.tipo_calculo === 'porcentaje' ? 
+                   'Porcentaje del monto de compra' : 
+                   'Valor fijo de puntos' }}
+              </small>
+            </div>
+
+            <!-- Compra Mínima -->
+            <div class="col-md-6">
+              <label class="form-label">Compra Mínima</label>
+              <div class="input-group">
+                <span class="input-group-text">S/</span>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  [(ngModel)]="configuracion.minimo_compra"
+                  (ngModelChange)="onConfiguracionChange()"
+                  min="0" 
+                  step="0.01"
+                  placeholder="0.00">
+              </div>
+              <small class="text-muted">Monto mínimo para aplicar la recompensa</small>
+            </div>
+
+            <!-- Máximo de Puntos -->
+            <div class="col-md-6">
+              <label class="form-label">Máximo de Puntos</label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  [(ngModel)]="configuracion.maximo_puntos"
+                  (ngModelChange)="onConfiguracionChange()"
+                  min="0" 
+                  placeholder="Sin límite">
+                <span class="input-group-text">pts</span>
+              </div>
+              <small class="text-muted">Límite máximo de puntos por transacción</small>
+            </div>
+
+            <!-- Multiplicador por Nivel -->
+            <div class="col-md-6" *ngIf="configuracion.tipo_calculo === 'escalonado'">
+              <label class="form-label">Multiplicador por Nivel</label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  [(ngModel)]="configuracion.multiplicador_nivel"
+                  (ngModelChange)="onConfiguracionChange()"
+                  min="1" 
+                  step="0.1"
+                  placeholder="1.0">
+                <span class="input-group-text">x</span>
+              </div>
+              <small class="text-muted">Multiplicador aplicado según el nivel del cliente</small>
+            </div>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="d-flex gap-2 mt-4">
+            <button 
+              class="btn btn-outline-secondary" 
+              (click)="resetearConfiguracion()">
+              <i class="fas fa-undo me-2"></i>Resetear
+            </button>
+            <button 
+              class="btn btn-outline-primary" 
+              (click)="simularCalculo()"
+              [disabled]="simulacion.monto_compra <= 0">
+              <i class="fas fa-calculator me-2"></i>Simular
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Simulador -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0">Simulador de Puntos</h6>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Monto de Compra</label>
+            <div class="input-group">
+              <span class="input-group-text">S/</span>
+              <input 
+                type="number" 
+                class="form-control" 
+                [(ngModel)]="simulacion.monto_compra"
+                (ngModelChange)="simularCalculo()"
+                min="0" 
+                step="0.01"
+                placeholder="0.00">
+            </div>
+          </div>
+
+          <div class="alert alert-info">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-coins me-2 text-warning"></i>
+              <div>
+                <strong>Puntos Obtenidos:</strong>
+                <div class="h4 mb-0 text-warning">
+                  <span *ngIf="simulacion.calculando" class="spinner-border spinner-border-sm me-2"></span>
+                  {{ simulacion.puntos_obtenidos | number }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="small text-muted">
+            <p><strong>Cálculo:</strong></p>
+            <ul class="mb-0">
+              <li>Puntos por compra: {{ configuracion.puntos_por_compra }}</li>
+              <li>Puntos por monto: {{ configuracion.puntos_por_monto }}</li>
+              <li>Tipo: {{ configuracion.tipo_calculo | titlecase }}</li>
+              <li *ngIf="configuracion.minimo_compra > 0">
+                Mínimo: S/ {{ configuracion.minimo_compra | number:'1.2-2' }}
+              </li>
+              <li *ngIf="configuracion.maximo_puntos > 0">
+                Máximo: {{ configuracion.maximo_puntos }} pts
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Validación -->
+      <div class="card mt-3">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle me-2" 
+               [class]="validarConfiguracion() ? 'text-success' : 'text-warning'"></i>
+            <div>
+              <strong>Configuración</strong>
+              <div class="small" 
+                   [class]="validarConfiguracion() ? 'text-success' : 'text-warning'">
+                {{ validarConfiguracion() ? 'Completa' : 'Incompleta' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -137,6 +137,81 @@
 
     
 
+      <!-- ✅ Recompensas con Botón Desplegable -->
+      <li *ngIf="puedeVerRecompensas" class="mb-8 recompensas-dropdown">
+        <div class="nav-item-dropdown">
+          <!-- Botón Principal Desplegable -->
+          <button
+            type="button"
+            class="recompensas-toggle-btn"
+            (click)="toggleRecompensasDropdown()"
+            [class.active]="showRecompensasDropdown"
+          >
+            <i class="ph ph-gift text-xl"></i>
+            <span *ngIf="!isCollapsed" class="fw-bold text-lg">Recompensas</span>
+            <i *ngIf="!isCollapsed" class="ph ph-caret-down text-sm transition-2" [class.rotate-180]="showRecompensasDropdown"></i>
+          </button>
+          
+          <!-- Menú Desplegable (solo visible cuando está expandido) -->
+          <div *ngIf="showRecompensasDropdown && !isCollapsed" class="recompensas-menu">
+            <!-- Dashboard -->
+            <a
+              routerLink="/dashboard/recompensas/dashboard"
+              routerLinkActive="active"
+              class="recompensas-item"
+              (click)="showRecompensasDropdown = false"
+            >
+              <i class="ph ph-gauge text-lg"></i>
+              <span>Dashboard</span>
+            </a>
+            
+            <!-- Crear Recompensa -->
+            <a
+              routerLink="/dashboard/recompensas/crear"
+              routerLinkActive="active"
+              class="recompensas-item"
+              (click)="showRecompensasDropdown = false"
+            >
+              <i class="ph ph-plus-circle text-lg"></i>
+              <span>Crear Recompensa</span>
+            </a>
+            
+            <!-- Gestionar -->
+            <a
+              routerLink="/dashboard/recompensas/lista"
+              routerLinkActive="active"
+              class="recompensas-item"
+              (click)="showRecompensasDropdown = false"
+            >
+              <i class="ph ph-gear text-lg"></i>
+              <span>Gestionar</span>
+            </a>
+            
+            <!-- Análisis -->
+            <a
+              routerLink="/dashboard/recompensas/analytics"
+              routerLinkActive="active"
+              class="recompensas-item"
+              (click)="showRecompensasDropdown = false"
+            >
+              <i class="ph ph-chart-line text-lg"></i>
+              <span>Análisis</span>
+            </a>
+            
+            <!-- Auditoría -->
+            <a
+              routerLink="/dashboard/recompensas/auditoria"
+              routerLinkActive="active"
+              class="recompensas-item"
+              (click)="showRecompensasDropdown = false"
+            >
+              <i class="ph ph-arrow-clockwise text-lg"></i>
+              <span>Auditoría</span>
+            </a>
+          </div>
+        </div>
+      </li>
+
       <!-- ✅ NUEVO: Arma tu PC -->
       <li *ngIf="puedeConfigure" class="mb-8">
         <a
