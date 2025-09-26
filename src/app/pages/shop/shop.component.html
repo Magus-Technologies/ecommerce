@@ -173,29 +173,30 @@
                 </div>
                 <!-- Top End -->
 
-           <div class="list-grid-wrapper"
-     [ngClass]="{'list-view': listview === 'list', 'grid-view': listview === 'grid'}">
-    
-    <!-- Loading -->
+           <!-- Loading -->
     <div *ngIf="isLoading" class="text-center py-5 w-100">
         <div class="spinner-border" role="status">
             <span class="visually-hidden">Cargando...</span>
         </div>
     </div>
 
-    <!-- Mensaje si no hay productos - FUERA del contenedor de productos -->
+    <!-- Mensaje si no hay productos -->
     <div *ngIf="!isLoading && productos.length === 0" class="text-center py-5 w-100">
         <h5>No se encontraron productos</h5>
         <p class="text-muted">Intenta con otra categoría</p>
     </div>
 
-    <!-- Contenedor de productos SOLO cuando hay productos -->
-    <div *ngIf="!isLoading && productos.length > 0" class="products-container">
-        <div *ngFor="let producto of productos" 
-             class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2">
+    <!-- Contenedor de productos con layout dinámico -->
+    <div *ngIf="!isLoading && productos.length > 0"
+         class="list-grid-wrapper"
+         [ngClass]="{'list-view': listview === 'list', 'grid-view': listview === 'grid'}">
+
+        <div *ngFor="let producto of productos"
+             class="product-card p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2"
+             [class.h-100]="listview === 'grid'">
             
             <a [routerLink]="['/product-details', producto.id]"
-               class="product-card__thumb flex-center rounded-8 bg-gray-50 position-relative">
+               class="product-card__thumb flex-center rounded-8 position-relative">
                 <!-- ✅ IMAGEN CON MANEJO DE ERRORES -->
                 <img [src]="producto.imagen_principal" 
                      [alt]="producto.nombre" 
@@ -246,28 +247,25 @@
                     </span>
                 </div>
 
-                <!-- ✅ BOTÓN MEJORADO PARA AGREGAR AL CARRITO -->
+                <!-- ✅ BOTÓN IGUAL QUE INDEX - CENTRADO -->
                 <button
                    (click)="addToCart(producto)"
                    [disabled]="producto.stock <= 0"
-                   class="product-card__cart btn hover-bg-main-600 hover-text-white py-11 px-24 rounded-8 flex-center gap-8 fw-medium w-100"
+                   class="product-card__cart btn bg-main-50 text-main-600 hover-bg-main-600 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-24 w-100 justify-content-center"
                    [ngClass]="{
-                     'bg-gray-50 text-heading': producto.stock > 0,
+                     'bg-main-50 text-main-600 hover-bg-main-600 hover-text-white': producto.stock > 0,
                      'bg-gray-200 text-gray-500': producto.stock <= 0
                    }">
                     <span *ngIf="producto.stock > 0">
-                        <i class="ph ph-shopping-cart me-8"></i>
-                        Agregar al carrito
+                        Agregar al carrito <i class="ph ph-shopping-cart"></i>
                     </span>
                     <span *ngIf="producto.stock <= 0">
-                        <i class="ph ph-x-circle me-8"></i>
-                        Sin stock
+                        Sin stock <i class="ph ph-x-circle"></i>
                     </span>
                 </button>
             </div>
         </div>
     </div>
-</div>
 
                 <!-- Pagination Start -->
                 <ul class="pagination flex-center flex-wrap gap-16">

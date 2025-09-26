@@ -15,13 +15,7 @@
         </span>
       </a>
 
-      <!-- Imagen de fondo mantenida -->
-      <img
-        src="assets/images/bg/banner-fondo.png"
-        alt="banner background"
-        class="banner-img position-absolute inset-block-start-0 inset-inline-start-0 w-100 h-100 z-n1 object-fit-cover rounded-16"
-        style="filter: brightness(1.1) contrast(0.9)"
-      />
+      <!-- ✅ SIN IMAGEN DE FONDO - Solo banners dinámicos -->
 
       <div class="flex-align">
         <button
@@ -52,117 +46,44 @@
         (afterChange)="afterChange($event)"
         (beforeChange)="beforeChange($event)"
       >
-        <!-- statdo de carga -->
+        <!-- Estado de carga -->
         <div ngxSlickItem *ngIf="isLoadingBanners" class="slide">
-          <div class="banner-slider">
-            <div class="banner-slider__item" style="min-height: 400px">
-              <div
-                class="banner-slider__inner flex-between position-relative px-40 py-60"
-              >
-                <div class="banner-item__content">
-                  <div class="placeholder-glow">
-                    <span class="placeholder col-6 mb-8"></span>
-                    <span class="placeholder col-8 mb-30"></span>
-                    <span class="placeholder col-4"></span>
-                  </div>
-                </div>
-                <div
-                  class="banner-item__thumb animate-scale animation-delay-12"
-                >
-                  <div class="placeholder-glow">
-                    <span
-                      class="placeholder col-12"
-                      style="height: 200px"
-                    ></span>
-                  </div>
+          <div class="banner-slider h-100">
+            <div class="banner-slider__item h-100" style="min-height: 400px">
+              <div class="w-100 h-100 d-flex align-items-center justify-content-center">
+                <div class="placeholder-glow w-100 h-100">
+                  <span class="placeholder col-12 h-100 rounded-16"></span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Banners dinámicos -->
+        <!-- ✅ BANNERS ESTILO MERCADO LIBRE - Solo imagen clickeable -->
         <div ngxSlickItem *ngFor="let banner of bannersDinamicos" class="slide">
-          <div class="banner-slider">
-            <div
-              class="banner-slider__item"
-              style="min-height: 400px; margin-bottom: 0; padding-bottom: 0"
-            >
-              <div
-                class="banner-slider__inner flex-between position-relative px-40 py-60"
+          <div class="banner-slider h-100">
+            <div class="banner-slider__item h-100">
+              <!-- ✅ BANNER OCUPA TODO EL ESPACIO DISPONIBLE -->
+              <a
+                [routerLink]="[banner.enlace_url]"
+                class="d-block w-100 h-100 position-relative overflow-hidden rounded-16 banner-link"
+                style="transition: transform 0.3s ease, box-shadow 0.3s ease; min-height: 400px;"
+                (mouseenter)="onBannerHover($event, true)"
+                (mouseleave)="onBannerHover($event, false)"
               >
-                <div
-                  class="banner-item__content pe-40"
-                  style="flex: 1; z-index: 2"
-                >
-                  <!-- Subtítulo como badge elegante -->
-                  <span
-                    *ngIf="banner.subtitulo"
-                    class="d-inline-block bg-main-50 text-main-600 px-16 py-8 rounded-pill text-sm fw-semibold mb-16 animate-left-right animation-delay-08"
-                  >
-                    {{ banner.subtitulo }}
-                  </span>
+                <img
+                  [src]="banner.imagen_url || 'assets/images/banner-placeholder.jpg'"
+                  [alt]="'Banner ' + banner.orden"
+                  (error)="onImageError($event)"
+                  class="w-100 h-100"
+                  style="object-fit: cover; object-position: center; transition: transform 0.3s ease;"
+                />
 
-                  <!-- Título principal más prominente -->
-                  <h1
-                    class="banner-item__title text-white fw-bold mb-24 animate-left-right animation-delay-1"
-                    style="
-                      font-size: 2.5rem;
-                      line-height: 1.2;
-                      max-width: 500px;
-                    "
-                  >
-                    {{ banner.titulo }}
-                  </h1>
-
-                  <!-- Contenedor de botón y precio -->
-                  <div
-                    class="d-flex align-items-center gap-24 animate-left-right animation-delay-12"
-                  >
-                    <a
-                      [routerLink]="[banner.enlace_url]"
-                      class="btn btn-white text-main-700 d-inline-flex align-items-center rounded-pill gap-8 px-24 py-12 fw-semibold"
-                    >
-                      {{ banner.texto_boton || "Comprar ahora" }}
-                      <span class="icon text-xl d-flex">
-                        <i class="ph ph-shopping-cart-simple"></i>
-                      </span>
-                    </a>
-
-                    <!-- Precio destacado -->
-                    <div
-                      *ngIf="banner.precio_desde"
-                      class="d-flex align-items-center gap-8"
-                    >
-                      <span class="text-gray-300 text-sm fw-medium">Desde</span>
-                      <h4 class="text-danger-20 mb-0 fw-bold">
-                        S/ {{ banner.precio_desde }}
-                      </h4>
-                    </div>
-                  </div>
+                <!-- Overlay hover sutil -->
+                <div class="banner-overlay position-absolute top-0 start-0 w-100 h-100"
+                     style="background: rgba(0,0,0,0); transition: background 0.3s ease; pointer-events: none;">
                 </div>
-
-                <!-- Imagen del producto -->
-                <div
-                  class="banner-item__thumb animate-scale animation-delay-12"
-                  style="
-                    flex: 0 0 auto;
-                    z-index: 2;
-                    max-width: 350px;
-                    max-height: 280px;
-                  "
-                >
-                  <img
-                    [src]="
-                      banner.imagen_url ||
-                      'assets/images/thumbs/banner-img3.png'
-                    "
-                    [alt]="banner.titulo"
-                    (error)="onImageError($event)"
-                    style="width: 100%; height: 100%; object-fit: contain"
-                  />
-                </div>
-              </div>
+              </a>
             </div>
           </div>
         </div>

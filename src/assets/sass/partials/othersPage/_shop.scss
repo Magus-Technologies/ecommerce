@@ -4,28 +4,88 @@
         display: none;
     }
 }
-.list-grid-wrapper {
+
+// ✅ ESTILOS ESPECÍFICOS SOLO PARA SHOP PAGE - No afecta otros componentes
+.shop .list-grid-wrapper {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 24px;
+    gap: 16px;
+
+    // Default grid view - SOLO para shop
+    &:not(.list-view) {
+        grid-template-columns: repeat(auto-fit, 280px);
+        justify-content: center;
+        grid-auto-rows: 1fr;
+    }
+
+    // SOLO PARA VISTA GRID en shop
+    &.grid-view .product-card {
+        display: flex;
+        flex-direction: column;
+        width: 280px !important;
+        max-width: 280px !important;
+        min-width: 280px !important;
+        height: 100%;
+    }
 }
 
-@media (min-width: 480px) {
-    .list-view {
-        grid-template-columns: repeat(auto-fit, minmax(430px, 1fr));
-        .product-card {
+// ✅ FALLBACK: Estilos originales para otros componentes (index-two)
+.list-grid-wrapper:not(.shop .list-grid-wrapper) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); // ✅ Comportamiento original
+    gap: 24px; // ✅ Gap original
+}
+
+// ✅ Vista de lista SOLO para shop page
+.shop .list-grid-wrapper.list-view {
+    grid-template-columns: repeat(2, 1fr);
+
+    .product-card {
+        display: flex;
+        align-items: stretch;
+        flex-direction: row;
+
+        &__thumb {
+            width: 120px;
+            height: 120px;
+            flex-shrink: 0;
+            margin-right: 16px;
+            margin-bottom: 0;
+            background: transparent !important;
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                object-position: center;
+            }
+        }
+
+        &__content {
+            flex: 1;
+            margin-top: 0;
             display: flex;
-            align-items: center;
-            flex-direction: row;
-            &__thumb {
-                max-width: 200px;
-                height: 100% !important;
-            }
-            &__content {
-                margin-top: 0 !important;
-                margin-left: 20px;
-                flex-grow: 1;
-            }
+            flex-direction: column;
+            justify-content: space-between;
+        }
+    }
+}
+
+// ✅ Responsive SOLO para shop page
+@media (max-width: 992px) {
+    .shop .list-grid-wrapper.list-view {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .shop .list-grid-wrapper.list-view .product-card {
+        flex-direction: column;
+
+        &__thumb {
+            width: 100%;
+            height: 200px;
+            margin-right: 0;
+            margin-bottom: 16px;
         }
     }
 }

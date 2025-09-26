@@ -378,9 +378,37 @@ import {
                       </label>
                     </div>
                   </div>
-                  <small class="text-gray-500 text-xs mt-8 d-block">
-                    Formatos: JPG, PNG, GIF (máx. 2MB)
-                  </small>
+                  <div class="mt-8">
+                    <small class="text-gray-500 text-xs d-block">
+                      <strong>Formatos:</strong> JPG, PNG, GIF (máx. 2MB)
+                    </small>
+                    <small class="text-info text-xs d-block mt-4">
+                      <i class="ph ph-lightbulb me-4"></i>
+                      <strong>Tamaño recomendado:</strong> 400x400px (cuadrado) para mejor visualización
+                    </small>
+                    <small class="text-warning text-xs d-block mt-4">
+                      ⚠️ Imágenes muy anchas o altas pueden verse deformadas en la tienda
+                    </small>
+                  </div>
+
+                  <!-- Mensaje de validación de imagen -->
+                  <div
+                    *ngIf="imageValidationMessage"
+                    class="alert mt-16 py-8 px-12 rounded-6 border-0"
+                    [ngClass]="{
+                      'alert-danger bg-danger-50 text-danger-600': imageValidationType === 'error',
+                      'alert-warning bg-warning-50 text-warning-600': imageValidationType === 'warning'
+                    }"
+                  >
+                    <i
+                      class="ph me-8"
+                      [ngClass]="{
+                        'ph-x-circle': imageValidationType === 'error',
+                        'ph-warning': imageValidationType === 'warning'
+                      }"
+                    ></i>
+                    {{ imageValidationMessage }}
+                  </div>
                 </div>
               </div>
             </form>
@@ -437,6 +465,8 @@ export class ProductoModalComponent implements OnInit, OnChanges {
   selectedImage: File | null = null;
   imagePreview: string | null = null;
   isLoading = false;
+  imageValidationMessage: string = '';
+  imageValidationType: 'error' | 'warning' | '' = '';
 
   constructor(private fb: FormBuilder, private almacenService: AlmacenService) {
     this.productoForm = this.fb.group({
@@ -494,6 +524,7 @@ export class ProductoModalComponent implements OnInit, OnChanges {
       });
       this.imagePreview = null;
       this.selectedImage = null;
+      this.clearImageValidation();
     }
   }
 
@@ -522,14 +553,64 @@ export class ProductoModalComponent implements OnInit, OnChanges {
   onImageSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
+      // Limpiar mensajes anteriores
+      this.clearImageValidation();
+
+      // Validar tamaño del archivo (máx. 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        this.showImageValidation('La imagen es muy grande. El tamaño máximo permitido es 2MB.', 'error');
+        event.target.value = '';
+        this.selectedImage = null;
+        this.imagePreview = null;
+        return;
+      }
+
       this.selectedImage = file;
 
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.imagePreview = e.target.result;
+
+        // Verificar dimensiones de la imagen
+        const img = new Image();
+        img.onload = () => {
+          const width = img.width;
+          const height = img.height;
+
+          // Mostrar advertencia si las dimensiones no son ideales
+          if (width < 200 || height < 200) {
+            this.showImageValidation(
+              `Imagen muy pequeña (${width}x${height}px). Se recomienda usar al menos 400x400px para mejor calidad.`,
+              'warning'
+            );
+          } else if (Math.abs(width - height) > width * 0.3) {
+            // Si la diferencia entre ancho y alto es mayor al 30%
+            this.showImageValidation(
+              `Imagen no cuadrada (${width}x${height}px). Para mejor visualización usa imágenes cuadradas (ej: 400x400px).`,
+              'warning'
+            );
+          } else {
+            // Imagen con buenas dimensiones - mostrar mensaje de éxito
+            this.imageValidationMessage = `¡Perfecto! Imagen con dimensiones ideales (${width}x${height}px).`;
+            this.imageValidationType = 'warning'; // Usamos warning para color verde/azul
+            // Ocultar el mensaje después de 3 segundos
+            setTimeout(() => this.clearImageValidation(), 3000);
+          }
+        };
+        img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     }
+  }
+
+  private showImageValidation(message: string, type: 'error' | 'warning'): void {
+    this.imageValidationMessage = message;
+    this.imageValidationType = type;
+  }
+
+  private clearImageValidation(): void {
+    this.imageValidationMessage = '';
+    this.imageValidationType = '';
   }
 
   onSubmit(): void {
