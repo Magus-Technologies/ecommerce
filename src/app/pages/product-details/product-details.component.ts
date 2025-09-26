@@ -1,7 +1,7 @@
 
 
 // src\app\pages\product-details\product-details.component.ts
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from "@angular/core"
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, Pipe, PipeTransform } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { RouterLink, ActivatedRoute, Router } from "@angular/router"
 import { FormsModule } from "@angular/forms"
@@ -13,12 +13,24 @@ import { CartService } from "../../services/cart.service"
 import { CartNotificationService } from "../../services/cart-notification.service"
 import Swal from "sweetalert2"
 import { environment } from "../../../environments/environment"
-import { DomSanitizer, SafeHtml } from "@angular/platform-browser"
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from "@angular/platform-browser"
+
+@Pipe({
+  name: 'trustUrl',
+  standalone: true
+})
+export class TrustUrlPipe implements PipeTransform {
+  constructor(private sanitizer: DomSanitizer) {}
+
+  transform(url: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+}
 
 @Component({
   selector: "app-product-details",
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, SlickCarouselModule, BreadcrumbComponent, ShippingComponent],
+  imports: [CommonModule, RouterLink, FormsModule, SlickCarouselModule, BreadcrumbComponent, ShippingComponent, TrustUrlPipe],
   templateUrl: "./product-details.component.html",
   styleUrl: "./product-details.component.scss",
 })
@@ -36,6 +48,10 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
   imagenPrincipal = ""
   isZoomActive = false
   isMobileZoom = false
+  videosProducto: string[] = []
+  contenidoPrincipal: { tipo: 'imagen' | 'video', url: string } = { tipo: 'imagen', url: '' }
+  showVideoModal = false
+  currentVideoUrl = ''
   private isMobileDevice = false
   especificacionesProcesadas: any[] = []
   caracteristicasProcesadas: any[] = []
@@ -135,11 +151,134 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
       }
     }
     this.imagenPrincipal = this.imagenesProducto.length > 0 ? this.imagenesProducto[0] : ""
+
+    // Procesar videos demostrativos
+    this.cargarVideos()
+
+    // Establecer contenido principal (imagen por defecto)
+    if (this.imagenesProducto.length > 0) {
+      this.contenidoPrincipal = { tipo: 'imagen', url: this.imagenesProducto[0] }
+    } else if (this.videosProducto.length > 0) {
+      this.contenidoPrincipal = { tipo: 'video', url: this.videosProducto[0] }
+    }
+  }
+
+  private cargarVideos(): void {
+    this.videosProducto = []
+    if (this.detalles?.videos) {
+      try {
+        const videos = typeof this.detalles.videos === 'string'
+          ? JSON.parse(this.detalles.videos)
+          : this.detalles.videos
+
+        if (Array.isArray(videos)) {
+          this.videosProducto = videos.filter(video => video && video.trim() !== '')
+        }
+      } catch (parseError) {
+        console.warn("Error parseando videos de detalles:", parseError)
+      }
+    }
+  }
+
+  getYouTubeEmbedUrl(url: string): string {
+    // Extraer el ID del video de diferentes formatos de URL de YouTube
+    const regexes = [
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
+    ];
+
+    for (const regex of regexes) {
+      const match = url.match(regex);
+      if (match) {
+        return `https://www.youtube.com/embed/${match[1]}`;
+      }
+    }
+
+    return url; // Si no coincide, devolver la URL original
+  }
+
+  getYouTubeThumbnail(url: string): string {
+    const regexes = [
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
+    ];
+
+    for (const regex of regexes) {
+      const match = url.match(regex);
+      if (match) {
+        return `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg`;
+      }
+    }
+
+    return '';
   }
 
   cambiarImagenPrincipal(nuevaImagen: string): void {
     this.imagenPrincipal = nuevaImagen
+    this.contenidoPrincipal = { tipo: 'imagen', url: nuevaImagen }
     this.resetZoom()
+  }
+
+  mostrarVideo(videoUrl: string): void {
+    // Mostrar video en el cuadro principal
+    this.contenidoPrincipal = { tipo: 'video', url: videoUrl }
+    this.resetZoom()
+  }
+
+  mostrarVideoEnModal(videoUrl: string): void {
+    // Mostrar video en modal interno
+    this.currentVideoUrl = this.getYouTubeEmbedUrl(videoUrl)
+    this.showVideoModal = true
+  }
+
+  cerrarVideoModal(): void {
+    this.showVideoModal = false
+    this.currentVideoUrl = ''
+  }
+
+  // Métodos de navegación para imágenes y videos
+  siguienteContenido(): void {
+    const todosLosContenidos = [...this.imagenesProducto, ...this.videosProducto]
+    if (todosLosContenidos.length <= 1) return
+
+    const indiceActual = this.obtenerIndiceContenidoActual()
+    const siguienteIndice = (indiceActual + 1) % todosLosContenidos.length
+    this.cambiarAContenido(siguienteIndice)
+  }
+
+  anteriorContenido(): void {
+    const todosLosContenidos = [...this.imagenesProducto, ...this.videosProducto]
+    if (todosLosContenidos.length <= 1) return
+
+    const indiceActual = this.obtenerIndiceContenidoActual()
+    const anteriorIndice = indiceActual === 0 ? todosLosContenidos.length - 1 : indiceActual - 1
+    this.cambiarAContenido(anteriorIndice)
+  }
+
+  private obtenerIndiceContenidoActual(): number {
+    const todosLosContenidos = [...this.imagenesProducto, ...this.videosProducto]
+    return todosLosContenidos.findIndex(contenido => contenido === this.contenidoPrincipal.url)
+  }
+
+  private cambiarAContenido(indice: number): void {
+    const todosLosContenidos = [...this.imagenesProducto, ...this.videosProducto]
+    const contenido = todosLosContenidos[indice]
+
+    if (this.imagenesProducto.includes(contenido)) {
+      this.cambiarImagenPrincipal(contenido)
+    } else if (this.videosProducto.includes(contenido)) {
+      this.mostrarVideo(contenido)
+    }
+  }
+
+  obtenerTotalContenidos(): number {
+    return this.imagenesProducto.length + this.videosProducto.length
+  }
+
+  obtenerIndiceActual(): number {
+    return this.obtenerIndiceContenidoActual() + 1
   }
 
   onMouseEnterImage(event: MouseEvent): void { if (!this.isMobileDevice) { this.isZoomActive = true; this.updateZoomPosition(event); } }
