@@ -23,144 +23,108 @@ import { BannersService, Banner, BannerCreate } from '../../services/banner.serv
           <div class="modal-body p-24">
             <form [formGroup]="bannerForm" (ngSubmit)="onSubmit()">
               <div class="row">
-                <!-- Información básica -->
+                <!-- ✅ INFORMACIÓN SIMPLIFICADA - Solo lo esencial -->
                 <div class="col-md-8">
                   <div class="mb-16">
-                    <label class="form-label text-heading fw-medium mb-8">Título Principal *</label>
-                    <input type="text" 
+                    <label class="form-label text-heading fw-medium mb-8">URL de Enlace *</label>
+                    <input type="text"
                            class="form-control px-16 py-12 border rounded-8"
-                           [class.is-invalid]="bannerForm.get('titulo')?.invalid && bannerForm.get('titulo')?.touched"
-                           formControlName="titulo"
-                           placeholder="Ej: Ordena tus productos diarios y recibe Express Delivery">
-                    <div class="invalid-feedback" 
-                         *ngIf="bannerForm.get('titulo')?.invalid && bannerForm.get('titulo')?.touched">
-                      El título es requerido (mínimo 5 caracteres)
+                           [class.is-invalid]="bannerForm.get('enlace_url')?.invalid && bannerForm.get('enlace_url')?.touched"
+                           formControlName="enlace_url"
+                           placeholder="/shop">
+                    <div class="invalid-feedback"
+                         *ngIf="bannerForm.get('enlace_url')?.invalid && bannerForm.get('enlace_url')?.touched">
+                      La URL de enlace es requerida
                     </div>
-                  </div>
-
-                  <div class="mb-16">
-                    <label class="form-label text-heading fw-medium mb-8">Subtítulo</label>
-                    <input type="text" 
-                           class="form-control px-16 py-12 border rounded-8"
-                           formControlName="subtitulo"
-                           placeholder="Ej: Ahorre hasta un 50% en su primer pedido">
-                  </div>
-
-                  <div class="mb-16">
-                    <label class="form-label text-heading fw-medium mb-8">Descripción</label>
-                    <textarea class="form-control px-16 py-12 border rounded-8" 
-                              rows="3"
-                              formControlName="descripcion"
-                              placeholder="Descripción adicional del banner..."></textarea>
+                    <small class="text-gray-500 mt-4">
+                      A dónde redirigir cuando el usuario haga clic en el banner
+                    </small>
                   </div>
 
                   <div class="row">
                     <div class="col-md-6 mb-16">
-                      <label class="form-label text-heading fw-medium mb-8">Texto del Botón *</label>
-                      <input type="text" 
-                             class="form-control px-16 py-12 border rounded-8"
-                             [class.is-invalid]="bannerForm.get('texto_boton')?.invalid && bannerForm.get('texto_boton')?.touched"
-                             formControlName="texto_boton"
-                             placeholder="Ej: Explorar Tienda">
-                      <div class="invalid-feedback" 
-                           *ngIf="bannerForm.get('texto_boton')?.invalid && bannerForm.get('texto_boton')?.touched">
-                        El texto del botón es requerido
-                      </div>
-                    </div>
-
-                    <div class="col-md-6 mb-16">
-                      <label class="form-label text-heading fw-medium mb-8">Precio "Desde"</label>
-                      <div class="input-group">
-                        <span class="input-group-text bg-gray-50 border-end-0">S/</span>
-                        <input type="number" 
-                               class="form-control px-16 py-12 border-start-0"
-                               formControlName="precio_desde"
-                               step="0.01"
-                               min="0"
-                               placeholder="60.99">
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="row">
-                    <div class="col-md-8 mb-16">
-                      <label class="form-label text-heading fw-medium mb-8">URL de Enlace *</label>
-                      <input type="text" 
-                             class="form-control px-16 py-12 border rounded-8"
-                             [class.is-invalid]="bannerForm.get('enlace_url')?.invalid && bannerForm.get('enlace_url')?.touched"
-                             formControlName="enlace_url"
-                             placeholder="/shop">
-                      <div class="invalid-feedback" 
-                           *ngIf="bannerForm.get('enlace_url')?.invalid && bannerForm.get('enlace_url')?.touched">
-                        La URL de enlace es requerida
-                      </div>
-                    </div>
-
-                    <div class="col-md-4 mb-16">
                       <label class="form-label text-heading fw-medium mb-8">Orden *</label>
-                      <input type="number" 
+                      <input type="number"
                              class="form-control px-16 py-12 border rounded-8"
                              [class.is-invalid]="bannerForm.get('orden')?.invalid && bannerForm.get('orden')?.touched"
                              formControlName="orden"
                              min="1"
                              placeholder="1">
-                      <div class="invalid-feedback" 
+                      <div class="invalid-feedback"
                            *ngIf="bannerForm.get('orden')?.invalid && bannerForm.get('orden')?.touched">
                         El orden es requerido
                       </div>
+                      <small class="text-gray-500 mt-4">
+                        Orden de aparición en el carrusel
+                      </small>
                     </div>
-                  </div>
 
-                  <div class="form-check">
-                    <input class="form-check-input" 
-                           type="checkbox" 
-                           formControlName="activo"
-                           id="activo">
-                    <label class="form-check-label text-heading fw-medium" for="activo">
-                      Banner activo
-                    </label>
+                    <div class="col-md-6 mb-16">
+                      <div class="form-check mt-32">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               formControlName="activo"
+                               id="activo">
+                        <label class="form-check-label text-heading fw-medium" for="activo">
+                          Banner activo
+                        </label>
+                        <small class="text-gray-500 d-block mt-4">
+                          Solo se mostrarán banners activos
+                        </small>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Imagen -->
+                <!-- ✅ IMAGEN DEL BANNER - Principal y único -->
                 <div class="col-md-4">
-                  <label class="form-label text-heading fw-medium mb-8">Imagen del Banner</label>
+                  <label class="form-label text-heading fw-medium mb-8">
+                    <i class="ph ph-image me-8"></i>
+                    Imagen del Banner *
+                  </label>
                   <div class="upload-area border-2 border-dashed border-gray-200 rounded-8 p-16 text-center"
-                       [class.border-main-600]="imagePreview">
-                    
+                       [class.border-main-600]="imagePreview"
+                       [class.border-danger]="!imagePreview && bannerForm.touched">
+
                     <div *ngIf="!imagePreview" class="text-center">
                       <i class="ph ph-image text-gray-400 text-4xl mb-12"></i>
-                      <p class="text-gray-500 text-sm mb-12">Seleccionar imagen del banner</p>
-                      <label class="btn bg-main-50 text-main-600 px-12 py-6 rounded-6 cursor-pointer text-sm">
+                      <p class="text-gray-600 text-sm mb-8 fw-medium">Banner estilo Mercado Libre</p>
+                      <p class="text-gray-500 text-xs mb-12">Solo imagen, sin texto sobrepuesto</p>
+                      <label class="btn bg-main-600 text-white px-16 py-8 rounded-8 cursor-pointer">
                         <i class="ph ph-upload me-6"></i>
-                        Subir imagen
-                        <input type="file" 
-                               class="d-none" 
+                        Subir Banner
+                        <input type="file"
+                               class="d-none"
                                accept="image/*"
                                (change)="onImageSelected($event)">
                       </label>
                     </div>
 
                     <div *ngIf="imagePreview" class="text-center">
-                      <img [src]="imagePreview" 
-                           alt="Preview" 
-                           class="img-fluid rounded-6 mb-12"
-                           style="max-height: 200px;">
+                      <img [src]="imagePreview"
+                           alt="Preview del banner"
+                           class="img-fluid rounded-8 mb-12"
+                           style="max-height: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                       <br>
                       <label class="btn bg-main-50 text-main-600 px-12 py-6 rounded-6 cursor-pointer text-sm">
                         <i class="ph ph-pencil me-6"></i>
                         Cambiar imagen
-                        <input type="file" 
-                               class="d-none" 
+                        <input type="file"
+                               class="d-none"
                                accept="image/*"
                                (change)="onImageSelected($event)">
                       </label>
                     </div>
                   </div>
-                  <small class="text-gray-500 text-xs mt-8 d-block">
-                    Formatos: JPG, PNG, GIF (máx. 2MB)<br>
-                    Recomendado: 534x270px
-                  </small>
+                  <div class="mt-8">
+                    <small class="text-gray-600 text-xs d-block fw-medium">
+                      <strong>Formatos:</strong> JPG, PNG, GIF (máx. 2MB)
+                    </small>
+                    <small class="text-info text-xs d-block mt-4">
+                      <i class="ph ph-lightbulb me-4"></i>
+                      <strong>Recomendado:</strong> 1200x400px para mejor calidad
+                    </small>
+                  </div>
                 </div>
               </div>
             </form>
@@ -210,12 +174,8 @@ export class BannerModalComponent implements OnInit, OnChanges {
     private fb: FormBuilder,
     private bannersService: BannersService
   ) {
+    // ✅ FORMULARIO SIMPLIFICADO - Solo campos esenciales
     this.bannerForm = this.fb.group({
-      titulo: ['', [Validators.required, Validators.minLength(5)]],
-      subtitulo: [''],
-      descripcion: [''],
-      texto_boton: ['Explorar Tienda', [Validators.required]],
-      precio_desde: [''],
       enlace_url: ['/shop', [Validators.required]],
       orden: [1, [Validators.required, Validators.min(1)]],
       activo: [true]
@@ -226,26 +186,16 @@ export class BannerModalComponent implements OnInit, OnChanges {
 
   ngOnChanges(): void {
     if (this.banner) {
-      // Modo edición
+      // ✅ MODO EDICIÓN - Solo campos esenciales
       this.bannerForm.patchValue({
-        titulo: this.banner.titulo,
-        subtitulo: this.banner.subtitulo,
-        descripcion: this.banner.descripcion,
-        texto_boton: this.banner.texto_boton,
-        precio_desde: this.banner.precio_desde,
         enlace_url: this.banner.enlace_url,
         orden: this.banner.orden,
         activo: this.banner.activo
       });
       this.imagePreview = this.banner.imagen_url || null;
     } else {
-      // Modo creación
+      // ✅ MODO CREACIÓN - Valores por defecto
       this.bannerForm.reset({
-        titulo: '',
-        subtitulo: '',
-        descripcion: '',
-        texto_boton: 'Explorar Tienda',
-        precio_desde: '',
         enlace_url: '/shop',
         orden: 1,
         activo: true
@@ -269,15 +219,24 @@ export class BannerModalComponent implements OnInit, OnChanges {
   }
 
   onSubmit(): void {
-    if (this.bannerForm.valid) {
+    // ✅ VALIDACIÓN PERSONALIZADA: Imagen requerida
+    if (this.bannerForm.valid && (this.selectedImage || this.imagePreview)) {
       this.isLoading = true;
-      
+
+      // ✅ DATOS DEL BANNER con campos predeterminados
       const bannerData: BannerCreate = {
-        ...this.bannerForm.value,
-        imagen: this.selectedImage
+        titulo: 'Banner ' + new Date().getTime(), // Título automático
+        subtitulo: '', // Vacío
+        descripcion: '', // Vacío
+        texto_boton: 'Ver más', // Predeterminado (no se usa)
+        precio_desde: undefined, // Sin precio
+        enlace_url: this.bannerForm.value.enlace_url,
+        orden: this.bannerForm.value.orden,
+        activo: this.bannerForm.value.activo,
+        imagen: this.selectedImage || undefined // ✅ Convierte null a undefined
       };
 
-      const request = this.banner 
+      const request = this.banner
         ? this.bannersService.actualizarBanner(this.banner.id, bannerData)
         : this.bannersService.crearBanner(bannerData);
 
@@ -293,6 +252,10 @@ export class BannerModalComponent implements OnInit, OnChanges {
         }
       });
     } else {
+      // ✅ VALIDACIÓN MEJORADA
+      if (!this.selectedImage && !this.imagePreview) {
+        alert('Por favor selecciona una imagen para el banner');
+      }
       this.markFormGroupTouched();
     }
   }

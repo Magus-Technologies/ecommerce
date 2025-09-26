@@ -39,6 +39,7 @@ import {
       <button
         class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
         *ngIf="permissionsService.canCreateProductos()"
+        (click)="nuevoProducto()"
         data-bs-toggle="modal"
         data-bs-target="#modalCrearProducto"
       >
@@ -319,6 +320,7 @@ import {
           <button
             class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
             *ngIf="permissionsService.canCreateProductos()"
+            (click)="nuevoProducto()"
             data-bs-toggle="modal"
             data-bs-target="#modalCrearProducto"
           >
@@ -893,6 +895,10 @@ export class ProductosListComponent implements OnInit, AfterViewInit, OnDestroy 
         this.isLoading = false;
       },
     });
+  }
+
+  nuevoProducto(): void {
+    this.productoSeleccionado = null;
   }
 
   editarProducto(producto: Producto): void {

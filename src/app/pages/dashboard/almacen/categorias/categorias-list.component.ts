@@ -38,7 +38,8 @@ import {
       </div>
       <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
         *ngIf="permissionsService.canCreateCategorias()"
-        data-bs-toggle="modal" 
+        (click)="nuevaCategoria()"
+        data-bs-toggle="modal"
         data-bs-target="#modalCrearCategoria">
         <i class="ph ph-plus me-8"></i>
         Nueva Categoría
@@ -248,8 +249,9 @@ import {
           <p class="text-gray-500 mb-16">Aún no has creado ninguna categoría</p>
           <button
             class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
-            *ngIf="permissionsService.canCreateCategorias()"       
-            data-bs-toggle="modal" 
+            *ngIf="permissionsService.canCreateCategorias()"
+            (click)="nuevaCategoria()"
+            data-bs-toggle="modal"
             data-bs-target="#modalCrearCategoria"
           >
             <i class="ph ph-plus me-8"></i>
@@ -700,6 +702,10 @@ export class CategoriasListComponent implements OnInit, AfterViewInit, OnDestroy
         this.isLoading = false
       },
     })
+  }
+
+  nuevaCategoria(): void {
+    this.categoriaSeleccionada = null
   }
 
   editarCategoria(categoria: Categoria): void {

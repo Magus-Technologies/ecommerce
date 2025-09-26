@@ -125,27 +125,11 @@
 <div class="flex-grow-1 ms-20">
   
   <div>
-    <!-- Top Start (similar a shop.component.html) -->
+    <!-- Top Start -->
     <div class="flex-between gap-16 flex-wrap mb-40">
       <span class="text-gray-900">
         Mostrando {{ productos.length }} de {{ totalProductos }} resultados
       </span>
-      <div class="position-relative flex-align gap-16 flex-wrap">
-        <!-- List/Grid Toggle (opcional, puedes quitarlo si solo quieres grid) -->
-        <div class="list-grid-btns flex-align gap-16">
-          <button
-            type="button"
-            class="w-44 h-44 flex-center border rounded-6 text-2xl grid-btn"
-            [ngClass]="{
-              'border-gray-100 text-gray-700': listview !== 'grid',
-              'border-main-600 text-white bg-main-600': listview === 'grid'
-            }"
-            (click)="listview = 'grid'"
-          >
-            <i class="ph ph-squares-four"></i>
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- Contenedor de productos -->
@@ -186,7 +170,7 @@
           >
             <a
               [routerLink]="['/product-details', producto.id]"
-              class="product-card__thumb d-block rounded-8 bg-gray-50 position-relative overflow-hidden"
+              class="product-card__thumb d-block rounded-8 position-relative overflow-hidden"
               style="height: 200px"
             >
               <img
@@ -237,22 +221,21 @@
                 </span>
               </div>
 
+              <!-- ✅ BOTÓN IGUAL QUE INDEX - CENTRADO -->
               <button
                 (click)="addToCart(producto)"
                 [disabled]="producto.stock <= 0"
-                class="btn btn-main text-white py-11 px-24 rounded-8 flex-center gap-8 fw-medium"
+                class="product-card__cart btn bg-main-50 text-main-600 hover-bg-main-600 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-24 w-100 justify-content-center"
                 [ngClass]="{
-                  'btn-main': producto.stock > 0,
-                  'btn-secondary': producto.stock <= 0
+                  'bg-main-50 text-main-600 hover-bg-main-600 hover-text-white': producto.stock > 0,
+                  'bg-gray-200 text-gray-500': producto.stock <= 0
                 }"
               >
                 <span *ngIf="producto.stock > 0">
-                  <i class="ph ph-shopping-cart me-8"></i>
-                  Agregar al carrito
+                  Agregar al carrito <i class="ph ph-shopping-cart"></i>
                 </span>
                 <span *ngIf="producto.stock <= 0">
-                  <i class="ph ph-x-circle me-8"></i>
-                  Sin stock
+                  Sin stock <i class="ph ph-x-circle"></i>
                 </span>
               </button>
             </div>

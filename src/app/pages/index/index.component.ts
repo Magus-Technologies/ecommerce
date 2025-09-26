@@ -1066,6 +1066,27 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     img.src = 'assets/images/thumbs/feature-img10.png';
   }
 
+  // ✅ MÉTODO PARA HOVER EFFECT EN BANNERS
+  onBannerHover(event: any, isHovering: boolean): void {
+    const bannerLink = event.currentTarget as HTMLElement;
+    const img = bannerLink.querySelector('img') as HTMLImageElement;
+    const overlay = bannerLink.querySelector('.banner-overlay') as HTMLElement;
+
+    if (isHovering) {
+      // Hover IN
+      bannerLink.style.transform = 'scale(1.02)';
+      bannerLink.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+      if (img) img.style.transform = 'scale(1.05)';
+      if (overlay) overlay.style.background = 'rgba(0,0,0,0.1)';
+    } else {
+      // Hover OUT
+      bannerLink.style.transform = 'scale(1)';
+      bannerLink.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+      if (img) img.style.transform = 'scale(1)';
+      if (overlay) overlay.style.background = 'rgba(0,0,0,0)';
+    }
+  }
+
   topProductSlides = [
     {
       imgSrc: 'assets/images/thumbs/short-product-img5.png',

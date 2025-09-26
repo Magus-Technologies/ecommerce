@@ -36,7 +36,8 @@ import {
       </div>
       <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
               *ngIf="permissionsService.canCreateMarcas()"
-              data-bs-toggle="modal" 
+              (click)="nuevaMarca()"
+              data-bs-toggle="modal"
               data-bs-target="#modalCrearMarca">
         <i class="ph ph-plus me-8"></i>
         Nueva Marca
@@ -237,7 +238,8 @@ import {
           <button
             class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
             *ngIf="permissionsService.canCreateMarcas()"
-            data-bs-toggle="modal" 
+            (click)="nuevaMarca()"
+            data-bs-toggle="modal"
             data-bs-target="#modalCrearMarca"
           >
             <i class="ph ph-plus me-8"></i>
@@ -685,6 +687,10 @@ const sidebarListener = () => {
         this.isLoading = false
       },
     })
+  }
+
+  nuevaMarca(): void {
+    this.marcaSeleccionada = null
   }
 
   editarMarca(marca: MarcaProducto): void {
