@@ -108,7 +108,7 @@ export class MotorizadosFormComponent implements OnInit {
 
       // Campos para crear usuario
       crear_usuario: [false],
-      password: ['']
+      password: ['', [Validators.minLength(6)]]
     });
   }
 
@@ -364,6 +364,14 @@ export class MotorizadosFormComponent implements OnInit {
         // Verificar si se crearon credenciales
         if (response.usuario_creado && response.credenciales) {
           this.credencialesGeneradas = response.credenciales;
+
+          // Verificar si se usó la contraseña del usuario o se generó automática
+          const passwordIngresado = this.motorizadoForm.get('password')?.value;
+          const mensajePassword = passwordIngresado && passwordIngresado.trim() !== ''
+            ? 'Se ha usado la contraseña que especificaste.'
+            : 'Se generó una contraseña automática segura.';
+
+          this.toastr.success(`¡Motorizado Creado Exitosamente!\nSe han generado las credenciales de acceso. ${mensajePassword}`);
           this.mostrarModalCredenciales(response);
         } else {
           this.toastr.success('Motorizado creado exitosamente');
@@ -388,7 +396,16 @@ export class MotorizadosFormComponent implements OnInit {
     const formValue = this.motorizadoForm.value;
     
     console.log('Preparing FormData from:', formValue);
-  
+
+    // Verificar específicamente la contraseña
+    const passwordValue = formValue['password'];
+    console.log('🔑 PASSWORD DEBUG:', {
+      passwordValue: passwordValue,
+      passwordLength: passwordValue ? passwordValue.length : 0,
+      passwordTrimmed: passwordValue ? passwordValue.trim() : '',
+      isEmpty: !passwordValue || passwordValue.trim() === ''
+    });
+
     // Append all form values except UI-only fields
     Object.keys(formValue).forEach(key => {
       // Skip departamento and provincia as they're only for UI, ubigeo contains the final value
@@ -396,9 +413,13 @@ export class MotorizadosFormComponent implements OnInit {
         console.log(`Skipping ${key}: ${formValue[key]}`);
         return;
       }
-      
+
       const value = formValue[key] || '';
-      console.log(`Adding ${key}: ${value}`);
+      if (key === 'password') {
+        console.log(`🔑 Adding password to FormData: "${value}" (length: ${value.length})`);
+      } else {
+        console.log(`Adding ${key}: ${value}`);
+      }
       formData.append(key, value);
     });
   

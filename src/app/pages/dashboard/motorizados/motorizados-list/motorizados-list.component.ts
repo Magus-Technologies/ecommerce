@@ -273,17 +273,19 @@ export class MotorizadosListComponent implements OnInit, AfterViewInit, OnDestro
 
   resetearPassword(id: number, username: string): void {
     Swal.fire({
-      title: '¿Resetear contraseña?',
-      text: `¿Deseas resetear la contraseña del usuario ${username}? Se enviará una nueva contraseña por correo.`,
+      title: '¿Generar nueva contraseña?',
+      text: `¿Deseas generar una nueva contraseña automática para ${username}? Se enviará la nueva contraseña por correo electrónico y la anterior dejará de funcionar.`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Sí, resetear',
+      confirmButtonText: 'Sí, generar nueva',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#3b82f6'
     }).then((result) => {
       if (result.isConfirmed) {
+        console.log('📧 Enviando reseteo de contraseña para motorizado ID:', id, 'username:', username);
         this.motorizadosService.resetearPassword(id).subscribe({
-          next: () => {
+          next: (response) => {
+            console.log('📧 Respuesta del reseteo:', response);
             Swal.fire({
               title: '¡Contraseña reseteada!',
               text: 'Se ha enviado la nueva contraseña por correo electrónico',

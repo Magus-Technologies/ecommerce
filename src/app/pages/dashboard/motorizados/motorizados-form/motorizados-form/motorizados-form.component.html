@@ -522,8 +522,23 @@
                   id="password"
                   formControlName="password"
                   class="form-control px-16 py-12 border rounded-8"
-                  placeholder="Dejar vacío para generar automáticamente">
-                <small class="text-muted">Mínimo 6 caracteres. Se generará automáticamente si no se especifica</small>
+                  [class.is-invalid]="motorizadoForm.get('password')?.invalid && motorizadoForm.get('password')?.touched && motorizadoForm.get('password')?.value?.trim() !== ''"
+                  [class.is-valid]="motorizadoForm.get('password')?.valid && motorizadoForm.get('password')?.value?.trim() !== ''"
+                  placeholder="Ingresa una contraseña o déjalo vacío para generar automáticamente">
+
+                <!-- Mensaje de error para contraseña -->
+                <div *ngIf="motorizadoForm.get('password')?.invalid && motorizadoForm.get('password')?.touched && motorizadoForm.get('password')?.value?.trim() !== ''"
+                     class="invalid-feedback">
+                  La contraseña debe tener al menos 6 caracteres
+                </div>
+
+                <!-- Mensaje de éxito para contraseña -->
+                <div *ngIf="motorizadoForm.get('password')?.valid && motorizadoForm.get('password')?.value?.trim() !== ''"
+                     class="valid-feedback">
+                  Contraseña válida - se usará esta contraseña
+                </div>
+
+                <small class="text-muted">Mínimo 6 caracteres. Si especificas una contraseña, debe ser segura (mín. 6 caracteres)</small>
               </div>
             </div>
 

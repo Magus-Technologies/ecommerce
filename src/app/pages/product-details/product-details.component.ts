@@ -185,7 +185,8 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     const regexes = [
       /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
       /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
-      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
     ];
 
     for (const regex of regexes) {
@@ -202,7 +203,8 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     const regexes = [
       /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
       /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
-      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
     ];
 
     for (const regex of regexes) {
@@ -229,7 +231,7 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
 
   mostrarVideoEnModal(videoUrl: string): void {
     // Mostrar video en modal interno
-    this.currentVideoUrl = this.getYouTubeEmbedUrl(videoUrl)
+    this.currentVideoUrl = videoUrl // Guardamos la URL original, el embed se maneja en el template
     this.showVideoModal = true
   }
 
@@ -279,6 +281,34 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
 
   obtenerIndiceActual(): number {
     return this.obtenerIndiceContenidoActual() + 1
+  }
+
+  // Función universal para obtener URL de embed de diferentes plataformas
+  getVideoEmbedUrl(url: string): string {
+    // YouTube (incluye Shorts)
+    const youtubeRegexes = [
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
+    ];
+
+    for (const regex of youtubeRegexes) {
+      const match = url.match(regex);
+      if (match) {
+        return `https://www.youtube.com/embed/${match[1]}`;
+      }
+    }
+
+    // Vimeo
+    const vimeoMatch = url.match(/(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)/);
+    if (vimeoMatch) {
+      return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    }
+
+    // Para TikTok e Instagram, devolvemos la URL original
+    // Nota: Estos formatos no se pueden embedear directamente
+    return url;
   }
 
   onMouseEnterImage(event: MouseEvent): void { if (!this.isMobileDevice) { this.isZoomActive = true; this.updateZoomPosition(event); } }
