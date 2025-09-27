@@ -114,6 +114,66 @@ import { BannersService, BannerPromocional, BannerPromocionalCreate } from '../.
                         Tiempo de espera antes de la animación (0-3000ms)
                       </small>
                     </div>
+
+                    <!-- Colores personalizados -->
+                    <div class="col-12 mb-16">
+                      <h6 class="text-heading fw-semibold mb-12">Personalización de Colores</h6>
+                      <div class="row">
+                        <div class="col-md-4 mb-16">
+                          <label class="form-label text-heading fw-medium mb-8">Color de Fondo</label>
+                          <div class="d-flex align-items-center gap-8">
+                            <input type="color" 
+                                  class="form-control form-control-color border rounded-8"
+                                  formControlName="color_fondo"
+                                  style="width: 50px; height: 38px;">
+                            <input type="text" 
+                                  class="form-control px-16 py-12 border rounded-8"
+                                  formControlName="color_fondo"
+                                  placeholder="#ffffff"
+                                  pattern="^#[0-9A-Fa-f]{6}$">
+                          </div>
+                          <small class="text-gray-500 text-xs mt-4 d-block">
+                            Color de fondo del banner
+                          </small>
+                        </div>
+
+                        <div class="col-md-4 mb-16">
+                          <label class="form-label text-heading fw-medium mb-8">Color del Botón</label>
+                          <div class="d-flex align-items-center gap-8">
+                            <input type="color" 
+                                  class="form-control form-control-color border rounded-8"
+                                  formControlName="color_boton"
+                                  style="width: 50px; height: 38px;">
+                            <input type="text" 
+                                  class="form-control px-16 py-12 border rounded-8"
+                                  formControlName="color_boton"
+                                  placeholder="#0d6efd"
+                                  pattern="^#[0-9A-Fa-f]{6}$">
+                          </div>
+                          <small class="text-gray-500 text-xs mt-4 d-block">
+                            Color de fondo del botón
+                          </small>
+                        </div>
+
+                        <div class="col-md-4 mb-16">
+                          <label class="form-label text-heading fw-medium mb-8">Color del Texto</label>
+                          <div class="d-flex align-items-center gap-8">
+                            <input type="color" 
+                                  class="form-control form-control-color border rounded-8"
+                                  formControlName="color_texto"
+                                  style="width: 50px; height: 38px;">
+                            <input type="text" 
+                                  class="form-control px-16 py-12 border rounded-8"
+                                  formControlName="color_texto"
+                                  placeholder="#212529"
+                                  pattern="^#[0-9A-Fa-f]{6}$">
+                          </div>
+                          <small class="text-gray-500 text-xs mt-4 d-block">
+                            Color del texto del botón
+                          </small>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="form-check">
@@ -222,6 +282,9 @@ export class BannerPromocionalModalComponent implements OnInit, OnChanges {
       enlace_url: ['/shop', [Validators.required]],
       orden: [1, [Validators.required, Validators.min(1), Validators.max(4)]],
       animacion_delay: [400, [Validators.min(0), Validators.max(3000)]],
+      color_fondo: ['#ffffff'],
+      color_boton: ['#0d6efd'],
+      color_texto: ['#212529'],
       activo: [true]
     });
   }
@@ -231,13 +294,16 @@ export class BannerPromocionalModalComponent implements OnInit, OnChanges {
   ngOnChanges(): void {
     if (this.banner) {
       // Modo edición
-      this.bannerForm.patchValue({
+     this.bannerForm.patchValue({
         titulo: this.banner.titulo,
         precio: this.banner.precio,
         texto_boton: this.banner.texto_boton,
         enlace_url: this.banner.enlace_url,
         orden: this.banner.orden,
         animacion_delay: this.banner.animacion_delay,
+        color_fondo: this.banner.color_fondo || '#ffffff',
+        color_boton: this.banner.color_boton || '#0d6efd',
+        color_texto: this.banner.color_texto || '#212529',
         activo: this.banner.activo
       });
       this.imagePreview = this.banner.imagen_url || null;
@@ -250,6 +316,9 @@ export class BannerPromocionalModalComponent implements OnInit, OnChanges {
         enlace_url: '/shop',
         orden: 1,
         animacion_delay: 400,
+        color_fondo: '#ffffff',
+        color_boton: '#0d6efd',
+        color_texto: '#212529',
         activo: true
       });
       this.imagePreview = null;

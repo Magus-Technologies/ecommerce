@@ -240,6 +240,10 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.bannersService.obtenerBannersPromocionalesPublicos().subscribe({
       next: (banners) => {
         console.log('Debug: Banners Promocionales recibidos:', banners); // <-- DEBUG
+        
+        console.log('Debug: Primer banner completo:', JSON.stringify(banners[0], null, 2));
+        this.promotionalBanners = banners;
+        this.isLoadingPromotionalBanners = false;
         this.promotionalBanners = banners;
         this.isLoadingPromotionalBanners = false;
       },

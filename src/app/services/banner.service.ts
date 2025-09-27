@@ -32,7 +32,6 @@ export interface BannerCreate {
   orden: number;
 }
 
-// ✅ NUEVA INTERFAZ PARA BANNERS PROMOCIONALES
 export interface BannerPromocional {
   id: number;
   titulo: string;
@@ -42,6 +41,9 @@ export interface BannerPromocional {
   enlace_url: string;
   orden: number;
   animacion_delay: number;
+  color_fondo?: string;
+  color_boton?: string;
+  color_texto?: string;
   activo: boolean;
   created_at?: string;
   updated_at?: string;
@@ -50,11 +52,14 @@ export interface BannerPromocional {
 export interface BannerPromocionalCreate {
   titulo: string;
   precio?: number;
-  texto_boton: string;  // ← Nueva línea agregada
+  texto_boton: string;
   imagen?: File;
   enlace_url: string;
   orden: number;
   animacion_delay?: number;
+  color_fondo?: string;
+  color_boton?: string;
+  color_texto?: string;
   activo: boolean;
 }
 
@@ -185,6 +190,11 @@ export class BannersService {
     if (bannerData.animacion_delay) formData.append('animacion_delay', bannerData.animacion_delay.toString());
     formData.append('activo', bannerData.activo ? '1' : '0');
     
+    // Agrega después de estas líneas:
+    if (bannerData.color_fondo) formData.append('color_fondo', bannerData.color_fondo);
+    if (bannerData.color_boton) formData.append('color_boton', bannerData.color_boton);
+    if (bannerData.color_texto) formData.append('color_texto', bannerData.color_texto);
+
     if (bannerData.imagen) {
       formData.append('imagen', bannerData.imagen);
     }
@@ -203,6 +213,11 @@ export class BannersService {
     if (bannerData.animacion_delay !== undefined) formData.append('animacion_delay', bannerData.animacion_delay.toString());
     if (bannerData.activo !== undefined) formData.append('activo', bannerData.activo ? '1' : '0');
     
+    // Agrega después de estas líneas:
+    if (bannerData.color_fondo) formData.append('color_fondo', bannerData.color_fondo);
+    if (bannerData.color_boton) formData.append('color_boton', bannerData.color_boton);
+    if (bannerData.color_texto) formData.append('color_texto', bannerData.color_texto);
+
     if (bannerData.imagen) {
       formData.append('imagen', bannerData.imagen);
     }
