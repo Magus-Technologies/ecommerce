@@ -557,19 +557,32 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges, OnDest
   isValidVideoUrl(url: string): boolean {
     if (!url || url.trim() === '') return false;
 
-    // Validar URLs de YouTube
+    // Validar URLs de YouTube (videos normales)
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)[a-zA-Z0-9_-]{11}/;
-    return youtubeRegex.test(url);
+
+    // Validar URLs de YouTube Shorts
+    const youtubeShortsRegex = /^(https?:\/\/)?(www\.)?youtube\.com\/shorts\/[a-zA-Z0-9_-]{11}/;
+
+    // Validar URLs de TikTok
+    const tiktokRegex = /^(https?:\/\/)?(www\.)?(tiktok\.com\/@[\w.-]+\/video\/\d+|vm\.tiktok\.com\/[a-zA-Z0-9]+|tiktok\.com\/t\/[a-zA-Z0-9]+)/;
+
+    // Validar URLs de Instagram Reels
+    const instagramRegex = /^(https?:\/\/)?(www\.)?instagram\.com\/(reel|p)\/[a-zA-Z0-9_-]+/;
+
+    // Validar URLs de Vimeo
+    const vimeoRegex = /^(https?:\/\/)?(www\.)?vimeo\.com\/\d+/;
+
+    return youtubeRegex.test(url) || youtubeShortsRegex.test(url) || tiktokRegex.test(url) || instagramRegex.test(url) || vimeoRegex.test(url);
   }
 
   previewVideo(url: string): void {
     if (!this.isValidVideoUrl(url)) {
-      alert('URL de video no válida. Asegúrate de usar una URL de YouTube válida.');
+      alert('URL de video no válida. Formatos soportados: YouTube, YouTube Shorts, TikTok, Instagram Reels, Vimeo.');
       return;
     }
 
     // Convertir URL a formato embed
-    const embedUrl = this.getYouTubeEmbedUrl(url);
+    const embedUrl = this.getVideoEmbedUrl(url);
 
     // Abrir en una nueva ventana pequeña para preview
     const width = 800;
@@ -589,7 +602,8 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges, OnDest
     const regexes = [
       /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
       /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
-      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
     ];
 
     for (const regex of regexes) {
@@ -600,6 +614,40 @@ export class ProductoDetallesModalComponent implements OnInit, OnChanges, OnDest
     }
 
     return url; // Si no coincide, devolver la URL original
+  }
+
+  // Función universal para obtener URL de embed de diferentes plataformas
+  private getVideoEmbedUrl(url: string): string {
+    // YouTube (incluye Shorts)
+    const youtubeRegexes = [
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/
+    ];
+
+    for (const regex of youtubeRegexes) {
+      const match = url.match(regex);
+      if (match) {
+        return `https://www.youtube.com/embed/${match[1]}`;
+      }
+    }
+
+    // Vimeo
+    const vimeoMatch = url.match(/(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)/);
+    if (vimeoMatch) {
+      return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    }
+
+    // Para TikTok e Instagram, abrimos la URL original ya que no tienen embed directo
+    const tiktokRegex = /^(https?:\/\/)?(www\.)?(tiktok\.com\/@[\w.-]+\/video\/\d+|vm\.tiktok\.com\/[a-zA-Z0-9]+|tiktok\.com\/t\/[a-zA-Z0-9]+)/;
+    const instagramRegex = /^(https?:\/\/)?(www\.)?instagram\.com\/(reel|p)\/[a-zA-Z0-9_-]+/;
+
+    if (tiktokRegex.test(url) || instagramRegex.test(url)) {
+      return url; // Para TikTok e Instagram, devolver URL original
+    }
+
+    return url; // Si no coincide con ningún formato, devolver URL original
   }
 
   // Métodos para imágenes

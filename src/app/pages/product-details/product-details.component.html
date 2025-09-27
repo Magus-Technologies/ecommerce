@@ -129,7 +129,7 @@
                                         <!-- Mostrar video -->
                                         <div *ngIf="contenidoPrincipal.tipo === 'video'" class="product-details__video-container">
                                             <iframe
-                                                [src]="getYouTubeEmbedUrl(contenidoPrincipal.url) | trustUrl"
+                                                [src]="getVideoEmbedUrl(contenidoPrincipal.url) | trustUrl"
                                                 frameborder="0"
                                                 allowfullscreen
                                                 class="product-details__video-iframe">
@@ -747,7 +747,7 @@
         </div>
         <div class="video-modal-body">
             <iframe
-                [src]="currentVideoUrl | trustUrl"
+                [src]="getVideoEmbedUrl(currentVideoUrl) | trustUrl"
                 frameborder="0"
                 allowfullscreen
                 class="video-modal-iframe">
