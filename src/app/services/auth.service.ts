@@ -39,34 +39,23 @@ export class AuthService {
       this.cartService = this.injector.get(CartService); // <-- AÑADIDO
     }, 0);
 
+    // Inicializar currentUserSubject con datos del localStorage de forma síncrona
     if (this.isBrowser) {
       const storedUser = localStorage.getItem(this.userKey);
-      const user = storedUser ? JSON.parse(storedUser) : null;
+      const storedToken = localStorage.getItem(this.tokenKey);
+
+      // Solo cargar el usuario si también existe el token
+      const user = (storedUser && storedToken) ? JSON.parse(storedUser) : null;
       this.currentUserSubject = new BehaviorSubject<User | null>(user);
+
+      console.log('🔧 AuthService inicializado con usuario:', user);
     } else {
       this.currentUserSubject = new BehaviorSubject<User | null>(null);
     }
+
     this.currentUser = this.currentUserSubject.asObservable();
-
-    if (this.isBrowser) {
-      this.loadStoredUserData();
-    }
   }
 
-  private loadStoredUserData(): void {
-    if (!this.isBrowser) return;
-    const storedUser = localStorage.getItem(this.userKey);
-    const storedToken = localStorage.getItem(this.tokenKey);
-    if (storedUser && storedToken) {
-      try {
-        const user = JSON.parse(storedUser);
-        this.currentUserSubject.next(user);
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        this.clearSession();
-      }
-    }
-  }
 
   setCurrentUser(user: User): void {
     this.currentUserSubject.next(user);
@@ -113,11 +102,21 @@ export class AuthService {
       motorizado_id: response.user.motorizado_id,
       username: response.user.username,
       numero_unidad: response.user.numero_unidad,
-      estadisticas: response.user.estadisticas
+      estadisticas: response.user.estadisticas,
+      // ✅ Incluir campo foto si existe
+      foto: (response.user as any).foto
     };
 
     localStorage.setItem(this.userKey, JSON.stringify(user));
     this.currentUserSubject.next(user);
+
+    // ✅ DESPUÉS del login, actualizar datos con información fresca del servidor
+    setTimeout(() => {
+      this.refreshUserData().subscribe({
+        next: () => console.log('✅ Datos de usuario actualizados después del login'),
+        error: (error) => console.warn('⚠️ No se pudieron actualizar datos post-login:', error)
+      });
+    }, 1000);
 
     // Configurar permisos según el tipo de usuario
     if (this.permissionsService) {

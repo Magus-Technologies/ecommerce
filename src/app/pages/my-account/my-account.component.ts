@@ -22,7 +22,7 @@ export class MyAccountComponent implements OnInit, OnDestroy {
   private photoUrlCache: string | null = null;
 
   constructor(
-    private authService: AuthService,
+    public authService: AuthService, // ✅ Hacer público para usar en template
     private router: Router
   ) {}
 
@@ -141,15 +141,26 @@ export class MyAccountComponent implements OnInit, OnDestroy {
       if (photoField) {
         let finalUrl = photoField;
 
+        // Verificar si ya es una URL completa
         if (finalUrl.startsWith('http')) {
           finalUrl = finalUrl.replace('/storage/clientes//storage/clientes/', '/storage/clientes/');
         } else {
+          // Construir URL completa
           let photoPath = finalUrl;
           if (photoPath.includes('/storage/clientes//storage/clientes/')) {
             photoPath = photoPath.replace('/storage/clientes//storage/clientes/', '/storage/clientes/');
           }
+
+          // Asegurar que la ruta comience con /
+          if (!photoPath.startsWith('/')) {
+            photoPath = '/' + photoPath;
+          }
+
           finalUrl = `${environment.baseUrl}${photoPath}`;
         }
+
+        // NO agregar token para imágenes públicas
+        // Las imágenes en /storage/ son públicas y no necesitan token
 
         this.photoUrlCache = finalUrl;
         return finalUrl;
@@ -162,7 +173,11 @@ export class MyAccountComponent implements OnInit, OnDestroy {
 
   // Método para manejar errores de imagen
   onImageError(event: any): void {
+    // Ocultar la imagen con error
     event.target.style.display = 'none';
+
+    // Limpiar cache para intentar recargar en el siguiente acceso
+    this.photoUrlCache = null;
   }
 
   // Método para abrir modal de foto
@@ -193,5 +208,20 @@ export class MyAccountComponent implements OnInit, OnDestroy {
         }
       });
     }, 500);
+  }
+
+  // Método para debug - forzar recarga manual
+  debugReloadUserData(): void {
+    console.log('🔄 Forzando recarga de datos del usuario...');
+    this.photoUrlCache = null;
+    this.authService.refreshUserData().subscribe({
+      next: (response) => {
+        console.log('✅ Datos actualizados:', response);
+        this.loadUserData();
+      },
+      error: (error) => {
+        console.error('❌ Error al actualizar datos:', error);
+      }
+    });
   }
 }

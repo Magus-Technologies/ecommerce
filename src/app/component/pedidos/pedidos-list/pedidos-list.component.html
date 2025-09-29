@@ -54,184 +54,165 @@
     </div>
   </div>
 
-  <!-- Tabla con NGX-Datatable -->
-  <div class="card border-0 shadow-sm rounded-12 mx-16 mb-24">
-    <!-- Header de información -->
-    <div class="card-header bg-white border-bottom px-24 py-16" *ngIf="!loading && cotizaciones.length > 0">
+  <!-- Tabla Moderna usando clases globales -->
+  <div class="modern-data-table mx-16 mb-24">
+    <!-- Header compacto -->
+    <div class="modern-data-table__header" *ngIf="!loading && cotizacionesFiltradas.length > 0">
       <div class="d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center gap-16">
-          <span class="text-sm text-gray-600">{{ cotizaciones.length }} cotizaciones encontradas</span>
-        </div>
-        <div class="d-flex align-items-center gap-8">
-          <span class="text-sm fw-medium text-dark">Mostrando</span>
-          <select class="form-select form-select-sm border-gray-300" style="width: auto; min-width: 60px; font-size: 0.875rem; padding: 4px 8px;" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+        <span class="table-info">{{ cotizacionesFiltradas.length }} pedidos encontrados</span>
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size: var(--font-xs); color: var(--gray-500);">Filas:</span>
+          <select class="page-size-selector" [(ngModel)]="pageSize" (change)="goToPage(1)">
             <option [value]="5">5</option>
             <option [value]="10">10</option>
             <option [value]="25">25</option>
             <option [value]="50">50</option>
           </select>
-          <span class="text-sm fw-medium text-dark">por página</span>
         </div>
       </div>
     </div>
 
-    <div class="card-body p-0">
-      <!-- Loading state -->
-      <div *ngIf="loading" class="text-center py-40">
-        <div class="spinner-border text-main-600" role="status">
-          <span class="visually-hidden">Cargando...</span>
-        </div>
-        <p class="text-gray-500 mt-12 mb-0">Cargando pedidos...</p>
+    <!-- Loading state -->
+    <div *ngIf="loading" class="modern-data-table__loading">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Cargando...</span>
       </div>
+      <p class="loading-text">Cargando pedidos...</p>
+    </div>
 
-      <!-- Datatable -->
-      <div class="table-container overflow-auto">
-        <ngx-datatable
-          #table
-          *ngIf="!loading"
-          class="bootstrap pedidos-table"
-          [columns]="[]"
-          [rows]="cotizaciones"
-          [columnMode]="ColumnMode.flex"
-          [headerHeight]="50"
-          [footerHeight]="60"
-          [rowHeight]="60"
-          [limit]="pageSize"
-          [scrollbarV]="false"
-          [scrollbarH]="true"
-          [loadingIndicator]="loading"
-          [trackByProp]="'id'"
-          [sortType]="SortType.single"
-          [selectionType]="SelectionType.single"
-        >
-        <!-- Columna Código -->
-        <ngx-datatable-column
-          name="Código"
-          prop="codigo_cotizacion"
-          [flexGrow]="1"
-          [minWidth]="120"
-          [resizeable]="false"
-        >
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            <span class="text-sm fw-medium text-dark">{{ row.codigo_cotizacion }}</span>
-          </ng-template>
-        </ngx-datatable-column>
+    <!-- Tabla moderna -->
+    <div class="modern-data-table__container" *ngIf="!loading">
+      <table class="table table-borderless mb-0">
+        <thead>
+          <tr>
+            <th>CÓDIGO</th>
+            <th>CLIENTE</th>
+            <th class="d-none d-lg-table-cell">FECHA</th>
+            <th>TOTAL</th>
+            <th class="d-none d-md-table-cell">ESTADO</th>
+            <th class="text-end">ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cotizacion of getPaginatedCotizaciones(); trackBy: trackByCotizacionId">
+            <!-- Código -->
+            <td>
+              <div class="client-info__name">{{ cotizacion.codigo_cotizacion }}</div>
+              <div class="client-info__subtitle">Cotización</div>
+            </td>
 
-        <!-- Columna Cliente -->
-        <ngx-datatable-column
-          name="Cliente"
-          prop="cliente_nombre"
-          [flexGrow]="2"
-          [minWidth]="220"
-          [resizeable]="false"
-        >
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            <div class="d-flex align-items-center gap-12">
-              <div class="w-40 h-40 bg-main-50 text-main-600 rounded-circle flex-center">
-                {{ getInitials(row.cliente_nombre) }}
+            <!-- Cliente -->
+            <td>
+              <div class="d-flex align-items-center gap-12">
+                <div class="table-avatar__circle" style="background-color: var(--main-600);">
+                  {{ getInitials(cotizacion.cliente_nombre) }}
+                </div>
+                <div>
+                  <div class="client-info__name">{{ cotizacion.cliente_nombre }}</div>
+                  <div class="client-info__subtitle">{{ cotizacion.cliente_email }}</div>
+                </div>
               </div>
-              <div>
-                <h6 class="mb-0 text-heading text-sm fw-medium">{{ row.cliente_nombre }}</h6>
-                <p class="mb-0 text-xs text-gray-500">{{ row.cliente_email }}</p>
+            </td>
+
+            <!-- Fecha (hidden on tablet) -->
+            <td class="d-none d-lg-table-cell">
+              <div class="date-info__main">{{ cotizacion.fecha_cotizacion | date:'dd/MM/yyyy' }}</div>
+              <div class="date-info__relative">{{ cotizacion.fecha_cotizacion | date:'HH:mm' }}</div>
+            </td>
+
+            <!-- Total -->
+            <td>
+              <div class="pedido-total-info">
+                <div class="total-amount">S/ {{ cotizacion.total | number:'1.2-2' }}</div>
+                <div class="total-label">Total</div>
               </div>
-            </div>
-          </ng-template>
-        </ngx-datatable-column>
+            </td>
 
-        <!-- Columna Fecha -->
-        <ngx-datatable-column
-          name="Fecha"
-          prop="fecha_cotizacion"
-          [flexGrow]="1"
-          [minWidth]="150"
-          [resizeable]="false"
-        >
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            <span class="text-sm fw-medium text-dark">{{ row.fecha_cotizacion | date : "dd/MM/yyyy HH:mm" }}</span>
-          </ng-template>
-        </ngx-datatable-column>
+            <!-- Estado (hidden on mobile) -->
+            <td class="d-none d-md-table-cell">
+              <span class="status-badge" [ngClass]="getEstadoBadgeClass(cotizacion.estado_cotizacion?.nombre)">
+                {{ cotizacion.estado_cotizacion?.nombre || 'Pendiente' }}
+              </span>
+            </td>
 
-        <!-- Columna Total -->
-        <ngx-datatable-column
-          name="Total"
-          prop="total"
-          [flexGrow]="1"
-          [minWidth]="120"
-          [resizeable]="false"
-        >
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            <span class="text-sm fw-bold text-success-600">S/ {{ row.total | number:'1.2-2' }}</span>
-          </ng-template>
-        </ngx-datatable-column>
+            <!-- Acciones -->
+            <td class="text-end">
+              <div class="action-buttons">
+                <button class="action-buttons__btn action-buttons__btn--view"
+                        (click)="verDetalle(cotizacion)"
+                        title="Ver detalle">
+                  <i class="ph ph-eye"></i>
+                </button>
+                <button class="action-buttons__btn action-buttons__btn--view"
+                        style="background-color: var(--success-50) !important; color: var(--success-600) !important;"
+                        (click)="contactarWhatsApp(cotizacion)"
+                        title="Contactar WhatsApp">
+                  <i class="ph ph-whatsapp-logo"></i>
+                </button>
+                <button class="action-buttons__btn action-buttons__btn--edit"
+                        (click)="cambiarEstado(cotizacion)"
+                        title="Cambiar estado">
+                  <i class="ph ph-gear"></i>
+                </button>
+                <button class="action-buttons__btn action-buttons__btn--view"
+                        style="background-color: var(--info-50) !important; color: var(--info-600) !important;"
+                        (click)="imprimirPedido()"
+                        title="Imprimir">
+                  <i class="ph ph-printer"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-        <!-- Columna Estado -->
-        <ngx-datatable-column
-          name="Estado"
-          prop="estado_cotizacion.nombre"
-          [flexGrow]="1"
-          [minWidth]="140"
-          [resizeable]="false"
-        >
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            <span
-              class="badge px-12 py-6 rounded-pill fw-medium"
-              [class]="getEstadoBadgeClassExtended(row.estado_cotizacion?.nombre)"
-            >
-              {{ row.estado_cotizacion?.nombre || "Pendiente" }}
-            </span>
-          </ng-template>
-        </ngx-datatable-column>
-
-        <!-- Columna Acciones -->
-        <ngx-datatable-column
-          name="Acciones"
-          [canAutoResize]="false"
-          [sortable]="false"
-          [width]="160"
-        >
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            <div class="d-flex align-items-center gap-4">
-              <button
-                class="w-32 h-32 bg-main-50 hover-bg-main-100 text-main-600 rounded-circle flex-center transition-2"
-                (click)="verDetalle(row)"
-                title="Ver detalle">
-                <i class="ph ph-eye"></i>
-              </button>
-              <button
-                class="w-32 h-32 bg-success-50 hover-bg-success-100 text-success-600 rounded-circle flex-center transition-2"
-                (click)="contactarWhatsApp(row)"
-                title="Contactar WhatsApp">
-                <i class="ph ph-whatsapp-logo"></i>
-              </button>
-              <button
-                class="w-32 h-32 bg-warning-50 hover-bg-warning-100 text-warning-600 rounded-circle flex-center transition-2"
-                (click)="cambiarEstado(row)"
-                title="Cambiar estado">
-                <i class="ph ph-gear"></i>
-              </button>
-              <button
-                class="w-32 h-32 bg-info-50 hover-bg-info-100 text-info-600 rounded-circle flex-center transition-2"
-                (click)="imprimirPedido()"
-                title="Imprimir">
-                <i class="ph ph-printer"></i>
-              </button>
-            </div>
-          </ng-template>
-        </ngx-datatable-column>
-
-        </ngx-datatable>
-      </div>
-
-      <!-- Estado vacío -->
-      <div *ngIf="!loading && cotizaciones.length === 0" class="text-center py-60">
-        <div class="w-80 h-80 bg-gray-50 text-gray-400 rounded-circle flex-center mx-auto mb-24">
-          <i class="ph ph-package text-3xl"></i>
+    <!-- Paginación moderna -->
+    <div class="modern-data-table__pagination" *ngIf="!loading && cotizacionesFiltradas.length > 0 && getTotalPages() > 1">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="pagination-info">
+          Mostrando {{ (currentPage - 1) * pageSize + 1 }} a {{ Math.min(currentPage * pageSize, cotizacionesFiltradas.length) }} de {{ cotizacionesFiltradas.length }} registros
         </div>
-        <h5 class="text-heading mb-12">No hay pedidos registrados</h5>
-        <p class="text-gray-500 mb-24 max-w-400 mx-auto">
-          Aún no se han registrado cotizaciones/pedidos en el sistema.
-        </p>
+        <nav>
+          <ul class="pagination-controls">
+            <li [class.disabled]="currentPage === 1">
+              <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
+                <i class="ph ph-caret-left"></i>
+              </button>
+            </li>
+            <li *ngFor="let page of getPageNumbers()" [class.active]="page === currentPage">
+              <button (click)="goToPage(page)">{{ page }}</button>
+            </li>
+            <li [class.disabled]="currentPage === getTotalPages()">
+              <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === getTotalPages()">
+                <i class="ph ph-caret-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
       </div>
+    </div>
+
+    <!-- Estado vacío -->
+    <div *ngIf="!loading && cotizaciones.length === 0" class="empty-state">
+      <div class="empty-state__icon">
+        <i class="ph ph-package"></i>
+      </div>
+      <h5 class="empty-state__title">No hay pedidos registrados</h5>
+      <p class="empty-state__description">
+        Aún no se han registrado cotizaciones/pedidos en el sistema.
+      </p>
+    </div>
+
+    <!-- Sin resultados de búsqueda -->
+    <div *ngIf="!loading && cotizaciones.length > 0 && cotizacionesFiltradas.length === 0" class="empty-state">
+      <div class="empty-state__icon">
+        <i class="ph ph-magnifying-glass"></i>
+      </div>
+      <h5 class="empty-state__title">No se encontraron resultados</h5>
+      <p class="empty-state__description">
+        Intenta cambiar los filtros para encontrar los pedidos que buscas.
+      </p>
     </div>
   </div>
 </div>

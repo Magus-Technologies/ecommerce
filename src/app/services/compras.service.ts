@@ -385,10 +385,10 @@ export class ComprasService {
 
     // Diccionario de correcciones comunes
     const correcciones: { [key: string]: string } = {
-      'Pendiente Aprobaci�n': 'Pendiente Aprobación',
-      'Preparaci�n': 'Preparación',
-      'Cancelaci�n': 'Cancelación',
-      'Aprobaci�n': 'Aprobación'
+      'Pendiente Aprobacion': 'Pendiente Aprobación',
+      'Preparacion': 'Preparación',
+      'Cancelacion': 'Cancelación',
+      'Aprobacion': 'Aprobación'
     };
 
     // Buscar y corregir el texto completo

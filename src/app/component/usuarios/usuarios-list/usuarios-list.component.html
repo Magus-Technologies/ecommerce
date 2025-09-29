@@ -17,212 +17,189 @@
     </div>
   </div>
 
-  <!-- Tabla con NGX-Datatable -->
-  <div class="card border-0 shadow-sm rounded-12 mx-24 mx-md-32 mb-24 mb-md-32">
-    <!-- Header de información -->
-    <div class="card-header bg-white border-bottom px-24 py-16" *ngIf="!isLoading && usuarios.length > 0">
+  <!-- Tabla Moderna usando clases globales -->
+  <div class="modern-data-table mx-24 mx-md-32 mb-24 mb-md-32">
+    <!-- Header compacto -->
+    <div class="modern-data-table__header" *ngIf="!isLoading && usuariosFiltrados.length > 0">
       <div class="d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-16">
-          <span class="text-sm text-gray-600">{{ selectionText }}</span>
-          <div class="d-flex align-items-center gap-8" *ngIf="selected.length > 0">
-            <button class="btn btn-sm btn-outline-danger px-12 py-6">
-              <i class="ph ph-trash me-4"></i>
-              Eliminar seleccionados
-            </button>
-          </div>
+          <span class="table-info">{{ usuariosFiltrados.length }} usuarios encontrados</span>
         </div>
-        <div class="d-flex align-items-center gap-8">
-          <span class="text-sm fw-medium text-dark">Mostrando</span>
-          <select class="form-select page-size-select" [(ngModel)]="pageSize">
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size: var(--font-xs); color: var(--gray-500);">Filas:</span>
+          <select class="page-size-selector" [(ngModel)]="pageSize" (change)="goToPage(1)">
             <option [value]="5">5</option>
             <option [value]="10">10</option>
             <option [value]="25">25</option>
             <option [value]="50">50</option>
           </select>
-          <span class="text-sm fw-medium text-dark">por página</span>
         </div>
       </div>
     </div>
 
-    <div class="card-body p-0">
-      <!-- Loading state -->
-      <div *ngIf="isLoading" class="text-center py-40">
-        <div class="spinner-border text-main-600" role="status">
-          <span class="visually-hidden">Cargando...</span>
-        </div>
-        <p class="text-gray-500 mt-12 mb-0">Cargando usuarios...</p>
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="modern-data-table__loading">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Cargando...</span>
       </div>
+      <p class="loading-text">Cargando usuarios...</p>
+    </div>
 
-      <!-- Datatable -->
-      <div class="table-container">
-        <ngx-datatable
-          *ngIf="!isLoading"
-          class="bootstrap usuarios-table"
-          [columns]="[]"
-          [rows]="usuarios"
-          [columnMode]="ColumnMode.flex"
-          [headerHeight]="50"
-          [footerHeight]="60"
-          [rowHeight]="60"
-          [limit]="pageSize"
-          [scrollbarV]="false"
-          [scrollbarH]="false"
-          [loadingIndicator]="isLoading"
-          [trackByProp]="'id'"
-          [sortType]="SortType.single"
-          [selectionType]="SelectionType.checkbox"
-          [selected]="selected"
-          [selectAllRowsOnPage]="false"
-          [displayCheck]="displayCheck"
-          [externalPaging]="false"
-          (select)="onSelect($event)"
-          (page)="onPageChange($event)"
-        >
-        <!-- Columna Usuario -->
-        <ngx-datatable-column
-          name="Usuario"
-          prop="nombre"
-          [flexGrow]="2"
-          [minWidth]="200"
-          [resizeable]="false"
-        >
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            <div class="d-flex align-items-center gap-12">
-              <div class="user-avatar"
-                  [style.background-color]="getAvatarDisplay(row).color"
-                  *ngIf="getAvatarDisplay(row).type === 'initial'">
-                {{ getAvatarDisplay(row).value }}
+    <!-- Tabla moderna -->
+    <div class="modern-data-table__container" *ngIf="!isLoading">
+      <table class="table table-borderless mb-0">
+        <thead>
+          <tr>
+            <th>USUARIO</th>
+            <th class="d-none d-lg-table-cell">EMAIL</th>
+            <th class="d-none d-md-table-cell">ROL</th>
+            <th>ESTADO</th>
+            <th class="d-none d-lg-table-cell">FECHA REGISTRO</th>
+            <th class="text-end">ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let usuario of getPaginatedUsuarios(); trackBy: trackByUsuarioId">
+
+            <!-- Usuario -->
+            <td>
+              <div class="d-flex align-items-center gap-12">
+                <div class="table-avatar__container">
+                  <ng-container *ngIf="getAvatarDisplay(usuario).type === 'image'; else avatarWithInitials">
+                    <img [src]="getAvatarDisplay(usuario).value"
+                         [alt]="usuario.nombre"
+                         class="table-avatar__img">
+                  </ng-container>
+                  <ng-template #avatarWithInitials>
+                    <div class="table-avatar__circle" [style.background-color]="getAvatarDisplay(usuario).color">
+                      {{ getAvatarDisplay(usuario).value }}
+                    </div>
+                  </ng-template>
+                </div>
+                <div>
+                  <div class="client-info__name">{{ usuario.nombre }}</div>
+                </div>
               </div>
-              <img class="user-avatar-img"
-                  [src]="getAvatarDisplay(row).value"
-                  [alt]="row.nombre"
-                  *ngIf="getAvatarDisplay(row).type === 'image'">
-              <div>
-                <h6 class="mb-0 text-heading text-sm fw-medium">{{ row.nombre }}</h6>
+            </td>
+
+            <!-- Email (hidden on tablet) -->
+            <td class="d-none d-lg-table-cell">
+              <div class="client-info__subtitle">{{ usuario.email }}</div>
+            </td>
+
+            <!-- Rol (hidden on mobile) -->
+            <td class="d-none d-md-table-cell">
+              <div class="text-center">
+                <span class="type-badge" [ngClass]="getRolClass(usuario.rol)">
+                  {{ usuario.rol }}
+                </span>
               </div>
-            </div>
-          </ng-template>
-        </ngx-datatable-column>
+            </td>
 
-        <!-- Columna Email -->
-        <ngx-datatable-column
-          name="Email"
-          prop="email"
-          [flexGrow]="2"
-          [minWidth]="200"
-          [resizeable]="false"
-        >
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            <span class="text-sm fw-medium text-dark">{{ row.email }}</span>
-          </ng-template>
-        </ngx-datatable-column>
+            <!-- Estado -->
+            <td>
+              <div class="d-flex align-items-center gap-8">
+                <span class="status-badge"
+                      [ngClass]="usuario.estado ? 'status-badge--active' : 'status-badge--inactive'">
+                  {{ usuario.estado ? 'Activo' : 'Inactivo' }}
+                </span>
+                <button *ngIf="canChangeStatus()"
+                        class="toggle-button"
+                        [ngClass]="usuario.estado ? 'toggle-button--active' : ''"
+                        [title]="usuario.estado ? 'Desactivar usuario' : 'Activar usuario'"
+                        (click)="onCambiarEstado(usuario)">
+                  <i class="ph" [class]="usuario.estado ? 'ph-toggle-right' : 'ph-toggle-left'"></i>
+                </button>
+              </div>
+            </td>
 
-        <!-- Columna Rol -->
-        <ngx-datatable-column
-          name="Rol"
-          prop="rol"
-          [flexGrow]="1"
-          [minWidth]="120"
-          [resizeable]="false"
-        >
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            <span class="badge estado-badge" [ngClass]="getRolClass(row.rol)">
-              {{ row.rol }}
-            </span>
-          </ng-template>
-        </ngx-datatable-column>
+            <!-- Fecha Registro (hidden on tablet) -->
+            <td class="d-none d-lg-table-cell">
+              <div class="text-center">
+                <div class="client-info__subtitle">{{ usuario.fechaCreacion | date:'dd/MM/yyyy' }}</div>
+              </div>
+            </td>
 
-        <!-- Columna Estado -->
-        <ngx-datatable-column
-          name="Estado"
-          prop="estado"
-          [flexGrow]="1"
-          [minWidth]="140"
-          [resizeable]="false"
-        >
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            <div class="d-flex align-items-center gap-8">
-              <span class="badge estado-badge estado-width"
-                    [class]="row.estado ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600'">
-                {{ row.estado ? 'Activo' : 'Inactivo' }}
-              </span>
-              <button
-                *ngIf="canChangeStatus()"
-                class="btn action-btn toggle-btn"
-                [class.toggle-active]="row.estado"
-                [class.toggle-inactive]="!row.estado"
-                [title]="row.estado ? 'Desactivar usuario' : 'Activar usuario'"
-                (click)="onCambiarEstado(row)">
-                <i class="ph" [class]="row.estado ? 'ph-toggle-right' : 'ph-toggle-left'"></i>
-              </button>
-            </div>
-          </ng-template>
-        </ngx-datatable-column>
+            <!-- Acciones -->
+            <td class="text-end">
+              <div class="action-buttons">
+                <button class="action-buttons__btn action-buttons__btn--view"
+                        (click)="onVerUsuario(usuario)"
+                        title="Ver usuario"
+                        *ngIf="canShowUser$ | async">
+                  <i class="ph ph-eye"></i>
+                </button>
+                <button class="action-buttons__btn action-buttons__btn--edit"
+                        (click)="onEditarUsuario(usuario)"
+                        title="Editar usuario"
+                        *ngIf="canEditUser()">
+                  <i class="ph ph-pencil"></i>
+                </button>
+                <button class="action-buttons__btn action-buttons__btn--delete"
+                        (click)="onEliminarUsuario(usuario)"
+                        title="Eliminar usuario"
+                        *ngIf="canDeleteUser()">
+                  <i class="ph ph-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-        <!-- Columna Fecha Registro -->
-        <ngx-datatable-column
-          name="Fecha Registro"
-          prop="fechaCreacion"
-          [flexGrow]="1"
-          [minWidth]="150"
-          [resizeable]="false"
-        >
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            <span class="text-sm fw-medium text-dark">{{ row.fechaCreacion | date:'dd/MM/yyyy' }}</span>
-          </ng-template>
-        </ngx-datatable-column>
-
-        <!-- Columna Acciones -->
-        <ngx-datatable-column
-          name="Acciones"
-          [canAutoResize]="false"
-          [sortable]="false"
-          [width]="120"
-        >
-          <ng-template let-row="row" ngx-datatable-cell-template>
-            <div class="d-flex align-items-center gap-8">
-              <button
-                class="w-32 h-32 bg-main-50 hover-bg-main-100 text-main-600 rounded-circle flex-center transition-2"
-                (click)="onVerUsuario(row)"
-                title="Ver usuario"
-                *ngIf="canShowUser$ | async">
-                <i class="ph ph-eye"></i>
-              </button>
-              <button
-                class="w-32 h-32 bg-warning-50 hover-bg-warning-100 text-warning-600 rounded-circle flex-center transition-2"
-                (click)="onEditarUsuario(row)"
-                title="Editar usuario"
-                *ngIf="canEditUser()">
-                <i class="ph ph-pencil"></i>
-              </button>
-              <button
-                class="w-32 h-32 bg-danger-50 hover-bg-danger-100 text-danger-600 rounded-circle flex-center transition-2"
-                (click)="onEliminarUsuario(row)"
-                title="Eliminar usuario"
-                *ngIf="canDeleteUser()">
-                <i class="ph ph-trash"></i>
-              </button>
-            </div>
-          </ng-template>
-        </ngx-datatable-column>
-
-        </ngx-datatable>
-      </div>
-
-      <!-- Estado vacío -->
-      <div *ngIf="!isLoading && usuarios.length === 0" class="text-center py-60">
-        <div class="w-80 h-80 bg-gray-50 text-gray-400 rounded-circle flex-center mx-auto mb-24">
-          <i class="ph ph-users text-3xl"></i>
+    <!-- Paginación moderna -->
+    <div class="modern-data-table__pagination" *ngIf="!isLoading && usuariosFiltrados.length > 0 && getTotalPages() > 1">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="pagination-info">
+          Mostrando {{ (currentPage - 1) * pageSize + 1 }} a {{ Math.min(currentPage * pageSize, usuariosFiltrados.length) }} de {{ usuariosFiltrados.length }} registros
         </div>
-        <h5 class="text-heading mb-12">No hay usuarios registrados</h5>
-        <p class="text-gray-500 mb-24 max-w-400 mx-auto">
-          Comienza creando tu primer usuario para gestionar la plataforma.
-        </p>
-        <button class="btn bg-main-600 hover-bg-main-700 text-white rounded-pill px-32 py-12" (click)="onCrearUsuario()">
-          <i class="ph-bold ph-plus me-8"></i>
-          Crear Usuario
-        </button>
+        <nav>
+          <ul class="pagination-controls">
+            <li [class.disabled]="currentPage === 1">
+              <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
+                <i class="ph ph-caret-left"></i>
+              </button>
+            </li>
+            <li *ngFor="let page of getPageNumbers()" [class.active]="page === currentPage">
+              <button (click)="goToPage(page)">{{ page }}</button>
+            </li>
+            <li [class.disabled]="currentPage === getTotalPages()">
+              <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === getTotalPages()">
+                <i class="ph ph-caret-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
       </div>
+    </div>
+
+    <!-- Estado vacío -->
+    <div *ngIf="!isLoading && usuarios.length === 0" class="empty-state">
+      <div class="empty-state__icon">
+        <i class="ph ph-users"></i>
+      </div>
+      <h5 class="empty-state__title">No hay usuarios registrados</h5>
+      <p class="empty-state__description">
+        Comienza creando tu primer usuario para gestionar la plataforma.
+      </p>
+      <button class="btn btn-primary"
+              *ngIf="canCreateUser$ | async"
+              (click)="onCrearUsuario()">
+        <i class="ph ph-plus me-8"></i>
+        Crear Usuario
+      </button>
+    </div>
+
+    <!-- Sin resultados de búsqueda -->
+    <div *ngIf="!isLoading && usuarios.length > 0 && usuariosFiltrados.length === 0" class="empty-state">
+      <div class="empty-state__icon">
+        <i class="ph ph-magnifying-glass"></i>
+      </div>
+      <h5 class="empty-state__title">No se encontraron resultados</h5>
+      <p class="empty-state__description">
+        Intenta cambiar los filtros para encontrar los usuarios que buscas.
+      </p>
     </div>
   </div>
 </div>

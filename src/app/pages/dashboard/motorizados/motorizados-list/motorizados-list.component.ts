@@ -1,84 +1,46 @@
-import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy, HostListener, ElementRef, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { MotorizadosService, Motorizado } from '../../../../services/motorizados.service';
 import { PermissionsService } from '../../../../services/permissions.service';
-import {
-  NgxDatatableModule,
-  ColumnMode,
-  SelectionType,
-  SortType,
-  DatatableComponent
-} from '@swimlane/ngx-datatable';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-motorizados-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, NgxDatatableModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './motorizados-list.component.html',
-  styleUrls: ['./motorizados-list.component.scss']
+  styleUrl: './motorizados-list.component.scss'
 })
-export class MotorizadosListComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild(DatatableComponent) table!: DatatableComponent;
-
+export class MotorizadosListComponent implements OnInit, OnDestroy {
+  // Datos
   motorizados: Motorizado[] = [];
   motorizadosFiltrados: Motorizado[] = [];
   filtroTexto = '';
   isLoading = false;
   estadisticas = { total: 0, activos: 0, inactivos: 0 };
 
-  private resizeTimeout: any;
-  private resizeObserver!: ResizeObserver;
-  private cleanupListener?: () => void;
-
-  // Datatable properties
+  // Paginación simple
   pageSize = 10;
-  ColumnMode = ColumnMode;
-  SelectionType = SelectionType;
-  SortType = SortType;
+  currentPage = 1;
   selected: Motorizado[] = [];
 
-  // Mensajes en español para NGX-Datatable
-  messages = {
-    emptyMessage: 'No se encontraron motorizados',
-    totalMessage: 'total',
-    selectedMessage: 'seleccionados'
-  };
+  // Método para acceder a Math.min en el template
+  Math = Math;
+
+  private cleanupListener?: () => void;
 
   constructor(
     private motorizadosService: MotorizadosService,
     public permissionsService: PermissionsService,
     private toastr: ToastrService,
-    private router: Router,
-    private elementRef: ElementRef,
-    private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.cargarMotorizados();
-
-    // Escuchar cambios del sidebar para recalcular la tabla
-    const sidebarListener = () => {
-      // Múltiples recálculos inmediatos para Angular 19 + ngx-datatable
-      this.recalcularTabla();
-
-      // Recálculos adicionales para eliminar completamente el lag
-      setTimeout(() => this.recalcularTabla(), 1);
-      setTimeout(() => this.recalcularTabla(), 10);
-      setTimeout(() => this.recalcularTabla(), 50);
-      setTimeout(() => this.recalcularTabla(), 100);
-    };
-
-    window.addEventListener('sidebarChanged', sidebarListener);
-
-    // Limpiar el listener cuando se destruya el componente
-    this.cleanupListener = () => {
-      window.removeEventListener('sidebarChanged', sidebarListener);
-    };
   }
 
   cargarMotorizados(): void {
@@ -89,10 +51,7 @@ export class MotorizadosListComponent implements OnInit, AfterViewInit, OnDestro
         this.motorizadosFiltrados = motorizados;
         this.calcularEstadisticas();
         this.isLoading = false;
-        // Force table resize after data is loaded
-        setTimeout(() => {
-          this.forceTableResize();
-        }, 50);
+        // Data loaded successfully
       },
       error: (error: any) => {
         this.toastr.error('Error al cargar motorizados');
@@ -123,11 +82,13 @@ export class MotorizadosListComponent implements OnInit, AfterViewInit, OnDestro
     this.estadisticas.inactivos = this.motorizados.filter(m => !m.estado).length;
   }
 
-  verDetalle(id: number): void {
+  verDetalle(id: number | undefined): void {
+    if (!id) return;
     this.router.navigate(['/dashboard/motorizados/ver', id]);
   }
 
-  editarMotorizado(id: number): void {
+  editarMotorizado(id: number | undefined): void {
+    if (!id) return;
     this.router.navigate(['/dashboard/motorizados/editar', id]);
   }
 
@@ -167,7 +128,8 @@ export class MotorizadosListComponent implements OnInit, AfterViewInit, OnDestro
     });
   }
 
-  eliminarMotorizado(id: number, nombre: string): void {
+  eliminarMotorizado(id: number | undefined, nombre: string): void {
+    if (!id) return;
     Swal.fire({
       title: '¿Estás seguro?',
       text: `¿Deseas eliminar al motorizado ${nombre}?`,
@@ -201,7 +163,8 @@ export class MotorizadosListComponent implements OnInit, AfterViewInit, OnDestro
     });
   }
 
-  crearUsuario(id: number, nombre: string): void {
+  crearUsuario(id: number | undefined, nombre: string): void {
+    if (!id) return;
     Swal.fire({
       title: '¿Crear usuario?',
       text: `¿Deseas crear un usuario para ${nombre}?`,
@@ -235,7 +198,8 @@ export class MotorizadosListComponent implements OnInit, AfterViewInit, OnDestro
     });
   }
 
-  toggleUsuario(id: number, username: string, estadoActual: boolean): void {
+  toggleUsuario(id: number | undefined, username: string | undefined, estadoActual: boolean | undefined): void {
+    if (!id || !username || estadoActual === undefined) return;
     const accion = estadoActual ? 'desactivar' : 'activar';
 
     Swal.fire({
@@ -271,7 +235,8 @@ export class MotorizadosListComponent implements OnInit, AfterViewInit, OnDestro
     });
   }
 
-  resetearPassword(id: number, username: string): void {
+  resetearPassword(id: number | undefined, username: string | undefined): void {
+    if (!id || !username) return;
     Swal.fire({
       title: '¿Generar nueva contraseña?',
       text: `¿Deseas generar una nueva contraseña automática para ${username}? Se enviará la nueva contraseña por correo electrónico y la anterior dejará de funcionar.`,
@@ -306,11 +271,54 @@ export class MotorizadosListComponent implements OnInit, AfterViewInit, OnDestro
     });
   }
 
-  formatDate(date: string): string {
+  formatDate(date: string | undefined): string {
+    if (!date) return 'Sin fecha';
     return new Date(date).toLocaleDateString('es-ES');
   }
 
-  // Datatable methods
+  // Métodos de paginación moderna
+  getPaginatedMotorizados(): Motorizado[] {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    return this.motorizadosFiltrados.slice(startIndex, endIndex);
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.motorizadosFiltrados.length / this.pageSize);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.getTotalPages()) {
+      this.currentPage = page;
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const totalPages = this.getTotalPages();
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let start = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+      let end = Math.min(totalPages, start + maxVisiblePages - 1);
+
+      if (end - start < maxVisiblePages - 1) {
+        start = Math.max(1, end - maxVisiblePages + 1);
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
+  }
+
+  // Datatable methods (mantener compatibilidad)
   get selectionText(): string {
     const count = this.selected.length;
     if (count === 0) {
@@ -330,6 +338,7 @@ export class MotorizadosListComponent implements OnInit, AfterViewInit, OnDestro
 
   onPageSizeChange(): void {
     this.selected = [];
+    this.currentPage = 1; // Reset to first page when changing page size
   }
 
   displayCheck = (row: any, column?: any, value?: any) => {
@@ -364,122 +373,12 @@ export class MotorizadosListComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   trackByMotorizadoId(index: number, motorizado: Motorizado): number {
-    return motorizado.id!;
-  }
-
-  ngAfterViewInit(): void {
-    // Force initial table resize after view initialization
-    setTimeout(() => {
-      this.forceTableResize();
-      this.setupResizeObserver();
-
-      // Configuración especial para Angular 19 + ngx-datatable
-      if (this.table) {
-        this.table.trackByProp = 'id';
-        this.cdr.detectChanges();
-      }
-    }, 100);
+    return motorizado.id || index;
   }
 
   ngOnDestroy(): void {
-    if (this.resizeTimeout) {
-      clearTimeout(this.resizeTimeout);
-    }
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-    }
     if (this.cleanupListener) {
       this.cleanupListener();
     }
-  }
-
-  @HostListener('window:resize', ['$event'])
-  onWindowResize(event: any): void {
-    this.debounceTableResize();
-  }
-
-  private debounceTableResize(): void {
-    if (this.resizeTimeout) {
-      clearTimeout(this.resizeTimeout);
-    }
-
-    this.resizeTimeout = setTimeout(() => {
-      this.forceTableResize();
-    }, 250);
-  }
-
-  private forceTableResize(): void {
-    if (this.table) {
-      // Force datatable to recalculate columns
-      this.table.recalculateColumns();
-      this.table.recalculateDims();
-    }
-  }
-
-  // Method to be called when sidebar state changes
-  onSidebarToggle(): void {
-    setTimeout(() => {
-      this.forceTableResize();
-    }, 300); // Wait for sidebar animation to complete
-  }
-
-  private setupResizeObserver(): void {
-    if (typeof ResizeObserver !== 'undefined') {
-      this.resizeObserver = new ResizeObserver((entries) => {
-        for (let entry of entries) {
-          this.debounceTableResize();
-        }
-      });
-
-      // Observe the main container
-      const container = this.elementRef.nativeElement.querySelector('.border.border-gray-100.rounded-16');
-      if (container) {
-        this.resizeObserver.observe(container);
-      }
-
-      // Also observe the table container
-      const tableContainer = this.elementRef.nativeElement.querySelector('.table-container');
-      if (tableContainer) {
-        this.resizeObserver.observe(tableContainer);
-      }
-
-      // Observe the card container
-      const cardContainer = this.elementRef.nativeElement.querySelector('.card.mx-16');
-      if (cardContainer) {
-        this.resizeObserver.observe(cardContainer);
-      }
-    }
-  }
-
-  // Método para recalcular columnas cuando cambia el layout
-  private recalcularTabla(): void {
-    this.ngZone.run(() => {
-      if (this.table) {
-        // Forzar detección de cambios inmediata
-        this.cdr.detectChanges();
-
-        // Recálculos múltiples para ngx-datatable con Angular 19
-        this.table.recalculate();
-        this.table.recalculateColumns();
-        this.table.recalculateDims();
-
-        // Segundo pase después de que Angular procese
-        setTimeout(() => {
-          if (this.table) {
-            this.table.recalculate();
-            this.table.recalculateColumns();
-            this.cdr.detectChanges();
-          }
-        }, 0);
-
-        // Tercer pase para asegurar compatibilidad con Angular 19
-        setTimeout(() => {
-          if (this.table) {
-            this.table.recalculateDims();
-            this.cdr.markForCheck();
-          }
-        }, 10);
-      }
-    });
   }
 }
