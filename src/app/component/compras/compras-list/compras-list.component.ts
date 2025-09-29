@@ -1,10 +1,9 @@
-import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ComprasService } from '../../../services/compras.service';
 import { Compra } from '../../../services/compras.service';
-import { NgxDatatableModule, ColumnMode, SelectionType, SortType, DatatableComponent } from '@swimlane/ngx-datatable';
 import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 import { environment } from '../../../../environments/environment';
@@ -12,80 +11,28 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-compras-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, NgxDatatableModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: "./compras-list.component.html",
-  styles: [`
-    .user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 500;
-      font-size: 14px;
-    }
-
-    ::ng-deep .compras-table {
-      .action-buttons {
-        display: flex !important;
-        gap: 4px !important;
-        align-items: center !important;
-        justify-content: center !important;
-        flex-wrap: nowrap !important;
-      }
-
-      .action-btn {
-        width: 24px !important;
-        height: 24px !important;
-        padding: 0 !important;
-        border: none !important;
-        border-radius: 4px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        transition: all 0.2s ease !important;
-        font-size: 10px !important;
-        min-width: 24px !important;
-      }
-
-      .details-btn {
-        background-color: #cff4fc !important;
-        color: #087990 !important;
-      }
-
-      .action-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      }
-    }
-  `]
+  styleUrl: "./compras-list.component.scss"
 })
-export class ComprasListComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('table') table!: DatatableComponent;
-
+export class ComprasListComponent implements OnInit, OnDestroy {
+  // Datos
   compras: Compra[] = [];
+  comprasFiltradas: Compra[] = [];
   compraSeleccionada: Compra | null = null;
   loading = false;
+
+  // Paginación simple
   pageSize = 10;
+  currentPage = 1;
+
+  // Método para acceder a Math.min en el template
+  Math = Math;
+
   private resizeSubscription!: Subscription;
 
   // Cache para URLs de fotos para evitar regeneración constante
   private photoUrlCache = new Map<string, string | null>();
-
-  // Configuración para NGX-Datatable
-  columns = [
-    { name: 'Código', prop: 'codigo_compra', flexGrow: 1.5, minWidth: 200 },
-    { name: 'Cliente', prop: 'cliente_nombre', flexGrow: 2.5, minWidth: 250 },
-    { name: 'Fecha', prop: 'fecha_compra', flexGrow: 1.2, minWidth: 140 },
-    { name: 'Total', prop: 'total', flexGrow: 1, minWidth: 120 },
-    { name: 'Estado', prop: 'estado_compra.nombre', flexGrow: 1.2, minWidth: 130 },
-    { name: 'Acciones', prop: 'acciones', flexGrow: 0.8, minWidth: 120 }
-  ];
-
-  ColumnMode = ColumnMode;
-  SelectionType = SelectionType;
-  SortType = SortType;
 
   constructor(private comprasService: ComprasService) {}
 
@@ -93,57 +40,9 @@ export class ComprasListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cargarCompras();
   }
 
-  ngAfterViewInit(): void {
-    // Escuchar cambios del sidebar para recalcular la tabla
-    const sidebarListener = () => {
-      // Recálculo inmediato sin setTimeout para respuesta más rápida
-      this.recalcularTabla();
-
-      // Recálculo adicional por si acaso
-      setTimeout(() => {
-        this.recalcularTabla();
-      }, 10);
-    };
-
-    window.addEventListener('sidebarChanged', sidebarListener);
-
-    // Escuchar cambios de ventana
-    const resizeListener = () => {
-      this.recalcularTabla();
-    };
-
-    window.addEventListener('resize', resizeListener);
-
-    // Cleanup en destroy
-    this.resizeSubscription = new Subscription();
-    this.resizeSubscription.add(() => {
-      window.removeEventListener('sidebarChanged', sidebarListener);
-      window.removeEventListener('resize', resizeListener);
-    });
-  }
-
   ngOnDestroy(): void {
     if (this.resizeSubscription) {
       this.resizeSubscription.unsubscribe();
-    }
-  }
-
-  // Método para recalcular columnas cuando cambia el layout
-  private recalcularTabla(): void {
-    if (this.table) {
-      // Forzar recalculo inmediato
-      this.table.recalculate();
-      this.table.recalculateColumns();
-
-      // Forzar redibujado del DOM
-      this.table.recalculateDims();
-
-      // Detectar cambios para Angular
-      setTimeout(() => {
-        if (this.table) {
-          this.table.recalculate();
-        }
-      }, 1);
     }
   }
 
@@ -156,6 +55,7 @@ export class ComprasListComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (response) => {
         if (response.status === 'success') {
           this.compras = response.compras || [];
+          this.comprasFiltradas = [...this.compras];
         }
         this.loading = false;
       },
@@ -179,7 +79,7 @@ export class ComprasListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  getInitials(nombre: string): string {
+  getInitials(nombre: string | undefined): string {
     if (!nombre) return '?';
     return nombre.split(' ').map(n => n.charAt(0)).join('').toUpperCase().substring(0, 2);
   }
@@ -327,6 +227,48 @@ export class ComprasListComponent implements OnInit, AfterViewInit, OnDestroy {
   // Método para manejar errores de imagen
   onImageError(event: any): void {
     event.target.style.display = 'none';
+  }
+
+  // Métodos de paginación moderna
+  getPaginatedCompras(): Compra[] {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    return this.comprasFiltradas.slice(startIndex, endIndex);
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.comprasFiltradas.length / this.pageSize);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.getTotalPages()) {
+      this.currentPage = page;
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const totalPages = this.getTotalPages();
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let start = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+      let end = Math.min(totalPages, start + maxVisiblePages - 1);
+
+      if (end - start < maxVisiblePages - 1) {
+        start = Math.max(1, end - maxVisiblePages + 1);
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
   }
 
   // TrackBy function para evitar re-renders innecesarios

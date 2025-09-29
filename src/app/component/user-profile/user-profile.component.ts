@@ -9,160 +9,8 @@ import { User } from '../../models/user.model';
   selector: 'app-user-profile',
   standalone: true,
   imports: [CommonModule, RouterLink],
-  template: `
-    <!-- Estado de carga inicial -->
-    <div *ngIf="isInitializing" class="user-profile position-relative">
-      <div class="flex-align gap-4 item-hover-white">
-        <span class="text-xl text-white d-flex position-relative item-hover__text">
-          <i class="ph ph-user"></i>
-        </span>
-        <span class="text-md text-white item-hover__text d-none d-lg-flex">
-          Cargando...
-        </span>
-      </div>
-    </div>
-
-    <!-- Usuario logueado -->
-    <div *ngIf="!isInitializing && isLoggedIn" class="user-profile position-relative">
-      <button 
-        type="button" 
-        class="flex-align gap-4 item-hover-white btn border-0 bg-transparent p-0"
-        (click)="toggleUserDropdown($event)"
-      >
-        <span class="text-xl text-white d-flex position-relative item-hover__text">
-          <i class="ph ph-user"></i>
-        </span>
-        <span class="text-md text-white item-hover__text d-none d-lg-flex">
-          {{ getDisplayName() }}
-        </span>
-        <span class="text-sm d-none d-lg-flex">
-          <i class="ph ph-caret-down"></i>
-        </span>
-      </button>
-      
-      <!-- Dropdown para usuario logueado -->
-      <div 
-        *ngIf="showUserDropdown" 
-        class="user-dropdown position-absolute top-100 end-0 mt-8 bg-white border border-gray-100 rounded-12 shadow-lg py-8 min-w-200 z-99"
-        (click)="$event.stopPropagation()"
-      >
-      
-        <a *ngIf="esCliente; else adminProfile" 
-          routerLink="/my-account" 
-          class="dropdown-item d-flex align-items-center gap-8 px-16 py-12 text-gray-700 hover-bg-white hover-text-main-600 transition-1"
-          (click)="closeUserDropdown()"
-        >
-          <i class="ph ph-user text-lg"></i>
-          <span>Mi Cuenta</span>
-        </a>
-
-        <ng-template #adminProfile>
-          <a routerLink="/dashboard" 
-            class="dropdown-item d-flex align-items-center gap-8 px-16 py-12 text-gray-700 hover-bg-white hover-text-main-600 transition-1"
-            (click)="closeUserDropdown()"
-          >
-            <i class="ph ph-user text-lg"></i>
-            <span>Mi Perfil</span>
-          </a>
-        </ng-template>
-        <a 
-          routerLink="/wishlist" 
-          class="dropdown-item d-flex align-items-center gap-8 px-16 py-12 text-gray-700 hover-bg-main-50 hover-text-main-600 transition-1"
-          (click)="closeUserDropdown()"
-        >
-          <i class="ph ph-heart text-lg"></i>
-          <span>Mis Favoritos</span>
-        </a>
-        <a 
-          routerLink="/cart" 
-          class="dropdown-item d-flex align-items-center gap-8 px-16 py-12 text-gray-700 hover-bg-main-50 hover-text-main-600 transition-1"
-          (click)="closeUserDropdown()"
-        >
-          <i class="ph ph-shopping-cart text-lg"></i>
-          <span>Mi Carrito</span>
-        </a>
-        <hr class="my-8 border-gray-100">
-        <button 
-          type="button"
-          class="dropdown-item d-flex align-items-center gap-8 px-16 py-12 text-gray-700 hover-bg-main-50 hover-text-main-600 transition-1 w-100 border-0 bg-transparent text-start"
-          (click)="logout()"
-        >
-          <i class="ph ph-sign-out text-lg"></i>
-          <span>Cerrar Sesión</span>
-        </button>
-      </div>
-    </div>
-    
-    <!-- Usuario no logueado -->
-    <div *ngIf="!isInitializing && !isLoggedIn" class="position-relative">
-      <button 
-        type="button" 
-        class="flex-align gap-4 item-hover-white btn border-0 bg-transparent p-0"
-        (click)="toggleAuthDropdown($event)"
-      >
-      <span class="text-xl text-white d-flex position-relative item-hover__text">
-  <i class="ph ph-user"></i>
-</span>
-<span class="text-md text-white item-hover__text d-none d-lg-flex">
-  Mi Cuenta
-</span>
-<span class="text-sm d-none d-lg-flex">
-  <i class="ph ph-caret-down"></i>
-</span>
-
-
-      </button>
-      
-      <!-- Dropdown de autenticación -->
-      <div 
-        *ngIf="showAuthDropdown" 
-        class="auth-dropdown position-absolute top-100 end-0 mt-8 bg-white border border-gray-100 rounded-12 shadow-lg py-8 min-w-200 z-99"
-        (click)="$event.stopPropagation()"
-      >
-        <a 
-          routerLink="/account" 
-          class="dropdown-item d-flex align-items-center gap-8 px-16 py-12 text-gray-700 hover-bg-main-50 hover-text-main-600 transition-1"
-          (click)="closeAuthDropdown()"
-        >
-          <i class="ph ph-sign-in text-lg"></i>
-          <span>Iniciar Sesión</span>
-        </a>
-        <a 
-          routerLink="/register" 
-          class="dropdown-item d-flex align-items-center gap-8 px-16 py-12 text-gray-700 hover-bg-main-50 hover-text-main-600 transition-1"
-          (click)="closeAuthDropdown()"
-        >
-          <i class="ph ph-user-plus text-lg"></i>
-          <span>Registrarse</span>
-        </a>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .auth-dropdown,
-    .user-dropdown {
-      min-width: 180px;
-      z-index: 1050;
-    }
-    
-    .dropdown-item {
-      text-decoration: none;
-      border: none;
-      background: none;
-      width: 100%;
-      text-align: left;
-      cursor: pointer;
-    }
-    
-    .dropdown-item:hover {
-      text-decoration: none;
-    }
-    
-    .dropdown-item:focus {
-      outline: none;
-      box-shadow: none;
-    }
-  `]
+  templateUrl: "./user-profile.component.html",
+  styleUrl: "./user-profile.component.scss"
 })
 export class UserProfileComponent implements OnInit {
   user: User | null = null;
@@ -176,43 +24,61 @@ export class UserProfileComponent implements OnInit {
   constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
-    // SOLUCIÓN HIDRATACIÓN: Verificar inmediatamente el token y usuario
-    if (this.authService.isLoggedIn()) {
-      const currentUser = this.authService.getCurrentUser();
-      if (currentUser) {
-        this.user = currentUser;
-        this.isLoggedIn = true;
-        this.esSuperadmin = currentUser.roles?.includes('superadmin') || false;
-        this.esCliente = currentUser.tipo_usuario === 'cliente';
-        this.isInitializing = false;
-      }
-    } else {
-      // No hay usuario logueado, finalizar inicialización
-      this.isInitializing = false;
-    }
+    // Obtener estado inmediatamente de forma síncrona
+    this.initializeUserState();
 
-    // Suscribirse a cambios futuros del usuario
+    // Suscribirse a cambios del usuario
     this.authService.currentUser.subscribe(user => {
-      this.user = user;
-      this.isLoggedIn = !!user;
-
-      if (user) {
-        // Evaluar si tiene el rol 'superadmin'
-        this.esSuperadmin = user.roles?.includes('superadmin') || false;
-        this.esCliente = user.tipo_usuario === 'cliente';
-      } else {
-        this.esSuperadmin = false;
-        this.esCliente = false;
-      }
-      
-      this.isInitializing = false;
-      
+      this.updateUserState(user);
       console.log('UserProfile updated:', {
         user: this.user,
         isLoggedIn: this.isLoggedIn,
         esCliente: this.esCliente,
-        esSuperadmin: this.esSuperadmin
+        esSuperadmin: this.esSuperadmin,
+        isInitializing: this.isInitializing
       });
+    });
+  }
+
+  private initializeUserState(): void {
+    // Obtener el usuario actual de forma síncrona para evitar estados duplicados
+    const currentUser = this.authService.getCurrentUser();
+    const isLoggedIn = this.authService.isLoggedIn();
+
+    console.log('🔄 Inicializando estado:', { currentUser, isLoggedIn });
+
+    if (isLoggedIn && currentUser) {
+      this.updateUserState(currentUser);
+    } else {
+      this.updateUserState(null);
+    }
+  }
+
+  private updateUserState(user: any): void {
+    console.log('🔧 Actualizando estado con usuario:', user);
+
+    this.user = user;
+    this.isLoggedIn = !!user;
+
+    if (user) {
+      // Verificar si es superadmin (puede estar en roles array o como propiedad)
+      this.esSuperadmin = user.roles?.includes('superadmin') ||
+                         user.roles?.includes('admin') ||
+                         user.tipo_usuario === 'admin';
+      this.esCliente = user.tipo_usuario === 'cliente';
+    } else {
+      this.esSuperadmin = false;
+      this.esCliente = false;
+    }
+
+    // CRÍTICO: Finalizar inicialización inmediatamente
+    this.isInitializing = false;
+
+    console.log('✅ Estado actualizado:', {
+      isLoggedIn: this.isLoggedIn,
+      esCliente: this.esCliente,
+      esSuperadmin: this.esSuperadmin,
+      isInitializing: this.isInitializing
     });
   }
 
@@ -249,9 +115,24 @@ export class UserProfileComponent implements OnInit {
     this.showUserDropdown = false;
   }
 
+  getCurrentState(): string {
+    if (this.isInitializing) {
+      console.log('🔄 User Profile State: LOADING');
+      return 'loading';
+    }
+
+    if (this.isLoggedIn && this.user) {
+      console.log('✅ User Profile State: LOGGED IN -', this.user.name);
+      return 'logged';
+    }
+
+    console.log('👤 User Profile State: GUEST');
+    return 'guest';
+  }
+
   getDisplayName(): string {
     if (!this.user) return 'No Usuario';
-    
+
     if (this.esCliente) {
       return this.user.name || 'Cliente';
     } else {

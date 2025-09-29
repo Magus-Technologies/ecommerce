@@ -3,18 +3,19 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PedidosService } from '../../../services/pedidos.service';
-import { NgxDatatableModule, ColumnMode, SelectionType, SortType } from '@swimlane/ngx-datatable';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-pedidos-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, NgxDatatableModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: "./pedidos-list.component.html",
-  styleUrl:"./pedidos-list.component.scss"
+  styleUrl: "./pedidos-list.component.scss"
 })
 export class PedidosListComponent implements OnInit {
+  // Datos
   cotizaciones: any[] = []; // Solo cotizaciones (que el admin ve como "pedidos")
+  cotizacionesFiltradas: any[] = [];
   cotizacionSeleccionada: any | null = null;
 
   // Para cambio de estado
@@ -24,22 +25,12 @@ export class PedidosListComponent implements OnInit {
   cambiandoEstado: boolean = false;
   loading = false;
 
-  // Para paginación
+  // Paginación simple
   pageSize = 10;
+  currentPage = 1;
 
-  // Configuración para NGX-Datatable
-  columns = [
-    { name: 'Código', prop: 'codigo_cotizacion', flexGrow: 1 },
-    { name: 'Cliente', prop: 'cliente_nombre', flexGrow: 2 },
-    { name: 'Fecha', prop: 'fecha_cotizacion', flexGrow: 1 },
-    { name: 'Total', prop: 'total', flexGrow: 1 },
-    { name: 'Estado', prop: 'estado_cotizacion.nombre', flexGrow: 1 },
-    { name: 'Acciones', prop: 'acciones', flexGrow: 1 }
-  ];
-
-  ColumnMode = ColumnMode;
-  SelectionType = SelectionType;
-  SortType = SortType;
+  // Método para acceder a Math.min en el template
+  Math = Math;
 
   constructor(private pedidosService: PedidosService) {}
 
@@ -54,17 +45,20 @@ export class PedidosListComponent implements OnInit {
         console.log('📦 Respuesta completa del servidor:', response);
         if (response.status === 'success') {
           this.cotizaciones = response.cotizaciones || [];
+          this.cotizacionesFiltradas = [...this.cotizaciones];
           console.log('✅ Cotizaciones cargadas:', this.cotizaciones.length);
           console.log('📋 Datos cotizaciones:', this.cotizaciones);
         } else {
           console.log('⚠️ Respuesta no exitosa:', response);
           this.cotizaciones = [];
+          this.cotizacionesFiltradas = [];
         }
         this.loading = false;
       },
       error: (error) => {
         console.error('❌ Error cargando cotizaciones:', error);
         this.cotizaciones = [];
+        this.cotizacionesFiltradas = [];
         this.loading = false;
       }
     });
@@ -296,8 +290,54 @@ export class PedidosListComponent implements OnInit {
     }).length;
   }
 
+  // Métodos de paginación moderna
+  getPaginatedCotizaciones(): any[] {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    return this.cotizacionesFiltradas.slice(startIndex, endIndex);
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.cotizacionesFiltradas.length / this.pageSize);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.getTotalPages()) {
+      this.currentPage = page;
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const totalPages = this.getTotalPages();
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let start = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+      let end = Math.min(totalPages, start + maxVisiblePages - 1);
+
+      if (end - start < maxVisiblePages - 1) {
+        start = Math.max(1, end - maxVisiblePages + 1);
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
+  }
+
+  // Método trackBy para optimizar renderizado
+  trackByCotizacionId(index: number, cotizacion: any): number {
+    return cotizacion.id;
+  }
+
   onPageSizeChange(): void {
-    // Método para manejar cambio de tamaño de página
-    console.log('Page size changed to:', this.pageSize);
+    this.currentPage = 1; // Reset to first page when changing page size
   }
 }

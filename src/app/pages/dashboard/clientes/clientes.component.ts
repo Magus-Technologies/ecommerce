@@ -13,12 +13,14 @@ import {
 } from '../../../models/cliente.model';
 import { ClienteEditModalComponent } from '../../../components/cliente-edit-modal/cliente-edit-modal.component';
 import { environment } from '../../../../environments/environment';
+import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-clientes',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     FormsModule,
     ClienteEditModalComponent
   ],
@@ -30,6 +32,7 @@ export class ClientesComponent implements OnInit, OnDestroy {
 
   // Datos
   clientes: Cliente[] = [];
+  clientesFiltrados: Cliente[] = [];
   estadisticas: EstadisticasGenerales = {
     total_clientes: 0,
     clientes_activos: 0,
@@ -66,13 +69,16 @@ export class ClientesComponent implements OnInit, OnDestroy {
   mostrarModalEditar = false;
   clienteEditando: Cliente | null = null;
 
-  // Referencia a Math para el template
-  Math = Math;
+  // Tabla properties
+  pageSize = 10;
+  currentPage = 1;
+  selected: Cliente[] = [];
 
   constructor(
     private clienteService: ClienteService,
     private permissionsService: PermissionsService,
-    private router: Router
+    private router: Router,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
@@ -118,6 +124,7 @@ export class ClientesComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (response.status === 'success') {
             this.clientes = response.data.data;
+            this.clientesFiltrados = [...this.clientes];
             this.paginacion = {
               current_page: response.data.current_page,
               last_page: response.data.last_page,
@@ -157,25 +164,6 @@ export class ClientesComponent implements OnInit, OnDestroy {
     }
   }
 
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const current = this.paginacion.current_page;
-    const last = this.paginacion.last_page;
-    
-    // Mostrar máximo 5 páginas
-    let start = Math.max(1, current - 2);
-    let end = Math.min(last, start + 4);
-    
-    if (end - start < 4) {
-      start = Math.max(1, end - 4);
-    }
-    
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    
-    return pages;
-  }
 
   verDetalle(id: number): void {
     this.router.navigate(['/dashboard/clientes', id]);
@@ -207,7 +195,7 @@ export class ClientesComponent implements OnInit, OnDestroy {
 
   toggleEstado(cliente: Cliente): void {
     const accion = cliente.estado ? 'desactivar' : 'activar';
-    
+
     if (confirm(`¿Está seguro de ${accion} al cliente ${cliente.nombre_completo}?`)) {
       this.clienteService.toggleEstado(cliente.id_cliente)
         .pipe(takeUntil(this.destroy$))
@@ -333,4 +321,89 @@ export class ClientesComponent implements OnInit, OnDestroy {
   onImageError(event: any): void {
     event.target.style.display = 'none';
   }
+
+  // Método para obtener avatar display
+  getAvatarDisplay(cliente: Cliente): { type: 'initial' | 'image', value: string, color?: string } {
+    const photoUrl = this.getClientePhotoUrl(cliente);
+
+    if (photoUrl) {
+      return { type: 'image', value: photoUrl };
+    }
+
+    const colors = [
+      '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
+      '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
+    ];
+
+    const name = cliente.nombre_completo || (cliente.nombres + ' ' + cliente.apellidos);
+    const colorIndex = (cliente.id_cliente || 0) % colors.length;
+
+    return {
+      type: 'initial',
+      value: this.getInitials(name),
+      color: colors[colorIndex]
+    };
+  }
+
+  // Método para obtener la clase CSS del estado
+  getEstadoClass(estado: boolean): string {
+    return estado
+      ? 'bg-success-50 text-success-600 border-success-100'
+      : 'bg-danger-50 text-danger-600 border-danger-100';
+  }
+
+  // Verificar permisos para cambiar estado
+  canChangeStatus(): boolean {
+    return this.puedeEditar;
+  }
+
+  // Paginación simple
+  getPaginatedClientes(): Cliente[] {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    return this.clientesFiltrados.slice(startIndex, endIndex);
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.clientesFiltrados.length / this.pageSize);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.getTotalPages()) {
+      this.currentPage = page;
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const totalPages = this.getTotalPages();
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let start = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+      let end = Math.min(totalPages, start + maxVisiblePages - 1);
+
+      if (end - start < maxVisiblePages - 1) {
+        start = Math.max(1, end - maxVisiblePages + 1);
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
+  }
+
+  // Método trackBy para optimizar renderizado
+  trackByClienteId(index: number, cliente: Cliente): number {
+    return cliente.id_cliente;
+  }
+
+  // Método para acceder a Math.min en el template
+  Math = Math;
 }

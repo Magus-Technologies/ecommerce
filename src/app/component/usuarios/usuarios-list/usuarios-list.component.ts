@@ -8,12 +8,6 @@ import Swal from 'sweetalert2';
 import { environment } from '../../../../environments/environment';
 import { PermissionsService } from '../../../services/permissions.service';
 import { Observable } from 'rxjs';
-import {
-  NgxDatatableModule,
-  ColumnMode,
-  SelectionType,
-  SortType,
-} from '@swimlane/ngx-datatable';
 
 interface Usuario {
   id: number;
@@ -27,24 +21,27 @@ interface Usuario {
 @Component({
   selector: 'app-usuarios-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, UsuarioModalComponent, NgxDatatableModule],
+  imports: [CommonModule, FormsModule, UsuarioModalComponent],
   templateUrl: './usuarios-list.component.html',
-  styleUrls: ['./usuarios-list.component.scss']
+  styleUrl: './usuarios-list.component.scss'
 })
 
 export class UsuariosListComponent implements OnInit {
 
+  // Datos
   usuarios: Usuario[] = [];
+  usuariosFiltrados: Usuario[] = [];
   usuariosBackend: any[] = [];
   loading = false;
   isLoading = false;
 
-  // Datatable properties
+  // Paginación simple
   pageSize = 10;
-  ColumnMode = ColumnMode;
-  SelectionType = SelectionType;
-  SortType = SortType;
+  currentPage = 1;
   selected: Usuario[] = [];
+
+  // Método para acceder a Math.min en el template
+  Math = Math;
 
   // Modal properties
   showModal = false;
@@ -105,6 +102,7 @@ private refreshUserPermissions(): void {
           estado: usuario.is_enabled || false,
           fechaCreacion: new Date(usuario.created_at)
         }));
+        this.usuariosFiltrados = [...this.usuarios];
         this.loading = false;
         this.isLoading = false;
       },
@@ -222,6 +220,10 @@ private refreshUserPermissions(): void {
   }
 
 
+   trackByUsuarioId(index: number, usuario: Usuario): number {
+    return usuario.id;
+  }
+
    trackByUserId(index: number, usuario: Usuario): number {
     return usuario.id;
   }
@@ -285,6 +287,49 @@ private refreshUserPermissions(): void {
   canChangeStatus(): boolean {
     return this.permissionsService.hasPermission('usuarios.edit');
   }
+
+  // Métodos de paginación moderna
+  getPaginatedUsuarios(): Usuario[] {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    return this.usuariosFiltrados.slice(startIndex, endIndex);
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.usuariosFiltrados.length / this.pageSize);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.getTotalPages()) {
+      this.currentPage = page;
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const totalPages = this.getTotalPages();
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let start = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+      let end = Math.min(totalPages, start + maxVisiblePages - 1);
+
+      if (end - start < maxVisiblePages - 1) {
+        start = Math.max(1, end - maxVisiblePages + 1);
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
+  }
+
 
   // Datatable methods
   get selectionText(): string {

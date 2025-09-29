@@ -1,0 +1,84 @@
+// src/app/pages/dashboard/almacen/productos/productos-list.component.scss
+// Este componente usa las clases globales de data-table
+// definidas en src/assets/sass/components/_data-table.scss
+
+// Solo estilos específicos para productos
+:host {
+  display: block;
+}
+
+// Estilos específicos para las imágenes de productos
+.product-image-container {
+  width: 40px;
+  height: 40px;
+  background-color: var(--gray-50);
+  border-radius: var(--size-6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--gray-200);
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--size-4);
+}
+
+// Estilos específicos para información de precios
+.product-price-info {
+  text-align: right;
+
+  .price-sale {
+    font-size: var(--font-sm);
+    font-weight: 600;
+    color: var(--success-600);
+    margin-bottom: 2px;
+  }
+
+  .price-buy {
+    font-size: var(--font-xs);
+    color: var(--gray-600);
+  }
+}
+
+// Estilos específicos para información de stock
+.product-stock-info {
+  text-align: center;
+
+  .stock-current {
+    font-size: var(--font-sm);
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 2px;
+
+    &.stock-low {
+      color: var(--danger-600);
+    }
+  }
+
+  .stock-min {
+    font-size: var(--font-xs);
+    color: var(--gray-600);
+  }
+}
+
+// Estilos específicos para el botón de estrella destacada
+.action-buttons__btn--view {
+  &:has(.ph-fill) {
+    background-color: var(--warning-50) !important;
+    color: var(--warning-600) !important;
+
+    &:hover {
+      background-color: var(--warning-100) !important;
+      color: var(--warning-700) !important;
+    }
+  }
+}
+
+// MARGEN PARA EL ÚLTIMO ITEM DE LA TABLA
+::ng-deep .modern-data-table .table tbody tr:last-child td {
+  padding-bottom: 24px !important;
+}

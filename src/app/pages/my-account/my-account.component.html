@@ -45,7 +45,8 @@
                 <img [src]="getUserPhotoUrl()"
                      [alt]="getUserName()"
                      class="w-100 h-100 object-cover"
-                     (error)="onImageError($event)">
+                     (error)="onImageError($event)"
+                     loading="lazy">
               </div>
 
               <!-- Avatar con iniciales si no hay foto -->
