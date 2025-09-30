@@ -9403,12 +9403,13 @@ input:focus-visible {
 /* ================== Section Heading Css End ========================= */
 /* ============================== Banner Css Start ========================== */
 .banner {
-    margin-top: 32px;
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 @media screen and (max-width: 767px) {
     .banner {
-        margin-bottom: 32px;
+        margin-bottom: 0;
     }
 }
 
@@ -9422,18 +9423,9 @@ input:focus-visible {
 
 .banner-item {
     position: relative;
-    padding-block-start: 80px;
-    padding-block-end: 140px;
-    padding-inline-start: clamp(1rem, -11.87rem + 20.758vw, 8.875rem);
-    padding-inline-end: clamp(1rem, -5.129rem + 9.885vw, 4.75rem);
-    -webkit-mask-image: url(../images/bg/banner-bg2.png);
-    mask-image: url(../images/bg/banner-bg2.png);
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    background: #E9FFFF;
-    mask-position: top;
-    mask-size: 100% 100%;
-    gap: clamp(1.5rem, -2.151rem + 7.607vw, 4.5rem);
+    padding: 0;
+    margin: 0;
+    background: transparent;
 }
 
 @media screen and (max-width: 767px) {
@@ -9574,7 +9566,7 @@ input:focus-visible {
 /* ============================== Banner Css End ========================== */
 /* ============================ Feature Section Css start =============================== */
 .feature {
-    margin-top: 32px;
+    margin-top: 0;
 }
 
 .feature .arrow-center:hover .slick-arrow {

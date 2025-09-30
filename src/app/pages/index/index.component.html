@@ -1,128 +1,142 @@
 <!-- src/app/pages/index/index.component.html -->
 <!-- ============================ Banner Section Start =============================== -->
 <div class="banner w-100 p-0">
-    <div
-      class="banner-item position-relative overflow-hidden w-100"
-      style="padding: 0; margin: 0;"
+  <div
+    class="banner-item position-relative overflow-hidden w-100"
+    style="padding: 0; margin: 0"
+  >
+
+    <!-- ✅ SIN IMAGEN DE FONDO - Solo banners dinámicos -->
+
+    <!-- ✅ BOTONES DE NAVEGACIÓN CON ESTILOS CORRECTOS -->
+    <button
+      type="button"
+      id="banner-prev"
+      class="banner-nav-btn flex-center rounded-circle box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
+      (click)="anteriorSlide()"
     >
-      <a
-        href="#featureSection"
-        class="scroll-down w-48 h-48 text-center flex-center bg-main-600 rounded-circle border border-3 text-white border-white position-absolute start-50 translate-middle-x z-3 hover-bg-main-800 transition-all"
-        style="bottom: -10px"
-      >
-        <span class="icon line-height-0" style="margin-top: -15px">
-          <i class="ph ph-caret-double-down"></i>
-        </span>
-      </a>
+      <i class="ph ph-caret-left"></i>
+    </button>
+    <button
+      type="button"
+      id="banner-next"
+      class="banner-nav-btn flex-center rounded-circle box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
+      (click)="siguienteSlide()"
+    >
+      <i class="ph ph-caret-right"></i>
+    </button>
 
-      <!-- ✅ SIN IMAGEN DE FONDO - Solo banners dinámicos -->
-
-      <!-- ✅ BOTONES DE NAVEGACIÓN CON ESTILOS CORRECTOS -->
-      <button
-        type="button"
-        id="banner-prev"
-        class="banner-nav-btn flex-center rounded-circle box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
-        (click)="anteriorSlide()"
-      >
-        <i class="ph ph-caret-left"></i>
-      </button>
-      <button
-        type="button"
-        id="banner-next"
-        class="banner-nav-btn flex-center rounded-circle box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
-        (click)="siguienteSlide()"
-      >
-        <i class="ph ph-caret-right"></i>
-      </button>
-
-      <!-- ✅ BANNERS DINÁMICOS -->
-      <ngx-slick-carousel
-        class="carousel"
-        #slickModal="slick-carousel"
-        [config]="slideConfig"
-        (init)="slickInit($event)"
-        (breakpoint)="breakpoint($event)"
-        (afterChange)="afterChange($event)"
-        (beforeChange)="beforeChange($event)"
-      >
-        <!-- Estado de carga -->
-        <div ngxSlickItem *ngIf="isLoadingBanners" class="slide">
-          <div class="w-100" style="height: 450px;">
-            <div class="w-100 h-100 d-flex align-items-center justify-content-center">
-              <div class="placeholder-glow w-100 h-100">
-                <span class="placeholder col-12 h-100"></span>
-              </div>
+    <!-- ✅ BANNERS DINÁMICOS -->
+    <ngx-slick-carousel
+      class="carousel"
+      #slickModal="slick-carousel"
+      [config]="slideConfig"
+      (init)="slickInit($event)"
+      (breakpoint)="breakpoint($event)"
+      (afterChange)="afterChange($event)"
+      (beforeChange)="beforeChange($event)"
+    >
+      <!-- Estado de carga -->
+      <div ngxSlickItem *ngIf="isLoadingBanners" class="slide">
+        <div class="w-100" style="height: 450px">
+          <div
+            class="w-100 h-100 d-flex align-items-center justify-content-center"
+          >
+            <div class="placeholder-glow w-100 h-100">
+              <span class="placeholder col-12 h-100"></span>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- ✅ BANNERS ESTILO MERCADO LIBRE - Solo imagen clickeable -->
-        <div ngxSlickItem *ngFor="let banner of bannersDinamicos" class="slide">
-          <div class="w-100 banner-responsive-container">
-            <!-- ✅ BANNER OCUPA TODO EL ESPACIO DISPONIBLE -->
-            <a
-              [routerLink]="[banner.enlace_url]"
-              class="d-block w-100 h-100 position-relative overflow-hidden banner-link"
-              style="transition: transform 0.3s ease, box-shadow 0.3s ease;"
-              (mouseenter)="onBannerHover($event, true)"
-              (mouseleave)="onBannerHover($event, false)"
+      <!-- ✅ BANNERS ESTILO MERCADO LIBRE - Solo imagen clickeable -->
+      <div ngxSlickItem *ngFor="let banner of bannersDinamicos" class="slide">
+        <div class="w-100 banner-responsive-container">
+          <!-- ✅ BANNER OCUPA TODO EL ESPACIO DISPONIBLE -->
+          <a
+            [routerLink]="[banner.enlace_url]"
+            class="d-block w-100 h-100 position-relative overflow-hidden banner-link"
+            style="transition: transform 0.3s ease, box-shadow 0.3s ease"
+            (mouseenter)="onBannerHover($event, true)"
+            (mouseleave)="onBannerHover($event, false)"
+          >
+            <img
+              [src]="
+                banner.imagen_url || 'assets/images/banner-placeholder.jpg'
+              "
+              [alt]="'Banner ' + banner.orden"
+              (error)="onImageError($event)"
+              class="w-100 h-100 banner-responsive-img"
+              style="
+                object-fit: cover;
+                object-position: center;
+                transition: transform 0.3s ease;
+              "
+            />
+
+            <!-- Overlay hover sutil -->
+            <div
+              class="banner-overlay position-absolute top-0 start-0 w-100 h-100"
+              style="
+                background: rgba(0, 0, 0, 0);
+                transition: background 0.3s ease;
+                pointer-events: none;
+              "
+            ></div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Mensaje cuando no hay banners dinámicos -->
+      <div
+        ngxSlickItem
+        *ngIf="!isLoadingBanners && bannersDinamicos.length === 0"
+        class="slide"
+      >
+        <div
+          class="w-100 d-flex align-items-center justify-content-center"
+          style="
+            height: 450px;
+            background: linear-gradient(
+              135deg,
+              var(--main-600) 0%,
+              var(--main-800) 100%
+            );
+          "
+        >
+          <div class="text-center text-white px-4">
+            <span
+              class="d-inline-block bg-white bg-opacity-20 backdrop-blur px-16 py-8 rounded-pill text-sm fw-semibold mb-16"
             >
-              <img
-                [src]="banner.imagen_url || 'assets/images/banner-placeholder.jpg'"
-                [alt]="'Banner ' + banner.orden"
-                (error)="onImageError($event)"
-                class="w-100 h-100 banner-responsive-img"
-                style="object-fit: cover; object-position: center; transition: transform 0.3s ease;"
-              />
-
-              <!-- Overlay hover sutil -->
-              <div class="banner-overlay position-absolute top-0 start-0 w-100 h-100"
-                   style="background: rgba(0,0,0,0); transition: background 0.3s ease; pointer-events: none;">
-              </div>
+              Descuento por apertura
+            </span>
+            <h1
+              class="fw-bold mb-24"
+              style="font-size: 2.5rem; line-height: 1.2"
+            >
+              Pedidos en la tienda en tecnología con descuentos
+            </h1>
+            <a
+              [routerLink]="['shop']"
+              class="btn btn-light d-inline-flex align-items-center rounded-pill gap-8 px-24 py-12 fw-semibold"
+            >
+              Ir a la tienda
+              <span class="icon text-xl d-flex">
+                <i class="ph ph-shopping-cart-simple"></i>
+              </span>
             </a>
           </div>
         </div>
-
-        <!-- Mensaje cuando no hay banners dinámicos -->
-        <div
-          ngxSlickItem
-          *ngIf="!isLoadingBanners && bannersDinamicos.length === 0"
-          class="slide"
-        >
-          <div class="w-100 d-flex align-items-center justify-content-center" style="height: 450px; background: linear-gradient(135deg, var(--main-600) 0%, var(--main-800) 100%);">
-            <div class="text-center text-white px-4">
-              <span
-                class="d-inline-block bg-white bg-opacity-20 backdrop-blur px-16 py-8 rounded-pill text-sm fw-semibold mb-16"
-              >
-                Descuento por apertura
-              </span>
-              <h1
-                class="fw-bold mb-24"
-                style="font-size: 2.5rem; line-height: 1.2"
-              >
-                Pedidos en la tienda en tecnología con descuentos
-              </h1>
-              <a
-                [routerLink]="['shop']"
-                class="btn btn-light d-inline-flex align-items-center rounded-pill gap-8 px-24 py-12 fw-semibold"
-              >
-                Ir a la tienda
-                <span class="icon text-xl d-flex">
-                  <i class="ph ph-shopping-cart-simple"></i>
-                </span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </ngx-slick-carousel>
-    </div>
+      </div>
+    </ngx-slick-carousel>
+  </div>
 </div>
 <!-- ============================ Banner Section End =============================== -->
 <!-- ============================ Inicio de la sección de funciones =============================== -->
 <div
   class="feature"
   id="featureSection"
-  style="padding-top: 30px; margin-top: -20px"
+
 >
   <div class="container container-lg" style="padding-top: 0">
     <div
@@ -136,7 +150,10 @@
           class="slick-prev slick-arrow flex-center rounded-circle bg-white text-xl hover-bg-main-600 hover-text-white transition-1"
         >
           <svg width="16" height="16" viewBox="0 0 256 256" fill="none">
-            <path d="M168.49 199.51a12 12 0 0 1-17 17l-80-80a12 12 0 0 1 0-17l80-80a12 12 0 0 1 17 17L97 128Z" fill="currentColor"/>
+            <path
+              d="M168.49 199.51a12 12 0 0 1-17 17l-80-80a12 12 0 0 1 0-17l80-80a12 12 0 0 1 17 17L97 128Z"
+              fill="currentColor"
+            />
           </svg>
         </button>
         <button
@@ -145,12 +162,25 @@
           class="slick-next slick-arrow flex-center rounded-circle bg-white text-xl hover-bg-main-600 hover-text-white transition-1"
         >
           <svg width="16" height="16" viewBox="0 0 256 256" fill="none">
-            <path d="M87.51 56.49a12 12 0 0 1 17-17l80 80a12 12 0 0 1 0 17l-80 80a12 12 0 0 1-17-17L159 128Z" fill="currentColor"/>
+            <path
+              d="M87.51 56.49a12 12 0 0 1 17-17l80 80a12 12 0 0 1 0 17l-80 80a12 12 0 0 1-17-17L159 128Z"
+              fill="currentColor"
+            />
           </svg>
         </button>
       </div>
 
+      <!-- ✅ ESTADO DE CARGA PARA CATEGORÍAS -->
+      <div *ngIf="isLoadingCategorias" class="text-center py-40">
+        <div class="spinner-border text-main-600" role="status">
+          <span class="visually-hidden">Cargando categorías...</span>
+        </div>
+        <p class="text-gray-500 mt-12 mb-0">Cargando categorías...</p>
+      </div>
+
+      <!-- ✅ CATEGORÍAS DINÁMICAS -->
       <ngx-slick-carousel
+        *ngIf="!isLoadingCategorias && featureItems.length > 0"
         class="feature-item-wrapper"
         #slickModal="slick-carousel"
         [config]="featureSlideConfig"
@@ -163,7 +193,7 @@
             padding-top: 0;
             margin-top: 0;
             transform: translate3d(0px, 10px, 0px);
-            height: 235px;
+            height: 200px;
           "
         >
           <div
@@ -230,6 +260,29 @@
           </div>
         </div>
       </ngx-slick-carousel>
+
+      <!-- ✅ MENSAJE CUANDO NO HAY CATEGORÍAS -->
+      <div
+        *ngIf="!isLoadingCategorias && featureItems.length === 0"
+        class="text-center py-40"
+      >
+        <div class="bg-gray-50 rounded-12 py-30 px-20">
+          <i class="ph ph-squares-four text-4xl text-gray-300 mb-16"></i>
+          <h6 class="text-gray-500 mb-8 fw-semibold">
+            No hay categorías disponibles
+          </h6>
+          <p class="text-gray-400 text-sm mb-16">
+            Actualmente no hay categorías configuradas en la tienda
+          </p>
+          <a
+            [routerLink]="['shop']"
+            class="btn btn-sm bg-main-600 text-white px-16 py-8 rounded-8"
+          >
+            <i class="ph ph-storefront me-8"></i>
+            Ver todos los productos
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -261,10 +314,10 @@
         [attr.data-aos-duration]="banner.animacion_delay"
       >
         <!-- Reemplázala con: -->
-      <div
-        class="promotional-banner-item position-relative rounded-24 overflow-hidden z-1 py-52 ps-40 pe-24 h-100"
-        [style.background-color]="banner.color_fondo || '#ffffff'"
-      >
+        <div
+          class="promotional-banner-item position-relative rounded-24 overflow-hidden z-1 py-52 ps-40 pe-24 h-100"
+          [style.background-color]="banner.color_fondo || '#ffffff'"
+        >
           <img
             [src]="
               banner.imagen_url ||
@@ -275,7 +328,7 @@
             (error)="onImageError($event)"
           />
           <div class="promotional-banner-item__content">
-            <h6 
+            <h6
               class="promotional-banner-item__title text-2xl max-w-184"
               [style.color]="banner.color_texto || '#212529'"
             >
@@ -283,7 +336,11 @@
             </h6>
 
             <div *ngIf="banner.precio" class="d-flex align-items-end gap-8">
-              <span class="fst-italic text-sm fw-bold text-white" style="text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);">Desde</span>
+              <span
+                class="fst-italic text-sm fw-bold text-white"
+                style="text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7)"
+                >Desde</span
+              >
               <h6 class="text-danger-600 mb-0 text-xl">{{ banner.precio }}</h6>
             </div>
 
@@ -507,37 +564,42 @@
             <div
               class="product-card h-100 p-12 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 group-item"
             >
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="wishlist-btn-custom"
                 [class.active]="isInWishlist(product.id)"
                 (click)="agregarAWishlist(product)"
               >
                 <!-- Corazón vacío (cuando no está en wishlist) -->
-                <svg 
+                <svg
                   *ngIf="!isInWishlist(product.id)"
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 256 256" 
+                  width="20"
+                  height="20"
+                  viewBox="0 0 256 256"
                   fill="none"
                   class="heart-icon"
                 >
-                  <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z" fill="currentColor"/>
+                  <path
+                    d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"
+                    fill="currentColor"
+                  />
                 </svg>
 
                 <!-- Corazón con solo el borde (cuando está en wishlist) -->
-                <svg 
+                <svg
                   *ngIf="isInWishlist(product.id)"
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 256 256" 
+                  width="20"
+                  height="20"
+                  viewBox="0 0 256 256"
                   fill="none"
                   class="heart-icon heart-outline"
                 >
-                  <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z" 
-                    stroke="currentColor" 
-                    stroke-width="16" 
-                    fill="none"/>
+                  <path
+                    d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"
+                    stroke="currentColor"
+                    stroke-width="16"
+                    fill="none"
+                  />
                 </svg>
               </button>
 
@@ -560,7 +622,7 @@
               <div class="product-card__content p-sm-2 w-100">
                 <h6 class="title text-lg fw-semibold my-12">
                   <a
-                    [routerLink]="['/product-details' , product.id]"
+                    [routerLink]="['/product-details', product.id]"
                     class="link text-line-2"
                     >{{ product.nombre }}</a
                   >
@@ -677,12 +739,11 @@
             class="position-absolute inset-block-start-0 inset-inline-start-0 z-n1 w-100 h-100 opacity-6"
           />
 
+          <!-- ✅ MOSTRAR IMAGEN SOLO SI HAY OFERTA CON IMAGEN -->
           <img
-            [src]="
-              ofertaPrincipalDelDia?.oferta_principal?.imagen_url ||
-              'assets/images/thumbs/basket-img.png'
-            "
-            alt="Basket Thumb"
+            *ngIf="ofertaPrincipalDelDia?.oferta_principal?.imagen_url"
+            [src]="ofertaPrincipalDelDia!.oferta_principal!.imagen_url"
+            [alt]="ofertaPrincipalDelDia!.oferta_principal!.titulo"
             class="position-absolute inset-inline-end-0 inset-block-end-0"
           />
 
@@ -766,49 +827,22 @@
               (!ofertaPrincipalDelDia ||
                 !ofertaPrincipalDelDia.oferta_principal)
             "
+            class="text-center py-40"
           >
-            <span
-              class="text-primary-600 bg-yellow text-heading py-4 px-12 rounded-4 text-sm fw-medium"
-              >Ofertas especiales</span
-            >
-            <div class="">
-              <h5 class="text-white mb-8 mt-12">Ofertas del día</h5>
-              <p class="fw-semibold text-success-600">
-                Ahorra hasta 50% en tu primera compra
+            <div class="bg-white bg-opacity-10 rounded-12 py-30 px-20">
+              <i class="ph ph-tag text-4xl text-white mb-16"></i>
+              <h5 class="text-white mb-8 fw-semibold">
+                No hay ofertas especiales disponibles
+              </h5>
+              <p class="text-white text-opacity-75 text-sm mb-16">
+                Actualmente no tenemos ofertas especiales del día activas
               </p>
-              <div class="countdown mt-24 mb-24" id="countdown4">
-                <ul class="countdown-list d-flex align-items-center flex-wrap">
-                  <li
-                    class="countdown-list__item py-8 px-12 text-heading flex-align gap-4 text-sm fw-medium colon-white"
-                  >
-                    <span class="days">0</span> D
-                  </li>
-                  <li
-                    class="countdown-list__item py-8 px-12 text-heading flex-align gap-4 text-sm fw-medium colon-white"
-                  >
-                    <span class="hours">0</span> H
-                  </li>
-                  <li
-                    class="countdown-list__item py-8 px-12 text-heading flex-align gap-4 text-sm fw-medium colon-white"
-                  >
-                    <span class="minutes">0</span> M
-                  </li>
-                  <li
-                    class="countdown-list__item py-8 px-12 text-heading flex-align gap-4 text-sm fw-medium colon-white"
-                  >
-                    <span class="seconds">0</span> S
-                  </li>
-                </ul>
-              </div>
               <a
                 [routerLink]="['shop']"
-                class="mt-16 btn bg-white hover-text-white hover-bg-main-800 text-main-600 fw-medium d-inline-flex align-items-center rounded-pill gap-8"
-                tabindex="0"
+                class="btn bg-white text-main-600 hover-bg-main-100 px-24 py-10 rounded-pill d-inline-flex align-items-center gap-8"
               >
-                Explorar Tienda
-                <span class="icon text-xl d-flex"
-                  ><i class="ph-bold ph-shopping-cart"></i
-                ></span>
+                <i class="ph ph-storefront"></i>
+                Explorar productos
               </a>
             </div>
           </div>
@@ -1430,96 +1464,206 @@
             <h6
               class="underlined-line position-relative mb-0 pb-16 d-inline-block"
             >
-              Productos más vendidos
+              Productos destacados
             </h6>
           </div>
-          <div class="short-product-list arrow-style-two max-h-unset">
+
+          <!-- ✅ ESTADO DE CARGA -->
+          <div *ngIf="isLoadingProductosMasVendidos" class="text-center py-40">
+            <div class="spinner-border text-main-600" role="status">
+              <span class="visually-hidden"
+                >Cargando productos más vendidos...</span
+              >
+            </div>
+            <p class="text-gray-500 mt-12 mb-0 text-sm">
+              Cargando productos destacados...
+            </p>
+          </div>
+
+          <!-- ✅ PRODUCTOS MÁS VENDIDOS DINÁMICOS -->
+          <div
+            *ngIf="
+              !isLoadingProductosMasVendidos && productosMasVendidos.length > 0
+            "
+            class="short-product-list arrow-style-two max-h-unset"
+          >
             <ngx-slick-carousel
               #slickModal="slick-carousel"
               class="short-product-list arrow-style-two max-h-unset"
               [config]="sortProductSlideConfig"
             >
+              <!-- ✅ PRIMER SLIDE CON PRODUCTOS MÁS VENDIDOS -->
               <div ngxSlickItem class="d-flex flex-column gap-44">
                 <div
-                  *ngFor="let product of topProductSlides"
+                  *ngFor="let product of productosMasVendidos.slice(0, 4)"
                   class="flex-align gap-16"
                 >
                   <div
                     class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
                   >
-                    <a [routerLink]="['/product-details', 1]" class="link"
-                      ><img
-                        src="assets/images/thumbs/short-product-img5.png"
-                        alt=""
-                    /></a>
+                    <a
+                      [routerLink]="['/product-details', product.id]"
+                      class="link"
+                    >
+                      <img
+                        [src]="
+                          product.imagen_principal ||
+                          'assets/images/thumbs/short-product-img1.png'
+                        "
+                        [alt]="product.nombre"
+                        (error)="onImageError($event)"
+                        style="
+                          width: 100%;
+                          height: 100%;
+                          object-fit: cover;
+                          border-radius: 8px;
+                        "
+                      />
+                    </a>
                   </div>
                   <div class="product-card__content mt-12">
                     <div class="flex-align gap-6">
-                      <span class="text-xs fw-bold text-gray-500">4.8</span>
-                      <span class="text-15 fw-bold text-warning-600 d-flex"
-                        ><i class="ph-fill ph-star"></i
-                      ></span>
-                      <span class="text-xs fw-bold text-gray-500">(17k)</span>
+                      <span class="text-xs fw-bold text-gray-500">{{
+                        product.rating || 4.8
+                      }}</span>
+                      <span class="text-15 fw-bold text-warning-600 d-flex">
+                        <i class="ph-fill ph-star"></i>
+                      </span>
+                      <span class="text-xs fw-bold text-gray-500"
+                        >({{
+                          product.reviews_count ||
+                            product.total_reviews ||
+                            "17k"
+                        }})</span
+                      >
                     </div>
                     <h6 class="title text-lg fw-semibold mt-8 mb-8">
                       <a
-                        [routerLink]="['/product-details', 1]"
+                        [routerLink]="['/product-details', product.id]"
                         class="link text-line-1"
-                        >Taylor Farms Broccoli Florets Vegetables</a
+                        [title]="product.nombre"
+                        >{{ product.nombre }}</a
                       >
                     </h6>
                     <div class="product-card__price flex-align gap-8">
-                      <span class="text-heading text-md fw-semibold d-block"
-                        >$1500.00</span
+                      <span class="text-heading text-md fw-semibold d-block">
+                        S/ {{ product.precio | number : "1.2-2" }}
+                      </span>
+                      <span
+                        *ngIf="
+                          product.precio_oferta &&
+                          product.precio_oferta < product.precio
+                        "
+                        class="text-gray-400 text-sm fw-normal text-decoration-line-through"
                       >
-                      <span class="text-gray-400 text-md fw-semibold d-block"
-                        >$1500.00</span
-                      >
+                        S/ {{ product.precio_oferta | number : "1.2-2" }}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
-              <div ngxSlickItem class="d-flex flex-column gap-44">
+
+              <!-- ✅ SEGUNDO SLIDE SI HAY MÁS DE 4 PRODUCTOS -->
+              <div
+                ngxSlickItem
+                *ngIf="productosMasVendidos.length > 4"
+                class="d-flex flex-column gap-44"
+              >
                 <div
-                  *ngFor="let product of topProductSlides"
+                  *ngFor="let product of productosMasVendidos.slice(4, 8)"
                   class="flex-align gap-16"
                 >
                   <div
                     class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
                   >
-                    <a [routerLink]="['/product-details', 1]" class="link"
-                      ><img
-                        src="assets/images/thumbs/short-product-img5.png"
-                        alt=""
-                    /></a>
+                    <a
+                      [routerLink]="['/product-details', product.id]"
+                      class="link"
+                    >
+                      <img
+                        [src]="
+                          product.imagen_principal ||
+                          'assets/images/thumbs/short-product-img1.png'
+                        "
+                        [alt]="product.nombre"
+                        (error)="onImageError($event)"
+                        style="
+                          width: 100%;
+                          height: 100%;
+                          object-fit: cover;
+                          border-radius: 8px;
+                        "
+                      />
+                    </a>
                   </div>
                   <div class="product-card__content mt-12">
                     <div class="flex-align gap-6">
-                      <span class="text-xs fw-bold text-gray-500">4.8</span>
-                      <span class="text-15 fw-bold text-warning-600 d-flex"
-                        ><i class="ph-fill ph-star"></i
-                      ></span>
-                      <span class="text-xs fw-bold text-gray-500">(17k)</span>
+                      <span class="text-xs fw-bold text-gray-500">{{
+                        product.rating || 4.8
+                      }}</span>
+                      <span class="text-15 fw-bold text-warning-600 d-flex">
+                        <i class="ph-fill ph-star"></i>
+                      </span>
+                      <span class="text-xs fw-bold text-gray-500"
+                        >({{
+                          product.reviews_count ||
+                            product.total_reviews ||
+                            "17k"
+                        }})</span
+                      >
                     </div>
                     <h6 class="title text-lg fw-semibold mt-8 mb-8">
                       <a
-                        [routerLink]="['/product-details', 1]"
+                        [routerLink]="['/product-details', product.id]"
                         class="link text-line-1"
-                        >Taylor Farms Broccoli Florets Vegetables</a
+                        [title]="product.nombre"
+                        >{{ product.nombre }}</a
                       >
                     </h6>
                     <div class="product-card__price flex-align gap-8">
-                      <span class="text-heading text-md fw-semibold d-block"
-                        >$1500.00</span
+                      <span class="text-heading text-md fw-semibold d-block">
+                        S/ {{ product.precio | number : "1.2-2" }}
+                      </span>
+                      <span
+                        *ngIf="
+                          product.precio_oferta &&
+                          product.precio_oferta < product.precio
+                        "
+                        class="text-gray-400 text-sm fw-normal text-decoration-line-through"
                       >
-                      <span class="text-gray-400 text-md fw-semibold d-block"
-                        >$1500.00</span
-                      >
+                        S/ {{ product.precio_oferta | number : "1.2-2" }}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
             </ngx-slick-carousel>
+          </div>
+
+          <!-- ✅ MENSAJE CUANDO NO HAY PRODUCTOS MÁS VENDIDOS -->
+          <div
+            *ngIf="
+              !isLoadingProductosMasVendidos &&
+              productosMasVendidos.length === 0
+            "
+            class="text-center py-40"
+          >
+            <div class="bg-gray-50 rounded-12 py-30 px-20">
+              <i class="ph ph-star text-4xl text-gray-300 mb-16"></i>
+              <h6 class="text-gray-500 mb-8 fw-semibold">
+                No hay productos destacados
+              </h6>
+              <p class="text-gray-400 text-sm mb-16">
+                Aún no se han marcado productos como destacados
+              </p>
+              <a
+                [routerLink]="['shop']"
+                class="btn btn-sm bg-main-600 text-white px-16 py-8 rounded-8"
+              >
+                <i class="ph ph-storefront me-8"></i>
+                Ver todos los productos
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -1636,127 +1780,149 @@
         </div>
 
         <!-- ✅ OFERTA DE LA SEMANA DINÁMICA -->
-      <div
-  *ngIf="
-    !isLoadingOfertaSemana &&
-    ofertaSemanaActiva &&
-    ofertaSemanaActiva.oferta_semana
-  "
-  class="product-card h-100 p-24 pt-32 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 group-item pt-32"
->
-  <button type="button" class="wishlist-btn-two">
-    <i class="ph-bold ph-heart"></i>
-  </button>
-
-  <div class="">
-    <h6 class="position-relative mb-0 pb-12 d-inline-block">
-      {{ ofertaSemanaActiva.oferta_semana.titulo }}
-    </h6>
-    <div class="countdown mb-10" id="countdown-oferta-semana">
-      <ul class="countdown-list flex-align flex-wrap">
-        <li
-          class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
+        <div
+          *ngIf="
+            !isLoadingOfertaSemana &&
+            ofertaSemanaActiva &&
+            ofertaSemanaActiva.oferta_semana
+          "
+          class="product-card h-100 p-24 pt-32 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 group-item pt-32"
         >
-          <span class="days">0</span> D
-        </li>
-        <li
-          class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
-        >
-          <span class="hours">0</span> H
-        </li>
-        <li
-          class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
-        >
-          <span class="minutes">0</span> M
-        </li>
-        <li
-          class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
-        >
-          <span class="seconds">0</span> S
-        </li>
-      </ul>
-    </div>
-    <p class="text-neutral-300 fw-medium text-sm">
-      {{
-        ofertaSemanaActiva.oferta_semana.subtitulo ||
-          "No te pierdas esta oportunidad especial"
-      }}
-    </p>
-  </div>
+          <button type="button" class="wishlist-btn-two">
+            <i class="ph-bold ph-heart"></i>
+          </button>
 
-  <!-- ✅ MOSTRAR IMAGEN DE LA OFERTA EN LUGAR DEL PRODUCTO -->
-  <div class="product-card__thumb flex-center overflow-hidden">
-    <img
-      [src]="
-        ofertaSemanaActiva.oferta_semana.imagen_url ||
-        'assets/images/thumbs/product-img32.png'
-      "
-      [alt]="ofertaSemanaActiva.oferta_semana.titulo"
-      (error)="onImageError($event)"
-      style="max-width: 200px; max-height: 200px; object-fit: contain;"
-    />
-  </div>
+          <div class="">
+            <h6 class="position-relative mb-0 pb-12 d-inline-block">
+              {{ ofertaSemanaActiva.oferta_semana.titulo }}
+            </h6>
+            <div class="countdown mb-10" id="countdown-oferta-semana">
+              <ul class="countdown-list flex-align flex-wrap">
+                <li
+                  class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
+                >
+                  <span class="days">0</span> D
+                </li>
+                <li
+                  class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
+                >
+                  <span class="hours">0</span> H
+                </li>
+                <li
+                  class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
+                >
+                  <span class="minutes">0</span> M
+                </li>
+                <li
+                  class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
+                >
+                  <span class="seconds">0</span> S
+                </li>
+              </ul>
+            </div>
+            <p class="text-neutral-300 fw-medium text-sm">
+              {{
+                ofertaSemanaActiva.oferta_semana.subtitulo ||
+                  "No te pierdas esta oportunidad especial"
+              }}
+            </p>
+          </div>
 
-  <div class="product-card__content w-100">
-    <!-- ✅ RATING GENÉRICO PARA LA OFERTA -->
-    <div class="flex-align gap-4">
-      <div class="flex-align gap-2 me-4">
-        <span class="text-12 fw-medium text-warning-600 d-flex"
-          ><i class="ph-fill ph-star"></i
-        ></span>
-        <span class="text-12 fw-medium text-warning-600 d-flex"
-          ><i class="ph-fill ph-star"></i
-        ></span>
-        <span class="text-12 fw-medium text-warning-600 d-flex"
-          ><i class="ph-fill ph-star"></i
-        ></span>
-        <span class="text-12 fw-medium text-warning-600 d-flex"
-          ><i class="ph-fill ph-star"></i
-        ></span>
-        <span class="text-12 fw-medium text-warning-600 d-flex"
-          ><i class="ph-fill ph-star"></i
-        ></span>
-      </div>
-      <span class="text-xs fw-medium text-heading">(Oferta especial)</span>
-    </div>
+          <!-- ✅ MOSTRAR IMAGEN DE LA OFERTA EN LUGAR DEL PRODUCTO -->
+          <div class="product-card__thumb flex-center overflow-hidden">
+            <img
+              [src]="
+                ofertaSemanaActiva.oferta_semana.imagen_url ||
+                'assets/images/thumbs/product-img32.png'
+              "
+              [alt]="ofertaSemanaActiva.oferta_semana.titulo"
+              (error)="onImageError($event)"
+              style="max-width: 200px; max-height: 200px; object-fit: contain"
+            />
+          </div>
 
-    <!-- ✅ MOSTRAR DESCUENTO DE LA OFERTA -->
-    <div class="d-flex align-items-center gap-12 mt-6">
-      <h6 class="text-danger-600 mb-0 text-lg">
-        {{
-          ofertaSemanaActiva.oferta_semana.tipo_descuento === 'porcentaje' 
-            ? ofertaSemanaActiva.oferta_semana.valor_descuento + '% OFF'
-            : 'S/ ' + ofertaSemanaActiva.oferta_semana.valor_descuento + ' OFF'
-        }}
-      </h6>
-    </div>
+          <div class="product-card__content w-100">
+            <!-- ✅ RATING GENÉRICO PARA LA OFERTA -->
+            <div class="flex-align gap-4">
+              <div class="flex-align gap-2 me-4">
+                <span class="text-12 fw-medium text-warning-600 d-flex"
+                  ><i class="ph-fill ph-star"></i
+                ></span>
+                <span class="text-12 fw-medium text-warning-600 d-flex"
+                  ><i class="ph-fill ph-star"></i
+                ></span>
+                <span class="text-12 fw-medium text-warning-600 d-flex"
+                  ><i class="ph-fill ph-star"></i
+                ></span>
+                <span class="text-12 fw-medium text-warning-600 d-flex"
+                  ><i class="ph-fill ph-star"></i
+                ></span>
+                <span class="text-12 fw-medium text-warning-600 d-flex"
+                  ><i class="ph-fill ph-star"></i
+                ></span>
+              </div>
+              <span class="text-xs fw-medium text-heading"
+                >(Oferta especial)</span
+              >
+            </div>
 
-    <h6 class="title text-md fw-semibold mt-10 mb-0">
-      <span class="fw-bold">{{ ofertaSemanaActiva.oferta_semana.titulo }}</span>
-    </h6>
+            <!-- ✅ MOSTRAR DESCUENTO DE LA OFERTA -->
+            <div class="d-flex align-items-center gap-12 mt-6">
+              <h6 class="text-danger-600 mb-0 text-lg">
+                {{
+                  ofertaSemanaActiva.oferta_semana.tipo_descuento ===
+                  "porcentaje"
+                    ? ofertaSemanaActiva.oferta_semana.valor_descuento + "% OFF"
+                    : "S/ " +
+                      ofertaSemanaActiva.oferta_semana.valor_descuento +
+                      " OFF"
+                }}
+              </h6>
+            </div>
 
-    <p class="text-gray-500 text-sm mt-12 pb-12 border-bottom border-neutral-100 mb-8">
-      {{ ofertaSemanaActiva.oferta_semana.descripcion || "Oferta especial de la semana" }}
-    </p>
+            <h6 class="title text-md fw-semibold mt-10 mb-0">
+              <span class="fw-bold">{{
+                ofertaSemanaActiva.oferta_semana.titulo
+              }}</span>
+            </h6>
 
-    <!-- ✅ BARRA DE PROGRESO GENÉRICA O OCULTA -->
-    <div class="progress w-100 bg-gray-100 rounded-pill h-8 mb-3" role="progressbar">
-      <div class="progress-bar bg-success-600 rounded-pill" style="width: 75%"></div>
-    </div>
-    <div class="d-flex align-items-center gap-6">
-      <span class="text-sm text-gray-500">¡Oferta limitada!</span>
-    </div>
+            <p
+              class="text-gray-500 text-sm mt-12 pb-12 border-bottom border-neutral-100 mb-8"
+            >
+              {{
+                ofertaSemanaActiva.oferta_semana.descripcion ||
+                  "Oferta especial de la semana"
+              }}
+            </p>
 
-    <!-- ✅ BOTÓN QUE REDIRIJA A LA TIENDA O URL ESPECÍFICA -->
-    <a
-      [routerLink]="[ofertaSemanaActiva.oferta_semana.enlace_url || '/shop']"
-      class="product-card__cart btn bg-success-600 text-white hover-bg-success-700 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-16 w-100 justify-content-center"
-    >
-      {{ ofertaSemanaActiva.oferta_semana.texto_boton || "Ver Ofertas" }}
-      <i class="ph ph-arrow-right"></i>
-    </a>
-  </div>
-</div>
+            <!-- ✅ BARRA DE PROGRESO GENÉRICA O OCULTA -->
+            <div
+              class="progress w-100 bg-gray-100 rounded-pill h-8 mb-3"
+              role="progressbar"
+            >
+              <div
+                class="progress-bar bg-success-600 rounded-pill"
+                style="width: 75%"
+              ></div>
+            </div>
+            <div class="d-flex align-items-center gap-6">
+              <span class="text-sm text-gray-500">¡Oferta limitada!</span>
+            </div>
+
+            <!-- ✅ BOTÓN QUE REDIRIJA A LA TIENDA O URL ESPECÍFICA -->
+            <a
+              [routerLink]="[
+                ofertaSemanaActiva.oferta_semana.enlace_url || '/shop'
+              ]"
+              class="product-card__cart btn bg-success-600 text-white hover-bg-success-700 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-16 w-100 justify-content-center"
+            >
+              {{
+                ofertaSemanaActiva.oferta_semana.texto_boton || "Ver Ofertas"
+              }}
+              <i class="ph ph-arrow-right"></i>
+            </a>
+          </div>
+        </div>
 
         <!-- ✅ FALLBACK CUANDO NO HAY OFERTA DE LA SEMANA -->
         <div
