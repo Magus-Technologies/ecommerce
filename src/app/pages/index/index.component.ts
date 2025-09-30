@@ -100,29 +100,33 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   isLoadingCupones = false;
   productosDestacados: ProductoPublico[] = [];
   isLoadingProductosDestacados = false;
-  
+  productosMasVendidos: ProductoPublico[] = [];
+  isLoadingProductosMasVendidos = false;
+
   // ✅ NUEVA PROPIEDAD: Cache para el estado de wishlist
   private wishlistState = new Set<number>();
 
   slideConfig = {
     slidesToShow: 1,
     slidesToScroll: 1,
-    arrows: false, // ✅ CAMBIO: false en lugar de true
+    arrows: false,
     autoplay: true,
     autoplaySpeed: 5000,
     speed: 600,
-    dots: false,
+    dots: true, // ✅ ACTIVAR DOTS
     infinite: true,
     pauseOnHover: true,
     fade: false,
     cssEase: 'ease-in-out',
+    dotsClass: 'slick-dots custom-dots', // ✅ CLASE PERSONALIZADA
     responsive: [
       {
         breakpoint: 768,
         settings: {
-          arrows: false, // ✅ CAMBIO: false en lugar de true
+          arrows: false,
           autoplay: true,
           autoplaySpeed: 4000,
+          dots: true, // ✅ DOTS EN MÓVIL TAMBIÉN
         },
       },
     ],
@@ -286,6 +290,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cargarCategoriasParaFiltro(); // ✅ NUEVA FUNCIÓN
     this.cargarTodosLosProductos(); // ✅ NUEVA FUNCIÓN
     this.cargarProductosDestacados();
+    this.cargarProductosMasVendidos(); // ✅ NUEVA FUNCIÓN
     this.cargarOfertaSemanaActiva();
 
     // ✅ NUEVA LÍNEA: Inicializar wishlist state
@@ -1091,40 +1096,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  topProductSlides = [
-    {
-      imgSrc: 'assets/images/thumbs/short-product-img5.png',
-      alt: 'Product 1',
-      rating: 4.8,
-      ratingCount: '17k',
-      title: 'Hortalizas en floretes de brócoli de Taylor Farms',
-      price: '$1500.00',
-    },
-    {
-      imgSrc: 'assets/images/thumbs/short-product-img6.png',
-      alt: 'Product 2',
-      rating: 4.8,
-      ratingCount: '17k',
-      title: 'Hortalizas en floretes de brócoli de Taylor Farms',
-      price: '$1500.00',
-    },
-    {
-      imgSrc: 'assets/images/thumbs/short-product-img7.png',
-      alt: 'Product 3',
-      rating: 4.8,
-      ratingCount: '17k',
-      title: 'Hortalizas en floretes de brócoli de Taylor Farms',
-      price: '$1500.00',
-    },
-    {
-      imgSrc: 'assets/images/thumbs/short-product-img8.png',
-      alt: 'Product 4',
-      rating: 4.8,
-      ratingCount: '17k',
-      title: 'Hortalizas en floretes de brócoli de Taylor Farms',
-      price: '$1500.00',
-    },
-  ];
+ 
 
   hotDealsSlideConfig = {
     slidesToShow: 4,
@@ -1273,6 +1245,37 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         console.error('Error al cargar productos destacados:', error);
         this.isLoadingProductosDestacados = false;
         this.productosDestacados = [];
+      },
+    });
+  }
+
+  cargarProductosMasVendidos(): void {
+    this.isLoadingProductosMasVendidos = true;
+    this.almacenService.obtenerProductosDestacados().subscribe({
+      next: (productos) => {
+        this.productosMasVendidos = productos.map((producto: any) => ({
+          ...producto,
+          precio: producto.precio_venta ?? 0,
+          imagen_principal: producto.imagen_url ?? '',
+          rating: producto.rating ?? 0,
+          total_reviews: producto.total_reviews ?? 0,
+          descripcion: producto.descripcion ?? '',
+          categoria_id: producto.categoria_id ?? null,
+          stock: producto.stock ?? 0,
+          nombre: producto.nombre ?? '',
+          marca_id: producto.marca_id ?? null,
+        })) as ProductoPublico[];
+
+        this.isLoadingProductosMasVendidos = false;
+
+        if (this.debugMode) {
+          console.log('✅ Productos más vendidos cargados:', productos);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar productos más vendidos:', error);
+        this.isLoadingProductosMasVendidos = false;
+        this.productosMasVendidos = [];
       },
     });
   }

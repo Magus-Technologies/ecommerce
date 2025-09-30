@@ -2,8 +2,9 @@
 /* ============================== Banner Css Start ========================== */
 .banner {
     margin-top: 0; /* ✅ SIN MARGEN SUPERIOR */
+    margin-bottom: 0; /* ✅ SIN MARGEN INFERIOR */
     @include sm-screen {
-        margin-bottom: 32px;
+        margin-bottom: 0;
     }
     .slick-slider {
         position: unset;
@@ -41,10 +42,6 @@
         min-height: 250px; /* ✅ ALTURA REDUCIDA EN MÓVIL */
         -webkit-mask-image: none;
         mask-image: none;
-        background-image: url(../../../images/bg/banner-fondo.png);
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
         overflow: hidden !important; /* ✅ CAMBIO: hidden para evitar overflow */
     }
     @include msm-screen {
@@ -187,25 +184,38 @@
     border: none;
     cursor: pointer;
     transition: all 0.3s ease;
+
+    /* ✅ PC: Centrado perfecto verticalmente */
+    @include lg-screen {
+        top: 50%;
+        transform: translateY(-50%);
+    }
 }
 
-/* ✅ POSICIÓN DEL BOTÓN IZQUIERDO (MÁS A LA DERECHA) */
+/* ✅ POSICIÓN DEL BOTÓN IZQUIERDO */
 #banner-prev {
-    left: 10px; /* Cambia este valor para mover más a la derecha */
+    left: 20px;
 }
 
 /* ✅ POSICIÓN DEL BOTÓN DERECHO */
 #banner-next {
-    right: 10px;
+    right: 20px;
 }
 
-/* ✅ RESPONSIVE PARA MÓVILES */
+/* ✅ RESPONSIVE PARA MÓVILES - Botones más pequeños */
 @include sm-screen {
+    #banner-prev,
+    #banner-next {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+
     #banner-prev {
-        left: 20px;
+        left: 10px;
     }
     #banner-next {
-        right: 20px;
+        right: 10px;
     }
 }
 
@@ -326,4 +336,71 @@
 }
 
 /* Slider Animation Css End */
+
+/* ✅ ESTILOS PARA LOS DOTS DEL BANNER */
+.banner {
+    .custom-dots {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        display: flex !important;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+            margin: 0;
+            padding: 0;
+            width: 16px;
+            height: 16px;
+
+            button {
+                width: 16px;
+                height: 16px;
+                padding: 0;
+                border: 2px solid rgba(255, 255, 255, 0.7);
+                border-radius: 50%;
+              background: rgba(255, 255, 255, 0.5);
+                cursor: pointer;
+                font-size: 0;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+                &:hover {
+                    transform: scale(1.2);
+                    background: var(--main-400);
+                    border-color: var(--main-400);
+                }
+            }
+
+            &.slick-active button {
+                background: var(--main-600);
+                border-color: var(--main-600);
+                transform: scale(1.3);
+                border-width: 3px;
+            }
+        }
+
+        @include sm-screen {
+            bottom: 15px;
+            gap: 10px;
+
+            li {
+                width: 14px;
+                height: 14px;
+
+                button {
+                    width: 14px;
+                    height: 14px;
+                }
+            }
+        }
+    }
+}
+
 /* ============================== Banner Css End ========================== */
