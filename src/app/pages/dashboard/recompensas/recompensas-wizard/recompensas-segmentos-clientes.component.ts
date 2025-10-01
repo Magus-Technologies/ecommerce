@@ -362,9 +362,9 @@ export class RecompensasSegmentosClientesComponent implements OnInit {
         descripcion: 'Clientes con más de 365 días, +5 pedidos, +$1000 gastado y compra reciente'
       },
       {
-        value: 'rango_fechas',
-        label: 'Rango de fechas específico',
-        descripcion: 'Clientes registrados en un rango de fechas específico'
+        value: 'no_registrados',
+        label: 'Clientes no registrados',
+        descripcion: 'Usuarios no registrados para captación de nuevos clientes'
       }
     ];
   }

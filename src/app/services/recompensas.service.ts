@@ -13,7 +13,8 @@ import {
   PaginatedResponse,
   FiltrosRecompensas,
   EstadisticasRecompensas,
-  TipoRecompensa
+  TipoRecompensa,
+  EstadosDisponiblesResponse
 } from '../models/recompensa.model';
 
 @Injectable({
@@ -102,6 +103,12 @@ export class RecompensasService {
   // Obtener tipos de recompensas disponibles
   obtenerTipos(): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/tipos`);
+  }
+
+  // Obtener estados disponibles según fecha de inicio
+  obtenerEstadosDisponibles(fechaInicio: string): Observable<ApiResponse<EstadosDisponiblesResponse>> {
+    const params = new HttpParams().set('fecha_inicio', fechaInicio);
+    return this.http.get<ApiResponse<EstadosDisponiblesResponse>>(`${this.apiUrl}/estados-disponibles`, { params });
   }
 
   // ===== MÉTODOS PARA ANALYTICS =====

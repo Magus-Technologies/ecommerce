@@ -646,6 +646,25 @@ interface SegmentoCumplido {
 
 ## 🔧 Implementación Técnica
 
+### **Nuevo Segmento: Clientes No Registrados**
+
+#### **Propósito:**
+- **Captación de nuevos clientes** mediante recompensas atractivas
+- **Estrategia de marketing** para usuarios no registrados
+- **Ampliar cartera de clientes** con incentivos de registro
+
+#### **Funcionalidad:**
+```php
+case self::SEGMENTO_NO_REGISTRADOS:
+    // Para clientes no registrados, siempre aplica
+    return true;
+```
+
+#### **Uso en el Sistema:**
+- ✅ **Recompensas públicas** visibles sin autenticación
+- ✅ **Incentivos de registro** para nuevos usuarios
+- ✅ **Estrategia de captación** de clientes potenciales
+
 ### Modelo de Segmentación
 
 ```php
@@ -658,18 +677,18 @@ class RecompensaCliente extends Model
     // Constantes para segmentos
     const SEGMENTO_TODOS = 'todos';
     const SEGMENTO_NUEVOS = 'nuevos';
-    const SEGMENTO_REGULARES = 'regulares';
+    const SEGMENTO_RECURRENTES = 'recurrentes';
     const SEGMENTO_VIP = 'vip';
-    const SEGMENTO_RANGO_FECHAS = 'rango_fechas';
+    const SEGMENTO_NO_REGISTRADOS = 'no_registrados';
 
     public static function getSegmentos(): array
     {
         return [
             self::SEGMENTO_TODOS,
             self::SEGMENTO_NUEVOS,
-            self::SEGMENTO_REGULARES,
+            self::SEGMENTO_RECURRENTES,
             self::SEGMENTO_VIP,
-            self::SEGMENTO_RANGO_FECHAS
+            self::SEGMENTO_NO_REGISTRADOS
         ];
     }
 
@@ -695,8 +714,9 @@ class RecompensaCliente extends Model
         $nombres = [
             self::SEGMENTO_TODOS => 'Todos los Clientes',
             self::SEGMENTO_NUEVOS => 'Clientes Nuevos',
-            self::SEGMENTO_REGULARES => 'Clientes Regulares',
-            self::SEGMENTO_VIP => 'Clientes VIP'
+            self::SEGMENTO_RECURRENTES => 'Clientes Recurrentes',
+            self::SEGMENTO_VIP => 'Clientes VIP',
+            self::SEGMENTO_NO_REGISTRADOS => 'Clientes No Registrados'
         ];
 
         return $nombres[$this->segmento] ?? $this->segmento;
@@ -712,9 +732,10 @@ class RecompensaCliente extends Model
         return match($this->segmento) {
             self::SEGMENTO_TODOS => true,
             self::SEGMENTO_NUEVOS => $cliente->created_at->gte(now()->subDays(30)),
-            self::SEGMENTO_REGULARES => $cliente->created_at->lt(now()->subDays(30)) && 
-                                       $cliente->created_at->gte(now()->subDays(365)),
+            self::SEGMENTO_RECURRENTES => $cliente->created_at->lt(now()->subDays(30)) && 
+                                         $cliente->created_at->gte(now()->subDays(365)),
             self::SEGMENTO_VIP => $this->esClienteVIP($cliente),
+            self::SEGMENTO_NO_REGISTRADOS => true, // Para clientes no registrados, siempre aplica
             default => false
         };
     }

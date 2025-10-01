@@ -2,8 +2,35 @@
 
 export type TipoRecompensa = 'puntos' | 'descuento' | 'envio_gratis' | 'regalo';
 export type EstadoRecompensa = 'programada' | 'activa' | 'pausada' | 'expirada' | 'cancelada';
-export type TipoSegmentacion = 'todos' | 'nuevos' | 'recurrentes' | 'vip' | 'rango_fechas';
+export type TipoSegmentacion = 'todos' | 'nuevos' | 'recurrentes' | 'vip' | 'no_registrados';
 export type TipoDescuento = 'porcentaje' | 'cantidad_fija';
+
+// ============================================================================
+// INTERFACES PARA ESTADOS DISPONIBLES
+// ============================================================================
+
+/**
+ * Estado disponible para una recompensa según su fecha de inicio
+ */
+export interface EstadoDisponible {
+  value: string;
+  label: string;
+  description: string;
+}
+
+/**
+ * Respuesta del endpoint de estados disponibles
+ */
+export interface EstadosDisponiblesResponse {
+  estados_disponibles: EstadoDisponible[];
+  estado_por_defecto: string;
+  mensaje: string;
+  fecha_inicio: string;
+  fecha_actual: string;
+  es_fecha_pasada: boolean;
+  es_fecha_hoy: boolean;
+  es_fecha_futura: boolean;
+}
 
 // ============================================================================
 // INTERFACES PRINCIPALES
