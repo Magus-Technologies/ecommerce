@@ -220,15 +220,15 @@
                     <label class="form-label text-heading fw-medium">
                       Forma de Envío <span class="text-danger">*</span>
                     </label>
-                    <select 
+                    <select
                       class="form-select rounded-8"
                       formControlName="formaEnvio"
                       (change)="onFormaEnvioChange()"
                       [class.is-invalid]="checkoutForm.get('formaEnvio')?.invalid && checkoutForm.get('formaEnvio')?.touched">
                       <option value="">Forma de Envío (*)</option>
-                      <option value="delivery">Delivery - S/ {{ costoEnvio.delivery }}</option>
-                      <option value="recojo_tienda">Recojo en tienda - Gratis</option>
-                      <option value="envio_provincia">Envío a provincia - S/ {{ costoEnvio.provincia }}</option>
+                      <option *ngFor="let forma of formasEnvio" [value]="forma.id">
+                        {{ forma.nombre }} - S/ {{ forma.costo.toFixed(2) }}
+                      </option>
                     </select>
                     <div class="invalid-feedback" *ngIf="checkoutForm.get('formaEnvio')?.invalid && checkoutForm.get('formaEnvio')?.touched">
                       Seleccione una forma de envío
@@ -240,16 +240,15 @@
                     <label class="form-label text-heading fw-medium">
                       Tipo de Pago <span class="text-danger">*</span>
                     </label>
-                    <select 
+                    <select
                       class="form-select rounded-8"
                       formControlName="tipoPago"
                       [class.is-invalid]="checkoutForm.get('tipoPago')?.invalid && checkoutForm.get('tipoPago')?.touched">
                       <option value="">Tipo de pago (*)</option>
-                      <option value="efectivo">Efectivo</option>
-                      <option value="tarjeta">Tarjeta de crédito/débito</option>
-                      <option value="transferencia">Transferencia bancaria</option>
-                      <option value="yape">Yape</option>
-                      <option value="plin">Plin</option>
+                      <option *ngFor="let tipo of tiposPago" [value]="tipo.codigo">
+                        <i *ngIf="tipo.icono" class="ph" [ngClass]="tipo.icono"></i>
+                        {{ tipo.nombre }}
+                      </option>
                     </select>
                     <div class="invalid-feedback" *ngIf="checkoutForm.get('tipoPago')?.invalid && checkoutForm.get('tipoPago')?.touched">
                       Seleccione un tipo de pago
@@ -402,17 +401,16 @@
           <!-- Costo por envío -->
           <div class="card border-0 shadow-sm rounded-12">
             <div class="card-header bg-warning-50 py-16">
-              <h6 class="mb-0 fw-semibold text-heading">Costo por envío</h6>
+              <h6 class="mb-0 fw-semibold text-heading">Costos de Envío Disponibles</h6>
             </div>
             <div class="card-body p-20">
               <div class="shipping-costs">
-                <div class="d-flex justify-content-between align-items-center mb-8">
-                  <span class="text-sm text-gray-600">Dentro de Lima:</span>
-                  <span class="text-sm fw-medium">S/ {{ formatPrice(costoEnvio.delivery) }}</span>
+                <div *ngFor="let forma of formasEnvio" class="d-flex justify-content-between align-items-center mb-8">
+                  <span class="text-sm text-gray-600">{{ forma.nombre }}:</span>
+                  <span class="text-sm fw-medium">S/ {{ formatPrice(forma.costo) }}</span>
                 </div>
-                <div class="d-flex justify-content-between align-items-center">
-                  <span class="text-sm text-gray-600">Fuera de Lima:</span>
-                  <span class="text-sm fw-medium">S/ {{ formatPrice(costoEnvio.provincia) }}</span>
+                <div *ngIf="formasEnvio.length === 0" class="text-center text-muted">
+                  <small>No hay formas de envío disponibles</small>
                 </div>
               </div>
             </div>

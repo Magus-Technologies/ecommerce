@@ -214,8 +214,7 @@
             onmouseout="this.style.transform='scale(1)'; this.style.filter='brightness(1)'"
           >
             <a
-              [routerLink]="['shop']"
-              [queryParams]="{ categoria: item.id }"
+              [routerLink]="getCategoriaLink(item)"
               class="w-100 h-100 flex-center"
               style="
                 border-radius: 50%;
@@ -247,8 +246,7 @@
           <div class="feature-item__content mt-16">
             <h6 class="text-lg mb-8">
               <a
-                [routerLink]="['shop']"
-                [queryParams]="{ categoria: item.id }"
+                [routerLink]="getCategoriaLink(item)"
                 class="text-inherit"
                 >{{ item.title }}</a
               >
@@ -610,7 +608,7 @@
                 Sale {{ product.discount_percentage }}%
               </span>
               <a
-                [routerLink]="['/product-details', product.id]"
+                [routerLink]="getProductLink(product)"
                 class="product-card__thumb flex-center overflow-hidden"
               >
                 <img
@@ -622,7 +620,7 @@
               <div class="product-card__content p-sm-2 w-100">
                 <h6 class="title text-lg fw-semibold my-12">
                   <a
-                    [routerLink]="['/product-details', product.id]"
+                    [routerLink]="getProductLink(product)"
                     class="link text-line-2"
                     >{{ product.nombre }}</a
                   >
@@ -908,7 +906,7 @@
                 </button>
 
                 <a
-                  [routerLink]="['/product-details', producto.id]"
+                  [routerLink]="getProductLink(producto)"
                   class="product-card__thumb flex-center overflow-hidden"
                 >
                   <img
@@ -946,7 +944,7 @@
 
                   <h6 class="title text-lg fw-semibold mt-12 mb-20">
                     <a
-                      [routerLink]="['/product-details', 1]"
+                      [routerLink]="getProductLink(producto)"
                       class="link text-line-2"
                       >{{ producto.nombre }}</a
                     >
@@ -1026,7 +1024,7 @@
                 </button>
 
                 <a
-                  [routerLink]="['/product-details', producto.id]"
+                  [routerLink]="getProductLink(producto)"
                   class="product-card__thumb flex-center overflow-hidden"
                 >
                   <img
@@ -1064,7 +1062,7 @@
 
                   <h6 class="title text-lg fw-semibold mt-12 mb-20">
                     <a
-                      [routerLink]="['/product-details', 1]"
+                      [routerLink]="getProductLink(producto)"
                       class="link text-line-2"
                       >{{ producto.nombre }}</a
                     >
@@ -1288,7 +1286,7 @@
                     class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
                   >
                     <a
-                      [routerLink]="['/product-details', product.id]"
+                      [routerLink]="getProductLink(product)"
                       class="link"
                     >
                       <img
@@ -1325,7 +1323,7 @@
                     </div>
                     <h6 class="title text-lg fw-semibold mt-8 mb-8">
                       <a
-                        [routerLink]="['/product-details', product.id]"
+                        [routerLink]="getProductLink(product)"
                         class="link text-line-1"
                         [title]="product.nombre"
                         >{{ product.nombre }}</a
@@ -1363,7 +1361,7 @@
                     class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
                   >
                     <a
-                      [routerLink]="['/product-details', product.id]"
+                      [routerLink]="getProductLink(product)"
                       class="link"
                     >
                       <img
@@ -1400,7 +1398,7 @@
                     </div>
                     <h6 class="title text-lg fw-semibold mt-8 mb-8">
                       <a
-                        [routerLink]="['/product-details', product.id]"
+                        [routerLink]="getProductLink(product)"
                         class="link text-line-1"
                         [title]="product.nombre"
                         >{{ product.nombre }}</a
@@ -1502,7 +1500,7 @@
                     class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
                   >
                     <a
-                      [routerLink]="['/product-details', product.id]"
+                      [routerLink]="getProductLink(product)"
                       class="link"
                     >
                       <img
@@ -1539,7 +1537,7 @@
                     </div>
                     <h6 class="title text-lg fw-semibold mt-8 mb-8">
                       <a
-                        [routerLink]="['/product-details', product.id]"
+                        [routerLink]="getProductLink(product)"
                         class="link text-line-1"
                         [title]="product.nombre"
                         >{{ product.nombre }}</a
@@ -1577,7 +1575,7 @@
                     class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
                   >
                     <a
-                      [routerLink]="['/product-details', product.id]"
+                      [routerLink]="getProductLink(product)"
                       class="link"
                     >
                       <img
@@ -1614,7 +1612,7 @@
                     </div>
                     <h6 class="title text-lg fw-semibold mt-8 mb-8">
                       <a
-                        [routerLink]="['/product-details', product.id]"
+                        [routerLink]="getProductLink(product)"
                         class="link text-line-1"
                         [title]="product.nombre"
                         >{{ product.nombre }}</a
@@ -1695,7 +1693,7 @@
                 <div
                   class="w-90 h-90 rounded-12 border border-gray-100 flex-shrink-0"
                 >
-                  <a [routerLink]="['/product-details', 1]" class="link">
+                  <a [routerLink]="getProductLink(producto)" class="link">
                     <img
                       [src]="
                         producto.imagen_url ||
@@ -1722,7 +1720,7 @@
                   </div>
                   <h6 class="title text-lg fw-semibold mt-8 mb-8">
                     <a
-                      [routerLink]="['/product-details', 1]"
+                      [routerLink]="getProductLink(producto)"
                       class="link text-line-1"
                       >{{ producto.nombre }}</a
                     >

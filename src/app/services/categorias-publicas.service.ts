@@ -7,6 +7,7 @@ import { environment } from '../../environments/environment';
 export interface CategoriaPublica {
   id: number;
   nombre: string;
+  slug?: string; // ✅ NUEVO: Slug para URLs amigables (ej: "laptops", "computadoras-gaming")
   descripcion?: string;
   imagen?: string;
   imagen_url?: string;

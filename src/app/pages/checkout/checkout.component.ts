@@ -10,11 +10,15 @@ import { UbigeoService, Departamento, Provincia, Distrito } from '../../services
 import { CotizacionesService, CrearCotizacionRequest } from '../../services/cotizaciones.service';
 import { ComprasService, CrearCompraRequest } from '../../services/compras.service';
 import { DireccionesService, Direccion } from '../../services/direcciones.service';
+import { ReniecService } from '../../services/reniec.service';
+import { FormaEnvioService, FormaEnvio } from '../../services/forma-envio.service';
+import { TipoPagoService, TipoPago } from '../../services/tipo-pago.service';
 import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-checkout',
+  standalone: true,
   imports: [
     CommonModule,
     RouterLink,
@@ -51,12 +55,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   direccionSeleccionada: Direccion | null = null;
   usarDireccionPersonalizada = false;
 
-  // Costos de envío
-  costoEnvio = {
-    delivery: 30.00,    // Delivery en Lima
-    provincia: 7.00,    // Envío a provincia
-    recojo: 0.00        // Recojo en tienda
-  };
+  // ✅ Formas de envío y tipos de pago dinámicos
+  formasEnvio: FormaEnvio[] = [];
+  tiposPago: TipoPago[] = [];
   costoEnvioCalculado = 0;
 
   private destroy$ = new Subject<void>();
@@ -69,6 +70,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     private cotizacionesService: CotizacionesService,
     private comprasService: ComprasService,
     private direccionesService: DireccionesService,
+    private reniecService: ReniecService,
+    private formaEnvioService: FormaEnvioService,
+    private tipoPagoService: TipoPagoService,
     private router: Router
   ) {
     this.initializeForm();
@@ -78,6 +82,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.checkCartItems();
     this.loadCartData();
     this.checkAuthStatus();
+    this.loadFormasEnvio(); // ✅ Cargar formas de envío
+    this.loadTiposPago(); // ✅ Cargar tipos de pago
     // Cargar ubigeo primero, luego direcciones
     this.loadUbigeoData().then(() => {
       this.loadDireccionesGuardadas();
@@ -141,6 +147,30 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       });
   }
 
+  // ✅ Cargar formas de envío desde el backend
+  private loadFormasEnvio(): void {
+    this.formaEnvioService.obtenerActivas().subscribe({
+      next: (response) => {
+        this.formasEnvio = response.formas_envio;
+      },
+      error: (error) => {
+        console.error('Error cargando formas de envío:', error);
+      }
+    });
+  }
+
+  // ✅ Cargar tipos de pago desde el backend
+  private loadTiposPago(): void {
+    this.tipoPagoService.obtenerActivos().subscribe({
+      next: (response) => {
+        this.tiposPago = response.tipos_pago;
+      },
+      error: (error) => {
+        console.error('Error cargando tipos de pago:', error);
+      }
+    });
+  }
+
   // Cargar datos de ubigeo
   private loadUbigeoData(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -173,93 +203,115 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Buscar datos por documento
-  buscarDocumento(): void {
-    const numeroDocumento = this.checkoutForm.get('numeroDocumento')?.value;
-    
-    if (!numeroDocumento || numeroDocumento.length < 8) {
-      Swal.fire({
-        title: 'Número inválido',
-        text: 'Ingrese un número de documento válido',
-        icon: 'warning',
-        confirmButtonColor: '#dc3545'
-      });
-      return;
-    }
-
-    this.buscandoDocumento = true;
-
-    // Simular búsqueda (aquí puedes integrar con API de RENIEC/SUNAT)
-    setTimeout(() => {
-      this.buscandoDocumento = false;
-      
-      if (numeroDocumento.length === 8) {
-        // Simular datos de DNI
-        this.checkoutForm.patchValue({
-          cliente: 'JUAN PÉREZ GARCÍA'
-        });
-      } else if (numeroDocumento.length === 11) {
-        // Simular datos de RUC
-        this.checkoutForm.patchValue({
-          cliente: 'EMPRESA EJEMPLO S.A.C.'
-        });
-      }
-
-      Swal.fire({
-        title: 'Datos encontrados',
-        text: 'Se han cargado los datos del documento',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      });
-    }, 1500);
+ // Buscar datos por documento
+buscarDocumento(): void {
+  const numeroDocumento = this.checkoutForm.get('numeroDocumento')?.value;
+  
+  if (!numeroDocumento || numeroDocumento.length < 8) {
+    Swal.fire({
+      title: 'Número inválido',
+      text: 'Ingrese un número de documento válido (DNI: 8 dígitos, RUC: 11 dígitos)',
+      icon: 'warning',
+      confirmButtonColor: '#dc3545'
+    });
+    return;
   }
 
-  // Método eliminado - ahora está como async al final del archivo
+  // Validar longitud según tipo de documento
+  if (numeroDocumento.length !== 8 && numeroDocumento.length !== 11) {
+    Swal.fire({
+      title: 'Número inválido',
+      text: 'Ingrese un DNI de 8 dígitos o un RUC de 11 dígitos',
+      icon: 'warning',
+      confirmButtonColor: '#dc3545'
+    });
+    return;
+  }
 
-  // Método eliminado - ahora está como async al final del archivo
+  this.buscandoDocumento = true;
+
+  // Usar el servicio real de RENIEC
+  this.reniecService.buscarPorDni(numeroDocumento).subscribe({
+    next: (response) => {
+      this.buscandoDocumento = false;
+      console.log('Respuesta de RENIEC:', response);
+
+      if (response.success !== false && (response.nombre || response.nombres || response.razonSocial)) {
+        let nombreCompleto = '';
+
+        // Para DNI (8 dígitos)
+        if (numeroDocumento.length === 8) {
+          if (response.nombres && response.apellidoPaterno && response.apellidoMaterno) {
+            nombreCompleto = `${response.nombres} ${response.apellidoPaterno} ${response.apellidoMaterno}`;
+          } else if (response.nombre) {
+            nombreCompleto = response.nombre;
+          }
+        } 
+        // Para RUC (11 dígitos)
+        else if (numeroDocumento.length === 11) {
+          nombreCompleto = response.razonSocial || response.nombre || '';
+        }
+
+        if (nombreCompleto) {
+          this.checkoutForm.patchValue({
+            cliente: nombreCompleto
+          });
+
+          Swal.fire({
+            title: 'Datos encontrados',
+            text: `Se encontró: ${nombreCompleto}`,
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        } else {
+          this.mostrarErrorDocumento();
+        }
+      } else {
+        this.mostrarErrorDocumento();
+      }
+    },
+    error: (error) => {
+      this.buscandoDocumento = false;
+      console.error('Error consultando documento:', error);
+      
+      Swal.fire({
+        title: 'Error al consultar',
+        text: 'No se pudo verificar el documento. Intente nuevamente.',
+        icon: 'error',
+        confirmButtonColor: '#dc3545'
+      });
+    }
+  });
+}
+
+// Método auxiliar para mostrar error cuando no se encuentran datos
+private mostrarErrorDocumento(): void {
+  Swal.fire({
+    title: 'Documento no encontrado',
+    text: 'No se encontraron datos para este documento. Puede ingresar el nombre manualmente.',
+    icon: 'warning',
+    confirmButtonColor: '#ffc107'
+  });
+}
+
+
 
   // Cambio en distrito
   onDistritoChange(): void {
-    this.checkForLimaDelivery();
+    // Método vacío - se mantiene por compatibilidad
   }
 
-  // Método para verificar si es Lima-Lima-Lima y setear delivery automáticamente
-  private checkForLimaDelivery(): void {
-    const departamentoId = this.checkoutForm.get('departamento')?.value;
-    const provinciaId = this.checkoutForm.get('provincia')?.value;
-    const distritoId = this.checkoutForm.get('distrito')?.value;
 
-    // Encontrar los nombres de departamento, provincia y distrito
-    const departamentoNombre = this.departamentos.find(d => d.id === departamentoId)?.nombre?.toLowerCase();
-    const provinciaNombre = this.provincias.find(p => p.id === provinciaId)?.nombre?.toLowerCase();
-    const distritoNombre = this.distritos.find(d => d.id === distritoId)?.nombre?.toLowerCase();
-
-    // Si es Lima, Lima, Lima (cualquier distrito de Lima)
-    if (departamentoNombre === 'lima' && provinciaNombre === 'lima') {
-      this.checkoutForm.patchValue({
-        formaEnvio: 'delivery'
-      });
-      this.costoEnvioCalculado = this.costoEnvio.delivery;
-    }
-  }
-
-  // Cambio en forma de envío
+  // ✅ Cambio en forma de envío - Ahora dinámico
   onFormaEnvioChange(): void {
-    const formaEnvio = this.checkoutForm.get('formaEnvio')?.value;
+    const formaEnvioId = this.checkoutForm.get('formaEnvio')?.value;
+    const formaEnvioSeleccionada = this.formasEnvio.find(f => f.id === Number(formaEnvioId));
 
-    switch (formaEnvio) {
-      case 'delivery':
-        this.costoEnvioCalculado = this.costoEnvio.delivery;
-        break;
-      case 'envio_provincia':
-        this.costoEnvioCalculado = this.costoEnvio.provincia;
-        break;
-      case 'recojo_tienda':
-        this.costoEnvioCalculado = this.costoEnvio.recojo;
-        break;
-      default:
-        this.costoEnvioCalculado = 0;
+    if (formaEnvioSeleccionada) {
+      this.costoEnvioCalculado = formaEnvioSeleccionada.costo;
+    } else {
+      this.costoEnvioCalculado = 0;
     }
   }
 
@@ -655,8 +707,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
         // Habilitar distrito
         this.checkoutForm.get('distrito')?.enable();
-
-        this.checkForLimaDelivery();
       } catch (error) {
         console.error('Error cargando distritos:', error);
       }

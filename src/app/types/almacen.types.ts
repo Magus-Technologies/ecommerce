@@ -83,6 +83,7 @@ export interface ProductoCreate {
 export interface ProductoPublico {
   id: number
   nombre: string
+  slug?: string // ✅ NUEVO: Slug para URLs SEO-friendly (ej: "laptop-gamer-asus-rog")
   descripcion: string
   precio: string | number
   precio_oferta?: string | number
