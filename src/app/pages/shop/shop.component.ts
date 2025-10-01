@@ -7,6 +7,7 @@ import { ShippingComponent } from "../../component/shipping/shipping.component"
 import { ProductosService, ProductoPublico, type CategoriaParaSidebar } from "../../services/productos.service"
 import { CartService } from "../../services/cart.service"
 import { CartNotificationService } from '../../services/cart-notification.service';
+import { SlugHelper } from '../../helpers/slug.helper'; // ✅ NUEVO
 import Swal from 'sweetalert2'
 
 @Component({
@@ -72,13 +73,63 @@ export class ShopComponent implements OnInit {
     // Cargar categorías para el sidebar
     this.cargarCategorias();
 
-    // Escuchar cambios en los query parameters
-    this.route.queryParams.subscribe((params) => {
-      // ✅ MODIFICADO: Agregar soporte para búsqueda
-      this.categoriaSeleccionada = params['categoria'] ? +params['categoria'] : undefined;
-      this.searchTerm = params['search'] || ''; // ✅ NUEVO
-      this.currentPage = 1; // Reset página al cambiar filtros
+    // ✅ NUEVO: Escuchar cambios en los parámetros de ruta (para slug)
+    this.route.params.subscribe(async (params) => {
+      const slug = params['slug'];
+
+      if (slug) {
+        // Si hay slug en la URL, buscar la categoría por slug
+        await this.buscarCategoriaPorSlug(slug);
+      }
+
       this.cargarProductos();
+    });
+
+    // Escuchar cambios en los query parameters (mantener compatibilidad)
+    this.route.queryParams.subscribe((params) => {
+      // Si viene categoria por query param (compatibilidad con URLs antiguas)
+      if (params['categoria']) {
+        this.categoriaSeleccionada = +params['categoria'];
+      }
+
+      this.searchTerm = params['search'] || '';
+      this.currentPage = 1;
+
+      // Solo recargar si no hay slug en la ruta (evitar doble carga)
+      if (!this.route.snapshot.params['slug']) {
+        this.cargarProductos();
+      }
+    });
+  }
+
+  // ✅ NUEVO: Buscar categoría por slug
+  private buscarCategoriaPorSlug(slug: string): Promise<void> {
+    return new Promise((resolve) => {
+      // Esperar a que las categorías se carguen
+      const checkCategorias = () => {
+        if (this.categorias.length > 0) {
+          // Buscar la categoría por slug normalizado
+          const categoria = this.categorias.find(cat => {
+            const catSlug = SlugHelper.getSlugFromCategoria({
+              nombre: cat.nombre,
+              slug: (cat as any).slug
+            });
+            return catSlug === SlugHelper.normalizeSlug(slug);
+          });
+
+          if (categoria) {
+            this.categoriaSeleccionada = categoria.id;
+          } else {
+            console.warn(`Categoría no encontrada para slug: ${slug}`);
+            this.categoriaSeleccionada = undefined;
+          }
+          resolve();
+        } else {
+          // Reintentar después de 100ms
+          setTimeout(checkCategorias, 100);
+        }
+      };
+      checkCategorias();
     });
   }
 
@@ -130,20 +181,27 @@ export class ShopComponent implements OnInit {
   }
 
   seleccionarCategoria(categoriaId: number): void {
-    // Navegar con query parameter
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { categoria: categoriaId },
-      queryParamsHandling: "merge",
-    })
+    // ✅ MEJORADO: Navegar con slug en lugar de query parameter
+    const categoria = this.categorias.find(cat => cat.id === categoriaId);
+    if (categoria) {
+      const slug = SlugHelper.getSlugFromCategoria({
+        nombre: categoria.nombre,
+        slug: (categoria as any).slug
+      });
+      this.router.navigate(['/shop/categoria', slug]);
+    } else {
+      // Fallback: usar query parameter si no se encuentra la categoría
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { categoria: categoriaId },
+        queryParamsHandling: "merge",
+      });
+    }
   }
 
   limpiarFiltros(): void {
-    // Navegar sin query parameters
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: {},
-    })
+    // ✅ MEJORADO: Navegar a shop sin parámetros ni slugs
+    this.router.navigate(['/shop']);
   }
 
   togglelistview(): void {

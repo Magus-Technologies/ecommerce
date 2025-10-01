@@ -82,6 +82,39 @@
     </li>
   </ul>
 </li>
+
+<!-- ✅ NUEVO: Configuración (Formas de Envío y Tipos de Pago) -->
+<li *ngIf="puedeVerConfiguracion" class="mb-8">
+  <a
+    (click)="toggleConfiguracion()"
+    class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500 cursor-pointer"
+  >
+    <i class="ph ph-gear text-xl flex-shrink-0"></i>
+    <span *ngIf="!isCollapsed" class="fw-medium">Configuración</span>
+    <i *ngIf="!isCollapsed" class="ph text-sm ms-auto transition-2"
+       [class.ph-caret-right]="!isConfiguracionOpen"
+       [class.ph-caret-down]="isConfiguracionOpen"></i>
+  </a>
+
+  <!-- Submódulos -->
+  <ul *ngIf="isConfiguracionOpen && !isCollapsed" class="list-style-none p-0 ms-28 mt-8 submenu">
+    <li class="mb-4">
+      <a routerLink="/dashboard/formas-envio" routerLinkActive="active"
+         class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+        <i class="ph ph-truck text-lg flex-shrink-0"></i>
+        <span class="fw-medium">Formas de Envío</span>
+      </a>
+    </li>
+
+    <li class="mb-4">
+      <a routerLink="/dashboard/tipos-pago" routerLinkActive="active"
+         class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+        <i class="ph ph-credit-card text-lg flex-shrink-0"></i>
+        <span class="fw-medium">Tipos de Pago</span>
+      </a>
+    </li>
+  </ul>
+</li>
       <!-- ventas -->
       <li class="mb-8">
         <a
@@ -135,81 +168,63 @@
         </ul>
       </li>
 
-    
 
-      <!-- ✅ Recompensas con Botón Desplegable -->
-      <li *ngIf="puedeVerRecompensas" class="mb-8 recompensas-dropdown">
-        <div class="nav-item-dropdown">
-          <!-- Botón Principal Desplegable -->
-          <button
-            type="button"
-            class="recompensas-toggle-btn"
-            (click)="toggleRecompensasDropdown()"
-            [class.active]="showRecompensasDropdown"
-          >
-            <i class="ph ph-gift text-xl"></i>
-            <span *ngIf="!isCollapsed" class="fw-bold text-lg">Recompensas</span>
-            <i *ngIf="!isCollapsed" class="ph ph-caret-down text-sm transition-2" [class.rotate-180]="showRecompensasDropdown"></i>
-          </button>
-          
-          <!-- Menú Desplegable (solo visible cuando está expandido) -->
-          <div *ngIf="showRecompensasDropdown && !isCollapsed" class="recompensas-menu">
-            <!-- Dashboard -->
-            <a
-              routerLink="/dashboard/recompensas/dashboard"
-              routerLinkActive="active"
-              class="recompensas-item"
-              (click)="showRecompensasDropdown = false"
-            >
-              <i class="ph ph-gauge text-lg"></i>
-              <span>Dashboard</span>
+
+      <!-- ✅ Recompensas -->
+      <li *ngIf="puedeVerRecompensas" class="mb-8">
+        <a
+          (click)="toggleRecompensas()"
+          class="nav-link flex-align gap-12 px-16 py-12 text-white text-decoration-none rounded-8 transition-2 hover-bg-main-500 cursor-pointer"
+        >
+          <i class="ph ph-gift text-xl flex-shrink-0"></i>
+          <span *ngIf="!isCollapsed" class="fw-medium">Recompensas</span>
+          <i *ngIf="!isCollapsed" class="ph text-sm ms-auto transition-2"
+             [class.ph-caret-right]="!isRecompensasOpen"
+             [class.ph-caret-down]="isRecompensasOpen"></i>
+        </a>
+
+        <!-- Submódulos -->
+        <ul *ngIf="isRecompensasOpen && !isCollapsed" class="list-style-none p-0 ms-28 mt-8 submenu">
+          <li class="mb-4">
+            <a routerLink="/dashboard/recompensas/dashboard" routerLinkActive="active"
+               class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+              <i class="ph ph-gauge text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Dashboard</span>
             </a>
-            
-            <!-- Crear Recompensa -->
-            <a
-              routerLink="/dashboard/recompensas/crear"
-              routerLinkActive="active"
-              class="recompensas-item"
-              (click)="showRecompensasDropdown = false"
-            >
-              <i class="ph ph-plus-circle text-lg"></i>
-              <span>Crear Recompensa</span>
+          </li>
+
+          <li class="mb-4">
+            <a routerLink="/dashboard/recompensas/crear" routerLinkActive="active"
+               class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+              <i class="ph ph-plus-circle text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Crear Recompensa</span>
             </a>
-            
-            <!-- Gestionar -->
-            <a
-              routerLink="/dashboard/recompensas/lista"
-              routerLinkActive="active"
-              class="recompensas-item"
-              (click)="showRecompensasDropdown = false"
-            >
-              <i class="ph ph-gear text-lg"></i>
-              <span>Gestionar</span>
+          </li>
+
+          <li class="mb-4">
+            <a routerLink="/dashboard/recompensas/lista" routerLinkActive="active"
+               class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+              <i class="ph ph-gear text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Gestionar</span>
             </a>
-            
-            <!-- Análisis -->
-            <a
-              routerLink="/dashboard/recompensas/analytics"
-              routerLinkActive="active"
-              class="recompensas-item"
-              (click)="showRecompensasDropdown = false"
-            >
-              <i class="ph ph-chart-line text-lg"></i>
-              <span>Análisis</span>
+          </li>
+
+          <li class="mb-4">
+            <a routerLink="/dashboard/recompensas/analytics" routerLinkActive="active"
+               class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+              <i class="ph ph-chart-line text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Análisis</span>
             </a>
-            
-            <!-- Auditoría -->
-            <a
-              routerLink="/dashboard/recompensas/auditoria"
-              routerLinkActive="active"
-              class="recompensas-item"
-              (click)="showRecompensasDropdown = false"
-            >
-              <i class="ph ph-arrow-clockwise text-lg"></i>
-              <span>Auditoría</span>
+          </li>
+
+          <li class="mb-4">
+            <a routerLink="/dashboard/recompensas/auditoria" routerLinkActive="active"
+               class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+              <i class="ph ph-arrow-clockwise text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Auditoría</span>
             </a>
-          </div>
-        </div>
+          </li>
+        </ul>
       </li>
 
       <!-- ✅ NUEVO: Arma tu PC -->

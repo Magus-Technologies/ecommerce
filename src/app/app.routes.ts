@@ -160,6 +160,13 @@ export const routes: Routes = [
           import('./pages/shop/shop.component').then((m) => m.ShopComponent),
         title: 'Shop',
       },
+      // ✅ NUEVO: Ruta SEO-friendly para categorías con slug
+      {
+        path: 'shop/categoria/:slug',
+        loadComponent: () =>
+          import('./pages/shop/shop.component').then((m) => m.ShopComponent),
+        title: 'Shop',
+      },
       // ✅ Lazy Loading para Vendor
       {
         path: 'vendor',
@@ -195,6 +202,15 @@ export const routes: Routes = [
       },
       {
         path: 'product-details/:id',
+        loadComponent: () =>
+          import('./pages/product-details/product-details.component').then(
+            (m) => m.ProductDetailsComponent
+          ),
+        title: 'Product Details',
+      },
+      // ✅ NUEVO: Ruta SEO-friendly para productos con slug
+      {
+        path: 'product/:id/:slug',
         loadComponent: () =>
           import('./pages/product-details/product-details.component').then(
             (m) => m.ProductDetailsComponent
@@ -483,6 +499,27 @@ export const routes: Routes = [
         title: 'Gestión de Motorizados',
         canActivate: [permissionGuard],
         data: { permission: 'motorizados.ver' },
+      },
+      // ✅ RUTAS DE CONFIGURACIÓN - Formas de Envío y Tipos de Pago
+      {
+        path: 'formas-envio',
+        loadComponent: () =>
+          import('./pages/dashboard/formas-envio/formas-envio.component').then(
+            (m) => m.FormasEnvioComponent
+          ),
+        title: 'Gestión de Formas de Envío',
+        canActivate: [permissionGuard],
+        data: { permission: 'configuracion.ver' },
+      },
+      {
+        path: 'tipos-pago',
+        loadComponent: () =>
+          import('./pages/dashboard/tipos-pago/tipos-pago.component').then(
+            (m) => m.TiposPagoComponent
+          ),
+        title: 'Gestión de Tipos de Pago',
+        canActivate: [permissionGuard],
+        data: { permission: 'configuracion.ver' },
       },
       // Agrega estas rutas justo después:
       {

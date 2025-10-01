@@ -41,6 +41,7 @@ import {
 import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 import { WhatsappFloatComponent } from '../../components/whatsapp-float/whatsapp-float.component';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { SlugHelper } from '../../helpers/slug.helper'; // ✅ NUEVO
 
 interface CategoriaConImagen extends CategoriaPublica {
   img: string;
@@ -1295,9 +1296,26 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.sanitizer.bypassSecurityTrustUrl(finalUrl);
   }
   calcularPorcentajeProgreso(producto: any): number {
-  if (!producto?.vendidos_oferta || !producto?.stock_oferta) {
-    return 0;
+    if (!producto?.vendidos_oferta || !producto?.stock_oferta) {
+      return 0;
+    }
+    return (producto.vendidos_oferta / producto.stock_oferta) * 100;
   }
-  return (producto.vendidos_oferta / producto.stock_oferta) * 100;
-}
+
+  // ✅ NUEVO: Método para obtener el link de categoría con slug
+  getCategoriaLink(categoria: CategoriaConImagen): string[] {
+    const slug = SlugHelper.getSlugFromCategoria({
+      nombre: categoria.nombre,
+      slug: categoria.slug
+    });
+    return ['/shop/categoria', slug];
+  }
+
+  // ✅ NUEVO: Método para obtener el link de producto con slug
+  getProductLink(producto: any): string[] {
+    // Generar slug desde el nombre del producto si no existe
+    const slug = producto.slug || SlugHelper.generateSlug(producto.nombre);
+    // Formato: /product/:id/:slug (el ID va primero para facilitar la búsqueda en el componente de detalles)
+    return ['/product', producto.id.toString(), slug];
+  }
 }

@@ -42,8 +42,10 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   isUsuariosOpen = false;
   isOperacionesOpen = false;
   isAlmacenOpen = false;
+  isConfiguracionOpen = false; // ✅ NUEVO
+  isRecompensasOpen = false; // ✅ NUEVO
   esSuperadmin = false;
-  
+
   // Permisos
   puedeVerUsuarios = false;
   puedeVerBanners = false;
@@ -59,10 +61,8 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   puedeVerEmpresaInfo = false;
   puedeVerEmailTemplates = false;
   puedeConfigure = false; // ✅ NUEVO: Para Arma tu PC
-  puedeVerRecompensas = false; // ✅ NUEVO: Para Recompensas 
-
-  // Dropdown state
-  showRecompensasDropdown = false;
+  puedeVerRecompensas = false; // ✅ NUEVO: Para Recompensas
+  puedeVerConfiguracion = false; // ✅ NUEVO: Para Formas de Envío y Tipos de Pago
 
   isDesktop = false;
   private permisosSub: Subscription | null = null;
@@ -109,6 +109,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
     this.puedeVerEmailTemplates = this.permissionsService.hasPermission('envio_correos.ver');
     this.puedeConfigure = this.permissionsService.hasPermission('categorias.edit'); // ✅ NUEVO
     this.puedeVerRecompensas = this.permissionsService.hasPermission('recompensas.ver'); // ✅ NUEVO
+    this.puedeVerConfiguracion = this.permissionsService.hasPermission('configuracion.ver'); // ✅ NUEVO
   }
 
   ngAfterViewInit(): void {
@@ -160,36 +161,11 @@ toggleAlmacen(): void {
   this.isAlmacenOpen = !this.isAlmacenOpen;
 }
 
+toggleConfiguracion(): void {
+  this.isConfiguracionOpen = !this.isConfiguracionOpen;
+}
 
-  toggleRecompensasDropdown(): void {
-    this.showRecompensasDropdown = !this.showRecompensasDropdown;
-  }
-
-  navegarARecompensasSubmodulo(submodulo: string, event: Event): void {
-    // Prevenir el comportamiento por defecto del enlace
-    event.preventDefault();
-    
-    // Cerrar el dropdown
-    this.showRecompensasDropdown = false;
-    
-    // Navegar según el submódulo
-    if (submodulo === 'crear') {
-      // Navegar al wizard de creación
-      this.router.navigate(['/dashboard/recompensas/crear']);
-    } else if (submodulo === 'lista') {
-      // Navegar a la lista de recompensas
-      this.router.navigate(['/dashboard/recompensas/lista']);
-    } else {
-      // Por defecto, navegar a la lista
-      this.router.navigate(['/dashboard/recompensas']);
-    }
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: Event): void {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.recompensas-dropdown')) {
-      this.showRecompensasDropdown = false;
-    }
-  }
+toggleRecompensas(): void {
+  this.isRecompensasOpen = !this.isRecompensasOpen;
+}
 }
