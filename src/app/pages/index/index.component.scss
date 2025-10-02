@@ -1,1 +1,41 @@
 // stiles para banner
+
+/* ✅ FIX: Eliminar margin de slick-slide en categorías para evitar overflow y corte */
+.feature-item-wrapper {
+  .slick-slide {
+    margin: 0 !important;
+  }
+
+  .slick-track {
+    margin: 0 !important;
+  }
+}
+
+/* ✅ FIX: Dar más espacio vertical a la sección de categorías */
+.feature {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+
+  .arrow-center {
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
+    overflow: visible !important;
+  }
+}
+
+/* ✅ FIX: Ajustar altura de los items de categorías */
+.feature-item {
+  height: auto !important;
+  min-height: 240px !important;
+  padding-bottom: 20px;
+
+  .feature-item__content {
+    margin-top: 20px !important;
+    padding: 0 10px;
+  }
+}
+
+/* ✅ FIX: Reducir espacio entre categorías y banners promocionales */
+.promotional-banner {
+  padding-top: 40px !important;
+}

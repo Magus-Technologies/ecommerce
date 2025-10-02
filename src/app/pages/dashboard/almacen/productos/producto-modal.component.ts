@@ -6,6 +6,7 @@ import {
   EventEmitter,
   OnInit,
   OnChanges,
+  OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -13,7 +14,9 @@ import {
   FormBuilder,
   FormGroup,
   Validators,
+  FormArray,
 } from '@angular/forms';
+import { QuillModule } from 'ngx-quill';
 import { AlmacenService } from '../../../../services/almacen.service';
 import {
   Producto,
@@ -25,423 +28,8 @@ import {
 @Component({
   selector: 'app-producto-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  template: `
-    <!-- Modal -->
-    <div class="modal fade" id="modalCrearProducto" tabindex="-1">
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content border-0 rounded-12">
-          <div class="modal-header border-0 pb-0">
-            <h5 class="modal-title text-heading fw-semibold">
-              {{ producto ? 'Editar Producto' : 'Nuevo Producto' }}
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-            ></button>
-          </div>
-
-          <div class="modal-body p-24">
-            <form [formGroup]="productoForm" (ngSubmit)="onSubmit()">
-              <div class="row">
-                <!-- Información básica -->
-                <div class="col-md-8">
-                  <div class="row">
-                    <div class="col-md-6 mb-16">
-                      <label class="form-label text-heading fw-medium mb-8"
-                        >Nombre del Producto *</label
-                      >
-                      <input
-                        type="text"
-                        class="form-control px-16 py-12 border rounded-8"
-                        [class.is-invalid]="
-                          productoForm.get('nombre')?.invalid &&
-                          productoForm.get('nombre')?.touched
-                        "
-                        formControlName="nombre"
-                        placeholder="Ej: iPhone 15 Pro Max"
-                      />
-                      <div
-                        class="invalid-feedback"
-                        *ngIf="
-                          productoForm.get('nombre')?.invalid &&
-                          productoForm.get('nombre')?.touched
-                        "
-                      >
-                        El nombre es requerido (mínimo 3 caracteres)
-                      </div>
-                    </div>
-
-                    <div class="col-md-6 mb-16">
-                      <label class="form-label text-heading fw-medium mb-8"
-                        >Código del Producto *</label
-                      >
-                      <input
-                        type="text"
-                        class="form-control px-16 py-12 border rounded-8"
-                        [class.is-invalid]="
-                          productoForm.get('codigo_producto')?.invalid &&
-                          productoForm.get('codigo_producto')?.touched
-                        "
-                        formControlName="codigo_producto"
-                        placeholder="Ej: IP15PM001"
-                      />
-                      <div
-                        class="invalid-feedback"
-                        *ngIf="
-                          productoForm.get('codigo_producto')?.invalid &&
-                          productoForm.get('codigo_producto')?.touched
-                        "
-                      >
-                        El código del producto es requerido
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="mb-16">
-                    <label class="form-label text-heading fw-medium mb-8"
-                      >Descripción</label
-                    >
-                    <textarea
-                      class="form-control px-16 py-12 border rounded-8"
-                      rows="3"
-                      formControlName="descripcion"
-                      placeholder="Descripción del producto..."
-                    ></textarea>
-                  </div>
-
-                  <div class="row">
-                    <div class="col-md-6 mb-16">
-                      <label class="form-label text-heading fw-medium mb-8"
-                        >Categoría *</label
-                      >
-                      <select
-                        class="form-select px-16 py-12 border rounded-8"
-                        [class.is-invalid]="
-                          productoForm.get('categoria_id')?.invalid &&
-                          productoForm.get('categoria_id')?.touched
-                        "
-                        formControlName="categoria_id"
-                      >
-                        <option value="">Seleccionar categoría</option>
-                        <option
-                          *ngFor="let categoria of categorias"
-                          [value]="categoria.id"
-                        >
-                          {{ categoria.nombre }}
-                        </option>
-                      </select>
-                      <div
-                        class="invalid-feedback"
-                        *ngIf="
-                          productoForm.get('categoria_id')?.invalid &&
-                          productoForm.get('categoria_id')?.touched
-                        "
-                      >
-                        Selecciona una categoría
-                      </div>
-                    </div>
-
-                    <div class="col-md-6 mb-16">
-                      <label class="form-label text-heading fw-medium mb-8"
-                        >Marca</label
-                      >
-                      <select
-                        class="form-select px-16 py-12 border rounded-8"
-                        formControlName="marca_id"
-                      >
-                        <option value="">Seleccionar marca (opcional)</option>
-                        <option *ngFor="let marca of marcas" [value]="marca.id">
-                          {{ marca.nombre }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <!-- Precios y Stock -->
-                  <div class="row">
-                    <div class="col-md-6 mb-16">
-                      <label class="form-label text-heading fw-medium mb-8"
-                        >Precio de Compra *</label
-                      >
-                      <div class="input-group">
-                        <span class="input-group-text bg-gray-50 border-end-0"
-                          >S/</span
-                        >
-                        <input
-                          type="number"
-                          class="form-control px-16 py-12 border-start-0"
-                          [class.is-invalid]="
-                            productoForm.get('precio_compra')?.invalid &&
-                            productoForm.get('precio_compra')?.touched
-                          "
-                          formControlName="precio_compra"
-                          step="0.01"
-                          min="0"
-                          placeholder="0.00"
-                        />
-                      </div>
-                      <div
-                        class="invalid-feedback"
-                        *ngIf="
-                          productoForm.get('precio_compra')?.invalid &&
-                          productoForm.get('precio_compra')?.touched
-                        "
-                      >
-                        El precio de compra es requerido
-                      </div>
-                    </div>
-
-                    <div class="col-md-6 mb-16">
-                      <label class="form-label text-heading fw-medium mb-8"
-                        >Precio de Venta *</label
-                      >
-                      <div class="input-group">
-                        <span class="input-group-text bg-gray-50 border-end-0"
-                          >S/</span
-                        >
-                        <input
-                          type="number"
-                          class="form-control px-16 py-12 border-start-0"
-                          [class.is-invalid]="
-                            productoForm.get('precio_venta')?.invalid &&
-                            productoForm.get('precio_venta')?.touched
-                          "
-                          formControlName="precio_venta"
-                          step="0.01"
-                          min="0"
-                          placeholder="0.00"
-                        />
-                      </div>
-                      <div
-                        class="invalid-feedback"
-                        *ngIf="
-                          productoForm.get('precio_venta')?.invalid &&
-                          productoForm.get('precio_venta')?.touched
-                        "
-                      >
-                        El precio de venta es requerido
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="row">
-                    <div class="col-md-6 mb-16">
-                      <label class="form-label text-heading fw-medium mb-8"
-                        >Stock Actual *</label
-                      >
-                      <input
-                        type="number"
-                        class="form-control px-16 py-12 border rounded-8"
-                        [class.is-invalid]="
-                          productoForm.get('stock')?.invalid &&
-                          productoForm.get('stock')?.touched
-                        "
-                        formControlName="stock"
-                        min="0"
-                        placeholder="0"
-                      />
-                      <div
-                        class="invalid-feedback"
-                        *ngIf="
-                          productoForm.get('stock')?.invalid &&
-                          productoForm.get('stock')?.touched
-                        "
-                      >
-                        El stock es requerido
-                      </div>
-                    </div>
-
-                    <div class="col-md-6 mb-16">
-                      <label class="form-label text-heading fw-medium mb-8"
-                        >Stock Mínimo *</label
-                      >
-                      <input
-                        type="number"
-                        class="form-control px-16 py-12 border rounded-8"
-                        [class.is-invalid]="
-                          productoForm.get('stock_minimo')?.invalid &&
-                          productoForm.get('stock_minimo')?.touched
-                        "
-                        formControlName="stock_minimo"
-                        min="0"
-                        placeholder="5"
-                      />
-                      <div
-                        class="invalid-feedback"
-                        *ngIf="
-                          productoForm.get('stock_minimo')?.invalid &&
-                          productoForm.get('stock_minimo')?.touched
-                        "
-                      >
-                        El stock mínimo es requerido
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      formControlName="activo"
-                      id="activo"
-                    />
-                    <label
-                      class="form-check-label text-heading fw-medium"
-                      for="activo"
-                    >
-                      Producto activo
-                    </label>
-                  </div>
-                  <div class="form-check mt-12">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      formControlName="destacado"
-                      id="destacado"
-                    />
-                    <label
-                      class="form-check-label text-heading fw-medium"
-                      for="destacado"
-                    >
-                      <i class="ph ph-star me-8 text-warning"></i>
-                      Producto destacado
-                    </label>
-
-                    <!-- NUEVO CHECKBOX -->
-                    <div class="form-check mt-12">
-                      <input
-                        class="form-check-input"
-                        type="checkbox"
-                        formControlName="mostrar_igv"
-                        id="mostrar_igv"
-                      />
-                      <label
-                        class="form-check-label text-heading fw-medium"
-                        for="mostrar_igv"
-                      >
-                        <i class="ph ph-percent me-8 text-info"></i>
-                        Mostrar IGV
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Imagen -->
-                <div class="col-md-4">
-                  <label class="form-label text-heading fw-medium mb-8"
-                    >Imagen del Producto</label
-                  >
-                  <div
-                    class="upload-area border-2 border-dashed border-gray-200 rounded-8 p-16 text-center"
-                    [class.border-main-600]="imagePreview"
-                  >
-                    <div *ngIf="!imagePreview" class="text-center">
-                      <i class="ph ph-image text-gray-400 text-4xl mb-12"></i>
-                      <p class="text-gray-500 text-sm mb-12">
-                        Seleccionar imagen
-                      </p>
-                      <label
-                        class="btn bg-main-50 text-main-600 px-12 py-6 rounded-6 cursor-pointer text-sm"
-                      >
-                        <i class="ph ph-upload me-6"></i>
-                        Subir imagen
-                        <input
-                          type="file"
-                          class="d-none"
-                          accept="image/*"
-                          (change)="onImageSelected($event)"
-                        />
-                      </label>
-                    </div>
-
-                    <div *ngIf="imagePreview" class="text-center">
-                      <img
-                        [src]="imagePreview"
-                        alt="Preview"
-                        class="img-fluid rounded-6 mb-12"
-                        style="max-height: 150px;"
-                      />
-                      <br />
-                      <label
-                        class="btn bg-main-50 text-main-600 px-12 py-6 rounded-6 cursor-pointer text-sm"
-                      >
-                        <i class="ph ph-pencil me-6"></i>
-                        Cambiar imagen
-                        <input
-                          type="file"
-                          class="d-none"
-                          accept="image/*"
-                          (change)="onImageSelected($event)"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                  <div class="mt-8">
-                    <small class="text-gray-500 text-xs d-block">
-                      <strong>Formatos:</strong> JPG, PNG, GIF (máx. 2MB)
-                    </small>
-                    <small class="text-info text-xs d-block mt-4">
-                      <i class="ph ph-lightbulb me-4"></i>
-                      <strong>Tamaño recomendado:</strong> 400x400px (cuadrado) para mejor visualización
-                    </small>
-                    <small class="text-warning text-xs d-block mt-4">
-                      ⚠️ Imágenes muy anchas o altas pueden verse deformadas en la tienda
-                    </small>
-                  </div>
-
-                  <!-- Mensaje de validación de imagen -->
-                  <div
-                    *ngIf="imageValidationMessage"
-                    class="alert mt-16 py-8 px-12 rounded-6 border-0"
-                    [ngClass]="{
-                      'alert-danger bg-danger-50 text-danger-600': imageValidationType === 'error',
-                      'alert-warning bg-warning-50 text-warning-600': imageValidationType === 'warning'
-                    }"
-                  >
-                    <i
-                      class="ph me-8"
-                      [ngClass]="{
-                        'ph-x-circle': imageValidationType === 'error',
-                        'ph-warning': imageValidationType === 'warning'
-                      }"
-                    ></i>
-                    {{ imageValidationMessage }}
-                  </div>
-                </div>
-              </div>
-            </form>
-          </div>
-
-          <div class="modal-footer border-0 pt-0">
-            <button
-              type="button"
-              class="btn bg-gray-100 hover-bg-gray-200 text-gray-600 px-16 py-8 rounded-8"
-              data-bs-dismiss="modal"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
-              [disabled]="isLoading"
-              (click)="onSubmit()"
-            >
-              <span
-                *ngIf="isLoading"
-                class="spinner-border spinner-border-sm me-8"
-              ></span>
-              <i *ngIf="!isLoading" class="ph ph-check me-8"></i>
-              {{
-                isLoading ? 'Guardando...' : producto ? 'Actualizar' : 'Guardar'
-              }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
+  imports: [CommonModule, ReactiveFormsModule, QuillModule],
+  templateUrl: './producto-modal.component.html',
   styles: [
     `
       .upload-area {
@@ -451,22 +39,76 @@ import {
       .upload-area:hover {
         border-color: var(--bs-main-600) !important;
       }
+      .quill-wrapper {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      ::ng-deep .ql-toolbar {
+        border: none;
+        border-bottom: 1px solid #ddd;
+        background: #f8f9fa;
+      }
+      ::ng-deep .ql-container {
+        border: none;
+        font-size: 14px;
+      }
+      ::ng-deep .ql-editor {
+        min-height: 200px;
+        padding: 12px;
+      }
+      ::ng-deep .ql-editor.ql-blank::before {
+        color: #999;
+        font-style: italic;
+      }
+      ::ng-deep .quill-editor {
+        background: white;
+      }
     `,
   ],
 })
-export class ProductoModalComponent implements OnInit, OnChanges {
+export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
   @Input() producto: Producto | null = null;
   @Output() productoGuardado = new EventEmitter<void>();
   @Output() modalCerrado = new EventEmitter<void>();
 
+  // Formularios
   productoForm: FormGroup;
+  detallesForm: FormGroup;
+
+  // Datos
   categorias: Categoria[] = [];
   marcas: MarcaProducto[] = [];
+
+  // Imágenes principales
   selectedImage: File | null = null;
   imagePreview: string | null = null;
-  isLoading = false;
   imageValidationMessage: string = '';
   imageValidationType: 'error' | 'warning' | '' = '';
+
+  // Imágenes galería (detalles)
+  imagenesSeleccionadas: File[] = [];
+  imagenesPreview: string[] = [];
+  imagenesExistentes: string[] = [];
+
+  // Estados
+  isLoading = false;
+  activeTab: string = 'basico';
+
+  // Configuración del editor Quill
+  quillConfig = {
+    toolbar: [
+      ['bold', 'italic', 'underline', 'strike'],
+      ['blockquote', 'code-block'],
+      [{ header: 1 }, { header: 2 }],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      [{ indent: '-1' }, { indent: '+1' }],
+      [{ size: ['small', false, 'large', 'huge'] }],
+      [{ color: [] }, { background: [] }],
+      [{ align: [] }],
+      ['clean', 'link', 'image'],
+    ],
+  };
 
   constructor(private fb: FormBuilder, private almacenService: AlmacenService) {
     this.productoForm = this.fb.group({
@@ -481,61 +123,140 @@ export class ProductoModalComponent implements OnInit, OnChanges {
       stock_minimo: [5, [Validators.required, Validators.min(0)]],
       activo: [true],
       destacado: [false],
-      mostrar_igv: [true] 
+      mostrar_igv: [true],
+    });
+
+    this.detallesForm = this.fb.group({
+      descripcion_detallada: [''],
+      instrucciones_uso: [''],
+      garantia: [''],
+      politicas_devolucion: [''],
+      especificaciones: this.fb.array([]),
+      caracteristicas_tecnicas: this.fb.array([]),
+      videos: this.fb.array([]),
+      largo: [''],
+      ancho: [''],
+      alto: [''],
+      peso: [''],
     });
   }
 
   ngOnInit(): void {
     this.cargarCategorias();
     this.cargarMarcas();
+    this.setupModalEventListeners();
+  }
+
+  ngOnDestroy(): void {
+    this.removeModalEventListeners();
   }
 
   ngOnChanges(): void {
     if (this.producto) {
       console.log('ngOnChanges - Cargando producto para edición:', this.producto);
-
-      this.productoForm.patchValue({
-        nombre: this.producto.nombre || '',
-        descripcion: this.producto.descripcion || '',
-        codigo_producto: this.producto.codigo_producto || '',
-        categoria_id: this.producto.categoria_id || '',
-        marca_id: this.producto.marca_id || '',
-        precio_compra: this.producto.precio_compra || '',
-        precio_venta: this.producto.precio_venta || '',
-        stock: this.producto.stock || 0,
-        stock_minimo: this.producto.stock_minimo || 5,
-        activo: Boolean(this.producto.activo),
-        destacado: Boolean(this.producto.destacado),
-        mostrar_igv: this.producto.mostrar_igv !== undefined ? Boolean(this.producto.mostrar_igv) : true
-      });
-
-      this.imagePreview = this.producto.imagen_url || null;
-      this.selectedImage = null; // Limpiar imagen seleccionada al cargar producto existente
-      this.clearImageValidation();
-
-      console.log('Formulario cargado con valores:', this.productoForm.value);
+      this.cargarProductoParaEdicion();
     } else {
       console.log('ngOnChanges - Creando nuevo producto');
-
-      this.productoForm.reset({
-        nombre: '',
-        descripcion: '',
-        codigo_producto: '',
-        categoria_id: '',
-        marca_id: '',
-        precio_compra: '',
-        precio_venta: '',
-        stock: '',
-        stock_minimo: 5,
-        activo: true,
-        destacado: false,
-        mostrar_igv: true
-      });
-
-      this.imagePreview = null;
-      this.selectedImage = null;
-      this.clearImageValidation();
+      this.resetearFormularios();
     }
+  }
+
+  private setupModalEventListeners(): void {
+    const modal = document.getElementById('modalCrearProducto');
+    if (modal) {
+      modal.addEventListener('hidden.bs.modal', () => {
+        console.log('Modal cerrado - limpiando datos');
+        this.resetearFormularios();
+        this.modalCerrado.emit();
+      });
+    }
+  }
+
+  private removeModalEventListeners(): void {
+    const modal = document.getElementById('modalCrearProducto');
+    if (modal) {
+      modal.removeEventListener('hidden.bs.modal', () => {});
+    }
+  }
+
+  cargarProductoParaEdicion(): void {
+    if (!this.producto) return;
+
+    // Cargar datos básicos
+    this.productoForm.patchValue({
+      nombre: this.producto.nombre || '',
+      descripcion: this.producto.descripcion || '',
+      codigo_producto: this.producto.codigo_producto || '',
+      categoria_id: this.producto.categoria_id || '',
+      marca_id: this.producto.marca_id || '',
+      precio_compra: this.producto.precio_compra || '',
+      precio_venta: this.producto.precio_venta || '',
+      stock: this.producto.stock || 0,
+      stock_minimo: this.producto.stock_minimo || 5,
+      activo: Boolean(this.producto.activo),
+      destacado: Boolean(this.producto.destacado),
+      mostrar_igv:
+        this.producto.mostrar_igv !== undefined
+          ? Boolean(this.producto.mostrar_igv)
+          : true,
+    });
+
+    this.imagePreview = this.producto.imagen_url || null;
+    this.selectedImage = null;
+    this.clearImageValidation();
+
+    // Cargar detalles si el producto existe
+    this.cargarDetallesProducto();
+  }
+
+  resetearFormularios(): void {
+    // Resetear formulario básico
+    this.productoForm.reset({
+      nombre: '',
+      descripcion: '',
+      codigo_producto: '',
+      categoria_id: '',
+      marca_id: '',
+      precio_compra: '',
+      precio_venta: '',
+      stock: '',
+      stock_minimo: 5,
+      activo: true,
+      destacado: false,
+      mostrar_igv: true,
+    });
+
+    // Resetear formulario de detalles
+    this.detallesForm.reset({
+      descripcion_detallada: '',
+      instrucciones_uso: '',
+      garantia: '',
+      politicas_devolucion: '',
+      largo: '',
+      ancho: '',
+      alto: '',
+      peso: '',
+    });
+
+    // Limpiar arrays
+    this.especificaciones.clear();
+    this.caracteristicasTecnicas.clear();
+    this.videos.clear();
+
+    // Limpiar imágenes
+    this.imagePreview = null;
+    this.selectedImage = null;
+    this.imagenesPreview = [];
+    this.imagenesSeleccionadas = [];
+    this.imagenesExistentes = [];
+    this.clearImageValidation();
+
+    // Volver al primer tab
+    this.activeTab = 'basico';
+
+    // Agregar elementos por defecto
+    this.agregarEspecificacion();
+    this.agregarCaracteristicaTecnica();
   }
 
   cargarCategorias(): void {
@@ -560,15 +281,158 @@ export class ProductoModalComponent implements OnInit, OnChanges {
     });
   }
 
+  cargarDetallesProducto(): void {
+    if (!this.producto) return;
+
+    console.log('Cargando detalles para producto ID:', this.producto.id);
+
+    this.almacenService.obtenerDetallesProducto(this.producto.id).subscribe({
+      next: (response) => {
+        console.log('Respuesta detalles:', response);
+        const detalles = response.detalles;
+
+        if (detalles) {
+          // Cargar datos básicos
+          this.detallesForm.patchValue({
+            descripcion_detallada: detalles.descripcion_detallada || '',
+            instrucciones_uso: detalles.instrucciones_uso || '',
+            garantia: detalles.garantia || '',
+            politicas_devolucion: detalles.politicas_devolucion || '',
+          });
+
+          // Cargar dimensiones
+          let dimensiones = detalles.dimensiones;
+          if (typeof dimensiones === 'string') {
+            try {
+              dimensiones = JSON.parse(dimensiones);
+            } catch (e) {
+              dimensiones = null;
+            }
+          }
+
+          if (dimensiones) {
+            if (Array.isArray(dimensiones) && dimensiones.length >= 4) {
+              this.detallesForm.patchValue({
+                largo: dimensiones[0] || '',
+                ancho: dimensiones[1] || '',
+                alto: dimensiones[2] || '',
+                peso: dimensiones[3] || '',
+              });
+            } else if (
+              typeof dimensiones === 'object' &&
+              !Array.isArray(dimensiones)
+            ) {
+              this.detallesForm.patchValue({
+                largo: dimensiones.largo || '',
+                ancho: dimensiones.ancho || '',
+                alto: dimensiones.alto || '',
+                peso: dimensiones.peso || '',
+              });
+            }
+          }
+
+          // Cargar especificaciones
+          let especificaciones = detalles.especificaciones;
+          if (typeof especificaciones === 'string') {
+            try {
+              especificaciones = JSON.parse(especificaciones);
+            } catch (e) {
+              especificaciones = null;
+            }
+          }
+
+          this.especificaciones.clear();
+          if (
+            especificaciones &&
+            Array.isArray(especificaciones) &&
+            especificaciones.length > 0
+          ) {
+            especificaciones.forEach((spec: any) => {
+              const group = this.fb.group({
+                nombre: [spec.nombre || ''],
+                valor: [spec.valor || ''],
+              });
+              this.especificaciones.push(group);
+            });
+          } else {
+            this.agregarEspecificacion();
+          }
+
+          // Cargar características técnicas
+          let caracteristicasTecnicas = detalles.caracteristicas_tecnicas;
+          if (typeof caracteristicasTecnicas === 'string') {
+            try {
+              caracteristicasTecnicas = JSON.parse(caracteristicasTecnicas);
+            } catch (e) {
+              caracteristicasTecnicas = null;
+            }
+          }
+
+          this.caracteristicasTecnicas.clear();
+          if (
+            caracteristicasTecnicas &&
+            Array.isArray(caracteristicasTecnicas) &&
+            caracteristicasTecnicas.length > 0
+          ) {
+            caracteristicasTecnicas.forEach((carac: any) => {
+              const group = this.fb.group({
+                caracteristica: [carac.caracteristica || ''],
+                detalle: [carac.detalle || ''],
+              });
+              this.caracteristicasTecnicas.push(group);
+            });
+          } else {
+            this.agregarCaracteristicaTecnica();
+          }
+
+          // Cargar videos
+          let videos = detalles.videos;
+          if (typeof videos === 'string') {
+            try {
+              videos = JSON.parse(videos);
+            } catch (e) {
+              videos = null;
+            }
+          }
+
+          this.videos.clear();
+          if (videos && Array.isArray(videos) && videos.length > 0) {
+            videos.forEach((video: string) => {
+              this.videos.push(this.fb.control(video));
+            });
+          }
+
+          // Cargar imágenes existentes
+          this.imagenesExistentes = detalles.imagenes_url || [];
+        } else {
+          // Si no hay detalles, agregar campos por defecto
+          this.agregarEspecificacion();
+          this.agregarCaracteristicaTecnica();
+        }
+
+        console.log('Detalles cargados exitosamente');
+      },
+      error: (error) => {
+        console.error('Error al cargar detalles:', error);
+        this.agregarEspecificacion();
+        this.agregarCaracteristicaTecnica();
+      },
+    });
+  }
+
+  // ==================== IMAGEN PRINCIPAL ====================
+
   onImageSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      // Limpiar mensajes anteriores
       this.clearImageValidation();
 
       // Validar tamaño del archivo (máx. 2MB)
       if (file.size > 2 * 1024 * 1024) {
-        this.showImageValidation('La imagen es muy grande. El tamaño máximo permitido es 2MB.', 'error');
+        this.showImageValidation(
+          'La imagen es muy grande. El tamaño máximo permitido es 2MB.',
+          'error'
+        );
         event.target.value = '';
         this.selectedImage = null;
         this.imagePreview = null;
@@ -594,16 +458,13 @@ export class ProductoModalComponent implements OnInit, OnChanges {
               'warning'
             );
           } else if (Math.abs(width - height) > width * 0.3) {
-            // Si la diferencia entre ancho y alto es mayor al 30%
             this.showImageValidation(
               `Imagen no cuadrada (${width}x${height}px). Para mejor visualización usa imágenes cuadradas (ej: 400x400px).`,
               'warning'
             );
           } else {
-            // Imagen con buenas dimensiones - mostrar mensaje de éxito
             this.imageValidationMessage = `¡Perfecto! Imagen con dimensiones ideales (${width}x${height}px).`;
-            this.imageValidationType = 'warning'; // Usamos warning para color verde/azul
-            // Ocultar el mensaje después de 3 segundos
+            this.imageValidationType = 'warning';
             setTimeout(() => this.clearImageValidation(), 3000);
           }
         };
@@ -623,6 +484,197 @@ export class ProductoModalComponent implements OnInit, OnChanges {
     this.imageValidationType = '';
   }
 
+  // ==================== GALERÍA DE IMÁGENES ====================
+
+  onImagenesSelected(event: any): void {
+    const files = Array.from(event.target.files) as File[];
+
+    files.forEach((file) => {
+      // Validar tamaño (máx. 2MB por imagen)
+      if (file.size > 2 * 1024 * 1024) {
+        alert(`La imagen ${file.name} es muy grande. Máximo 2MB por imagen.`);
+        return;
+      }
+
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          // Verificar dimensiones de la imagen
+          const img = new Image();
+          img.onload = () => {
+            const width = img.width;
+            const height = img.height;
+
+            // Mostrar advertencia si las dimensiones no son ideales
+            if (width < 200 || height < 200) {
+              console.warn(`Imagen ${file.name} muy pequeña (${width}x${height}px). Se recomienda usar al menos 400x400px.`);
+            } else if (Math.abs(width - height) > width * 0.3) {
+              console.warn(`Imagen ${file.name} no cuadrada (${width}x${height}px). Para mejor visualización usa imágenes cuadradas.`);
+            } else {
+              console.log(`✓ Imagen ${file.name} con dimensiones ideales (${width}x${height}px).`);
+            }
+
+            // Agregar la imagen al array
+            this.imagenesSeleccionadas.push(file);
+            this.imagenesPreview.push(e.target.result);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Limpiar el input
+    event.target.value = '';
+  }
+
+  eliminarImagenPreview(index: number): void {
+    this.imagenesSeleccionadas.splice(index, 1);
+    this.imagenesPreview.splice(index, 1);
+  }
+
+  eliminarImagenExistente(index: number): void {
+    if (this.producto) {
+      this.almacenService
+        .eliminarImagenDetalle(this.producto.id, index)
+        .subscribe({
+          next: () => {
+            this.imagenesExistentes.splice(index, 1);
+          },
+          error: (error) => {
+            console.error('Error al eliminar imagen:', error);
+          },
+        });
+    }
+  }
+
+  // ==================== GETTERS PARA FORM ARRAYS ====================
+
+  get especificaciones() {
+    return this.detallesForm.get('especificaciones') as FormArray;
+  }
+
+  get caracteristicasTecnicas() {
+    return this.detallesForm.get('caracteristicas_tecnicas') as FormArray;
+  }
+
+  get videos() {
+    return this.detallesForm.get('videos') as FormArray;
+  }
+
+  // ==================== MÉTODOS PARA ESPECIFICACIONES ====================
+
+  agregarEspecificacion(): void {
+    const especificacionGroup = this.fb.group({
+      nombre: [''],
+      valor: [''],
+    });
+    this.especificaciones.push(especificacionGroup);
+  }
+
+  eliminarEspecificacion(index: number): void {
+    this.especificaciones.removeAt(index);
+  }
+
+  // ==================== MÉTODOS PARA CARACTERÍSTICAS TÉCNICAS ====================
+
+  agregarCaracteristicaTecnica(): void {
+    const caracteristicaGroup = this.fb.group({
+      caracteristica: [''],
+      detalle: [''],
+    });
+    this.caracteristicasTecnicas.push(caracteristicaGroup);
+  }
+
+  eliminarCaracteristicaTecnica(index: number): void {
+    this.caracteristicasTecnicas.removeAt(index);
+  }
+
+  // ==================== MÉTODOS PARA VIDEOS ====================
+
+  agregarVideo(): void {
+    this.videos.push(this.fb.control(''));
+  }
+
+  eliminarVideo(index: number): void {
+    this.videos.removeAt(index);
+  }
+
+  isValidVideoUrl(url: string): boolean {
+    if (!url || url.trim() === '') return false;
+
+    const youtubeRegex =
+      /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)[a-zA-Z0-9_-]{11}/;
+    const youtubeShortsRegex =
+      /^(https?:\/\/)?(www\.)?youtube\.com\/shorts\/[a-zA-Z0-9_-]{11}/;
+    const tiktokRegex =
+      /^(https?:\/\/)?(www\.)?(tiktok\.com\/@[\w.-]+\/video\/\d+|vm\.tiktok\.com\/[a-zA-Z0-9]+|tiktok\.com\/t\/[a-zA-Z0-9]+)/;
+    const instagramRegex =
+      /^(https?:\/\/)?(www\.)?instagram\.com\/(reel|p)\/[a-zA-Z0-9_-]+/;
+    const vimeoRegex = /^(https?:\/\/)?(www\.)?vimeo\.com\/\d+/;
+
+    return (
+      youtubeRegex.test(url) ||
+      youtubeShortsRegex.test(url) ||
+      tiktokRegex.test(url) ||
+      instagramRegex.test(url) ||
+      vimeoRegex.test(url)
+    );
+  }
+
+  previewVideo(url: string): void {
+    if (!this.isValidVideoUrl(url)) {
+      alert(
+        'URL de video no válida. Formatos soportados: YouTube, YouTube Shorts, TikTok, Instagram Reels, Vimeo.'
+      );
+      return;
+    }
+
+    const embedUrl = this.getVideoEmbedUrl(url);
+    const width = 800;
+    const height = 450;
+    const left = (screen.width - width) / 2;
+    const top = (screen.height - height) / 2;
+
+    window.open(
+      embedUrl,
+      'VideoPreview',
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
+    );
+  }
+
+  private getVideoEmbedUrl(url: string): string {
+    const youtubeRegexes = [
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+    ];
+
+    for (const regex of youtubeRegexes) {
+      const match = url.match(regex);
+      if (match) {
+        return `https://www.youtube.com/embed/${match[1]}`;
+      }
+    }
+
+    const vimeoMatch = url.match(
+      /(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)/
+    );
+    if (vimeoMatch) {
+      return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    }
+
+    return url;
+  }
+
+  onVideoUrlChange(index: number, event: any): void {
+    const url = event.target.value;
+    console.log(`Video ${index} URL changed:`, url);
+  }
+
+  // ==================== GUARDAR ====================
+
   onSubmit(): void {
     if (this.productoForm.valid) {
       this.isLoading = true;
@@ -633,7 +685,6 @@ export class ProductoModalComponent implements OnInit, OnChanges {
         imagen: this.selectedImage,
       };
 
-      // Si marca_id está vacío, convertirlo a null
       if (!formValue.marca_id) {
         formValue.marca_id = null;
       }
@@ -645,8 +696,15 @@ export class ProductoModalComponent implements OnInit, OnChanges {
       request.subscribe({
         next: (response) => {
           console.log('Producto guardado exitosamente:', response);
-          this.productoGuardado.emit();
-          this.cerrarModal();
+
+          // Si hay detalles para guardar
+          const productoId = this.producto?.id || response.producto?.id;
+          if (productoId && this.tieneDetallesParaGuardar()) {
+            this.guardarDetalles(productoId);
+          } else {
+            this.productoGuardado.emit();
+            this.cerrarModal();
+          }
         },
         error: (error) => {
           console.error('Error al guardar producto:', error);
@@ -656,6 +714,96 @@ export class ProductoModalComponent implements OnInit, OnChanges {
     } else {
       this.markFormGroupTouched();
     }
+  }
+
+  private tieneDetallesParaGuardar(): boolean {
+    const detalles = this.detallesForm.value;
+
+    // Verificar si hay algún detalle con contenido
+    return !!(
+      detalles.descripcion_detallada ||
+      detalles.instrucciones_uso ||
+      detalles.garantia ||
+      detalles.politicas_devolucion ||
+      this.especificaciones.value.some((spec: any) => spec.nombre && spec.valor) ||
+      this.caracteristicasTecnicas.value.some((carac: any) => carac.caracteristica && carac.detalle) ||
+      this.videos.value.some((video: string) => video.trim()) ||
+      this.imagenesSeleccionadas.length > 0 ||
+      detalles.largo ||
+      detalles.ancho ||
+      detalles.alto ||
+      detalles.peso
+    );
+  }
+
+  private guardarDetalles(productoId: number): void {
+    const formData = new FormData();
+
+    // Datos básicos
+    formData.append(
+      'descripcion_detallada',
+      this.detallesForm.get('descripcion_detallada')?.value || ''
+    );
+    formData.append(
+      'instrucciones_uso',
+      this.detallesForm.get('instrucciones_uso')?.value || ''
+    );
+    formData.append(
+      'garantia',
+      this.detallesForm.get('garantia')?.value || ''
+    );
+    formData.append(
+      'politicas_devolucion',
+      this.detallesForm.get('politicas_devolucion')?.value || ''
+    );
+
+    // Dimensiones
+    const dimensiones = {
+      largo: this.detallesForm.get('largo')?.value || null,
+      ancho: this.detallesForm.get('ancho')?.value || null,
+      alto: this.detallesForm.get('alto')?.value || null,
+      peso: this.detallesForm.get('peso')?.value || null,
+    };
+    formData.append('dimensiones', JSON.stringify(dimensiones));
+
+    // Especificaciones
+    const especificaciones = this.especificaciones.value.filter(
+      (spec: any) => spec.nombre && spec.valor
+    );
+    formData.append('especificaciones', JSON.stringify(especificaciones));
+
+    // Características técnicas
+    const caracteristicasTecnicas = this.caracteristicasTecnicas.value.filter(
+      (carac: any) => carac.caracteristica && carac.detalle
+    );
+    formData.append(
+      'caracteristicas_tecnicas',
+      JSON.stringify(caracteristicasTecnicas)
+    );
+
+    // Videos
+    const videos = this.videos.value.filter((video: string) => video.trim());
+    formData.append('videos', JSON.stringify(videos));
+
+    // Imágenes
+    this.imagenesSeleccionadas.forEach((imagen, index) => {
+      formData.append(`imagenes[${index}]`, imagen);
+    });
+
+    // Enviar al servidor
+    this.almacenService.guardarDetallesProducto(productoId, formData).subscribe({
+      next: (response) => {
+        console.log('Detalles guardados exitosamente:', response);
+        this.productoGuardado.emit();
+        this.cerrarModal();
+      },
+      error: (error) => {
+        console.error('Error al guardar detalles:', error);
+        // Aunque los detalles fallen, el producto ya se guardó
+        this.productoGuardado.emit();
+        this.cerrarModal();
+      },
+    });
   }
 
   private markFormGroupTouched(): void {
@@ -675,5 +823,9 @@ export class ProductoModalComponent implements OnInit, OnChanges {
       }
     }
     this.modalCerrado.emit();
+  }
+
+  cambiarTab(tab: string): void {
+    this.activeTab = tab;
   }
 }

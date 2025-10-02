@@ -34,6 +34,11 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
         gap: 16px;
+
+        /* ✅ FIX: Eliminar margin de slick-slide para evitar overflow */
+        .slick-slide {
+            margin: 0 !important;
+        }
         .feature-item {
             &:nth-child(10n + 1) {
                 .feature-item__thumb {
