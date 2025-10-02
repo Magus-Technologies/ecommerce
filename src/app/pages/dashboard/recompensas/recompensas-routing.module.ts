@@ -12,6 +12,8 @@ import { RecompensasConfiguracionEnviosComponent } from './recompensas-configura
 import { RecompensasConfiguracionRegalosComponent } from './recompensas-configuracion-regalos/recompensas-configuracion-regalos.component';
 import { RecompensasProductosCategoriasComponent } from './recompensas-wizard/recompensas-productos-categorias.component';
 import { RecompensasSegmentosClientesComponent } from './recompensas-wizard/recompensas-segmentos-clientes.component';
+import { RecompensasPopupsGlobalComponent } from './recompensas-popups-global/recompensas-popups-global.component';
+import { RecompensasPopupsListComponent } from './recompensas-popups-list/recompensas-popups-list.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -21,6 +23,22 @@ const routes: Routes = [
     data: { 
       title: 'Dashboard de Recompensas',
       breadcrumb: 'Dashboard'
+    }
+  },
+  { 
+    path: 'popups', 
+    component: RecompensasPopupsGlobalComponent,
+    data: { 
+      title: 'Gestión de Popups',
+      breadcrumb: 'Popups'
+    }
+  },
+  { 
+    path: 'popups/todos', 
+    component: RecompensasPopupsListComponent,
+    data: { 
+      title: 'Todos los Popups',
+      breadcrumb: 'Todos los Popups'
     }
   },
   { 

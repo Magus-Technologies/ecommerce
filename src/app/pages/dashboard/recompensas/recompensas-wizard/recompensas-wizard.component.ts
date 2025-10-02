@@ -140,6 +140,7 @@ export class RecompensasWizardComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarTiposYEstados();
+    this.configurarEscuchaFechaInicio();
     // Verificar si es edición
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -182,6 +183,48 @@ export class RecompensasWizardComponent implements OnInit {
           { value: 'expirada', label: 'Expirada' },
           { value: 'cancelada', label: 'Cancelada' }
         ];
+      }
+    });
+  }
+
+  configurarEscuchaFechaInicio(): void {
+    // Escuchar cambios en la fecha de inicio para actualizar estados disponibles
+    this.datosGeneralesForm.get('fecha_inicio')?.valueChanges.subscribe(fechaInicio => {
+      if (fechaInicio) {
+        this.obtenerEstadosDisponibles(fechaInicio);
+      }
+    });
+  }
+
+  obtenerEstadosDisponibles(fechaInicio: string): void {
+    this.recompensasService.obtenerEstadosDisponibles(fechaInicio).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          // Actualizar la lista de estados disponibles
+          this.estadosRecompensa = response.data.estados_disponibles.map((estado: any) => ({
+            value: estado.value,
+            label: estado.label
+          }));
+
+          // Aplicar el estado por defecto si no hay uno seleccionado
+          const estadoActual = this.datosGeneralesForm.get('estado')?.value;
+          if (!estadoActual || !this.estadosRecompensa.find(e => e.value === estadoActual)) {
+            this.datosGeneralesForm.patchValue({
+              estado: response.data.estado_por_defecto
+            });
+          }
+
+          console.log('Estados disponibles actualizados:', {
+            fechaInicio,
+            estados: this.estadosRecompensa,
+            estadoPorDefecto: response.data.estado_por_defecto,
+            mensaje: response.data.mensaje
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error obteniendo estados disponibles:', error);
+        // En caso de error, mantener los estados por defecto
       }
     });
   }
@@ -345,17 +388,68 @@ export class RecompensasWizardComponent implements OnInit {
       this.recompensasService.crear(datosRecompensa).subscribe({
         next: (response) => {
           console.log('Respuesta del servicio crear:', response);
+          console.log('Estructura completa de response.data:', JSON.stringify(response.data, null, 2));
+          
           if (response.success) {
             console.log('Recompensa creada exitosamente:', response.data);
+            
+            // Obtener el ID de la recompensa - ESTRUCTURA CORRECTA DEL BACKEND
+            let recompensaId = null;
+            
+            // PRIORIDAD 1: response.data.recompensa.id (ESTRUCTURA ACTUAL DEL BACKEND)
+            if ((response.data as any).recompensa && (response.data as any).recompensa.id) {
+              recompensaId = (response.data as any).recompensa.id;
+              console.log('✅ ID encontrado en response.data.recompensa.id:', recompensaId);
+            }
+            // PRIORIDAD 2: response.data.id (ESTRUCTURA ANTERIOR - COMPATIBILIDAD)
+            else if ((response.data as any).id) {
+              recompensaId = (response.data as any).id;
+              console.log('✅ ID encontrado en response.data.id:', recompensaId);
+            }
+            // PRIORIDAD 3: response.data.data.id (ESTRUCTURA ALTERNATIVA)
+            else if ((response.data as any).data && (response.data as any).data.id) {
+              recompensaId = (response.data as any).data.id;
+              console.log('✅ ID encontrado en response.data.data.id:', recompensaId);
+            }
+            // PRIORIDAD 4: Si response.data es directamente el objeto recompensa
+            else if (response.data && typeof response.data === 'object' && (response.data as any).id) {
+              recompensaId = (response.data as any).id;
+              console.log('✅ ID encontrado en response.data (objeto directo):', recompensaId);
+            }
+            
+            // DEBUGGING: Mostrar todas las propiedades disponibles
+            console.log('🔍 DEBUGGING - Propiedades de response.data:', Object.keys(response.data));
+            if ((response.data as any).recompensa) {
+              console.log('🔍 DEBUGGING - Propiedades de response.data.recompensa:', Object.keys((response.data as any).recompensa));
+              console.log('🔍 DEBUGGING - response.data.recompensa.id:', (response.data as any).recompensa.id);
+            }
+            
+            console.log('ID de recompensa obtenido:', recompensaId);
+            
+            if (!recompensaId) {
+              console.error('❌ CRÍTICO: No se pudo obtener el ID de la recompensa');
+              console.error('Estructura completa de response.data:', response.data);
+              console.error('Propiedades disponibles:', Object.keys(response.data));
+              
+              // Mostrar error específico
+              this.error = 'Error crítico: No se pudo obtener el ID de la recompensa creada. Verifica la estructura de respuesta del backend.';
+              
+              // Navegar a la lista de recompensas después de un breve delay
+              setTimeout(() => {
+                this.loading = false;
+                this.router.navigate(['/dashboard/recompensas']);
+              }, 3000);
+              return;
+            }
             
             // Si hay productos/categorías seleccionados, asignarlos
             if (this.productosSeleccionados.length > 0 || this.categoriasSeleccionadas.length > 0) {
               console.log('Asignando productos y categorías...');
-              this.asignarProductosYCategorias(response.data.id);
+              this.asignarProductosYCategorias(recompensaId);
             } else {
               console.log('No hay productos/categorías, activando recompensa...');
               // Si no hay asignaciones, activar si es necesario y navegar
-              this.activarRecompensaCreada(response.data.id);
+              this.activarRecompensaCreada(recompensaId);
             }
           } else {
             console.error('Error en la respuesta del servicio:', response);

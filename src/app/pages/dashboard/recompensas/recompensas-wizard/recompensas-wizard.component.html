@@ -103,7 +103,12 @@
               <div class="form-text">
                 <small class="text-muted">
                   <i class="fas fa-info-circle me-1"></i>
-                  Si seleccionas "Programada", la recompensa se creará como borrador y podrás activarla después.
+                  <span *ngIf="!datosGeneralesForm.get('fecha_inicio')?.value">
+                    Selecciona una fecha de inicio para ver los estados disponibles
+                  </span>
+                  <span *ngIf="datosGeneralesForm.get('fecha_inicio')?.value">
+                    Los estados disponibles se actualizan automáticamente según la fecha de inicio
+                  </span>
                 </small>
               </div>
             </div>
