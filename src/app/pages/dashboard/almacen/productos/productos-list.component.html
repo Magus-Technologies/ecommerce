@@ -98,8 +98,8 @@
 
             <!-- Producto -->
             <td>
-              <div class="client-info__name">{{ producto.nombre }}</div>
-              <div class="client-info__subtitle">{{ producto.codigo_producto }}</div>
+              <div class="client-info__name" [title]="producto.nombre">{{ producto.nombre }}</div>
+              <div class="client-info__subtitle" [title]="producto.codigo_producto">{{ producto.codigo_producto }}</div>
             </td>
 
             <!-- Categoría (hidden on tablet) -->
@@ -162,12 +162,6 @@
                         [title]="producto.destacado ? 'Quitar destacado' : 'Marcar como destacado'"
                         *ngIf="permissionsService.canEditProductos()">
                   <i class="ph" [ngClass]="producto.destacado ? 'ph-star ph-fill' : 'ph-star'"></i>
-                </button>
-                <button class="action-buttons__btn action-buttons__btn--edit"
-                        (click)="gestionarDetalles(producto)"
-                        title="Gestionar detalles"
-                        *ngIf="permissionsService.canEditProductos()">
-                  <i class="ph ph-list-dashes"></i>
                 </button>
                 <button class="action-buttons__btn action-buttons__btn--edit"
                         (click)="editarProducto(producto)"
@@ -253,11 +247,3 @@
       (modalCerrado)="onModalCerrado()"
     >
     </app-producto-modal>
-
-    <!-- Modal para gestionar detalles del producto -->
-    <app-producto-detalles-modal
-      [producto]="productoSeleccionado"
-      (detallesGuardados)="onDetallesGuardados()"
-      (modalCerrado)="onModalCerrado()"
-    >
-    </app-producto-detalles-modal>

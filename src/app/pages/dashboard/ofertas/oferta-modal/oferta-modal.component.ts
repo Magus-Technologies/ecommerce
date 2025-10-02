@@ -578,13 +578,51 @@ export class OfertaModalComponent implements OnInit, OnChanges {
   onImageSelected(event: any, tipo: 'imagen' | 'banner_imagen'): void {
     const file = event.target.files[0];
     if (file) {
+      // Validar tamaño del archivo (máx. 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('La imagen es muy grande. El tamaño máximo permitido es 2MB.');
+        event.target.value = '';
+        return;
+      }
+
       // ✅ Guardar el archivo en formData
       (this.formData as any)[tipo] = file;
-      
+
       // ✅ Crear preview y asignarlo a la variable correcta
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
+
+        // Verificar dimensiones de la imagen
+        const img = new Image();
+        img.onload = () => {
+          const width = img.width;
+          const height = img.height;
+
+          // Mostrar advertencia si las dimensiones no son ideales
+          if (tipo === 'imagen') {
+            // Para imagen principal, recomendado: 400x400px cuadrado
+            if (width < 200 || height < 200) {
+              console.warn(`Imagen muy pequeña (${width}x${height}px). Se recomienda usar al menos 400x400px para mejor calidad.`);
+            } else if (Math.abs(width - height) > width * 0.3) {
+              console.warn(`Imagen no cuadrada (${width}x${height}px). Para mejor visualización usa imágenes cuadradas (ej: 400x400px).`);
+            } else {
+              console.log(`✓ Imagen con dimensiones ideales (${width}x${height}px).`);
+            }
+          } else if (tipo === 'banner_imagen') {
+            // Para banner, advertir si no mantiene proporción horizontal
+            const ratio = width / height;
+            if (ratio < 1.2) {
+              console.warn(`Banner muy cuadrado o vertical (${width}x${height}px). Se recomienda imágenes más horizontales para mejor visualización.`);
+            } else if (width < 400) {
+              console.warn(`Banner muy pequeño (${width}x${height}px). Se recomienda usar al menos 600px de ancho.`);
+            } else {
+              console.log(`✓ Banner con dimensiones adecuadas (${width}x${height}px).`);
+            }
+          }
+        };
+        img.src = result;
+
         if (tipo === 'imagen') {
           this.imagenPreview = result;
         } else {

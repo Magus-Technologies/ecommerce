@@ -6,7 +6,6 @@ import { FormsModule } from '@angular/forms';
 import { AlmacenService } from '../../../../services/almacen.service';
 import { Producto } from '../../../../types/almacen.types';
 import { ProductoModalComponent } from './producto-modal.component';
-import { ProductoDetallesModalComponent } from './producto-detalles-modal.component';
 import { SeccionFilterService } from '../../../../services/seccion-filter.service';
 import { PermissionsService } from '../../../../services/permissions.service';
 import Swal from 'sweetalert2';
@@ -18,8 +17,7 @@ import Swal from 'sweetalert2';
     CommonModule,
     RouterModule,
     FormsModule,
-    ProductoModalComponent,
-    ProductoDetallesModalComponent
+    ProductoModalComponent
   ],
   templateUrl: "./productos-list.component.html",
   styleUrl: "./productos-list.component.scss"
@@ -92,20 +90,6 @@ export class ProductosListComponent implements OnInit, OnDestroy {
     }, 10);
   }
 
-  gestionarDetalles(producto: Producto): void {
-    console.log('Gestionando detalles de producto:', producto);
-    this.productoSeleccionado = { ...producto }; // Crear copia para evitar problemas de referencia
-
-    // Esperar un tick antes de abrir el modal para asegurar que los datos se carguen
-    setTimeout(() => {
-      const modal = document.getElementById('modalDetallesProducto');
-      if (modal) {
-        const bootstrapModal = new (window as any).bootstrap.Modal(modal);
-        bootstrapModal.show();
-      }
-    }, 10);
-  }
-
   eliminarProducto(producto: Producto): void {
     Swal.fire({
       title: '¿Eliminar producto?',
@@ -169,11 +153,6 @@ export class ProductosListComponent implements OnInit, OnDestroy {
   }
 
   onProductoGuardado(): void {
-    this.cargarProductos();
-    this.productoSeleccionado = null;
-  }
-
-  onDetallesGuardados(): void {
     this.cargarProductos();
     this.productoSeleccionado = null;
   }
