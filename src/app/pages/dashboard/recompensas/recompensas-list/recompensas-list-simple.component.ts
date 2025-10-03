@@ -40,6 +40,8 @@ export class RecompensasListSimpleComponent implements OnInit {
   tiposRecompensa: any[] = [];
   estadosRecompensa: any[] = [];
   vistaCompacta = true;
+  // Control del menú de acciones por fila
+  openMenuId: number | null = null;
 
   // Filtros
   filtros: FiltrosRecompensas = {
@@ -403,6 +405,19 @@ export class RecompensasListSimpleComponent implements OnInit {
         }
       });
     }
+  }
+
+  // ===== Menú de acciones desplegable =====
+  toggleAccionesMenu(recompensaId: number, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    this.openMenuId = this.openMenuId === recompensaId ? null : recompensaId;
+  }
+
+  closeAccionesMenu(): void {
+    this.openMenuId = null;
   }
 
   // Método unificado para cambiar estado

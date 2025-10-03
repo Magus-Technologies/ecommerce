@@ -23,6 +23,7 @@ import {
 export class PopupsService {
   private apiUrl = `${environment.apiUrl}/admin/recompensas`;
   private clienteApiUrl = `${environment.apiUrl}/cliente/recompensas`;
+  private publicoApiUrl = `${environment.apiUrl}/publico/recompensas`;
 
   constructor(private http: HttpClient) {}
 
@@ -165,6 +166,13 @@ export class PopupsService {
    */
   obtenerPopupsActivos(): Observable<PopupResponse> {
     return this.http.get<PopupResponse>(`${this.clienteApiUrl}/popups-activos`);
+  }
+
+  /**
+   * Obtener popups activos para invitados (público, sin token)
+   */
+  obtenerPopupsPublicosActivos(): Observable<PopupResponse> {
+    return this.http.get<PopupResponse>(`${this.publicoApiUrl}/popups-activos`);
   }
 
   /**

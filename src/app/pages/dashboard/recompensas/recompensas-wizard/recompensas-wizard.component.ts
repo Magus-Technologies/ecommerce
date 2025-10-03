@@ -108,13 +108,22 @@ export class RecompensasWizardComponent implements OnInit {
   tiposRecompensa: any[] = [];
   estadosRecompensa: any[] = [];
 
+  // Fecha mínima permitida (hoy)
+  hoyStr: string;
+
   constructor() {
+    // Calcular hoy en formato YYYY-MM-DD para el input date
+    const hoy = new Date();
+    const y = hoy.getFullYear();
+    const m = String(hoy.getMonth() + 1).padStart(2, '0');
+    const d = String(hoy.getDate()).padStart(2, '0');
+    this.hoyStr = `${y}-${m}-${d}`;
     // Inicializar formularios
     this.datosGeneralesForm = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(3)]],
       descripcion: ['', [Validators.required, Validators.minLength(10)]],
       tipo: ['puntos', Validators.required],
-      fecha_inicio: ['', Validators.required],
+      fecha_inicio: ['', [Validators.required, this.validarFechaNoPasada.bind(this)]],
       fecha_fin: ['', Validators.required],
       estado: ['programada']
     });
@@ -154,7 +163,10 @@ export class RecompensasWizardComponent implements OnInit {
       next: (response) => {
         if (response.success && response.data) {
           this.tiposRecompensa = response.data.tipos || [];
-          this.estadosRecompensa = response.data.estados || [];
+          // Siempre filtrar estados no permitidos en creación
+          const fechaInicioActual = this.datosGeneralesForm.get('fecha_inicio')?.value;
+          const estadosCrudos = (response.data.estados || []).map((e: any) => ({ value: e.value, label: e.label }));
+          this.estadosRecompensa = this.filtrarEstadosParaCreacion(estadosCrudos, fechaInicioActual);
           
           // Si no hay tipos cargados, usar valores por defecto
           if (this.tiposRecompensa.length === 0) {
@@ -165,6 +177,12 @@ export class RecompensasWizardComponent implements OnInit {
               { value: 'regalo', label: 'Productos de Regalo' }
             ];
           }
+
+          // Asegurar un estado válido por defecto después de filtrar
+          const estadoActual = this.datosGeneralesForm.get('estado')?.value;
+          const estadoValido = this.estadosRecompensa.find(e => e.value === estadoActual)?.value
+            || this.obtenerEstadoPorDefecto(fechaInicioActual);
+          this.datosGeneralesForm.patchValue({ estado: estadoValido }, { emitEvent: false });
         }
       },
       error: (error) => {
@@ -176,13 +194,16 @@ export class RecompensasWizardComponent implements OnInit {
           { value: 'envio_gratis', label: 'Envío Gratuito' },
           { value: 'regalo', label: 'Productos de Regalo' }
         ];
-        this.estadosRecompensa = [
+        // Filtrar estados por fecha aún en fallback
+        const fechaInicioActual = this.datosGeneralesForm.get('fecha_inicio')?.value;
+        this.estadosRecompensa = this.filtrarEstadosParaCreacion([
           { value: 'programada', label: 'Programada' },
           { value: 'activa', label: 'Activa' },
-          { value: 'pausada', label: 'Pausada' },
-          { value: 'expirada', label: 'Expirada' },
-          { value: 'cancelada', label: 'Cancelada' }
-        ];
+          { value: 'pausada', label: 'Pausada' }
+        ], fechaInicioActual);
+
+        // Estado por defecto coherente
+        this.datosGeneralesForm.patchValue({ estado: this.obtenerEstadoPorDefecto(fechaInicioActual) }, { emitEvent: false });
       }
     });
   }
@@ -200,24 +221,24 @@ export class RecompensasWizardComponent implements OnInit {
     this.recompensasService.obtenerEstadosDisponibles(fechaInicio).subscribe({
       next: (response) => {
         if (response.success && response.data) {
-          // Actualizar la lista de estados disponibles
-          this.estadosRecompensa = response.data.estados_disponibles.map((estado: any) => ({
+          // Actualizar la lista de estados disponibles siempre filtrando creación
+          const estadosCrudos = response.data.estados_disponibles.map((estado: any) => ({
             value: estado.value,
             label: estado.label
           }));
+          this.estadosRecompensa = this.filtrarEstadosParaCreacion(estadosCrudos, fechaInicio);
 
           // Aplicar el estado por defecto si no hay uno seleccionado
           const estadoActual = this.datosGeneralesForm.get('estado')?.value;
-          if (!estadoActual || !this.estadosRecompensa.find(e => e.value === estadoActual)) {
-            this.datosGeneralesForm.patchValue({
-              estado: response.data.estado_por_defecto
-            });
-          }
+          const estadoValido = (!estadoActual || !this.estadosRecompensa.find(e => e.value === estadoActual))
+            ? this.obtenerEstadoPorDefecto(fechaInicio)
+            : estadoActual;
+          this.datosGeneralesForm.patchValue({ estado: estadoValido }, { emitEvent: false });
 
           console.log('Estados disponibles actualizados:', {
             fechaInicio,
             estados: this.estadosRecompensa,
-            estadoPorDefecto: response.data.estado_por_defecto,
+            estadoPorDefecto: this.obtenerEstadoPorDefecto(fechaInicio),
             mensaje: response.data.mensaje
           });
         }
@@ -227,6 +248,40 @@ export class RecompensasWizardComponent implements OnInit {
         // En caso de error, mantener los estados por defecto
       }
     });
+  }
+
+  // Helpers: reglas de negocio para estados permitidos en creación
+  private filtrarEstadosParaCreacion(estados: { value: string; label: string }[], fechaInicio?: string) {
+    const hoy = new Date();
+    const fecha = fechaInicio ? new Date(fechaInicio + 'T00:00:00') : null;
+
+    const esFuturo = fecha ? fecha > new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) : false;
+    // Nunca permitir expirada ni cancelada al crear
+    const baseSinProhibidos = estados.filter(e => e.value !== 'expirada' && e.value !== 'cancelada');
+
+    if (esFuturo) {
+      // Solo programada o pausada
+      return baseSinProhibidos.filter(e => e.value === 'programada' || e.value === 'pausada');
+    }
+    // Fecha hoy o pasada: activa o pausada
+    return baseSinProhibidos.filter(e => e.value === 'activa' || e.value === 'pausada');
+  }
+
+  private obtenerEstadoPorDefecto(fechaInicio?: string): 'programada' | 'activa' | 'pausada' {
+    const hoy = new Date();
+    const fecha = fechaInicio ? new Date(fechaInicio + 'T00:00:00') : null;
+    const esFuturo = fecha ? fecha > new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) : false;
+    return esFuturo ? 'programada' : 'activa';
+  }
+
+  // Validator: no permitir fecha de inicio pasada
+  private validarFechaNoPasada(control: any) {
+    const valor: string = control?.value;
+    if (!valor) return null;
+    const hoy = new Date();
+    const hoySinHora = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    const fecha = new Date(valor + 'T00:00:00');
+    return fecha < hoySinHora ? { fechaPasada: true } : null;
   }
 
   cargarRecompensaParaEdicion(id: number): void {

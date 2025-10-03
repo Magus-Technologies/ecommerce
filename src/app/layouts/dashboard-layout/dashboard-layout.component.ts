@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DashboardSidebarComponent } from './dashboard-sidebar/dashboard-sidebar.component';
 import { DashboardHeaderComponent } from './dashboard-header/dashboard-header.component';
+import { PopupWrapperComponent } from '../../components/popup-wrapper/popup-wrapper.component';
 import { AuthService } from '../../services/auth.service';
 import { PermissionsService } from '../../services/permissions.service';
 
@@ -14,7 +15,8 @@ import { PermissionsService } from '../../services/permissions.service';
     CommonModule,
     RouterModule,
     DashboardSidebarComponent,
-    DashboardHeaderComponent
+    DashboardHeaderComponent,
+    PopupWrapperComponent
   ],
   templateUrl: './dashboard-layout.component.html',
   styleUrls: ['./dashboard-layout.component.scss']

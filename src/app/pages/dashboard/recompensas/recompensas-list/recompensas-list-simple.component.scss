@@ -89,6 +89,10 @@
 // Mejoras para la tabla
 .recompensas-list-container {
   .table {
+    // fijar ancho de acciones y truncado de nombre
+    th:first-child, td:first-child { text-align: center; }
+    th:last-child, td:last-child { width: 90px; text-align: center; }
+
     th {
       background-color: #f8f9fa;
       border-bottom: 2px solid #dee2e6;
@@ -99,6 +103,7 @@
     td {
       vertical-align: middle;
     }
+
 
 // Botones de acciones mejorados
 .d-flex.gap-1 {
@@ -206,6 +211,54 @@
     }
   }
 }
+
+// Estilos para el menú de acciones desplegable
+.acciones-dropdown {
+  position: relative;
+
+  .dropdown-menu {
+    display: block;
+    position: absolute;
+    inset: auto 0 auto auto; // alineado a la derecha
+    transform: translateY(2px);
+    min-width: 12rem;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    border-radius: 6px;
+  }
+
+  // Botón compacto, sin animaciones ni fondo blanco
+  .btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #6c757d; // gris sólido discreto
+    color: #fff;
+    border-color: #6c757d;
+    box-shadow: none;
+    transition: none;
+
+    i { font-size: 0.85rem; opacity: 0.9; }
+
+    &:hover,
+    &:focus { background-color: #5c636a; color: #fff; border-color: #5c636a; box-shadow: none; }
+  }
+
+  // Variante aún más discreta
+  .acciones-trigger {
+    background-color: #6b7280; // gris neutral
+    border-color: #6b7280;
+    opacity: 0.85;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .recompensas-list-container .table {
+    th:last-child, td:last-child { width: 90px; }
+  }
+}
   }
 }
 
@@ -244,6 +297,31 @@
   h5 {
     color: #495057;
     font-weight: 600;
+  }
+}
+
+// Header más limpio del listado
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap; // evita que 10 y los botones se mezclen
+
+  .form-select.form-select-sm {
+    min-width: 72px; // asegura ancho estable para 10/25/50/100
+  }
+
+  .btn-group {
+    flex-shrink: 0;
+    .btn { 
+      border-radius: 8px; 
+      padding: 0.25rem 0.5rem;
+    }
   }
 }
 

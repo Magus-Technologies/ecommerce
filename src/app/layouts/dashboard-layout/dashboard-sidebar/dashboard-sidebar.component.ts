@@ -15,6 +15,7 @@ import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { PermissionsService } from '../../../services/permissions.service';
 import { Subscription } from 'rxjs';
+import { NavigationEnd } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard-sidebar',
@@ -86,6 +87,16 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
     this.permisosSub = this.permissionsService.permissions$.subscribe(() => {
       this.checkPermissions();
     });
+
+    // Mantener abierto el dropdown de Recompensas según la ruta activa
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) {
+        this.syncRecompensasDropdownWithRoute(event.urlAfterRedirects);
+      }
+    });
+
+    // Estado inicial basado en la URL actual
+    this.syncRecompensasDropdownWithRoute(this.router.url);
   }
 
   ngOnDestroy(): void {
@@ -163,6 +174,11 @@ toggleAlmacen(): void {
 
   toggleRecompensasDropdown(): void {
     this.showRecompensasDropdown = !this.showRecompensasDropdown;
+  }
+
+  private syncRecompensasDropdownWithRoute(url: string): void {
+    const isRecompensas = url.startsWith('/dashboard/recompensas');
+    this.showRecompensasDropdown = isRecompensas;
   }
 
   navegarARecompensasSubmodulo(submodulo: string, event: Event): void {

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe, TitleCasePipe, DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { RecompensasService } from '../../../../services/recompensas.service';
 import { 
   DashboardStats, 
@@ -13,7 +14,7 @@ import {
 @Component({
   selector: 'app-recompensas-dashboard',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, TitleCasePipe, DatePipe, RouterModule],
+  imports: [CommonModule, FormsModule, DecimalPipe, TitleCasePipe, DatePipe, RouterModule],
   templateUrl: './recompensas-dashboard.component.html',
   styleUrls: ['./recompensas-dashboard.component.scss']
 })
@@ -37,6 +38,13 @@ export class RecompensasDashboardComponent implements OnInit {
   estadisticasMesActual: any = {};
   comparativaMesAnterior: any = {};
   loadingStats = false;
+  openMenuId: number | null = null;
+
+  // Modal de edición (reutilizado del listado)
+  mostrarModalEditar = false;
+  recompensaEditando: any = null;
+  cargandoEdicion = false;
+  errorEdicion: string | null = null;
 
   constructor(
     private recompensasService: RecompensasService,
@@ -300,7 +308,65 @@ export class RecompensasDashboardComponent implements OnInit {
   }
 
   editarRecompensa(id: number): void {
-    this.router.navigate(['/dashboard/recompensas/editar', id]);
+    this.mostrarModalEditar = true;
+    this.cargarDetalleParaEdicion(id);
+  }
+
+  private cargarDetalleParaEdicion(id: number): void {
+    this.cargandoEdicion = true;
+    this.errorEdicion = null;
+
+    this.recompensasService.obtenerDetalle(id).subscribe({
+      next: (response: any) => {
+        this.recompensaEditando = response.recompensa || response.data?.recompensa || response.data || response;
+        this.cargandoEdicion = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar detalle para edición:', error);
+        this.errorEdicion = 'Error al cargar los datos de la recompensa';
+        this.cargandoEdicion = false;
+      }
+    });
+  }
+
+  cerrarModalEditar(): void {
+    this.mostrarModalEditar = false;
+    this.recompensaEditando = null;
+    this.errorEdicion = null;
+  }
+
+  guardarEdicion(): void {
+    if (!this.recompensaEditando) return;
+
+    this.cargandoEdicion = true;
+    this.errorEdicion = null;
+
+    const datosActualizacion = {
+      nombre: this.recompensaEditando.nombre?.trim(),
+      descripcion: this.recompensaEditando.descripcion?.trim(),
+      tipo: this.recompensaEditando.tipo,
+      fecha_inicio: this.recompensaEditando.fecha_inicio,
+      fecha_fin: this.recompensaEditando.fecha_fin,
+      estado: this.recompensaEditando.estado
+    };
+
+    this.recompensasService.actualizar(this.recompensaEditando.id, datosActualizacion).subscribe({
+      next: (response: any) => {
+        if (response.success) {
+          this.cerrarModalEditar();
+          this.cargarRecompensasRecientes();
+          this.cargarStats();
+        } else {
+          this.errorEdicion = response.message || 'Error al actualizar la recompensa';
+        }
+        this.cargandoEdicion = false;
+      },
+      error: (error) => {
+        console.error('Error al actualizar recompensa:', error);
+        this.errorEdicion = error.error?.message || 'Error al actualizar la recompensa';
+        this.cargandoEdicion = false;
+      }
+    });
   }
 
   toggleEstado(recompensa: RecompensaReciente): void {
