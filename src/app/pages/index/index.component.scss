@@ -10,10 +10,9 @@
     margin: 0 !important;
   }
 }
-
-/* ✅ ESTILOS PARA BANNER OFERTAS */
+/* ✅ ESTILOS PARA BANNER OFERTAS CON CARRUSEL */
 .hot-deals {
-  overflow: visible !important; // Quitar overflow hidden que causaba problemas con iconos
+  overflow: visible !important;
 
   .banner-ofertas-image {
     background-color: #ffffff !important;
@@ -23,22 +22,31 @@
     }
   }
 
-  // Ocultar flechas de navegación si existen
-  .slick-arrow,
-  .arrow-prev,
-  .arrow-next,
-  [class*="arrow"] {
-    display: none !important;
+  /* ✅ ESTILOS PARA EL CARRUSEL */
+  .ofertas-carousel {
+    .slick-slide {
+      padding: 0 6px; // Espacio entre productos (reducido de 8px a 6px)
+    }
+
+    .slick-list {
+      margin: 0 -6px; // Compensar padding (reducido de -8px a -6px)
+    }
+
+    .slick-track {
+      display: flex;
+      align-items: stretch;
+    }
   }
 
-  /* ✅ CARDS DE PRODUCTOS - MISMO ESTILO QUE RECOMENDADO PARA TI */
+  /* ✅ CARDS DE PRODUCTOS */
   .product-card {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    height: 100%;
 
     .product-card__thumb {
-      height: 232px; // Misma altura que Recomendado para ti
+      height: 200px;
       width: 100%;
       display: flex;
       align-items: center;
@@ -49,6 +57,11 @@
         width: 100%;
         height: auto;
         object-fit: contain;
+        transition: transform 0.3s ease;
+      }
+
+      &:hover img {
+        transform: scale(1.1);
       }
     }
 
@@ -58,7 +71,37 @@
       flex-direction: column;
     }
   }
+
+  /* ✅ BOTONES DE NAVEGACIÓN CUADRADOS PARA OFERTAS ESPECIALES */
+  .ofertas-nav-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 48px;
+    height: 48px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 8px !important; // Cuadrado con bordes redondeados
+
+    &.ofertas-nav-prev {
+      left: 10px; // Dentro del primer producto
+    }
+
+    &.ofertas-nav-next {
+      right: 10px; // Dentro del último producto
+    }
+
+    &:hover {
+      transform: translateY(-50%) scale(1.1);
+    }
+  }
 }
+
 
 /* ✅ FIX: Dar más espacio vertical a la sección de categorías */
 .feature {
@@ -69,6 +112,51 @@
     padding-top: 20px !important;
     padding-bottom: 20px !important;
     overflow: visible !important;
+
+    /* ✅ Mostrar botones al hacer hover en la sección */
+    &:hover {
+      .categoria-nav-btn {
+        visibility: visible;
+        opacity: 1;
+
+        &.categoria-nav-prev {
+          left: -24px;
+        }
+
+        &.categoria-nav-next {
+          right: -24px;
+        }
+      }
+    }
+  }
+
+  /* ✅ BOTONES DE NAVEGACIÓN PERSONALIZADOS PARA CATEGORÍAS */
+  .categoria-nav-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 48px;
+    height: 48px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    visibility: hidden;
+    opacity: 0;
+
+    &.categoria-nav-prev {
+      left: -40px;
+    }
+
+    &.categoria-nav-next {
+      right: -40px;
+    }
+
+    &:hover {
+      transform: translateY(-50%) scale(1.1);
+    }
   }
 }
 

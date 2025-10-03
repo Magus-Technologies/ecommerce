@@ -139,32 +139,21 @@
       class="position-relative arrow-center"
       style="padding-top: 0; margin-top: 0"
     >
-      <div class="flex-align">
-        <button
-          type="button"
-          id="feature-item-wrapper-prev"
-          class="slick-prev slick-arrow flex-center rounded-circle bg-white text-xl hover-bg-main-600 hover-text-white transition-1"
-        >
-          <svg width="16" height="16" viewBox="0 0 256 256" fill="none">
-            <path
-              d="M168.49 199.51a12 12 0 0 1-17 17l-80-80a12 12 0 0 1 0-17l80-80a12 12 0 0 1 17 17L97 128Z"
-              fill="currentColor"
-            />
-          </svg>
-        </button>
-        <button
-          type="button"
-          id="feature-item-wrapper-next"
-          class="slick-next slick-arrow flex-center rounded-circle bg-white text-xl hover-bg-main-600 hover-text-white transition-1"
-        >
-          <svg width="16" height="16" viewBox="0 0 256 256" fill="none">
-            <path
-              d="M87.51 56.49a12 12 0 0 1 17-17l80 80a12 12 0 0 1 0 17l-80 80a12 12 0 0 1-17-17L159 128Z"
-              fill="currentColor"
-            />
-          </svg>
-        </button>
-      </div>
+      <!-- ✅ BOTONES DE NAVEGACIÓN PERSONALIZADOS -->
+      <button
+        type="button"
+        class="categoria-nav-btn categoria-nav-prev flex-center rounded-circle box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
+        (click)="anteriorCategoria()"
+      >
+        <i class="ph ph-caret-left"></i>
+      </button>
+      <button
+        type="button"
+        class="categoria-nav-btn categoria-nav-next flex-center rounded-circle box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
+        (click)="siguienteCategoria()"
+      >
+        <i class="ph ph-caret-right"></i>
+      </button>
 
       <!-- ✅ ESTADO DE CARGA PARA CATEGORÍAS -->
       <div *ngIf="isLoadingCategorias" class="text-center py-40">
@@ -178,7 +167,7 @@
       <ngx-slick-carousel
         *ngIf="!isLoadingCategorias && featureItems.length > 0"
         class="feature-item-wrapper"
-        #slickModal="slick-carousel"
+        #categoriasCarousel="slick-carousel"
         [config]="featureSlideConfig"
       >
         <div
@@ -362,6 +351,351 @@
   </div>
 </section>
 
+
+
+<!-- Resto del contenido permanece igual... -->
+<section class="recommended overflow-hidden pt-80">
+  <div class="container container-lg">
+    <div class="section-heading flex-between flex-wrap gap-16">
+      <h5 class="mb-0 wow fadeInLeft">Recomendado para ti</h5>
+      <ul
+        class="nav common-tab nav-pills wow fadeInRight"
+        id="pills-tab"
+        role="tablist"
+      >
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link fw-medium text-sm border border-white hover-border-main-600"
+            [class.active]="categoriaSeleccionada === null"
+            (click)="filtrarPorCategoria(null)"
+            type="button"
+            role="tab"
+          >
+            Todo
+          </button>
+        </li>
+        <li
+          class="nav-item"
+          role="presentation"
+          *ngFor="let categoria of categoriasParaFiltro; let i = index"
+        >
+          <button
+            class="nav-link fw-medium text-sm border border-white hover-border-main-600"
+            [class.active]="categoriaSeleccionada === categoria.id"
+            (click)="filtrarPorCategoria(categoria.id)"
+            type="button"
+            role="tab"
+          >
+            {{ categoria.nombre }}
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="tab-content" id="pills-tabContent">
+      <div
+        class="tab-pane fade show active"
+        id="pills-all"
+        role="tabpanel"
+        aria-labelledby="pills-all-tab"
+        tabindex="0"
+      >
+        <!-- ✅ LOADING STATE PARA PRODUCTOS RECOMENDADOS -->
+        <div *ngIf="isLoadingProductosFiltrados" class="text-center py-40">
+          <div class="spinner-border text-main-600" role="status">
+            <span class="visually-hidden">Cargando productos...</span>
+            >
+          </div>
+          <p class="text-gray-500 mt-12 mb-0">Cargando productos...</p>
+        </div>
+
+        <!-- ✅ PRODUCTOS RECOMENDADOS DINÁMICOS -->
+        <div class="row g-12">
+          <!-- Productos dinámicos -->
+          <div
+            *ngFor="let product of productosFiltrados; let i = index"
+            class="col-xxl-2 col-lg-3 col-sm-4 col-6"
+            data-aos="fade-up"
+            data-aos-duration="200"
+            [hidden]="i >= productosVisibles"
+          >
+            <div
+              class="product-card h-100 p-12 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 group-item"
+            >
+              <button
+                type="button"
+                class="wishlist-btn-custom"
+                [class.active]="isInWishlist(product.id)"
+                (click)="agregarAWishlist(product)"
+              >
+                <!-- Corazón vacío (cuando no está en wishlist) -->
+                <svg
+                  *ngIf="!isInWishlist(product.id)"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 256 256"
+                  fill="none"
+                  class="heart-icon"
+                >
+                  <path
+                    d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"
+                    fill="currentColor"
+                  />
+                </svg>
+
+                <!-- Corazón con solo el borde (cuando está en wishlist) -->
+                <svg
+                  *ngIf="isInWishlist(product.id)"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 256 256"
+                  fill="none"
+                  class="heart-icon heart-outline"
+                >
+                  <path
+                    d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"
+                    stroke="currentColor"
+                    stroke-width="16"
+                    fill="none"
+                  />
+                </svg>
+              </button>
+
+              <span
+                *ngIf="product.is_on_sale"
+                class="product-card__badge bg-danger-600 px-8 py-4 text-sm text-white"
+              >
+                Sale {{ product.discount_percentage }}%
+              </span>
+              <a
+                [routerLink]="getProductLink(product)"
+                class="product-card__thumb flex-center overflow-hidden"
+              >
+                <img
+                  [src]="product.imagen_principal"
+                  [alt]="product.nombre"
+                  (error)="onImageError($event)"
+                />
+              </a>
+              <div class="product-card__content p-sm-2 w-100">
+                <h6 class="title text-lg fw-semibold my-12">
+                  <a
+                    [routerLink]="getProductLink(product)"
+                    class="link text-line-2"
+                    >{{ product.nombre }}</a
+                  >
+                </h6>
+                <div class="flex-align gap-4">
+                  <span class="text-main-600 text-md d-flex"
+                    ><i class="ph-fill ph-storefront"></i
+                  ></span>
+                  <span class="text-gray-500 text-xs"
+                    >By {{ product.marca || "Tienda" }}</span
+                  >
+                </div>
+
+                <div class="product-card__content mt-12">
+                  <div class="product-card__price mb-8">
+                    <span class="text-heading text-md fw-semibold"
+                      >S/ {{ product.precio_oferta || product.precio }}
+                      <span class="text-gray-500 fw-normal">/Qty</span>
+                    </span>
+                    <span
+                      *ngIf="product.precio_oferta && product.precio"
+                      class="text-gray-400 text-md fw-semibold text-decoration-line-through"
+                      >S/ {{ product.precio }}</span
+                    >
+                  </div>
+                  <div class="flex-align gap-6">
+                    <span class="text-xs fw-bold text-gray-600">{{
+                      product.rating || 4.8
+                    }}</span>
+                    <span class="text-15 fw-bold text-warning-600 d-flex"
+                      ><i class="ph-fill ph-star"></i
+                    ></span>
+                    <span class="text-xs fw-bold text-gray-600"
+                      >({{ product.reviews_count || "17" }}k)</span
+                    >
+                  </div>
+                  <!-- ✅ BOTÓN MEJORADO PARA AGREGAR AL CARRITO -->
+                  <button
+                    (click)="addToCart(product)"
+                    class="product-card__cart btn bg-main-50 text-main-600 hover-bg-main-600 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-24 w-100 justify-content-center"
+                  >
+                    Agregar al carrito <i class="ph ph-shopping-cart"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ✅ BOTÓN "VER MÁS" -->
+        <div
+          *ngIf="!isLoadingProductosFiltrados && productosFiltrados.length > productosVisibles"
+          class="text-center mt-32"
+        >
+          <button
+            (click)="verMasProductos()"
+            class="btn btn-outline-main rounded-pill py-12 px-32"
+          >
+            Ver más productos
+          </button>
+        </div>
+
+        <!-- ✅ MENSAJE CUANDO NO HAY PRODUCTOS RECOMENDADOS -->
+        <div
+          *ngIf="
+            !isLoadingProductosFiltrados && productosFiltrados.length === 0
+          "
+          class="text-center py-40"
+        >
+          <h6 class="text-gray-500 mb-20">
+            No hay productos disponibles{{
+              categoriaSeleccionada ? " en esta categoría" : ""
+            }}
+          </h6>
+
+          <a [routerLink]="['shop']" class="btn btn-main">
+            Explorar Productos
+          </a>
+        </div>
+      </div>
+      <!-- Repetir para las demás pestañas con el mismo botón mejorado -->
+    </div>
+  </div>
+</section>
+<!-- ========================= OFERTAS ESPECIALES (CON BANNER OFERTAS) ================================ -->
+<section class="hot-deals pt-80" *ngIf="bannerOfertaActivo">
+  <div class="container container-lg">
+    <div class="section-heading">
+      <div class="flex-between flex-wrap gap-8">
+        <h5 class="mb-0 wow fadeInLeft">Ofertas Especiales</h5>
+        <div class="flex-align gap-16 wow fadeInRight">
+          <a
+            [routerLink]="['shop']"
+            class="text-sm fw-medium text-gray-700 hover-text-main-600 hover-text-decoration-underline"
+            >Ver Todas las ofertas</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-20">
+      <!-- Banner Imagen (Lado izquierdo) -->
+      <div class="col-lg-3 col-md-4 col-12" data-aos="fade-right">
+        <div class="banner-ofertas-image rounded-16 overflow-hidden"
+             style="height: 500px; display: flex; align-items: center; justify-content: center;">
+          <img
+            [src]="bannerOfertaActivo.imagen_url"
+            alt="Banner Ofertas Especiales"
+            style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;">
+        </div>
+      </div>
+
+      <!-- ✅ CARRUSEL DE PRODUCTOS CON BOTONES (Lado derecho) -->
+      <div class="col-lg-9 col-md-8 col-12 position-relative">
+        <!-- ✅ BOTONES DE NAVEGACIÓN CUADRADOS -->
+        <button
+          type="button"
+          (click)="anteriorOfertaEspecial()"
+          class="ofertas-nav-btn ofertas-nav-prev flex-center box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
+        >
+          <i class="ph ph-caret-left"></i>
+        </button>
+        <button
+          type="button"
+          (click)="siguienteOfertaEspecial()"
+          class="ofertas-nav-btn ofertas-nav-next flex-center box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
+        >
+          <i class="ph ph-caret-right"></i>
+        </button>
+
+        <ngx-slick-carousel
+          *ngIf="bannerOfertaActivo.productos && bannerOfertaActivo.productos.length > 0"
+          #ofertasCarousel="slick-carousel"
+          [config]="ofertasEspecialesSlideConfig"
+          class="ofertas-carousel"
+        >
+          <div ngxSlickItem *ngFor="let producto of bannerOfertaActivo.productos">
+            <div>
+              <div class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2">
+
+                <a [routerLink]="['/producto', producto.id]"
+                   class="product-card__thumb rounded-8 position-relative overflow-hidden"
+                   style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                  <img [src]="producto.imagen_principal"
+                       [alt]="producto.nombre"
+                       (error)="onImageError($event)"
+                       loading="lazy"
+                       class="transition-2"
+                       style="max-width: 100%; max-height: 100%; object-fit: contain;">
+
+                  <!-- Badge de descuento -->
+                  <span class="product-card__badge bg-danger-600 px-8 py-4 text-sm text-white position-absolute inset-inline-start-0 inset-block-start-0">
+                    -{{ producto.descuento_porcentaje }}%
+                  </span>
+                </a>
+
+                <!-- Contenido -->
+                <div class="product-card__content mt-16">
+                  <h6 class="title text-lg fw-semibold mt-12 mb-8">
+                    <a [routerLink]="['/producto', producto.id]" class="link text-line-2">
+                      {{ producto.nombre }}
+                    </a>
+                  </h6>
+
+                  <div class="mt-8">
+                    <span class="text-gray-900 text-xs fw-medium mt-8">
+                      Stock: {{ producto.stock }} unidades
+                    </span>
+                  </div>
+
+                  <div class="product-card__price my-20">
+                    <span class="text-gray-400 text-md fw-semibold text-decoration-line-through">
+                      S/ {{ producto.precio | number:'1.2-2' }}
+                    </span>
+                    <span class="text-heading text-md fw-semibold">
+                      S/ {{ producto.precio_con_descuento | number:'1.2-2' }}
+                      <span class="text-gray-500 fw-normal">/Qty</span>
+                    </span>
+                  </div>
+
+                  <button
+                    (click)="agregarAlCarrito(producto)"
+                    [disabled]="producto.stock <= 0"
+                    class="product-card__cart btn bg-main-50 text-main-600 hover-bg-main-600 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-24 w-100 justify-content-center"
+                    [ngClass]="{
+                      'bg-main-50 text-main-600 hover-bg-main-600 hover-text-white': producto.stock > 0,
+                      'bg-gray-200 text-gray-500': producto.stock <= 0
+                    }">
+                    <span *ngIf="producto.stock > 0">
+                      Agregar al carrito <i class="ph ph-shopping-cart"></i>
+                    </span>
+                    <span *ngIf="producto.stock <= 0">
+                      Sin stock <i class="ph ph-x-circle"></i>
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ngx-slick-carousel>
+
+        <!-- Empty state si no hay productos -->
+        <div *ngIf="!bannerOfertaActivo.productos || bannerOfertaActivo.productos.length === 0"
+             class="text-center py-60">
+          <div class="bg-gray-50 rounded-12 py-40 px-30">
+            <i class="ph ph-package text-4xl text-gray-400 mb-16"></i>
+            <p class="text-gray-600 mb-0">No hay productos en esta oferta</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <!-- ========================= flash sales Start (DINÁMICO) ================================ -->
 <section class="flash-sales pt-80 overflow-hidden">
   <div class="container container-lg">
@@ -479,318 +813,6 @@
   </div>
 </section>
 <!-- ========================= flash sales End ================================ -->
-
-<!-- Resto del contenido permanece igual... -->
-<section class="recommended overflow-hidden pt-80">
-  <div class="container container-lg">
-    <div class="section-heading flex-between flex-wrap gap-16">
-      <h5 class="mb-0 wow fadeInLeft">Recomendado para ti</h5>
-      <ul
-        class="nav common-tab nav-pills wow fadeInRight"
-        id="pills-tab"
-        role="tablist"
-      >
-        <li class="nav-item" role="presentation">
-          <button
-            class="nav-link fw-medium text-sm border border-white hover-border-main-600"
-            [class.active]="categoriaSeleccionada === null"
-            (click)="filtrarPorCategoria(null)"
-            type="button"
-            role="tab"
-          >
-            Todo
-          </button>
-        </li>
-        <li
-          class="nav-item"
-          role="presentation"
-          *ngFor="let categoria of categoriasParaFiltro; let i = index"
-        >
-          <button
-            class="nav-link fw-medium text-sm border border-white hover-border-main-600"
-            [class.active]="categoriaSeleccionada === categoria.id"
-            (click)="filtrarPorCategoria(categoria.id)"
-            type="button"
-            role="tab"
-          >
-            {{ categoria.nombre }}
-          </button>
-        </li>
-      </ul>
-    </div>
-
-    <div class="tab-content" id="pills-tabContent">
-      <div
-        class="tab-pane fade show active"
-        id="pills-all"
-        role="tabpanel"
-        aria-labelledby="pills-all-tab"
-        tabindex="0"
-      >
-        <!-- ✅ LOADING STATE PARA PRODUCTOS RECOMENDADOS -->
-        <div *ngIf="isLoadingProductosFiltrados" class="text-center py-40">
-          <div class="spinner-border text-main-600" role="status">
-            <span class="visually-hidden">Cargando productos...</span>
-            >
-          </div>
-          <p class="text-gray-500 mt-12 mb-0">Cargando productos...</p>
-        </div>
-
-        <!-- ✅ PRODUCTOS RECOMENDADOS DINÁMICOS -->
-        <div class="row g-12">
-          <!-- Productos dinámicos -->
-          <div
-            *ngFor="let product of productosFiltrados"
-            class="col-xxl-2 col-lg-3 col-sm-4 col-6"
-            data-aos="fade-up"
-            data-aos-duration="200"
-          >
-            <div
-              class="product-card h-100 p-12 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 group-item"
-            >
-              <button
-                type="button"
-                class="wishlist-btn-custom"
-                [class.active]="isInWishlist(product.id)"
-                (click)="agregarAWishlist(product)"
-              >
-                <!-- Corazón vacío (cuando no está en wishlist) -->
-                <svg
-                  *ngIf="!isInWishlist(product.id)"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 256 256"
-                  fill="none"
-                  class="heart-icon"
-                >
-                  <path
-                    d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"
-                    fill="currentColor"
-                  />
-                </svg>
-
-                <!-- Corazón con solo el borde (cuando está en wishlist) -->
-                <svg
-                  *ngIf="isInWishlist(product.id)"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 256 256"
-                  fill="none"
-                  class="heart-icon heart-outline"
-                >
-                  <path
-                    d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"
-                    stroke="currentColor"
-                    stroke-width="16"
-                    fill="none"
-                  />
-                </svg>
-              </button>
-
-              <span
-                *ngIf="product.is_on_sale"
-                class="product-card__badge bg-danger-600 px-8 py-4 text-sm text-white"
-              >
-                Sale {{ product.discount_percentage }}%
-              </span>
-              <a
-                [routerLink]="getProductLink(product)"
-                class="product-card__thumb flex-center overflow-hidden"
-              >
-                <img
-                  [src]="product.imagen_principal"
-                  [alt]="product.nombre"
-                  (error)="onImageError($event)"
-                />
-              </a>
-              <div class="product-card__content p-sm-2 w-100">
-                <h6 class="title text-lg fw-semibold my-12">
-                  <a
-                    [routerLink]="getProductLink(product)"
-                    class="link text-line-2"
-                    >{{ product.nombre }}</a
-                  >
-                </h6>
-                <div class="flex-align gap-4">
-                  <span class="text-main-600 text-md d-flex"
-                    ><i class="ph-fill ph-storefront"></i
-                  ></span>
-                  <span class="text-gray-500 text-xs"
-                    >By {{ product.marca || "Tienda" }}</span
-                  >
-                </div>
-
-                <div class="product-card__content mt-12">
-                  <div class="product-card__price mb-8">
-                    <span class="text-heading text-md fw-semibold"
-                      >S/ {{ product.precio_oferta || product.precio }}
-                      <span class="text-gray-500 fw-normal">/Qty</span>
-                    </span>
-                    <span
-                      *ngIf="product.precio_oferta && product.precio"
-                      class="text-gray-400 text-md fw-semibold text-decoration-line-through"
-                      >S/ {{ product.precio }}</span
-                    >
-                  </div>
-                  <div class="flex-align gap-6">
-                    <span class="text-xs fw-bold text-gray-600">{{
-                      product.rating || 4.8
-                    }}</span>
-                    <span class="text-15 fw-bold text-warning-600 d-flex"
-                      ><i class="ph-fill ph-star"></i
-                    ></span>
-                    <span class="text-xs fw-bold text-gray-600"
-                      >({{ product.reviews_count || "17" }}k)</span
-                    >
-                  </div>
-                  <!-- ✅ BOTÓN MEJORADO PARA AGREGAR AL CARRITO -->
-                  <button
-                    (click)="addToCart(product)"
-                    class="product-card__cart btn bg-main-50 text-main-600 hover-bg-main-600 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-24 w-100 justify-content-center"
-                  >
-                    Agregar al carrito <i class="ph ph-shopping-cart"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ✅ MENSAJE CUANDO NO HAY PRODUCTOS RECOMENDADOS -->
-        <div
-          *ngIf="
-            !isLoadingProductosFiltrados && productosFiltrados.length === 0
-          "
-          class="text-center py-40"
-        >
-          <h6 class="text-gray-500 mb-20">
-            No hay productos disponibles{{
-              categoriaSeleccionada ? " en esta categoría" : ""
-            }}
-          </h6>
-
-          <a [routerLink]="['shop']" class="btn btn-main">
-            Explorar Productos
-          </a>
-        </div>
-      </div>
-      <!-- Repetir para las demás pestañas con el mismo botón mejorado -->
-    </div>
-  </div>
-</section>
-<!-- ========================= OFERTAS ESPECIALES (CON BANNER OFERTAS) ================================ -->
-<section class="hot-deals pt-80" *ngIf="bannerOfertaActivo">
-  <div class="container container-lg">
-    <div class="section-heading">
-      <div class="flex-between flex-wrap gap-8">
-        <h5 class="mb-0 wow fadeInLeft">Ofertas Especiales</h5>
-        <div class="flex-align gap-16 wow fadeInRight">
-          <a
-            [routerLink]="['shop']"
-            class="text-sm fw-medium text-gray-700 hover-text-main-600 hover-text-decoration-underline"
-            >Ver Todas las ofertas</a
-          >
-        </div>
-      </div>
-    </div>
-
-    <div class="row g-20">
-      <!-- Banner Imagen (Lado izquierdo o arriba en móvil) -->
-      <div class="col-lg-3 col-md-4 col-12" data-aos="fade-right">
-        <div class="banner-ofertas-image rounded-16 overflow-hidden"
-             style="height: 500px; display: flex; align-items: center; justify-content: center;">
-          <img
-            [src]="bannerOfertaActivo.imagen_url"
-            alt="Banner Ofertas Especiales"
-            style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;">
-        </div>
-      </div>
-
-      <!-- Productos (Lado derecho o abajo en móvil) -->
-      <div class="col-lg-9 col-md-8 col-12">
-        <!-- Grid de productos en oferta -->
-        <div class="row g-12" *ngIf="bannerOfertaActivo.productos && bannerOfertaActivo.productos.length > 0">
-          <div *ngFor="let producto of bannerOfertaActivo.productos"
-               class="col-xl-3 col-lg-4 col-sm-6 col-6"
-               data-aos="fade-up"
-               data-aos-duration="200">
-            <div class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2">
-
-              <a [routerLink]="['/producto', producto.id]"
-                 class="product-card__thumb rounded-8 position-relative overflow-hidden"
-                 style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                <img [src]="producto.imagen_principal"
-                     [alt]="producto.nombre"
-                     (error)="onImageError($event)"
-                     loading="lazy"
-                     class="transition-2"
-                     style="max-width: 100%; max-height: 100%; object-fit: contain;">
-
-                <!-- Badge de descuento -->
-                <span class="product-card__badge bg-danger-600 px-8 py-4 text-sm text-white position-absolute inset-inline-start-0 inset-block-start-0">
-                  -{{ producto.descuento_porcentaje }}%
-                </span>
-              </a>
-
-              <!-- Contenido -->
-              <div class="product-card__content mt-16">
-                <h6 class="title text-lg fw-semibold mt-12 mb-8">
-                  <a [routerLink]="['/producto', producto.id]" class="link text-line-2">
-                    {{ producto.nombre }}
-                  </a>
-                </h6>
-
-                <div class="mt-8">
-                  <span class="text-gray-900 text-xs fw-medium mt-8">
-                    Stock: {{ producto.stock }} unidades
-                  </span>
-                </div>
-
-                <div class="product-card__price my-20">
-                  <span class="text-gray-400 text-md fw-semibold text-decoration-line-through">
-                    S/ {{ producto.precio | number:'1.2-2' }}
-                  </span>
-                  <span class="text-heading text-md fw-semibold">
-                    S/ {{ producto.precio_con_descuento | number:'1.2-2' }}
-                    <span class="text-gray-500 fw-normal">/Qty</span>
-                  </span>
-                </div>
-
-                <button
-                  (click)="agregarAlCarrito(producto)"
-                  [disabled]="producto.stock <= 0"
-                  class="product-card__cart btn bg-main-50 text-main-600 hover-bg-main-600 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-24 w-100 justify-content-center"
-                  [ngClass]="{
-                    'bg-main-50 text-main-600 hover-bg-main-600 hover-text-white': producto.stock > 0,
-                    'bg-gray-200 text-gray-500': producto.stock <= 0
-                  }">
-                  <span *ngIf="producto.stock > 0">
-                    Agregar al carrito <i class="ph ph-shopping-cart"></i>
-                  </span>
-                  <span *ngIf="producto.stock <= 0">
-                    Sin stock <i class="ph ph-x-circle"></i>
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Empty state si no hay productos -->
-        <div *ngIf="!bannerOfertaActivo.productos || bannerOfertaActivo.productos.length === 0"
-             class="text-center py-60">
-          <div class="bg-gray-50 rounded-12 py-40 px-30">
-            <i class="ph ph-package text-4xl text-gray-400 mb-16"></i>
-            <p class="text-gray-600 mb-0">No hay productos en esta oferta</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</section>
-<!-- ========================= FIN OFERTAS ESPECIALES ================================ -->
-
 <!-- ✅ SECCIÓN DE CUPONES DINÁMICOS -->
 <div class="pt-80">
   <div class="container container-lg">
@@ -1593,22 +1615,6 @@
               class="text-sm fw-medium text-gray-700 hover-text-main-600 hover-text-decoration-underline"
               >Ver todas las ofertas</a
             >
-            <div class="flex-align gap-8">
-              <button
-                type="button"
-                id="brand-prev"
-                class="slick-prev slick-arrow flex-center rounded-circle border border-gray-100 hover-border-main-600 text-xl hover-bg-main-600 hover-text-white transition-1"
-              >
-                <i class="ph ph-caret-left"></i>
-              </button>
-              <button
-                type="button"
-                id="brand-next"
-                class="slick-next slick-arrow flex-center rounded-circle border border-gray-100 hover-border-main-600 text-xl hover-bg-main-600 hover-text-white transition-1"
-              >
-                <i class="ph ph-caret-right"></i>
-              </button>
-            </div>
           </div>
         </div>
       </div>

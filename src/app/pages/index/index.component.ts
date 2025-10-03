@@ -84,6 +84,14 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('slickModal', { static: false })
   slickModal!: SlickCarouselComponent;
 
+  // ✅ REFERENCIA AL SLIDER DE CATEGORÍAS
+  @ViewChild('categoriasCarousel', { static: false })
+  categoriasCarousel!: SlickCarouselComponent;
+
+  @ViewChild('ofertasCarousel', { static: false })
+ofertasCarousel!: SlickCarouselComponent;
+
+
   // ✅ CONFIGURACIÓN DE DEBUG - CAMBIAR A false PARA PRODUCCIÓN
   private readonly debugMode = false; // Cambiar a true solo para debugging
 
@@ -99,6 +107,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   productosFiltrados: ProductoPublico[] = [];
   isLoadingProductosFiltrados = false;
   todosLosProductos: ProductoPublico[] = []; // Cache de todos los productos
+  productosVisibles: number = 24; // Mostrar inicialmente 24 productos (2 filas de 12)
   // ✅ NUEVA VARIABLE ESPECÍFICA PARA CUPONES
   isLoadingCupones = false;
   productosDestacados: ProductoPublico[] = [];
@@ -168,11 +177,9 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     speed: 1500,
     dots: false,
     pauseOnHover: true,
-    arrows: true,
+    arrows: false, // Deshabilitado porque usamos botones personalizados
     draggable: true,
     infinite: true,
-    nextArrow: '#feature-item-wrapper-next',
-    prevArrow: '#feature-item-wrapper-prev',
     responsive: [
       {
         breakpoint: 1699,
@@ -224,6 +231,40 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       },
     ],
   };
+  // ✅ CONFIGURACIÓN PARA CARRUSEL DE OFERTAS ESPECIALES
+ofertasEspecialesSlideConfig: any = {
+  slidesToShow: 4,
+  slidesToScroll: 1,
+  arrows: false, // Usaremos botones personalizados
+  dots: false,
+  infinite: true,
+  speed: 500,
+  autoplay: true,
+  autoplaySpeed: 3000,
+  pauseOnHover: true,
+  draggable: true,
+  responsive: [
+    {
+      breakpoint: 1400,
+      settings: {
+        slidesToShow: 3,
+      },
+    },
+    {
+      breakpoint: 992,
+      settings: {
+        slidesToShow: 2,
+      },
+    },
+    {
+      breakpoint: 576,
+      settings: {
+        slidesToShow: 1,
+      },
+    },
+  ],
+};
+
 
   promotionalBanners: BannerPromocional[] = [];
   isLoadingPromotionalBanners = false;
@@ -389,6 +430,27 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  // ✅ MÉTODOS PARA CONTROLAR EL SLIDER DE CATEGORÍAS
+  anteriorCategoria(): void {
+    if (this.isBrowser && this.categoriasCarousel) {
+      try {
+        this.categoriasCarousel.slickPrev();
+      } catch (error) {
+        console.warn('Error al ir a la categoría anterior:', error);
+      }
+    }
+  }
+
+  siguienteCategoria(): void {
+    if (this.isBrowser && this.categoriasCarousel) {
+      try {
+        this.categoriasCarousel.slickNext();
+      } catch (error) {
+        console.warn('Error al ir a la siguiente categoría:', error);
+      }
+    }
+  }
+
   // ✅ MÉTODO AUXILIAR PARA CONTROLAR EL SLIDER
   private controlSlider(direction: 'prev' | 'next'): void {
     const waitForSlider = (attempts: number = 0): void => {
@@ -509,10 +571,16 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  // ✅ FUNCIÓN: Ver más productos
+  verMasProductos(): void {
+    this.productosVisibles += 24; // Mostrar 24 productos más
+  }
+
   // ✅ NUEVA FUNCIÓN: Filtrar productos por categoría
   filtrarPorCategoria(categoriaId: number | null): void {
     this.categoriaSeleccionada = categoriaId;
     this.isLoadingProductosFiltrados = true;
+    this.productosVisibles = 24; // Resetear al filtrar
 
     if (this.debugMode) {
       console.log('🔍 Filtrando por categoría:', categoriaId);
@@ -1291,11 +1359,9 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     speed: 1500,
     dots: false,
     pauseOnHover: true,
-    arrows: true,
+    arrows: false, // Sin flechas porque se mueve solo con autoplay
     draggable: true,
     infinite: true,
-    nextArrow: '#brand-next',
-    prevArrow: '#brand-prev',
     responsive: [
       {
         breakpoint: 1599,
@@ -1440,6 +1506,19 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       this.flashSalesCurrentPage++;
     }
   }
+  // ✅ FUNCIONES PARA NAVEGAR EN OFERTAS ESPECIALES
+anteriorOfertaEspecial(): void {
+  if (this.ofertasCarousel) {
+    this.ofertasCarousel.slickPrev();
+  }
+}
+
+siguienteOfertaEspecial(): void {
+  if (this.ofertasCarousel) {
+    this.ofertasCarousel.slickNext();
+  }
+}
+
 
   getSafeUrl(url: string): SafeUrl {
     if (!url) {
