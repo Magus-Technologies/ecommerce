@@ -13,7 +13,7 @@ import { CartService } from "../../services/cart.service"
 import { CartNotificationService } from "../../services/cart-notification.service"
 import Swal from "sweetalert2"
 import { environment } from "../../../environments/environment"
-import { DomSanitizer, SafeHtml, SafeResourceUrl } from "@angular/platform-browser"
+import { DomSanitizer, SafeHtml, SafeResourceUrl, Title } from "@angular/platform-browser"
 
 @Pipe({
   name: 'trustUrl',

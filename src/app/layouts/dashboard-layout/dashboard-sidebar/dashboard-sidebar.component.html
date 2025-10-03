@@ -222,38 +222,22 @@
                class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
               <i class="ph ph-arrow-clockwise text-lg flex-shrink-0"></i>
               <span class="fw-medium">Auditoría</span>
-            
-            <!-- Popups -->
-            <a
-              routerLink="/dashboard/recompensas/popups"
-              routerLinkActive="active"
-              class="recompensas-item"
-              (click)="showRecompensasDropdown = false"
-            >
-              <i class="ph ph-notification text-lg"></i>
-              <span>Popups</span>
             </a>
-            
-            <!-- Todos los Popups -->
-            <a
-              routerLink="/dashboard/recompensas/popups/todos"
-              routerLinkActive="active"
-              class="recompensas-item"
-              (click)="showRecompensasDropdown = false"
-            >
-              <i class="ph ph-squares-four text-lg"></i>
-              <span>Todos los Popups</span>
+          </li>
+
+          <li class="mb-4">
+            <a routerLink="/dashboard/recompensas/popups" routerLinkActive="active"
+               class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+              <i class="ph ph-notification text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Popups</span>
             </a>
-            
-            <!-- Auditoría -->
-            <a
-              routerLink="/dashboard/recompensas/auditoria"
-              routerLinkActive="active"
-              class="recompensas-item"
-              (click)="showRecompensasDropdown = false"
-            >
-              <i class="ph ph-arrow-clockwise text-lg"></i>
-              <span>Auditoría</span>
+          </li>
+
+          <li class="mb-4">
+            <a routerLink="/dashboard/recompensas/popups/todos" routerLinkActive="active"
+               class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+              <i class="ph ph-squares-four text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Todos los Popups</span>
             </a>
           </li>
         </ul>
@@ -313,7 +297,7 @@
         <span class="fw-medium">Banners Promocionales</span>
       </a>
     </li>
-    
+
     <li class="mb-4" *ngIf="puedeVerOfertas">
       <a routerLink="/dashboard/ofertas" routerLinkActive="active"
          class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
@@ -321,7 +305,23 @@
         <span class="fw-medium">Ofertas</span>
       </a>
     </li>
-    
+
+    <li class="mb-4" *ngIf="puedeVerBanners_ofertas">
+      <a routerLink="/dashboard/banners-ofertas" routerLinkActive="active"
+         class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+        <i class="ph ph-image text-lg flex-shrink-0"></i>
+        <span class="fw-medium">Banners Ofertas</span>
+      </a>
+    </li>
+
+    <li class="mb-4" *ngIf="puedeVerBanners_flash_sales">
+      <a routerLink="/dashboard/banners-flash-sales" routerLinkActive="active"
+         class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+        <i class="ph ph-lightning text-lg flex-shrink-0"></i>
+        <span class="fw-medium">Banners Flash Sales</span>
+      </a>
+    </li>
+
     <li class="mb-4" *ngIf="puedeVerCupones">
       <a routerLink="/dashboard/cupones" routerLinkActive="active"
          class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">

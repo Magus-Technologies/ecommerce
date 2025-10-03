@@ -10,26 +10,17 @@ export interface OfertaAdmin {
   titulo: string;
   subtitulo?: string;
   descripcion?: string;
-  tipo_oferta_id?: number;
   tipo_descuento: 'porcentaje' | 'cantidad_fija';
   valor_descuento: number;
-  precio_minimo?: number;
   fecha_inicio: string;
   fecha_fin: string;
   imagen?: File;
-  banner_imagen?: File;
   imagen_url?: string;
-  banner_imagen_url?: string;
   color_fondo: string;
   texto_boton: string;
   enlace_url: string;
-  limite_uso?: number;
-  usos_actuales?: number;
   activo: boolean;
-  mostrar_countdown: boolean;
-  mostrar_en_slider: boolean;
-  mostrar_en_banner: boolean;
-  es_oferta_principal: boolean; // ✅ NUEVO CAMPO
+  es_oferta_principal: boolean;
   es_oferta_semana: boolean;
   prioridad: number;
   created_at?: string;
@@ -118,35 +109,28 @@ export class OfertasAdminService {
     formData.append('texto_boton', oferta.texto_boton);
     formData.append('enlace_url', oferta.enlace_url);
     formData.append('activo', oferta.activo ? '1' : '0');
-    formData.append('mostrar_countdown', oferta.mostrar_countdown ? '1' : '0');
-    formData.append('mostrar_en_slider', oferta.mostrar_en_slider ? '1' : '0');
-    formData.append('mostrar_en_banner', oferta.mostrar_en_banner ? '1' : '0');
-    formData.append('es_oferta_principal', oferta.es_oferta_principal ? '1' : '0'); // ✅ NUEVO CAMPO
-    formData.append('es_oferta_semana', oferta.es_oferta_semana ? '1' : '0'); // ✅ AGREGAR CAMPO FALTANTE
+    formData.append('es_oferta_principal', oferta.es_oferta_principal ? '1' : '0');
+    formData.append('es_oferta_semana', oferta.es_oferta_semana ? '1' : '0');
     formData.append('prioridad', oferta.prioridad.toString());
 
     // Campos opcionales
     if (oferta.subtitulo) formData.append('subtitulo', oferta.subtitulo);
     if (oferta.descripcion) formData.append('descripcion', oferta.descripcion);
-    if (oferta.tipo_oferta_id) formData.append('tipo_oferta_id', oferta.tipo_oferta_id.toString());
-    if (oferta.precio_minimo) formData.append('precio_minimo', oferta.precio_minimo.toString());
-    if (oferta.limite_uso) formData.append('limite_uso', oferta.limite_uso.toString());
 
-    // Archivos
+    // Archivo
     if (oferta.imagen) formData.append('imagen', oferta.imagen);
-    if (oferta.banner_imagen) formData.append('banner_imagen', oferta.banner_imagen);
 
     return this.http.post<OfertaAdmin>(`${this.apiUrl}/ofertas`, formData);
   }
 
   actualizarOferta(id: number, oferta: Partial<OfertaAdmin>): Observable<OfertaAdmin> {
     const formData = new FormData();
-    
+
     // Agregar campos que se están actualizando
     Object.keys(oferta).forEach(key => {
       const value = (oferta as any)[key];
       if (value !== null && value !== undefined) {
-        if (key === 'imagen' || key === 'banner_imagen') {
+        if (key === 'imagen') {
           if (value instanceof File) {
             formData.append(key, value);
           }

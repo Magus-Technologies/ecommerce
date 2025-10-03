@@ -50,6 +50,8 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   puedeVerUsuarios = false;
   puedeVerBanners = false;
   puedeVerBanners_promocionales = false;
+  puedeVerBanners_flash_sales = false;
+  puedeVerBanners_ofertas = false;
   puedeVerClientes = false;
   puedeVerOfertas = false;
   puedeVerCupones = false;
@@ -97,6 +99,8 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
     this.puedeVerUsuarios = this.permissionsService.hasPermission('usuarios.ver');
     this.puedeVerBanners = this.permissionsService.hasPermission('banners.ver');
     this.puedeVerBanners_promocionales = this.permissionsService.hasPermission('banners_promocionales.ver');
+    this.puedeVerBanners_flash_sales = this.permissionsService.hasPermission('banners_flash_sales.ver');
+    this.puedeVerBanners_ofertas = this.permissionsService.hasPermission('banners_ofertas.ver');
     this.puedeVerClientes = this.permissionsService.hasPermission('clientes.ver');
     this.puedeVerOfertas = this.permissionsService.hasPermission('ofertas.ver');
     this.puedeVerCupones = this.permissionsService.hasPermission('cupones.ver');
