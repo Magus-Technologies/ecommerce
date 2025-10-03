@@ -69,6 +69,7 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     private cartService: CartService,
     private cartNotificationService: CartNotificationService,
     private sanitizer: DomSanitizer,
+    private titleService: Title
   ) {
     this.isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   }
@@ -116,17 +117,22 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     })
   }
 
-  private procesarDatosProducto(): void {
-    try {
-      this.configurarImagenes()
-      this.procesarEspecificaciones()
-      this.procesarCaracteristicas()
-      const rawDescription = this.detalles?.descripcion_detallada || this.producto?.descripcion || ""
-      this.safeDescripcionDetallada = this.sanitizer.bypassSecurityTrustHtml(rawDescription)
-    } catch (error) {
-      console.error("Error en procesarDatosProducto:", error)
+ private procesarDatosProducto(): void {
+  try {
+    this.configurarImagenes()
+    this.procesarEspecificaciones()
+    this.procesarCaracteristicas()
+    const rawDescription = this.detalles?.descripcion_detallada || this.producto?.descripcion || ""
+    this.safeDescripcionDetallada = this.sanitizer.bypassSecurityTrustHtml(rawDescription)
+    
+    // Actualizar el título de la página con el nombre del producto
+    if (this.producto?.nombre) {
+      this.titleService.setTitle(this.producto.nombre + ' - MAGUS');
     }
+  } catch (error) {
+    console.error("Error en procesarDatosProducto:", error)
   }
+}
 
   private configurarImagenes(): void {
     this.imagenesProducto = []
