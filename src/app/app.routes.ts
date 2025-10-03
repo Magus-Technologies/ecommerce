@@ -443,6 +443,26 @@ export const routes: Routes = [
           ).then((m) => m.BannersPromocionalesListComponent),
         title: 'Banners Promocionales',
       },
+      {
+        path: 'banners-flash-sales',
+        loadComponent: () =>
+          import(
+            './pages/dashboard/banners-flash-sales/banners-flash-sales-list/banners-flash-sales-list.component'
+          ).then((m) => m.BannersFlashSalesListComponent),
+        title: 'Banners Flash Sales',
+        canActivate: [permissionGuard],
+        data: { permission: 'banners_flash_sales.ver' },
+      },
+      {
+        path: 'banners-ofertas',
+        loadComponent: () =>
+          import(
+            './pages/dashboard/banners-ofertas/banners-ofertas-list/banners-ofertas-list.component'
+          ).then((m) => m.BannersOfertasListComponent),
+        title: 'Banners Ofertas',
+        canActivate: [permissionGuard],
+        data: { permission: 'banners_ofertas.ver' },
+      },
       // Dentro de las rutas de dashboard, agrega:
       {
         path: 'clientes',

@@ -198,31 +198,30 @@
 
   /* Estilos específicos para botones de acción */
   .oferta-btn-principal {
-    background-color: #FEFCE8;  // warning-50
-    color: #FF9F29;  // warning-600
-    border: 1px solid #FEF08A;  // warning-200
+    background-color: #f8f9fa;  // Gris claro
+    border: 1px solid #dee2e6;  // Borde gris
+
+    i {
+      color: #6c757d;  // Estrella gris
+    }
 
     &:hover {
-      background-color: #FEF9C3;  // warning-100
-      border-color: #FDE047;  // warning-300
+      background-color: #e9ecef;  // Gris un poco más oscuro
+      border-color: #ced4da;
     }
 
     &.activo {
-      background-color: #FF9F29;  // warning-600
-      color: #fff;
-      border-color: #FF9F29;
-
-      i {
-        color: #fff !important;
-      }
+      background-color: #FEF08A;  // Fondo amarillo claro (warning-200)
+      border: 1px solid #FEF08A;
 
       &:hover {
-        background-color: #f39016;  // warning-700
-        border-color: #f39016;
+        background-color: #FDE047;  // Amarillo un poco más intenso (warning-300)
+        border-color: #FDE047;
       }
     }
   }
 }
+
 
 /* Los estilos de colores ya están en las clases globales del proyecto */
 

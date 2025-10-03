@@ -103,30 +103,6 @@ import Swal from 'sweetalert2';
                                    required>
                           </div>
                         </div>
-
-                        <div class="col-md-6 mb-16">
-                          <label class="form-label text-heading fw-medium mb-8">Compra mínima</label>
-                          <div class="input-group">
-                            <span class="input-group-text bg-gray-50 border-end-0">S/</span>
-                            <input type="number" 
-                                   class="form-control px-16 py-12 border-start-0"
-                                   [(ngModel)]="formData.precio_minimo"
-                                   name="precio_minimo"
-                                   min="0"
-                                   step="0.01"
-                                   placeholder="0.00">
-                          </div>
-                        </div>
-
-                        <div class="col-md-6 mb-16">
-                          <label class="form-label text-heading fw-medium mb-8">Límite de uso</label>
-                          <input type="number" 
-                                 class="form-control px-16 py-12 border rounded-8"
-                                 [(ngModel)]="formData.limite_uso"
-                                 name="limite_uso"
-                                 min="1"
-                                 placeholder="Dejar vacío para ilimitado">
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -247,7 +223,7 @@ import Swal from 'sweetalert2';
                               <input type="file" 
                                      class="d-none" 
                                      accept="image/*"
-                                     (change)="onImageSelected($event, 'imagen')">
+                                     (change)="onImageSelected($event)">
                             </label>
                           </div>
 
@@ -256,7 +232,7 @@ import Swal from 'sweetalert2';
                                  alt="Preview" 
                                  class="img-fluid rounded-6 mb-12"
                                  style="max-height: 120px;"
-                                 (error)="onImageError('imagen')">
+                                 (error)="onImageError()">
                             <br>
                             <label class="btn bg-main-50 text-main-600 px-12 py-6 rounded-6 cursor-pointer text-sm">
                               <i class="ph ph-pencil me-6"></i>
@@ -264,149 +240,33 @@ import Swal from 'sweetalert2';
                               <input type="file" 
                                      class="d-none" 
                                      accept="image/*"
-                                     (change)="onImageSelected($event, 'imagen')">
+                                     (change)="onImageSelected($event)">
                             </label>
                           </div>
                         </div>
                       </div>
 
-                      <!-- Banner -->
-                      <div>
-                        <label class="form-label text-heading fw-medium mb-8">
-                          Banner (Flash Sales)
-                          <small class="text-muted d-block">Dimensiones recomendadas: 828x268px</small>
-                        </label>
-                        <div class="upload-area border-2 border-dashed border-gray-200 rounded-8 p-16 text-center"
-                             [class.border-main-600]="bannerPreview">
-                          
-                          <div *ngIf="!bannerPreview" class="text-center">
-                            <i class="ph ph-image text-gray-400 text-4xl mb-12"></i>
-                            <p class="text-gray-500 text-sm mb-12">Seleccionar banner</p>
-                            <label class="btn bg-main-50 text-main-600 px-12 py-6 rounded-6 cursor-pointer text-sm">
-                              <i class="ph ph-upload me-6"></i>
-                              Subir banner
-                              <input type="file" 
-                                     class="d-none" 
-                                     accept="image/*"
-                                     (change)="onImageSelected($event, 'banner_imagen')">
-                            </label>
-                          </div>
-
-                          <div *ngIf="bannerPreview" class="text-center">
-                            <img [src]="bannerPreview" 
-                                 alt="Preview" 
-                                 class="img-fluid rounded-6 mb-12"
-                                 style="max-height: 120px;"
-                                 (error)="onImageError('banner')">
-                            <br>
-                            <label class="btn bg-main-50 text-main-600 px-12 py-6 rounded-6 cursor-pointer text-sm">
-                              <i class="ph ph-pencil me-6"></i>
-                              Cambiar
-                              <input type="file" 
-                                     class="d-none" 
-                                     accept="image/*"
-                                     (change)="onImageSelected($event, 'banner_imagen')">
-                            </label>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
 
-                  <!-- Configuración de visualización -->
+                  <!-- Estado -->
                   <div class="card border-0 bg-gray-50">
                     <div class="card-body p-16">
                       <h6 class="text-heading fw-semibold mb-16 d-flex align-items-center">
-                        <i class="ph ph-eye me-8 text-primary-600"></i>
-                        Visualización
+                        <i class="ph ph-toggle-right me-8 text-success-600"></i>
+                        Estado
                       </h6>
-                      
-                      <div class="d-flex flex-column gap-12">
-                        <!-- ✅ CHECKBOX: Oferta principal del día -->
-                        <div class="form-check">
-                          <input class="form-check-input" 
-                                 type="checkbox" 
-                                 [checked]="formData.es_oferta_principal"
-                                 name="es_oferta_principal"
-                                 id="es_oferta_principal"
-                                 (change)="onPrincipalChange($event)">
-                          <label class="form-check-label text-heading fw-medium" for="es_oferta_principal">
-                            <i class="ph ph-star text-warning-600 me-4"></i>
-                            Oferta principal del día
-                            <span class="badge bg-info ms-2 text-xs">{{ formData.es_oferta_principal ? 'SI' : 'NO' }}</span>
-                          </label>
-                          <small class="text-gray-500 d-block">
-                            <strong>¡IMPORTANTE!</strong> Solo una oferta puede ser principal a la vez. 
-                            Esta oferta se mostrará en la sección especial "Ofertas del día" del home.
-                            <br><strong>Debug:</strong> Valor actual: {{ formData.es_oferta_principal }}
-                          </small>
-                        </div>
-                        <div class="form-check">
-                          <input class="form-check-input" 
-                                 type="checkbox" 
-                                 [checked]="formData.es_oferta_semana"
-                                 name="es_oferta_semana"
-                                 id="es_oferta_semana"
-                                 (change)="onSemanaChange($event)">
-                          <label class="form-check-label text-heading fw-medium" for="es_oferta_semana">
-                            <i class="ph ph-calendar-star text-purple-600 me-4"></i>
-                            Oferta de la semana
-                            <span class="badge bg-purple ms-2 text-xs">{{ formData.es_oferta_semana ? 'SI' : 'NO' }}</span>
-                          </label>
-                          <small class="text-gray-500 d-block">
-                            <strong>¡IMPORTANTE!</strong> Solo una oferta puede ser de la semana a la vez. 
-                            Esta oferta se mostrará en la sección "Ofertas de la semana" del home.
-                            <br><strong>Debug:</strong> Valor actual: {{ formData.es_oferta_semana }}
-                          </small>
-                        </div>
 
-                        <div class="form-check">
-                          <input class="form-check-input" 
-                                 type="checkbox" 
-                                 [(ngModel)]="formData.mostrar_countdown"
-                                 name="mostrar_countdown"
-                                 id="mostrar_countdown">
-                          <label class="form-check-label text-heading fw-medium" for="mostrar_countdown">
-                            Mostrar countdown
-                          </label>
-                          <small class="text-gray-500 d-block">Muestra temporizador de cuenta regresiva en Flash Sales</small>
-                        </div>
-
-                        <div class="form-check">
-                          <input class="form-check-input" 
-                                 type="checkbox" 
-                                 [(ngModel)]="formData.mostrar_en_slider"
-                                 name="mostrar_en_slider"
-                                 id="mostrar_en_slider">
-                          <label class="form-check-label text-heading fw-medium" for="mostrar_en_slider">
-                            Mostrar en slider
-                          </label>
-                          <small class="text-gray-500 d-block">Aparece en el slider principal del home</small>
-                        </div>
-
-                        <div class="form-check">
-                          <input class="form-check-input" 
-                                 type="checkbox" 
-                                 [(ngModel)]="formData.mostrar_en_banner"
-                                 name="mostrar_en_banner"
-                                 id="mostrar_en_banner">
-                          <label class="form-check-label text-heading fw-medium" for="mostrar_en_banner">
-                            Mostrar en banner
-                          </label>
-                          <small class="text-gray-500 d-block">Aparece en sección de banners promocionales</small>
-                        </div>
-
-                        <div class="form-check">
-                          <input class="form-check-input" 
-                                 type="checkbox" 
-                                 [(ngModel)]="formData.activo"
-                                 name="activo"
-                                 id="activo">
-                          <label class="form-check-label text-heading fw-medium" for="activo">
-                            Oferta activa
-                          </label>
-                          <small class="text-gray-500 d-block">Solo las ofertas activas se muestran públicamente</small>
-                        </div>
+                      <div class="form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               [(ngModel)]="formData.activo"
+                               name="activo"
+                               id="activo">
+                        <label class="form-check-label text-heading fw-medium" for="activo">
+                          Oferta activa
+                        </label>
+                        <small class="text-gray-500 d-block">Solo las ofertas activas se muestran públicamente</small>
                       </div>
                     </div>
                   </div>
@@ -456,9 +316,8 @@ export class OfertaModalComponent implements OnInit, OnChanges {
   tiposOfertas: TipoOferta[] = [];
   isLoading = false;
   
-  // ✅ Variables separadas para los previews de imágenes
+  // ✅ Variable para el preview de imagen
   imagenPreview: string | null = null;
-  bannerPreview: string | null = null;
 
   constructor(
     private ofertasAdminService: OfertasAdminService,
@@ -484,9 +343,6 @@ export class OfertaModalComponent implements OnInit, OnChanges {
       
       // ✅ FORZAR conversión de valores booleanos por si vienen como strings o números del backend
       this.formData.activo = this.convertToBoolean(this.oferta.activo);
-      this.formData.mostrar_countdown = this.convertToBoolean(this.oferta.mostrar_countdown);
-      this.formData.mostrar_en_slider = this.convertToBoolean(this.oferta.mostrar_en_slider);
-      this.formData.mostrar_en_banner = this.convertToBoolean(this.oferta.mostrar_en_banner);
       this.formData.es_oferta_principal = this.convertToBoolean(this.oferta.es_oferta_principal);
       this.formData.es_oferta_semana = this.convertToBoolean(this.oferta.es_oferta_semana);
       
@@ -513,12 +369,6 @@ export class OfertaModalComponent implements OnInit, OnChanges {
       
     
       this.imagenPreview = this.oferta.imagen_url || null;
-      this.bannerPreview = this.oferta.banner_imagen_url || null;
-      
-      console.log('🖼️ Previews asignados:', {
-        imagenPreview: this.imagenPreview,
-        bannerPreview: this.bannerPreview
-      });
       
       // Convertir fechas para datetime-local
       if (this.formData.fecha_inicio) {
@@ -532,7 +382,6 @@ export class OfertaModalComponent implements OnInit, OnChanges {
       console.log('🆕 Modo creación - Reseteando formulario');
       this.formData = this.getEmptyForm();
       this.imagenPreview = null;
-      this.bannerPreview = null;
       
       console.log('📋 Form reseteado:', {
         es_oferta_principal: this.formData.es_oferta_principal,
@@ -555,10 +404,7 @@ export class OfertaModalComponent implements OnInit, OnChanges {
       texto_boton: 'Compra ahora',
       enlace_url: '/shop',
       activo: true,
-      mostrar_countdown: false,
-      mostrar_en_slider: false,
-      mostrar_en_banner: false,
-      es_oferta_principal: false, // ✅ NUEVO CAMPO
+      es_oferta_principal: false,
       es_oferta_semana: false,
       prioridad: 0
     };
@@ -575,7 +421,7 @@ export class OfertaModalComponent implements OnInit, OnChanges {
     });
   }
 
-  onImageSelected(event: any, tipo: 'imagen' | 'banner_imagen'): void {
+  onImageSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
       // Validar tamaño del archivo (máx. 2MB)
@@ -585,10 +431,10 @@ export class OfertaModalComponent implements OnInit, OnChanges {
         return;
       }
 
-      // ✅ Guardar el archivo en formData
-      (this.formData as any)[tipo] = file;
+      // Guardar el archivo en formData
+      (this.formData as any)['imagen'] = file;
 
-      // ✅ Crear preview y asignarlo a la variable correcta
+      // Crear preview
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
@@ -600,93 +446,37 @@ export class OfertaModalComponent implements OnInit, OnChanges {
           const height = img.height;
 
           // Mostrar advertencia si las dimensiones no son ideales
-          if (tipo === 'imagen') {
-            // Para imagen principal, recomendado: 400x400px cuadrado
-            if (width < 200 || height < 200) {
-              console.warn(`Imagen muy pequeña (${width}x${height}px). Se recomienda usar al menos 400x400px para mejor calidad.`);
-            } else if (Math.abs(width - height) > width * 0.3) {
-              console.warn(`Imagen no cuadrada (${width}x${height}px). Para mejor visualización usa imágenes cuadradas (ej: 400x400px).`);
-            } else {
-              console.log(`✓ Imagen con dimensiones ideales (${width}x${height}px).`);
-            }
-          } else if (tipo === 'banner_imagen') {
-            // Para banner, advertir si no mantiene proporción horizontal
-            const ratio = width / height;
-            if (ratio < 1.2) {
-              console.warn(`Banner muy cuadrado o vertical (${width}x${height}px). Se recomienda imágenes más horizontales para mejor visualización.`);
-            } else if (width < 400) {
-              console.warn(`Banner muy pequeño (${width}x${height}px). Se recomienda usar al menos 600px de ancho.`);
-            } else {
-              console.log(`✓ Banner con dimensiones adecuadas (${width}x${height}px).`);
-            }
+          if (width < 200 || height < 200) {
+            console.warn(`Imagen muy pequeña (${width}x${height}px). Se recomienda usar al menos 400x400px para mejor calidad.`);
+          } else if (Math.abs(width - height) > width * 0.3) {
+            console.warn(`Imagen no cuadrada (${width}x${height}px). Para mejor visualización usa imágenes cuadradas (ej: 400x400px).`);
+          } else {
+            console.log(`✓ Imagen con dimensiones ideales (${width}x${height}px).`);
           }
         };
         img.src = result;
-
-        if (tipo === 'imagen') {
-          this.imagenPreview = result;
-        } else {
-          this.bannerPreview = result;
-        }
+        this.imagenPreview = result;
       };
       reader.readAsDataURL(file);
     }
   }
 
-  // ✅ Método para manejar errores de carga de imagen
-  onImageError(tipo: 'imagen' | 'banner'): void {
-    console.error(`❌ Error al cargar imagen de ${tipo}`);
-    if (tipo === 'imagen') {
-      this.imagenPreview = null;
-    } else {
-      this.bannerPreview = null;
-    }
-  }
-
-  // ✅ Método para debugging del checkbox principal
-  onPrincipalChange(event: any): void {
-    console.log('🔘 Checkbox principal cambió:', {
-      event_checked: event.target.checked,
-      formData_antes: this.formData.es_oferta_principal,
-    });
-    this.formData.es_oferta_principal = event.target.checked;
-    console.log('🔘 Checkbox principal después del cambio:', {
-      formData_despues: this.formData.es_oferta_principal
-    });
-  }
-
-  // ✅ Método para debugging del checkbox semana
-  onSemanaChange(event: any): void {
-    console.log('🔘 Checkbox semana cambió:', {
-      event_checked: event.target.checked,
-      formData_antes: this.formData.es_oferta_semana,
-    });
-    this.formData.es_oferta_semana = event.target.checked;
-    console.log('🔘 Checkbox semana después del cambio:', {
-      formData_despues: this.formData.es_oferta_semana
-    });
+  // Método para manejar errores de carga de imagen
+  onImageError(): void {
+    console.error(`❌ Error al cargar imagen`);
+    this.imagenPreview = null;
   }
 
   guardarOferta(): void {
     this.isLoading = true;
 
-    // ✅ ASEGURAR QUE LOS CAMPOS BOOLEANOS SE ENVÍEN EXPLÍCITAMENTE
+    // Preparar datos para enviar
     const datosParaEnviar = { ...this.formData };
-    
-    // ✅ GARANTIZAR que los campos booleanos siempre se envíen, incluso si son false
+
+    // Garantizar que los campos booleanos se envíen correctamente
     datosParaEnviar.activo = this.formData.activo;
-    datosParaEnviar.mostrar_countdown = this.formData.mostrar_countdown;
-    datosParaEnviar.mostrar_en_slider = this.formData.mostrar_en_slider;
-    datosParaEnviar.mostrar_en_banner = this.formData.mostrar_en_banner;
     datosParaEnviar.es_oferta_principal = this.formData.es_oferta_principal;
     datosParaEnviar.es_oferta_semana = this.formData.es_oferta_semana;
-
-    console.log('📤 Datos que se enviarán:', datosParaEnviar);
-    console.log('📤 Estados específicos que se envían:', {
-      es_oferta_principal: datosParaEnviar.es_oferta_principal,
-      es_oferta_semana: datosParaEnviar.es_oferta_semana,
-      activo: datosParaEnviar.activo
-    });
 
     const operacion = this.oferta?.id 
       ? this.ofertasAdminService.actualizarOferta(this.oferta.id, datosParaEnviar)

@@ -11,6 +11,55 @@
   }
 }
 
+/* ✅ ESTILOS PARA BANNER OFERTAS */
+.hot-deals {
+  overflow: visible !important; // Quitar overflow hidden que causaba problemas con iconos
+
+  .banner-ofertas-image {
+    background-color: #ffffff !important;
+
+    img {
+      object-fit: contain !important;
+    }
+  }
+
+  // Ocultar flechas de navegación si existen
+  .slick-arrow,
+  .arrow-prev,
+  .arrow-next,
+  [class*="arrow"] {
+    display: none !important;
+  }
+
+  /* ✅ CARDS DE PRODUCTOS - MISMO ESTILO QUE RECOMENDADO PARA TI */
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .product-card__thumb {
+      height: 232px; // Misma altura que Recomendado para ti
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      img {
+        max-width: 160px;
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+      }
+    }
+
+    .product-card__content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
+
 /* ✅ FIX: Dar más espacio vertical a la sección de categorías */
 .feature {
   padding-bottom: 0 !important;

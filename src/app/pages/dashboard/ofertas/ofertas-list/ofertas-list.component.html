@@ -3,7 +3,7 @@
   <div class="d-flex justify-content-between align-items-center mb-24">
     <div>
       <h4 class="text-heading fw-semibold mb-8">Ofertas</h4>
-      <p class="text-gray-500 mb-0">Administra las ofertas y promociones</p>
+      <p class="text-gray-500 mb-0">Administra las ofertas</p>
     </div>
     <button class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
             data-bs-toggle="modal"
@@ -111,23 +111,9 @@
               </div>
             </div>
 
-            <!-- Configuración -->
-            <div class="oferta-config mb-12">
-              <div class="d-flex flex-wrap gap-6">
-                <span *ngIf="oferta.mostrar_countdown"
-                      class="badge bg-warning-50 text-warning-600">
-                  <i class="ph ph-timer me-4"></i>Countdown
-                </span>
-                <span *ngIf="oferta.mostrar_en_slider"
-                      class="badge bg-info-50 text-info-600">
-                  <i class="ph ph-slides me-4"></i>Slider
-                </span>
-                <span *ngIf="oferta.mostrar_en_banner"
-                      class="badge bg-purple-50 text-purple-600">
-                  <i class="ph ph-image me-4"></i>Banner
-                </span>
-              </div>
-              <div class="mt-8 text-sm text-gray-600">
+            <!-- Prioridad -->
+            <div class="mb-12">
+              <div class="text-sm text-gray-600">
                 <strong>Prioridad:</strong> {{ oferta.prioridad }}
               </div>
             </div>
@@ -148,7 +134,7 @@
                       [class.activo]="oferta.es_oferta_principal"
                       [title]="oferta.es_oferta_principal ? 'Quitar como oferta principal' : 'Marcar como oferta principal'"
                       (click)="toggleOfertaPrincipal(oferta)">
-                <i class="ph" [class.ph-star-fill]="oferta.es_oferta_principal" [class.ph-star]="!oferta.es_oferta_principal"></i>
+                <i class="ph ph-star"></i>
               </button>
 
               <!-- Toggle Oferta de la Semana -->

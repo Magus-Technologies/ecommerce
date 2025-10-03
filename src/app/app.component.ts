@@ -47,9 +47,16 @@ export class AppComponent implements OnInit {
       if (isPlatformBrowser(this.platformId)) {
         AOS.init({
           duration: 1000,
-          once: true,
+          once: false, // ✅ CAMBIADO: permitir que AOS se re-ejecute en cambios dinámicos
           easing: 'ease-in-out',
+          mirror: false, // No repetir animaciones al hacer scroll hacia arriba
+          anchorPlacement: 'top-bottom'
         });
+
+        // ✅ NUEVO: Refrescar AOS periódicamente para elementos cargados dinámicamente
+        setInterval(() => {
+          AOS.refresh();
+        }, 3000);
       }
 
       // Verificar si hay parámetros de autenticación de Google en la URL

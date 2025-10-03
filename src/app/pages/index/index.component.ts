@@ -38,6 +38,8 @@ import {
   OfertaPrincipalResponse,
   OfertaSemanaResponse
 } from '../../services/ofertas.service';
+import { BannerFlashSalesService, BannerFlashSale } from '../../services/banner-flash-sales.service';
+import { BannerOfertaService, BannerOferta } from '../../services/banner-oferta.service';
 import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 import { WhatsappFloatComponent } from '../../components/whatsapp-float/whatsapp-float.component';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
@@ -228,7 +230,10 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ✅ PROPIEDADES PARA OFERTAS DINÁMICAS
   ofertasActivas: Oferta[] = [];
-  flashSalesActivas: Oferta[] = [];
+  flashSalesActivas: BannerFlashSale[] = [];
+  flashSalesCurrentPage = 0;
+  flashSalesPerPage = 2; // Mostrar 2 a la vez
+  bannerOfertaActivo: BannerOferta | null = null;
   productosEnOferta: ProductoOferta[] = [];
   cuponesActivos: Cupon[] = [];
   isLoadingOfertas = false;
@@ -270,6 +275,8 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     private wishlistService: WishlistService,
     private authService: AuthService,
     private ofertasService: OfertasService,
+    private bannerFlashSalesService: BannerFlashSalesService,
+    private bannerOfertaService: BannerOfertaService,
     private cdr: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
     private cartNotificationService: CartNotificationService
@@ -285,6 +292,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cargarMarcasDinamicas();
     this.cargarOfertasActivas();
     this.cargarFlashSales();
+    this.cargarBannerOfertaActivo(); // ✅ NUEVO
     this.cargarProductosEnOferta();
     this.cargarCuponesActivos();
     this.cargarOfertaPrincipalDelDia(); // ✅ NUEVA FUNCIÓN
@@ -311,8 +319,53 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       // ✅ AUMENTAR EL DELAY PARA ASEGURAR QUE TODO ESTÉ CARGADO
       setTimeout(() => {
         this.inicializarCountdowns();
+        this.reinicializarSliders();
       }, 2000);
     }
+  }
+
+  // ✅ NUEVO: Método para reinicializar sliders después de cargar datos
+  private reinicializarSliders(): void {
+    if (!this.isBrowser) return;
+
+    setTimeout(() => {
+      try {
+        // Método 1: Refrescar AOS (Animate On Scroll)
+        if (typeof (window as any).AOS !== 'undefined') {
+          (window as any).AOS.refresh();
+        }
+
+        // Método 2: Usando jQuery si está disponible
+        if (typeof (window as any).$ !== 'undefined') {
+          const $ = (window as any).$;
+          $('.slick-slider').each(function(this: any) {
+            if ($(this).hasClass('slick-initialized')) {
+              $(this).slick('refresh');
+              $(this).slick('setPosition');
+            }
+          });
+        }
+
+        // Método 3: Forzar reflow manualmente
+        const sliders = document.querySelectorAll('.slick-slider');
+        sliders.forEach((slider) => {
+          if (slider instanceof HTMLElement) {
+            // Forzar un reflow
+            slider.style.display = 'none';
+            void slider.offsetHeight; // Trigger reflow
+            slider.style.display = '';
+          }
+        });
+
+        // Método 4: Forzar detección de cambios
+        this.cdr.detectChanges();
+
+        // Método 5: Trigger window resize event (esto fuerza a los sliders a recalcular)
+        window.dispatchEvent(new Event('resize'));
+      } catch (error) {
+        console.warn('Error al refrescar sliders:', error);
+      }
+    }, 100);
   }
 
   // ✅ MÉTODOS PARA CONTROLAR EL SLIDER - VERSIÓN DEFINITIVA
@@ -513,6 +566,15 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
           imgAlt: marca.nombre,
         }));
         this.isLoadingMarcas = false;
+
+        // Forzar detección de cambios y reinicializar sliders
+        this.cdr.detectChanges();
+        if (this.isBrowser) {
+          setTimeout(() => {
+            this.cdr.detectChanges();
+            setTimeout(() => this.reinicializarSliders(), 500);
+          }, 200);
+        }
       },
       error: (error) => {
         console.error('Error al cargar marcas:', error);
@@ -553,6 +615,47 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         this.cartNotificationService.showProductAddedNotification(
           product.name || product.title || product.nombre,
           Number(product.precio_venta || product.precio || 0),
+          productImage,
+          1,
+          suggestedProducts
+        );
+      },
+      error: (err) => {
+        Swal.fire({
+          title: 'Error',
+          text: err.message || 'No se pudo agregar el producto al carrito. Revisa el stock disponible.',
+          icon: 'error',
+          confirmButtonColor: '#dc3545',
+        });
+      }
+    });
+  }
+
+  agregarAlCarrito(producto: any): void {
+    if (producto.stock <= 0) {
+      Swal.fire({
+        title: 'Sin stock',
+        text: 'Este producto no tiene stock disponible',
+        icon: 'warning',
+        confirmButtonColor: '#dc3545',
+      });
+      return;
+    }
+
+    this.cartService.addToCart(producto, 1).subscribe({
+      next: () => {
+        // Preparar imagen del producto
+        const productImage = producto.imagen_principal || 'assets/images/thumbs/product-default.png';
+
+        // Obtener productos sugeridos (otros productos del banner)
+        const suggestedProducts = (this.bannerOfertaActivo?.productos || [])
+          .filter(p => p.id !== producto.id)
+          .slice(0, 3);
+
+        // Mostrar notificación
+        this.cartNotificationService.showProductAddedNotification(
+          producto.nombre,
+          Number(producto.precio_con_descuento || producto.precio),
           productImage,
           1,
           suggestedProducts
@@ -667,7 +770,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   cargarFlashSales(): void {
-    this.ofertasService.obtenerFlashSales().subscribe({
+    this.bannerFlashSalesService.getActivos().subscribe({
       next: (flashSales) => {
         if (this.debugMode) {
           console.log('✅ Flash Sales cargadas:', flashSales);
@@ -682,6 +785,25 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       },
       error: (error) => {
         console.error('Error al cargar flash sales:', error);
+      },
+    });
+  }
+
+  cargarBannerOfertaActivo(): void {
+    this.bannerOfertaService.getBannerActivo().subscribe({
+      next: (banner) => {
+        if (this.debugMode) {
+          console.log('✅ Banner Oferta activo cargado:', banner);
+        }
+        this.bannerOfertaActivo = banner;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        if (error.status !== 404) {
+          console.error('Error al cargar banner oferta:', error);
+        }
+        // Si es 404, simplemente no hay banner activo (normal)
+        this.bannerOfertaActivo = null;
       },
     });
   }
@@ -1238,6 +1360,15 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
 
         this.isLoadingProductosDestacados = false;
 
+        // Forzar detección de cambios y reinicializar sliders
+        this.cdr.detectChanges();
+        if (this.isBrowser) {
+          setTimeout(() => {
+            this.cdr.detectChanges();
+            setTimeout(() => this.reinicializarSliders(), 500);
+          }, 200);
+        }
+
         if (this.debugMode) {
           console.log('✅ Productos destacados cargados:', productos);
         }
@@ -1269,6 +1400,15 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
 
         this.isLoadingProductosMasVendidos = false;
 
+        // Forzar detección de cambios y reinicializar sliders
+        this.cdr.detectChanges();
+        if (this.isBrowser) {
+          setTimeout(() => {
+            this.cdr.detectChanges();
+            setTimeout(() => this.reinicializarSliders(), 500);
+          }, 200);
+        }
+
         if (this.debugMode) {
           console.log('✅ Productos más vendidos cargados:', productos);
         }
@@ -1279,6 +1419,26 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         this.productosMasVendidos = [];
       },
     });
+  }
+
+  // ✅ MÉTODOS PARA CAROUSEL DE FLASH SALES
+  getFlashSalesVisibles(): BannerFlashSale[] {
+    const start = this.flashSalesCurrentPage * this.flashSalesPerPage;
+    const end = start + this.flashSalesPerPage;
+    return this.flashSalesActivas.slice(start, end);
+  }
+
+  anteriorFlashSale(): void {
+    if (this.flashSalesCurrentPage > 0) {
+      this.flashSalesCurrentPage--;
+    }
+  }
+
+  siguienteFlashSale(): void {
+    const maxPage = Math.ceil(this.flashSalesActivas.length / this.flashSalesPerPage) - 1;
+    if (this.flashSalesCurrentPage < maxPage) {
+      this.flashSalesCurrentPage++;
+    }
   }
 
   getSafeUrl(url: string): SafeUrl {
