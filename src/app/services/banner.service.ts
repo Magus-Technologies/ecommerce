@@ -16,6 +16,8 @@ export interface Banner {
   enlace_url: string;
   activo: boolean;
   orden: number;
+  tipo_banner?: 'principal' | 'horizontal'; // ✅ NUEVO
+  posicion_horizontal?: 'debajo_ofertas_especiales' | 'debajo_categorias' | 'debajo_ventas_flash'; // ✅ NUEVO
   created_at?: string;
   updated_at?: string;
 }
@@ -30,6 +32,8 @@ export interface BannerCreate {
   enlace_url: string;
   activo: boolean;
   orden: number;
+  tipo_banner?: 'principal' | 'horizontal'; // ✅ NUEVO
+  posicion_horizontal?: 'debajo_ofertas_especiales' | 'debajo_categorias' | 'debajo_ventas_flash'; // ✅ NUEVO
 }
 
 export interface BannerPromocional {
@@ -96,6 +100,14 @@ export class BannersService {
       );
   }
 
+  // ✅ NUEVO: Obtener banners horizontales públicos
+  obtenerBannersHorizontalesPublicos(): Observable<Banner[]> {
+    return this.http.get<ApiResponse<Banner[]>>(`${this.apiUrl}/banners-horizontales/publicos`)
+      .pipe(
+        map(response => response.data)
+      );
+  }
+
   obtenerBanner(id: number): Observable<Banner> {
     return this.http.get<ApiResponse<Banner>>(`${this.apiUrl}/banners/${id}`)
       .pipe(
@@ -108,7 +120,7 @@ export class BannersService {
 
   crearBanner(bannerData: BannerCreate): Observable<any> {
     const formData = new FormData();
-    
+
     formData.append('titulo', bannerData.titulo);
     if (bannerData.subtitulo) formData.append('subtitulo', bannerData.subtitulo);
     if (bannerData.descripcion) formData.append('descripcion', bannerData.descripcion);
@@ -117,7 +129,11 @@ export class BannersService {
     formData.append('enlace_url', bannerData.enlace_url);
     formData.append('activo', bannerData.activo ? '1' : '0');
     formData.append('orden', bannerData.orden.toString());
-    
+
+    // ✅ AGREGAR campos tipo_banner y posicion_horizontal
+    if (bannerData.tipo_banner) formData.append('tipo_banner', bannerData.tipo_banner);
+    if (bannerData.posicion_horizontal) formData.append('posicion_horizontal', bannerData.posicion_horizontal);
+
     if (bannerData.imagen) {
       formData.append('imagen', bannerData.imagen);
     }
@@ -127,7 +143,7 @@ export class BannersService {
 
   actualizarBanner(id: number, bannerData: Partial<BannerCreate>): Observable<any> {
     const formData = new FormData();
-    
+
     if (bannerData.titulo) formData.append('titulo', bannerData.titulo);
     if (bannerData.subtitulo) formData.append('subtitulo', bannerData.subtitulo);
     if (bannerData.descripcion) formData.append('descripcion', bannerData.descripcion);
@@ -136,11 +152,15 @@ export class BannersService {
     if (bannerData.enlace_url) formData.append('enlace_url', bannerData.enlace_url);
     if (bannerData.activo !== undefined) formData.append('activo', bannerData.activo ? '1' : '0');
     if (bannerData.orden !== undefined) formData.append('orden', bannerData.orden.toString());
-    
+
+    // ✅ AGREGAR campos tipo_banner y posicion_horizontal
+    if (bannerData.tipo_banner) formData.append('tipo_banner', bannerData.tipo_banner);
+    if (bannerData.posicion_horizontal) formData.append('posicion_horizontal', bannerData.posicion_horizontal);
+
     if (bannerData.imagen) {
       formData.append('imagen', bannerData.imagen);
     }
-    
+
     return this.http.post(`${this.apiUrl}/banners/${id}`, formData);
   }
 
