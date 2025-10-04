@@ -107,7 +107,8 @@ ofertasCarousel!: SlickCarouselComponent;
   productosFiltrados: ProductoPublico[] = [];
   isLoadingProductosFiltrados = false;
   todosLosProductos: ProductoPublico[] = []; // Cache de todos los productos
-  productosVisibles: number = 24; // Mostrar inicialmente 24 productos (2 filas de 12)
+  productosVisibles: number = 12; // ✅ Mostrar inicialmente 12 productos (2 filas de 6)
+  productosPorCarga: number = 12; // ✅ Cargar 12 productos más cada vez
   // ✅ NUEVA VARIABLE ESPECÍFICA PARA CUPONES
   isLoadingCupones = false;
   productosDestacados: ProductoPublico[] = [];
@@ -162,6 +163,18 @@ ofertasCarousel!: SlickCarouselComponent;
 
   bannersDinamicos: Banner[] = [];
   isLoadingBanners = false;
+
+  // ✅ NUEVO: Banners horizontales
+  bannersHorizontales: {
+    debajo_ofertas_especiales: Banner | null;
+    debajo_categorias: Banner | null;
+    debajo_ventas_flash: Banner | null;
+  } = {
+    debajo_ofertas_especiales: null,
+    debajo_categorias: null,
+    debajo_ventas_flash: null
+  };
+  isLoadingBannersHorizontales = false;
 
   featureItems: CategoriaConImagen[] = [];
   isLoadingCategorias = false;
@@ -330,6 +343,7 @@ ofertasEspecialesSlideConfig: any = {
     this.cargarCategoriasPublicas();
     this.cargarBannersDinamicos();
     this.cargarBannersPromocionales();
+    this.cargarBannersHorizontales(); // ✅ NUEVO
     this.cargarMarcasDinamicas();
     this.cargarOfertasActivas();
     this.cargarFlashSales();
@@ -571,16 +585,30 @@ ofertasEspecialesSlideConfig: any = {
     });
   }
 
-  // ✅ FUNCIÓN: Ver más productos
+  // ✅ FUNCIÓN: Ver más productos con scroll suave
   verMasProductos(): void {
-    this.productosVisibles += 24; // Mostrar 24 productos más
+    const productosAntesDeCargar = this.productosVisibles;
+    this.productosVisibles += this.productosPorCarga; // ✅ Cargar 12 productos más
+
+    // ✅ Scroll suave al primer producto nuevo después de cargar
+    if (this.isBrowser) {
+      setTimeout(() => {
+        const productosContainer = document.querySelector('.recommended .row.g-12');
+        if (productosContainer) {
+          const nuevoProducto = productosContainer.children[productosAntesDeCargar] as HTMLElement;
+          if (nuevoProducto) {
+            nuevoProducto.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        }
+      }, 100);
+    }
   }
 
   // ✅ NUEVA FUNCIÓN: Filtrar productos por categoría
   filtrarPorCategoria(categoriaId: number | null): void {
     this.categoriaSeleccionada = categoriaId;
     this.isLoadingProductosFiltrados = true;
-    this.productosVisibles = 24; // Resetear al filtrar
+    this.productosVisibles = 12; // ✅ Resetear a 12 al filtrar
 
     if (this.debugMode) {
       console.log('🔍 Filtrando por categoría:', categoriaId);
@@ -618,6 +646,30 @@ ofertasEspecialesSlideConfig: any = {
         console.error('Error al cargar banners:', error);
         this.isLoadingBanners = false;
         this.bannersDinamicos = [];
+      },
+    });
+  }
+
+  // ✅ NUEVO: Cargar banners horizontales
+  cargarBannersHorizontales(): void {
+    this.isLoadingBannersHorizontales = true;
+    this.bannersService.obtenerBannersHorizontalesPublicos().subscribe({
+      next: (banners) => {
+        // Organizar banners por posición
+        banners.forEach(banner => {
+          if (banner.posicion_horizontal) {
+            this.bannersHorizontales[banner.posicion_horizontal] = banner;
+          }
+        });
+        this.isLoadingBannersHorizontales = false;
+
+        if (this.debugMode) {
+          console.log('✅ Banners horizontales cargados:', this.bannersHorizontales);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar banners horizontales:', error);
+        this.isLoadingBannersHorizontales = false;
       },
     });
   }

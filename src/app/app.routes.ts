@@ -436,6 +436,16 @@ export const routes: Routes = [
         title: 'Gestión de Banners',
       },
       {
+        path: 'banners/horizontales',
+        loadComponent: () =>
+          import(
+            './pages/dashboard/banners/banners-horizontales/banners-horizontales.component'
+          ).then((m) => m.BannersHorizontalesComponent),
+        title: 'Banners Horizontales',
+        canActivate: [permissionGuard],
+        data: { permission: 'banners.ver' },
+      },
+      {
         path: 'banners-promocionales',
         loadComponent: () =>
           import(

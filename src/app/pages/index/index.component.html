@@ -268,6 +268,21 @@
 </div>
 
 <!-- ============================ Feature Section End =============================== -->
+
+<!-- ✅ BANNER HORIZONTAL 1: Debajo de Categorías -->
+<section class="pt-40" *ngIf="bannersHorizontales.debajo_categorias && !isLoadingBannersHorizontales">
+  <div class="container container-lg">
+    <a [href]="bannersHorizontales.debajo_categorias.enlace_url"
+       class="d-block position-relative overflow-hidden rounded-16 banner-horizontal-link">
+      <img [src]="bannersHorizontales.debajo_categorias.imagen_url"
+           [alt]="bannersHorizontales.debajo_categorias.titulo || 'Banner Horizontal'"
+           class="w-100 banner-horizontal-img"
+           (error)="onImageError($event)"
+           style="max-height: 200px; object-fit: cover; transition: transform 0.3s ease;">
+    </a>
+  </div>
+</section>
+
 <section class="promotional-banner pt-80">
   <div class="container container-lg">
     <!-- Loading state -->
@@ -530,17 +545,25 @@
           </div>
         </div>
 
-        <!-- ✅ BOTÓN "VER MÁS" -->
+        <!-- ✅ BOTÓN "VER MÁS" CON CONTADOR -->
         <div
           *ngIf="!isLoadingProductosFiltrados && productosFiltrados.length > productosVisibles"
-          class="text-center mt-32"
+          class="text-center mt-40"
         >
           <button
             (click)="verMasProductos()"
-            class="btn btn-outline-main rounded-pill py-12 px-32"
+            class="btn btn-main rounded-pill py-14 px-40 fw-semibold d-inline-flex align-items-center gap-12"
+            style="font-size: 15px; transition: all 0.3s ease;"
           >
+            <i class="ph ph-arrow-down text-lg"></i>
             Ver más productos
+            <span class="badge bg-white text-main-600 rounded-pill px-12 py-4 ms-8">
+              {{ productosVisibles }} de {{ productosFiltrados.length }}
+            </span>
           </button>
+          <p class="text-gray-500 text-sm mt-12 mb-0">
+            Mostrando {{ productosVisibles }} de {{ productosFiltrados.length }} productos
+          </p>
         </div>
 
         <!-- ✅ MENSAJE CUANDO NO HAY PRODUCTOS RECOMENDADOS -->
@@ -696,6 +719,20 @@
   </div>
 </section>
 
+<!-- ✅ BANNER HORIZONTAL 2: Debajo de Ofertas Especiales -->
+<section class="pt-40" *ngIf="bannersHorizontales.debajo_ofertas_especiales && !isLoadingBannersHorizontales">
+  <div class="container container-lg">
+    <a [href]="bannersHorizontales.debajo_ofertas_especiales.enlace_url"
+       class="d-block position-relative overflow-hidden rounded-16 banner-horizontal-link">
+      <img [src]="bannersHorizontales.debajo_ofertas_especiales.imagen_url"
+           [alt]="bannersHorizontales.debajo_ofertas_especiales.titulo || 'Banner Horizontal'"
+           class="w-100 banner-horizontal-img"
+           (error)="onImageError($event)"
+           style="max-height: 200px; object-fit: cover; transition: transform 0.3s ease;">
+    </a>
+  </div>
+</section>
+
 <!-- ========================= flash sales Start (DINÁMICO) ================================ -->
 <section class="flash-sales pt-80 overflow-hidden">
   <div class="container container-lg">
@@ -813,6 +850,21 @@
   </div>
 </section>
 <!-- ========================= flash sales End ================================ -->
+
+<!-- ✅ BANNER HORIZONTAL 3: Debajo de Ventas Flash -->
+<section class="pt-40" *ngIf="bannersHorizontales.debajo_ventas_flash && !isLoadingBannersHorizontales">
+  <div class="container container-lg">
+    <a [href]="bannersHorizontales.debajo_ventas_flash.enlace_url"
+       class="d-block position-relative overflow-hidden rounded-16 banner-horizontal-link">
+      <img [src]="bannersHorizontales.debajo_ventas_flash.imagen_url"
+           [alt]="bannersHorizontales.debajo_ventas_flash.titulo || 'Banner Horizontal'"
+           class="w-100 banner-horizontal-img"
+           (error)="onImageError($event)"
+           style="max-height: 200px; object-fit: cover; transition: transform 0.3s ease;">
+    </a>
+  </div>
+</section>
+
 <!-- ✅ SECCIÓN DE CUPONES DINÁMICOS -->
 <div class="pt-80">
   <div class="container container-lg">
