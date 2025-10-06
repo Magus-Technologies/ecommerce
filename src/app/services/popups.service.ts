@@ -41,9 +41,7 @@ export class PopupsService {
    */
   crearPopup(recompensaId: number, popupData: PopupCreateRequest): Observable<PopupResponse> {
     const formData = new FormData();
-    
-    console.log('🔧 Creando popup con datos:', popupData);
-    
+
     // Campo obligatorio
     formData.append('titulo', popupData.titulo);
     
@@ -68,11 +66,6 @@ export class PopupsService {
     }
     
     formData.append('popup_activo', (popupData.popup_activo !== undefined ? popupData.popup_activo : false) ? '1' : '0');
-
-    console.log('🔧 FormData enviado:');
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
 
     return this.http.post<PopupResponse>(`${this.apiUrl}/${recompensaId}/popups`, formData);
   }
@@ -114,6 +107,20 @@ export class PopupsService {
    */
   togglePopup(recompensaId: number, popupId: number): Observable<PopupResponse> {
     return this.http.patch<PopupResponse>(`${this.apiUrl}/${recompensaId}/popups/${popupId}/toggle`, {});
+  }
+
+  /**
+   * Activar popup (si tu API lo soporta)
+   */
+  activarPopup(recompensaId: number, popupId: number): Observable<PopupResponse> {
+    return this.http.patch<PopupResponse>(`${this.apiUrl}/${recompensaId}/popups/${popupId}/activar`, {});
+  }
+
+  /**
+   * Desactivar popup (si tu API lo soporta)
+   */
+  desactivarPopup(recompensaId: number, popupId: number): Observable<PopupResponse> {
+    return this.http.patch<PopupResponse>(`${this.apiUrl}/${recompensaId}/popups/${popupId}/desactivar`, {});
   }
 
   /**
@@ -171,8 +178,12 @@ export class PopupsService {
   /**
    * Obtener popups activos para invitados (público, sin token)
    */
-  obtenerPopupsPublicosActivos(): Observable<PopupResponse> {
-    return this.http.get<PopupResponse>(`${this.publicoApiUrl}/popups-activos`);
+  obtenerPopupsPublicosActivos(segmento?: string): Observable<PopupResponse> {
+    let params = new HttpParams();
+    if (segmento && segmento.trim() !== '') {
+      params = params.set('segmento', segmento);
+    }
+    return this.http.get<PopupResponse>(`${this.publicoApiUrl}/popups-activos`, { params });
   }
 
   /**
@@ -203,7 +214,6 @@ export class PopupsService {
       if (imagenPath.includes('/api/storage/')) {
         // Reemplazar '/api/storage/' con '/storage/'
         const correctedUrl = imagenPath.replace('/api/storage/', '/storage/');
-        console.log('🔧 URL corregida de /api/storage/ a /storage/:', correctedUrl);
         return correctedUrl;
       }
       // Si es una URL http pero no tiene el patrón incorrecto, usarla tal cual
@@ -213,7 +223,6 @@ export class PopupsService {
     // Si es solo una ruta (ej. 'nombre_archivo.jpg'), construir la URL
     const cleanPath = imagenPath.replace(/\s+/g, '_'); // Limpiar espacios
     const url = `${environment.baseUrl}/storage/${cleanPath}`;
-    console.log('🔧 URL de imagen construida:', url);
     return url;
   }
 

@@ -15,17 +15,22 @@
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0,0,0,.15);
-  padding: 24px;
-  width: 90%;
-  max-width: 800px;
+  padding: 20px;
+  width: min(90vw, 520px);
+  max-height: 90vh;
+  overflow: auto;
   margin: 20px;
   position: relative;
 }
 
 .popup-card img {
   width: 100%;
+  height: auto;
+  max-height: 55vh;
+  object-fit: contain;
   border-radius: 8px;
   margin-bottom: 12px;
+  display: block;
 }
 
 .popup-card .close {

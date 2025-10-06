@@ -4,6 +4,7 @@ import { AuthService } from '../../services/auth.service';
 import { PopupsService } from '../../services/popups.service';
 import { Popup } from '../../models/popup.model';
 import { PopupClienteComponent } from '../popup-cliente/popup-cliente.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-popup-wrapper',
@@ -15,6 +16,7 @@ import { PopupClienteComponent } from '../popup-cliente/popup-cliente.component'
 export class PopupWrapperComponent implements OnInit, OnDestroy {
   popups = signal<Popup[]>([]);
   visible = signal<boolean>(false);
+  private triedAllSegment = false;
 
   private loadTimeout?: any;
 
@@ -36,23 +38,21 @@ export class PopupWrapperComponent implements OnInit, OnDestroy {
     const isCliente = this.auth.isCliente();
     const userType = this.auth.getUserType?.() as any;
     const hasToken = !!this.auth.getToken?.();
-    console.log('[Popups] isCliente:', isCliente, '| user_type:', userType, '| hasToken:', hasToken);
     const obs = isCliente
       ? this.popupsService.obtenerPopupsActivos()
-      : this.popupsService.obtenerPopupsPublicosActivos();
+      : this.popupsService.obtenerPopupsPublicosActivos('no_registrados');
 
     obs.subscribe({
       next: (resp) => this.renderRespuesta(resp),
       error: (err) => {
         // Fallback: si falla el endpoint de cliente con 401, intentar público
         if (isCliente && err?.status === 401) {
-          this.popupsService.obtenerPopupsPublicosActivos().subscribe({
+          this.popupsService.obtenerPopupsPublicosActivos('no_registrados').subscribe({
             next: (resp2) => this.renderRespuesta(resp2),
-            error: (err2) => console.warn('No se pudieron cargar popups públicos:', err2)
+            error: (err2) => {}
           });
           return;
         }
-        console.warn('No se pudieron cargar popups:', err);
       }
     });
   }
@@ -60,13 +60,19 @@ export class PopupWrapperComponent implements OnInit, OnDestroy {
   private renderRespuesta(resp: any): void {
     const data: any = resp?.data as any;
     const lista: Popup[] = (data?.popups_activos || data?.popups || []) as Popup[];
-    console.log('[Popups] Respuesta cruda:', resp);
-    console.log('[Popups] data:', data);
-    console.log('[Popups] lista recibida (length):', Array.isArray(lista) ? lista.length : 'no-array');
     if (Array.isArray(lista) && lista.length > 0) {
       this.popups.set(lista);
       this.visible.set(true);
     } else {
+      // Fallback de desarrollo: si no hay popups para 'no_registrados', probar 'all' una sola vez
+      if (!environment.production && !this.auth.isCliente() && !this.triedAllSegment) {
+        this.triedAllSegment = true;
+        this.popupsService.obtenerPopupsPublicosActivos('all').subscribe({
+          next: (resp2) => this.renderRespuesta(resp2),
+          error: () => this.visible.set(false)
+        });
+        return;
+      }
       this.visible.set(false);
     }
   }

@@ -227,16 +227,19 @@ export class RecompensasPopupsListComponent implements OnInit, OnDestroy {
   }
 
   togglePopup(popup: Popup): void {
-    this.popupsService.togglePopup(popup.recompensa_id, popup.id).subscribe({
+    const recompensaId = popup.recompensa_id || popup.recompensa_info?.id || popup.recompensa?.id;
+    if (!recompensaId) {
+      return;
+    }
+    this.popupsService.togglePopup(recompensaId as number, popup.id).subscribe({
       next: (response) => {
-        if (response.success) {
-          // Actualizar el estado del popup en la lista
-          const index = this.popups.findIndex(p => p.id === popup.id);
-          if (index !== -1) {
-            this.popups[index].popup_activo = !this.popups[index].popup_activo;
-            this.popups[index].esta_activo = !this.popups[index].esta_activo;
-          }
-        }
+        const index = this.popups.findIndex(p => p.id === popup.id);
+        if (index === -1) return;
+        // Si el backend devuelve el estado actualizado, úsalo; si no, invierte
+        const nuevoActivo = (response as any)?.data?.popup_activo ?? !this.popups[index].popup_activo;
+        const nuevoEstaActivo = (response as any)?.data?.esta_activo ?? nuevoActivo;
+        this.popups[index].popup_activo = nuevoActivo as boolean;
+        (this.popups[index] as any).esta_activo = nuevoEstaActivo as boolean;
       },
       error: (error) => {
         console.error('Error cambiando estado del popup:', error);
