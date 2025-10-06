@@ -41,86 +41,93 @@
 
           <!-- Tabla de productos -->
           <div class="overflow-x-auto">
-            <table class="table table-borderless">
+            <table class="table table-borderless" style="table-layout: fixed; min-width: 100%; font-size: 0.9rem;">
+              <colgroup>
+                <col style="width: 45%;">  <!-- Producto -->
+                <col style="width: 15%;">  <!-- Precio -->
+                <col style="width: 18%;">  <!-- Cantidad -->
+                <col style="width: 15%;">  <!-- Subtotal -->
+                <col style="width: 7%;">   <!-- Acciones -->
+              </colgroup>
               <thead class="bg-gray-50">
                 <tr>
-                  <th class="px-16 py-12 text-heading fw-semibold border-0">Producto</th>
-                  <th class="px-16 py-12 text-heading fw-semibold border-0">Precio</th>
-                  <th class="px-16 py-12 text-heading fw-semibold border-0">Cantidad</th>
-                  <th class="px-16 py-12 text-heading fw-semibold border-0">Subtotal</th>
-                  <th class="px-16 py-12 text-heading fw-semibold border-0 text-center">Acciones</th>
+                  <th class="px-12 py-8 fw-semibold border-0" style="font-size: 0.85rem; text-transform: uppercase; color: #666;">Producto</th>
+                  <th class="px-12 py-8 fw-semibold border-0" style="font-size: 0.85rem; text-transform: uppercase; color: #666;">Precio</th>
+                  <th class="px-12 py-8 fw-semibold border-0" style="font-size: 0.85rem; text-transform: uppercase; color: #666;">Cantidad</th>
+                  <th class="px-12 py-8 fw-semibold border-0" style="font-size: 0.85rem; text-transform: uppercase; color: #666;">Subtotal</th>
+                  <th class="px-12 py-8 fw-semibold border-0 text-center" style="font-size: 0.85rem; text-transform: uppercase; color: #666;"></th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let item of cartItems" class="border-bottom border-gray-100">
                   <!-- Producto -->
-                  <td class="px-16 py-16">
-                    <div class="d-flex align-items-center gap-16">
-                      <div class="cart-product-thumb border border-gray-100 rounded-8 overflow-hidden flex-shrink-0">
-                        <img 
-                          [src]="item.imagen_url" 
+                  <td class="px-12 py-12">
+                    <div class="d-flex align-items-center gap-12">
+                      <div class="cart-product-thumb border border-gray-100 rounded-6 overflow-hidden flex-shrink-0">
+                        <img
+                          [src]="item.imagen_url"
                           [alt]="item.nombre"
                           (error)="onImageError($event)"
-                          class="w-80 h-80 object-fit-cover">
+                          class="object-fit-cover"
+                          style="width: 60px; height: 60px;">
                       </div>
-                      <div class="cart-product-content">
-                        <h6 class="text-heading fw-semibold mb-8">
-                          <a [routerLink]="['/product-details', item.producto_id]" class="text-decoration-none">
+                      <div class="cart-product-content" style="max-width: 350px;">
+                        <h6 class="mb-4" style="
+                          display: -webkit-box;
+                          -webkit-line-clamp: 2;
+                          -webkit-box-orient: vertical;
+                          overflow: hidden;
+                          text-overflow: ellipsis;
+                          line-height: 1.3;
+                          max-height: 2.6em;
+                          font-size: 0.9rem;
+                          font-weight: 600;
+                        ">
+                          <a [routerLink]="['/product-details', item.producto_id]"
+                             class="text-decoration-none text-dark"
+                             [title]="item.nombre">
                             {{ item.nombre }}
                           </a>
                         </h6>
-                        <p class="text-gray-500 text-sm mb-4">
+                        <p class="text-gray-500 mb-2" style="font-size: 0.75rem;">
                           Código: {{ item.codigo_producto }}
                         </p>
-                        <div class="d-flex align-items-center gap-8 text-sm">
-                          <span *ngIf="item.categoria" class="badge bg-main-50 text-main-600 px-8 py-4">
-                            {{ item.categoria }}
-                          </span>
-                          <span *ngIf="item.marca" class="badge bg-secondary-50 text-secondary-600 px-8 py-4">
-                            {{ item.marca }}
-                          </span>
-                        </div>
-                        <p class="text-success-600 text-sm mt-8 mb-0">
-                          <i class="ph ph-check-circle me-4"></i>
+                        <p class="text-success-600 mb-0" style="font-size: 0.75rem;">
+                          <i class="ph ph-check-circle me-1"></i>
                           {{ item.stock_disponible }} disponibles
                         </p>
-                        <!-- Botón temporal para debug -->
-                        <button 
-                          type="button" 
-                          class="btn btn-sm btn-outline-info mt-4"
-                          (click)="debugImageUrl(item)"
-                          title="Debug imagen">
-                          Debug Imagen
-                        </button>
                       </div>
                     </div>
                   </td>
 
                   <!-- Precio -->
-                  <td class="px-16 py-16">
-                    <span class="text-heading fw-semibold">S/ {{ formatPrice(item.precio) }}</span>
+                  <td class="px-12 py-12" style="vertical-align: middle;">
+                    <span class="fw-semibold" style="font-size: 0.9rem;">S/ {{ formatPrice(item.precio) }}</span>
                   </td>
 
                   <!-- Cantidad -->
-                  <td class="px-16 py-16">
-                    <div class="quantity-controls d-flex align-items-center border border-gray-200 rounded-8 overflow-hidden">
-                      <button 
+                  <td class="px-12 py-12" style="vertical-align: middle;">
+                    <div class="quantity-controls d-flex align-items-center border border-gray-200 rounded-6 overflow-hidden" style="width: fit-content;">
+                      <button
                         type="button"
-                        class="quantity-btn border-0 bg-gray-50 hover-bg-main-600 hover-text-white w-40 h-40 d-flex align-items-center justify-content-center transition-2"
+                        class="quantity-btn border-0 bg-gray-50 hover-bg-main-600 hover-text-white d-flex align-items-center justify-content-center transition-2"
+                        style="width: 32px; height: 32px; font-size: 0.85rem;"
                         (click)="decrementQuantity(item)"
                         [disabled]="isUpdating">
                         <i class="ph ph-minus"></i>
                       </button>
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         [ngModel]="item.cantidad || 1"
                         (ngModelChange)="updateQuantity(item, $event)"
-                        class="quantity-input border-0 text-center w-60 h-40 bg-white"
+                        class="quantity-input border-0 text-center bg-white"
+                        style="width: 50px; height: 32px; font-size: 0.9rem;"
                         min="1"
                         [max]="item.stock_disponible || 1">
-                      <button 
+                      <button
                         type="button"
-                        class="quantity-btn border-0 bg-gray-50 hover-bg-main-600 hover-text-white w-40 h-40 d-flex align-items-center justify-content-center transition-2"
+                        class="quantity-btn border-0 bg-gray-50 hover-bg-main-600 hover-text-white d-flex align-items-center justify-content-center transition-2"
+                        style="width: 32px; height: 32px; font-size: 0.85rem;"
                         (click)="incrementQuantity(item)"
                         [disabled]="isUpdating || (item.cantidad || 0) >= (item.stock_disponible || 0)">
                         <i class="ph ph-plus"></i>
@@ -129,17 +136,18 @@
                   </td>
 
                   <!-- Subtotal -->
-                  <td class="px-16 py-16">
-                    <span class="text-heading fw-bold">S/ {{ formatPrice(getItemSubtotal(item)) }}</span>
+                  <td class="px-12 py-12" style="vertical-align: middle;">
+                    <span class="fw-bold" style="font-size: 0.95rem;">S/ {{ formatPrice(getItemSubtotal(item)) }}</span>
                   </td>
 
                   <!-- Acciones -->
-                  <td class="px-16 py-16 text-center">
-                    <button 
-                      class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-40 h-40 rounded-8 d-flex align-items-center justify-content-center transition-2"
+                  <td class="px-12 py-12 text-center" style="vertical-align: middle;">
+                    <button
+                      class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 rounded-6 d-flex align-items-center justify-content-center transition-2 mx-auto"
+                      style="width: 32px; height: 32px;"
                       (click)="removeProduct(item.id)"
                       title="Eliminar producto">
-                      <i class="ph ph-trash"></i>
+                      <i class="ph ph-trash" style="font-size: 0.9rem;"></i>
                     </button>
                   </td>
                 </tr>

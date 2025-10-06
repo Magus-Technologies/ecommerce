@@ -642,11 +642,11 @@
                     </span>
                   </div>
 
-                  <div class="product-card__price my-20">
+                  <div class="product-card__price my-20 d-flex flex-column gap-2">
                     <span class="text-gray-400 text-md fw-semibold text-decoration-line-through">
                       S/ {{ producto.precio | number:'1.2-2' }}
                     </span>
-                    <span class="text-heading text-md fw-semibold">
+                    <span class="text-md fw-semibold" style="color: #28a745;">
                       S/ {{ producto.precio_con_descuento | number:'1.2-2' }}
                       <span class="text-gray-500 fw-normal">/Qty</span>
                     </span>
