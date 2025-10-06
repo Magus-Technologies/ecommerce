@@ -107,10 +107,16 @@
                     <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
                         <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">Filtrar por marca</h6>
                         <ul class="max-h-540 overflow-y-auto scroll-sm">
-                            <li *ngFor="let brand of brands" class="mb-24">
+                            <li *ngFor="let marca of marcas" class="mb-24">
                                 <div class="form-check common-check common-radio">
-                                    <input class="form-check-input" type="radio" name="color" [id]="brand.id">
-                                    <label class="form-check-label" [for]="brand.id">{{ brand.name }}</label>
+                                    <input
+                                        class="form-check-input"
+                                        type="radio"
+                                        name="marca"
+                                        [id]="'marca-' + marca.id"
+                                        [checked]="marcaSeleccionada === marca.id"
+                                        (change)="seleccionarMarca(marca.id)">
+                                    <label class="form-check-label" [for]="'marca-' + marca.id">{{ marca.nombre }}</label>
                                 </div>
                             </li>
                         </ul>

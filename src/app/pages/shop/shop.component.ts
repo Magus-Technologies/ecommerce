@@ -215,6 +215,14 @@ export class ShopComponent implements OnInit {
     }
   }
 
+  // ✅ NUEVO: Método para seleccionar marca
+  seleccionarMarca(marcaId: number): void {
+    this.router.navigate(['/shop'], {
+      queryParams: { marca: marcaId },
+      queryParamsHandling: "merge",
+    });
+  }
+
   limpiarFiltros(): void {
     // ✅ MEJORADO: Navegar a shop sin parámetros ni slugs
     this.router.navigate(['/shop']);
