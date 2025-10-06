@@ -308,49 +308,56 @@
         [attr.data-aos]="'fade-up'"
         [attr.data-aos-duration]="banner.animacion_delay"
       >
-        <!-- Reemplázala con: -->
         <div
-          class="promotional-banner-item position-relative rounded-24 overflow-hidden z-1 py-52 ps-40 pe-24 h-100"
-          [style.background-color]="banner.color_fondo || '#ffffff'"
-        >
+            class="promotional-banner-item position-relative rounded-24 overflow-hidden z-1 ps-32 pe-20 h-100 d-flex align-items-end"
+            style="min-height: 220px; padding-bottom: 16px;"
+          >
           <img
-            [src]="
-              banner.imagen_url ||
-              'assets/images/thumbs/promotional-banner-default.png'
-            "
+            [src]="banner.imagen_url || 'assets/images/thumbs/promotional-banner-default.png'"
             [alt]="banner.titulo"
             class="position-absolute inset-block-start-0 inset-inline-start-0 w-100 h-100 object-fit-cover z-n1"
             (error)="onImageError($event)"
           />
-          <div class="promotional-banner-item__content">
-            <h6
-              class="promotional-banner-item__title text-2xl max-w-184"
-              [style.color]="banner.color_texto || '#212529'"
-            >
-              {{ banner.titulo }}
-            </h6>
+          <div class="promotional-banner-item__content w-100">
+            <div>
+              <!-- Badges horizontales ARRIBA -->
+              <div class="d-flex align-items-center gap-6 flex-wrap mb-8">
+                <span 
+                  class="badge rounded-pill px-10 py-5 fw-medium"
+                  style="font-size: 0.75rem;"
+                  [style.background-color]="banner.color_badge_nombre || '#0d6efd'"
+                  [style.color]="'#ffffff'"
+                >
+                  {{ banner.titulo }}
+                </span>
 
-            <div *ngIf="banner.precio" class="d-flex align-items-end gap-8">
-              <span
-                class="fst-italic text-sm fw-bold text-white"
-                style="text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7)"
-                >Desde</span
-              >
-              <h6 class="text-danger-600 mb-0 text-xl">{{ banner.precio }}</h6>
+                <span 
+                  *ngIf="banner.precio"
+                  class="badge rounded-pill px-10 py-5 fw-bold"
+                  style="font-size: 0.75rem;"
+                  [style.background-color]="banner.color_badge_precio || '#28a745'"
+                  [style.color]="'#ffffff'"
+                >
+                  {{ banner.precio }}
+                </span>
+              </div>
+
+              <!-- Botón principal ABAJO con tamaño más reducido y CENTRADO -->
+              <div class="d-flex justify-content-center w-100">
+                <a [href]="getSafeUrl(banner.enlace_url)"
+                  class="d-inline-flex align-items-center rounded-pill gap-4 px-10 py-5 text-decoration-none fw-medium"
+                  style="font-size: 0.8rem;"
+                  [style.background-color]="banner.color_boton || '#0d6efd'"
+                  [style.color]="'#ffffff'"
+                  [style.border]="'1px solid ' + (banner.color_boton || '#0d6efd')"
+                >
+                  {{ banner.texto_boton || "Compra ahora" }}
+                  <span class="icon d-flex" style="font-size: 1rem;">
+                    <i class="ph ph-arrow-right"></i>
+                  </span>
+                </a>
+              </div>
             </div>
-
-            <a
-              [href]="getSafeUrl(banner.enlace_url)"
-              class="d-inline-flex align-items-center rounded-pill gap-8 mt-24 px-16 py-8 text-decoration-none"
-              [style.background-color]="banner.color_boton || '#0d6efd'"
-              [style.color]="'#ffffff'"
-              [style.border]="'1px solid ' + (banner.color_boton || '#0d6efd')"
-            >
-              {{ banner.texto_boton || "Compra ahora" }}
-              <span class="icon text-xl d-flex">
-                <i class="ph ph-arrow-right"></i>
-              </span>
-            </a>
           </div>
         </div>
       </div>
