@@ -1,0 +1,13 @@
+<div class="popup-cliente">
+  <div class="popup-card">
+    <button class="close" *ngIf="popup.mostrar_cerrar" (click)="onClose()">×</button>
+    <img *ngIf="imagenUrl()" [src]="imagenUrl()" alt="popup" />
+    <h3>{{ popup.titulo }}</h3>
+    <p *ngIf="popup.descripcion">{{ popup.descripcion }}</p>
+    <a class="action" [href]="popup.url_destino || ('/recompensas/' + popup.recompensa_id)" (click)="onView()">
+      {{ popup.texto_boton || 'Ver promoción' }}
+    </a>
+  </div>
+</div>
+
+

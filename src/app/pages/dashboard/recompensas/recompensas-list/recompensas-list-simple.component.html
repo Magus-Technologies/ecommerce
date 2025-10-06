@@ -9,17 +9,6 @@
       <p class="text-muted mb-0">Administra y configura las recompensas para tus clientes</p>
     </div>
     <div class="d-flex gap-2">
-      <!-- Botones de exportación -->
-      <div class="btn-group" role="group">
-        <button class="btn btn-outline-success" (click)="exportarExcel()" title="Exportar a Excel">
-          <i class="fas fa-file-excel me-2"></i>
-          Excel
-        </button>
-        <button class="btn btn-outline-danger" (click)="exportarPDF()" title="Exportar a PDF">
-          <i class="fas fa-file-pdf me-2"></i>
-          PDF
-        </button>
-      </div>
       <!-- Botón crear recompensa -->
       <button class="btn btn-primary" (click)="crearRecompensa()">
         <i class="fas fa-plus me-2"></i>
@@ -135,12 +124,12 @@
   <!-- Tabla de recompensas -->
   <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">
+      <h5 class="mb-0 header-title">
         <i class="fas fa-list me-2"></i>
         Lista de Recompensas
         <span class="badge bg-primary ms-2">{{ totalElements }}</span>
       </h5>
-      <div class="d-flex align-items-center gap-2">
+      <div class="d-flex align-items-center gap-2 header-controls">
         <span class="text-muted small">Mostrar:</span>
         <select class="form-select form-select-sm" style="width: auto;" [(ngModel)]="pageSize" (change)="cargarRecompensas()">
           <option [value]="10">10</option>
@@ -171,7 +160,7 @@
         <table class="table table-hover mb-0" [class.table-sm]="vistaCompacta">
           <thead class="table-light">
             <tr>
-              <th style="width: 60px;">ID</th>
+              <th style="width: 60px;" class="text-center">ID</th>
               <th style="width: 200px;">Nombre</th>
               <th style="width: 100px;">Tipo</th>
               <th style="width: 100px;">Estado</th>
@@ -179,8 +168,8 @@
               <th style="width: 100px;">Fin</th>
               <th style="width: 80px;">Clientes</th>
               <th style="width: 80px;">Productos</th>
-              <th style="width: 100px;">Valor</th>
-              <th style="width: 120px;">Acciones</th>
+              <th style="width: 90px;">Valor</th>
+              <th style="width: 90px;">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -206,11 +195,11 @@
               </td>
             </tr>
             <tr *ngFor="let recompensa of recompensas; trackBy: trackByRecompensaId">
-              <td>
+              <td class="text-center">
                 <span class="fw-medium">#{{ recompensa.id }}</span>
               </td>
-              <td>
-                <div *ngIf="vistaCompacta" class="text-truncate" style="max-width: 180px;" [title]="recompensa.nombre">
+              <td class="name-cell">
+                <div *ngIf="vistaCompacta" class="text-truncate" [title]="recompensa.nombre">
                   <strong class="d-block">{{ recompensa.nombre | slice:0:20 }}{{ recompensa.nombre.length > 20 ? '...' : '' }}</strong>
                   <small class="text-muted">{{ recompensa.descripcion | slice:0:30 }}{{ recompensa.descripcion.length > 30 ? '...' : '' }}</small>
                 </div>
@@ -249,30 +238,25 @@
               <td>
                 <span class="fw-medium text-success">{{ formatearMoneda(calcularValorEstimado(recompensa)) }}</span>
               </td>
-              <td>
-                <div class="d-flex gap-1 justify-content-center">
-                  <button class="btn btn-sm btn-primary" (click)="verDetalle(recompensa)" title="Ver detalle">
-                    <i class="fas fa-eye"></i>
+              <td class="acciones-cell text-center">
+                <div class="dropdown acciones-dropdown">
+                  <button class="btn btn-sm acciones-trigger" type="button"
+                          (click)="toggleAccionesMenu(recompensa.id, $event)" [attr.aria-expanded]="openMenuId === recompensa.id">
+                    <i class="fas fa-ellipsis-h" title="Acciones"></i>
                   </button>
-                  <button class="btn btn-sm btn-secondary" (click)="editarRecompensa(recompensa)" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button 
-                    class="btn btn-sm" 
-                    [ngClass]="getEstadoReal(recompensa) === 'activa' ? 'btn-warning' : 'btn-success'"
-                    (click)="cambiarEstadoRecompensa(recompensa)"
-                    [title]="getEstadoReal(recompensa) === 'activa' ? 'Pausar' : 'Activar'"
-                    [disabled]="loading"
-                  >
-                    <i *ngIf="!loading" [class]="getEstadoReal(recompensa) === 'activa' ? 'fas fa-pause' : 'fas fa-play'"></i>
-                    <i *ngIf="loading" class="fas fa-spinner fa-spin"></i>
-                  </button>
-                  <button class="btn btn-sm btn-info" (click)="duplicarRecompensa(recompensa)" title="Duplicar">
-                    <i class="fas fa-copy"></i>
-                  </button>
-                  <button class="btn btn-sm btn-danger" (click)="eliminarRecompensa(recompensa)" title="Eliminar">
-                    <i class="fas fa-trash"></i>
-                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end show" *ngIf="openMenuId === recompensa.id">
+                    <li><button class="dropdown-item" type="button" (click)="verDetalle(recompensa)"><i class="fas fa-eye me-2"></i>Ver detalle</button></li>
+                    <li><button class="dropdown-item" type="button" (click)="editarRecompensa(recompensa)"><i class="fas fa-edit me-2"></i>Editar</button></li>
+                    <li>
+                      <button class="dropdown-item" type="button" (click)="cambiarEstadoRecompensa(recompensa)">
+                        <i class="me-2" [class]="getEstadoReal(recompensa) === 'activa' ? 'fas fa-pause' : 'fas fa-play'"></i>
+                        {{ getEstadoReal(recompensa) === 'activa' ? 'Pausar' : 'Activar' }}
+                      </button>
+                    </li>
+                    <li><button class="dropdown-item" type="button" (click)="duplicarRecompensa(recompensa)"><i class="fas fa-copy me-2"></i>Duplicar</button></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><button class="dropdown-item text-danger" type="button" (click)="eliminarRecompensa(recompensa)"><i class="fas fa-trash me-2"></i>Eliminar</button></li>
+                  </ul>
                 </div>
               </td>
             </tr>

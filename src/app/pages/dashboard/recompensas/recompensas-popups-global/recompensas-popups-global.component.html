@@ -235,6 +235,15 @@
         <div class="card-body">
                   <!-- Título del popup -->
                   <h5 class="card-title mb-3">{{ popup.titulo }}</h5>
+                <!-- Acciones por popup -->
+                <div class="d-flex gap-2 mb-3">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" (click)="editarPopup(popup)">
+                    <i class="fas fa-edit"></i> Editar
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-danger" (click)="eliminarPopup(popup)">
+                    <i class="fas fa-trash"></i> Eliminar
+                  </button>
+                </div>
                   
                   <!-- Imagen del popup -->
                   <div class="popup-image-container mb-3" *ngIf="popup.imagen_popup || popup.imagen_popup_url">

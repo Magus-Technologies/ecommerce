@@ -104,7 +104,10 @@ export class BannersListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isLoading = true;
     this.bannersService.obtenerBanners().subscribe({
       next: (banners) => {
-        this.banners = banners.sort((a, b) => a.orden - b.orden);
+        // Filtrar solo banners principales (excluir horizontales)
+        this.banners = banners
+          .filter(b => !b.tipo_banner || b.tipo_banner === 'principal')
+          .sort((a, b) => a.orden - b.orden);
         this.isLoading = false;
       },
       error: (error) => {

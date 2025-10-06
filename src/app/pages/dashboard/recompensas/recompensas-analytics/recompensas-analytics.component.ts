@@ -98,27 +98,12 @@ export class RecompensasAnalyticsComponent implements OnInit, OnDestroy {
   private loadAnalytics(): void {
     this.loading = true;
     
-    // Usar el servicio de recompensas para obtener analytics
-    this.recompensasService.obtenerDashboardAnalytics()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: any) => {
-          if (response.success) {
-            this.analytics = response.data || this.getEmptyAnalytics();
-          } else {
-            this.analytics = this.getEmptyAnalytics();
-          }
-          this.loading = false;
-          this.updateCharts();
-        },
-        error: (error: any) => {
-          console.error('Error al cargar analytics:', error);
-          this.showError('Error al cargar los datos de analytics');
-          this.analytics = this.getEmptyAnalytics();
-          this.loading = false;
-          this.updateCharts();
-        }
-      });
+    // Para esta vista, cargaremos datos falsos (mock) para visualización
+    setTimeout(() => {
+      this.analytics = this.getFakeAnalytics();
+      this.loading = false;
+      this.updateCharts();
+    }, 250);
   }
 
   private initializeCharts(): void {
@@ -430,6 +415,181 @@ export class RecompensasAnalyticsComponent implements OnInit, OnDestroy {
   private showSuccess(message: string): void {
     console.log(message);
     // Implementar sistema de notificaciones
+  }
+
+  // ====== MOCK DATA PARA DEMO ======
+  private getFakeAnalytics(): RecompensaAnalytics {
+    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const evol = meses.slice(0, 8).map((m, i) => ({ x: m, y: Math.round(150 + Math.sin(i/2)*40 + i*10), label: m }));
+    const conv = ['Nuevos','Regulares','VIP','Premium'].map((s, i) => ({ x: s, y: [8.5, 12.3, 18.9, 15.1][i], label: s }));
+    const dist = [
+      { tipo: 'puntos', tipo_nombre: 'Puntos', cantidad: 350, porcentaje: 35, valor_total: 24000, conversion_rate: 10.2 },
+      { tipo: 'descuento', tipo_nombre: 'Descuentos', cantidad: 420, porcentaje: 42, valor_total: 43000, conversion_rate: 14.1 },
+      { tipo: 'envio_gratis', tipo_nombre: 'Envío Gratis', cantidad: 120, porcentaje: 12, valor_total: 9000, conversion_rate: 8.3 },
+      { tipo: 'regalo', tipo_nombre: 'Regalos', cantidad: 110, porcentaje: 11, valor_total: 9600, conversion_rate: 9.5 }
+    ];
+    const distGraph = [
+      { x: 'Puntos', y: 35 },
+      { x: 'Descuentos', y: 42 },
+      { x: 'Envío Gratis', y: 12 },
+      { x: 'Regalos', y: 11 }
+    ];
+    const trend = meses.slice(0, 8).map((m, i) => ({ x: m, y: Math.round(20000 + i*3500 + (i%3)*1200), label: m }));
+
+    const base = this.getEmptyAnalytics();
+    const fake: RecompensaAnalytics = {
+      dashboard: {
+        resumen_general: {
+          total_recompensas_activas: 12,
+          total_recompensas_este_mes: 5,
+          total_clientes_beneficiados: 1348,
+          valor_total_beneficios: 85640,
+          conversion_rate_promedio: 12.7,
+          crecimiento_mensual: 7.4
+        },
+        metricas_principales: {
+          recompensas_por_tipo: dist,
+          top_recompensas: [
+            { id: 1, nombre: 'Bienvenida 10%', tipo: 'descuento', aplicaciones: 420, clientes_beneficiados: 330, valor_beneficios: 18560, conversion_rate: 18.4, efectividad: 92 },
+            { id: 2, nombre: 'Puntos Doble', tipo: 'puntos', aplicaciones: 360, clientes_beneficiados: 290, valor_beneficios: 15340, conversion_rate: 14.2, efectividad: 86 },
+            { id: 3, nombre: 'Envío Gratis Finde', tipo: 'envio_gratis', aplicaciones: 210, clientes_beneficiados: 180, valor_beneficios: 9600, conversion_rate: 9.8, efectividad: 74 }
+          ],
+          clientes_mas_activos: [
+            { id: 101, nombre: 'Juan Pérez', email: 'juan@example.com', total_recompensas: 18, valor_beneficios: 540, ultima_actividad: '2025-09-28', segmento: 'VIP' },
+            { id: 102, nombre: 'María García', email: 'maria@example.com', total_recompensas: 15, valor_beneficios: 420, ultima_actividad: '2025-09-26', segmento: 'Recurrentes' },
+            { id: 103, nombre: 'Carlos Díaz', email: 'carlos@example.com', total_recompensas: 12, valor_beneficios: 380, ultima_actividad: '2025-09-25', segmento: 'Recurrentes' }
+          ],
+          productos_mas_recompensados: [
+            { id: 501, nombre: 'Mouse Inalámbrico', codigo: 'MS-100', veces_recompensado: 140, valor_total_recompensado: 3500, categoria: 'Accesorios' },
+            { id: 502, nombre: 'Teclado Mecánico', codigo: 'KB-200', veces_recompensado: 120, valor_total_recompensado: 4800, categoria: 'Accesorios' }
+          ],
+          zonas_mas_activas: [
+            { codigo: 'LIM', nombre: 'Lima', total_aplicaciones: 2200, valor_beneficios: 42000, porcentaje_participacion: 46 },
+            { codigo: 'ARE', nombre: 'Arequipa', total_aplicaciones: 680, valor_beneficios: 12800, porcentaje_participacion: 14 }
+          ]
+        },
+        graficos_principales: {
+          evolucion_temporal: evol,
+          distribucion_por_tipo: distGraph,
+          conversion_por_segmento: conv,
+          tendencia_valores: trend
+        },
+        alertas: [
+          { id: 'a1', tipo: 'info', titulo: 'Tendencia positiva', mensaje: 'La conversión subió 2.1% vs mes anterior', fecha: new Date().toISOString(), accion_requerida: false },
+          { id: 'a2', tipo: 'warning', titulo: 'Segmento Premium bajo', mensaje: 'Baja participación en segmento Premium', fecha: new Date().toISOString(), accion_requerida: false }
+        ],
+        recomendaciones: [
+          { id: 'r1', categoria: 'optimizacion', titulo: 'Probar A/B en CTA', descripcion: 'Testear variantes del texto del botón del descuento', impacto_estimado: 'medio', facilidad_implementacion: 'alta', accion_sugerida: 'Crear experimento A/B' },
+          { id: 'r2', categoria: 'nuevas_campanas', titulo: 'Visibilidad Envío Gratis', descripcion: 'Resaltar campaña de envío gratis en home', impacto_estimado: 'alto', facilidad_implementacion: 'media', accion_sugerida: 'Añadir banner promocional' }
+        ]
+      },
+      rendimiento: {
+        metricas_rendimiento: {
+          conversion_rate: 13.8,
+          valor_promedio_beneficio: 42.5,
+          tiempo_promedio_aplicacion: 2.4,
+          tasa_abandono: 5.2,
+          retorno_inversion: 165,
+          costo_por_adquisicion: 7.8
+        },
+        analisis_efectividad: {
+          recompensas_mas_efectivas: [
+            { id: 1, nombre: 'Bienvenida 10%', tipo: 'descuento', efectividad: 92, conversion_rate: 18.4, valor_beneficios: 18560, razones_exito: ['Fácil de entender','Alta visibilidad'] },
+            { id: 2, nombre: 'Puntos Doble', tipo: 'puntos', efectividad: 86, conversion_rate: 14.2, valor_beneficios: 15340, razones_exito: ['Recompensa acumulativa','Clientes fieles'] }
+          ],
+          recompensas_menos_efectivas: [
+            { id: 3, nombre: 'Regalo Misterioso', tipo: 'regalo', efectividad: 61, conversion_rate: 8.1, valor_beneficios: 6240, razones_exito: ['Segmentación amplia'] }
+          ],
+          factores_exito: [
+            { factor: 'Mensaje claro', impacto: 0.8, descripcion: 'CTA directo incrementa la conversión', recomendaciones: ['Usar verbos de acción','Mantener corto el texto'] },
+            { factor: 'Segmentación', impacto: 0.7, descripcion: 'Segmentos VIP responden mejor a puntos', recomendaciones: ['Ofrecer multiplicadores a VIP'] }
+          ],
+          areas_mejora: [
+            { area: 'Timing de envío', problema: 'Baja apertura en mañanas', impacto: 0.6, solucion_sugerida: 'Enviar 6-9pm', prioridad: 'media' }
+          ]
+        },
+        comparacion_periodos: {
+          periodo_actual: {
+            fecha_inicio: '2025-09-01',
+            fecha_fin: '2025-09-30',
+            total_recompensas: 12,
+            total_aplicaciones: 4210,
+            conversion_rate: 12.7,
+            valor_beneficios: 85640
+          },
+          periodo_anterior: {
+            fecha_inicio: '2025-08-01',
+            fecha_fin: '2025-08-31',
+            total_recompensas: 11,
+            total_aplicaciones: 3920,
+            conversion_rate: 11.5,
+            valor_beneficios: 80210
+          },
+          cambios: [
+            { metrica: 'aplicaciones', valor_actual: 4210, valor_anterior: 3920, cambio_absoluto: 290, cambio_porcentual: 7.4, tendencia: 'creciente' },
+            { metrica: 'conversion_rate', valor_actual: 12.7, valor_anterior: 11.5, cambio_absoluto: 1.2, cambio_porcentual: 10.4, tendencia: 'creciente' }
+          ]
+        },
+        insights: [
+          { id: 'i1', tipo: 'oportunidad', titulo: 'Alta respuesta a descuentos', descripcion: 'Los descuentos superan al resto en 7 pts.', datos_soporte: {}, accion_recomendada: 'Incrementar presupuesto en descuentos', urgencia: 'media' }
+        ]
+      },
+      tendencias: {
+        tendencias_temporales: [
+          { metrica: 'aplicaciones', periodo: 'mensual', datos: evol, tendencia: 'creciente', fuerza_tendencia: 0.78, significancia: 0.9 }
+        ],
+        patrones_estacionales: [
+          { patron: 'fin_de_semana', descripcion: 'Mayor uso sábados', frecuencia: 'semanal', impacto: 0.6, recomendaciones: ['Focalizar campañas viernes-sábado'] }
+        ],
+        proyecciones: {
+          proyeccion_conversion: { metrica: 'conversion', valores_historicos: evol, valores_proyectados: evol.map(p=>({ ...p, y: Math.round((p.y as number)*1.05) })), confianza: 0.82, intervalo_confianza: { inferior: evol.map(p=>({ ...p, y: (p.y as number)*0.98 })), superior: evol.map(p=>({ ...p, y: (p.y as number)*1.12 })) } },
+          proyeccion_valores: { metrica: 'valor', valores_historicos: trend, valores_proyectados: trend.map(p=>({ ...p, y: Math.round((p.y as number)*1.08) })), confianza: 0.79, intervalo_confianza: { inferior: trend.map(p=>({ ...p, y: (p.y as number)*0.95 })), superior: trend.map(p=>({ ...p, y: (p.y as number)*1.15 })) } },
+          proyeccion_clientes: { metrica: 'clientes', valores_historicos: evol, valores_proyectados: evol.map(p=>({ ...p, y: (p.y as number)*1.03 })), confianza: 0.77, intervalo_confianza: { inferior: evol.map(p=>({ ...p, y: (p.y as number)*0.96 })), superior: evol.map(p=>({ ...p, y: (p.y as number)*1.1 })) } },
+          escenarios: [
+            { nombre: 'conservador', descripcion: 'Crecimiento leve', probabilidad: 0.4, valores_proyectados: trend.map(p=>({ ...p, y: (p.y as number)*1.03 })), factores_clave: ['estacionalidad'] },
+            { nombre: 'optimista', descripcion: 'Campañas exitosas', probabilidad: 0.35, valores_proyectados: trend.map(p=>({ ...p, y: (p.y as number)*1.15 })), factores_clave: ['segmentación','promos'] }
+          ]
+        },
+        ciclos_vida: [
+          { fase: 'lanzamiento', duracion_promedio: 15, caracteristicas: ['alto interés inicial'], metricas_tipicas: {}, recomendaciones: ['reforzar awareness'] },
+          { fase: 'madurez', duracion_promedio: 45, caracteristicas: ['rendimiento estable'], metricas_tipicas: {}, recomendaciones: ['optimizaciones menores'] }
+        ]
+      },
+      comparativa: {
+        comparacion_tipos: [
+          { tipo: 'descuento', tipo_nombre: 'Descuentos', metricas: { aplicaciones: 2100, conversion_rate: 15.2, valor_beneficios: 43000, costo_implementacion: 9000, roi: 378 }, ranking: 1, fortalezas: ['rápida adopción'], debilidades: ['sensibilidad a margen'] },
+          { tipo: 'puntos', tipo_nombre: 'Puntos', metricas: { aplicaciones: 1600, conversion_rate: 12.1, valor_beneficios: 24000, costo_implementacion: 6000, roi: 300 }, ranking: 2, fortalezas: ['fidelización'], debilidades: ['resultado más lento'] }
+        ],
+        comparacion_segmentos: [
+          { segmento: 'Nuevos', metricas: { clientes: 520, aplicaciones: 980, conversion_rate: 9.2, valor_promedio_beneficio: 25, frecuencia_uso: 1.3 }, ranking: 3, caracteristicas: ['sensible a descuentos'] },
+          { segmento: 'VIP', metricas: { clientes: 120, aplicaciones: 480, conversion_rate: 19.1, valor_promedio_beneficio: 68, frecuencia_uso: 2.1 }, ranking: 1, caracteristicas: ['alto ticket'] }
+        ],
+        comparacion_productos: [
+          { producto: 'Laptop A', categoria: 'Electrónica', metricas: { veces_recompensado: 120, valor_total_recompensado: 22000, conversion_rate: 13.4, popularidad: 78 }, ranking: 1, tendencia: 'creciente' },
+          { producto: 'Silla Gamer', categoria: 'Hogar', metricas: { veces_recompensado: 80, valor_total_recompensado: 9600, conversion_rate: 10.2, popularidad: 66 }, ranking: 2, tendencia: 'estable' }
+        ],
+        benchmarking: {
+          metricas_industria: { conversion_rate_promedio: 11.2, valor_beneficio_promedio: 38, frecuencia_uso_promedio: 1.6 },
+          posicion_actual: { conversion_rate: 12.7, valor_beneficio: 42.5, frecuencia_uso: 1.8 },
+          gaps: [ { metrica: 'conversion_rate', gap_actual: 1.5, gap_objetivo: 2.3, accion_requerida: 'Optimizar mensajes' } ]
+        }
+      },
+      segmentos: {
+        analisis_segmentos: [
+          { segmento: 'Nuevos', caracteristicas: ['precio'], metricas: { total_clientes: 800, clientes_activos: 520, aplicaciones: 980, conversion_rate: 9.2, valor_beneficios: 20000, frecuencia_uso: 1.3 }, comportamiento: { patrones_compra: ['fin de semana'], preferencias_recompensas: ['descuento'], horarios_actividad: ['19-22h'], canales_preferidos: ['web'] }, potencial: { crecimiento_estimado: 0.12, oportunidades_expansion: ['email onboarding'], riesgos: ['deserción'] } },
+          { segmento: 'VIP', caracteristicas: ['alta lealtad'], metricas: { total_clientes: 150, clientes_activos: 120, aplicaciones: 480, conversion_rate: 19.1, valor_beneficios: 32000, frecuencia_uso: 2.1 }, comportamiento: { patrones_compra: ['tickets altos'], preferencias_recompensas: ['puntos','regalos'], horarios_actividad: ['18-21h'], canales_preferidos: ['app'] }, potencial: { crecimiento_estimado: 0.08, oportunidades_expansion: ['club VIP'], riesgos: ['canibalización de margen'] } }
+        ],
+        segmentacion_efectiva: { segmentos_mas_efectivos: ['VIP','Recurrentes'], segmentos_menos_efectivos: ['Nuevos'], factores_diferenciacion: ['ticket','frecuencia'], recomendaciones_optimizacion: ['incentivos escalonados'] },
+        oportunidades_segmentacion: [ { oportunidad: 'Bundle gaming', descripcion: 'Armar combos con envío gratis', segmento_objetivo: 'Recurrentes', potencial_impacto: 0.6, facilidad_implementacion: 'media', accion_sugerida: 'Crear campaña bundle' } ]
+      },
+      productos: {
+        analisis_productos: [ { producto: 'Laptop A', categoria: 'Electrónica', metricas: { veces_recompensado: 120, valor_total_recompensado: 22000, conversion_rate: 13.4, popularidad: 78, rentabilidad: 0.22 }, comportamiento: { estacionalidad: ['back to school'], tendencias: ['alto interés'], correlaciones: ['accesorios'] }, potencial: { crecimiento_estimado: 0.15, oportunidades_expansion: ['packs'], limitaciones: ['stock'] } } ],
+        categorias_mas_efectivas: [ { categoria: 'Electrónica', efectividad: 81, metricas: { productos_incluidos: 35, aplicaciones: 1600, conversion_rate: 13.2, valor_beneficios: 42000 }, fortalezas: ['ticket'], areas_mejora: ['logística'] } ],
+        oportunidades_productos: [ { oportunidad: 'Accesorios 2x1', descripcion: 'Impulsar ventas cruzadas', productos_afectados: ['Mouse','Teclados'], potencial_impacto: 0.5, facilidad_implementacion: 'alta', accion_sugerida: 'Crear cupones 2x1' } ]
+      }
+    };
+
+    return fake;
   }
 
   private getEmptyAnalytics(): RecompensaAnalytics {

@@ -1,0 +1,69 @@
+.popup-cliente {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+}
+
+.popup-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.15);
+  padding: 20px;
+  width: min(90vw, 520px);
+  max-height: 90vh;
+  overflow: auto;
+  margin: 20px;
+  position: relative;
+}
+
+.popup-card img {
+  width: 100%;
+  height: auto;
+  max-height: 55vh;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.popup-card .close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  color: #666;
+}
+
+.popup-card .action {
+  display: inline-block;
+  margin-top: 16px;
+  background: #2e7d32;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.popup-card .action:hover {
+  background: #1b5e20;
+}
+
+

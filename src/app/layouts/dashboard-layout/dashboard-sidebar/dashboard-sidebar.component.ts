@@ -15,6 +15,7 @@ import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { PermissionsService } from '../../../services/permissions.service';
 import { Subscription } from 'rxjs';
+import { NavigationEnd } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard-sidebar',
@@ -45,6 +46,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   isConfiguracionOpen = false; // ✅ NUEVO
   isRecompensasOpen = false; // ✅ NUEVO
   esSuperadmin = false;
+  showRecompensasDropdown = true;
 
   // Permisos
   puedeVerUsuarios = false;
@@ -88,6 +90,16 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
     this.permisosSub = this.permissionsService.permissions$.subscribe(() => {
       this.checkPermissions();
     });
+
+    // Mantener abierto el dropdown de Recompensas según la ruta activa
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) {
+        this.syncRecompensasDropdownWithRoute(event.urlAfterRedirects);
+      }
+    });
+
+    // Estado inicial basado en la URL actual
+    this.syncRecompensasDropdownWithRoute(this.router.url);
   }
 
   ngOnDestroy(): void {
@@ -172,4 +184,40 @@ toggleConfiguracion(): void {
 toggleRecompensas(): void {
   this.isRecompensasOpen = !this.isRecompensasOpen;
 }
+  toggleRecompensasDropdown(): void {
+    this.showRecompensasDropdown = !this.showRecompensasDropdown;
+  }
+
+  private syncRecompensasDropdownWithRoute(url: string): void {
+    const isRecompensas = url.startsWith('/dashboard/recompensas');
+    this.showRecompensasDropdown = isRecompensas;
+  }
+
+  navegarARecompensasSubmodulo(submodulo: string, event: Event): void {
+    // Prevenir el comportamiento por defecto del enlace
+    event.preventDefault();
+    
+    // Cerrar el dropdown
+    this.showRecompensasDropdown = false;
+    
+    // Navegar según el submódulo
+    if (submodulo === 'crear') {
+      // Navegar al wizard de creación
+      this.router.navigate(['/dashboard/recompensas/crear']);
+    } else if (submodulo === 'lista') {
+      // Navegar a la lista de recompensas
+      this.router.navigate(['/dashboard/recompensas/lista']);
+    } else {
+      // Por defecto, navegar a la lista
+      this.router.navigate(['/dashboard/recompensas']);
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.recompensas-dropdown')) {
+      this.showRecompensasDropdown = false;
+    }
+  }
 }

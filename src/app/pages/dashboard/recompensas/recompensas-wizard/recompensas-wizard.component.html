@@ -85,7 +85,10 @@
             </div>
             <div class="col-md-6">
               <label class="form-label">Fecha de Inicio *</label>
-              <input type="date" class="form-control" formControlName="fecha_inicio">
+              <input type="date" class="form-control" formControlName="fecha_inicio" [attr.min]="hoyStr">
+              <div *ngIf="datosGeneralesForm.get('fecha_inicio')?.invalid && datosGeneralesForm.get('fecha_inicio')?.touched" class="text-danger small">
+                La fecha de inicio no puede ser pasada
+              </div>
             </div>
             <div class="col-md-6">
               <label class="form-label">Fecha de Fin *</label>
