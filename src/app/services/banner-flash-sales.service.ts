@@ -5,8 +5,8 @@ import { environment } from '../../environments/environment';
 
 export interface BannerFlashSale {
   id?: number;
-  titulo: string;
-  subtitulo?: string | null;
+  nombre: string;
+  color_badge?: string | null;
   fecha_inicio: string;
   fecha_fin: string;
   imagen?: string | null;
@@ -77,13 +77,13 @@ export class BannerFlashSalesService {
     const formData = new FormData();
 
     // Campos obligatorios
-    formData.append('titulo', data.titulo);
+    formData.append('nombre', data.nombre);
     formData.append('fecha_inicio', data.fecha_inicio);
     formData.append('fecha_fin', data.fecha_fin);
     formData.append('activo', data.activo ? '1' : '0');
 
     // Campos opcionales
-    if (data.subtitulo) formData.append('subtitulo', data.subtitulo);
+    if (data.color_badge) formData.append('color_badge', data.color_badge);
     if (data.color_boton) formData.append('color_boton', data.color_boton);
     if (data.texto_boton) formData.append('texto_boton', data.texto_boton);
     if (data.enlace_url) formData.append('enlace_url', data.enlace_url);

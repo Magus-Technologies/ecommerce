@@ -747,52 +747,30 @@
         >
           <div
             class="flash-sales-item rounded-16 overflow-hidden z-1 position-relative flex-align flex-0 justify-content-between gap-8 ps-56-px"
-            style="background-color: #f8f9fa"
+            style="background-color: #f8f9fa; min-height: 320px;"
           >
             <img
               [src]="sale.imagen_url || 'assets/images/bg/flash-sale-bg1.png'"
-              [alt]="sale.titulo"
-              class="position-absolute inset-block-start-0 inset-inline-start-0 w-100 h-100 object-fit-cover z-n1 flash-sales-item__bg"
+              [alt]="sale.nombre"
+             class="position-absolute inset-block-start-0 inset-inline-start-0 w-100 h-100 object-fit-cover z-n1 flash-sales-item__bg"
               (error)="onImageError($event)"
             />
 
             <div class="flash-sales-item__content">
-              <h6 class="text-32 mb-8">{{ sale.titulo }}</h6>
-              <p class="text-neutral-500 mb-12">
-                {{
-                  sale.subtitulo ||
-                    "Tiempo restante hasta el final de la oferta."
-                }}
-              </p>
+              <!-- Badge con el nombre del banner (color dinámico) -->
+              <span class="badge text-white px-16 py-8 rounded-pill mb-16 d-inline-block"
+                    [style.background-color]="sale.color_badge || '#DC2626'"
+                    style="font-size: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                <i class="ph ph-lightning me-6"></i>
+                {{ sale.nombre }}
+              </span>
+            </div>
 
-              <div class="countdown mb-16" [id]="'countdown-flash-' + sale.id">
-                <ul class="countdown-list flex-align flex-wrap">
-                  <li
-                    class="countdown-list__item py-8 px-12 text-heading flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-white text-dark"
-                  >
-                    <span class="days">0</span> D
-                  </li>
-                  <li
-                    class="countdown-list__item py-8 px-12 text-heading flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-white text-dark"
-                  >
-                    <span class="hours">0</span> H
-                  </li>
-                  <li
-                    class="countdown-list__item py-8 px-12 text-heading flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-white text-dark"
-                  >
-                    <span class="minutes">0</span> M
-                  </li>
-                  <li
-                    class="countdown-list__item py-8 px-12 text-heading flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-white text-dark"
-                  >
-                    <span class="seconds">0</span> S
-                  </li>
-                </ul>
-              </div>
-
+            <!-- Botón (reposicionado abajo a la izquierda) -->
+            <div class="position-absolute bottom-0 start-0" style="z-index: 10; margin-left: 56px; margin-bottom: 24px;">
               <a
                 [routerLink]="[sale.enlace_url]"
-                class="btn d-inline-flex align-items-center rounded-pill gap-8 mt-24"
+                class="btn d-inline-flex align-items-center rounded-pill gap-8"
                 [style.background-color]="sale.color_boton || '#3B82F6'"
                 style="color: white"
               >
@@ -801,6 +779,54 @@
                   <i class="ph ph-arrow-right"></i>
                 </span>
               </a>
+            </div>
+
+            <!-- Countdown (reposicionado a la esquina inferior derecha) -->
+            <div class="position-absolute bottom-0 end-0 m-3" style="z-index: 10;">
+              <div class="countdown" [id]="'countdown-flash-' + sale.id">
+                <ul class="countdown-list flex-align flex-wrap gap-2">
+                  <li class="countdown-list__item py-10 px-14 text-heading flex-align gap-2 fw-bold rounded-6"
+                      style="background: white;
+                             color: #3B82F6;
+                             min-width: 50px;
+                             font-size: 15px;
+                             justify-content: center;
+                             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                             border: 2px solid #3B82F6;">
+                    <span class="days">0</span>d
+                  </li>
+                  <li class="countdown-list__item py-10 px-14 text-heading flex-align gap-2 fw-bold rounded-6"
+                      style="background: white;
+                             color: #3B82F6;
+                             min-width: 50px;
+                             font-size: 15px;
+                             justify-content: center;
+                             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                             border: 2px solid #3B82F6;">
+                    <span class="hours">0</span>h
+                  </li>
+                  <li class="countdown-list__item py-10 px-14 text-heading flex-align gap-2 fw-bold rounded-6"
+                      style="background: white;
+                             color: #3B82F6;
+                             min-width: 50px;
+                             font-size: 15px;
+                             justify-content: center;
+                             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                             border: 2px solid #3B82F6;">
+                    <span class="minutes">0</span>m
+                  </li>
+                  <li class="countdown-list__item py-10 px-14 text-heading flex-align gap-2 fw-bold rounded-6"
+                      style="background: white;
+                             color: #3B82F6;
+                             min-width: 50px;
+                             font-size: 15px;
+                             justify-content: center;
+                             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                             border: 2px solid #3B82F6;">
+                    <span class="seconds">0</span>s
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
@@ -1658,12 +1684,14 @@
           [attr.data-aos]="slide.dataAos"
           [attr.data-aos-duration]="slide.dataAosDuration"
         >
-          <img
-            [src]="slide.imgSrc"
-            [alt]="slide.imgAlt"
-            (error)="onImageError($event)"
-            class="img-fluid"
-          />
+          <a [routerLink]="['/shop']" [queryParams]="{marca: slide.marcaId}" style="cursor: pointer; display: block;">
+            <img
+              [src]="slide.imgSrc"
+              [alt]="slide.imgAlt"
+              (error)="onImageError($event)"
+              class="img-fluid"
+            />
+          </a>
         </div>
       </ngx-slick-carousel>
 

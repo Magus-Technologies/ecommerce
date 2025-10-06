@@ -29,6 +29,12 @@ export class ProductosListComponent implements OnInit, OnDestroy {
   isLoading = true;
   productoSeleccionado: Producto | null = null;
 
+  // ✅ NUEVAS PROPIEDADES PARA FILTROS
+  categorias: any[] = [];
+  marcas: any[] = [];
+  filtroCategoria: number | null = null;
+  filtroMarca: number | null = null;
+
   // Paginación simple
   pageSize = 10;
   currentPage = 1;
@@ -45,11 +51,67 @@ export class ProductosListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarProductos();
+    this.cargarCategorias(); // ✅ NUEVO
+    this.cargarMarcas(); // ✅ NUEVO
 
     // Suscribirse a cambios de sección
     this.seccionFilterService.seccionSeleccionada$.subscribe((seccionId) => {
       this.cargarProductos();
     });
+  }
+
+  // ✅ NUEVO: Cargar categorías
+  cargarCategorias(): void {
+    this.almacenService.obtenerCategorias().subscribe({
+      next: (categorias) => {
+        this.categorias = categorias;
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías:', error);
+      }
+    });
+  }
+
+  // ✅ NUEVO: Cargar marcas
+  cargarMarcas(): void {
+    this.almacenService.obtenerMarcasPublicas().subscribe({
+      next: (marcas) => {
+        this.marcas = marcas;
+      },
+      error: (error) => {
+        console.error('Error al cargar marcas:', error);
+      }
+    });
+  }
+
+  // ✅ NUEVO: Aplicar filtros
+  aplicarFiltros(): void {
+    this.productosFiltrados = this.productos.filter(producto => {
+      let cumpleCategoria = true;
+      let cumpleMarca = true;
+
+      // Convertir a número para comparar
+      if (this.filtroCategoria !== null && this.filtroCategoria !== undefined) {
+        cumpleCategoria = Number(producto.categoria_id) === Number(this.filtroCategoria);
+      }
+
+      if (this.filtroMarca !== null && this.filtroMarca !== undefined) {
+        cumpleMarca = Number(producto.marca_id) === Number(this.filtroMarca);
+      }
+
+      return cumpleCategoria && cumpleMarca;
+    });
+
+    // Resetear a la primera página
+    this.currentPage = 1;
+  }
+
+  // ✅ NUEVO: Limpiar filtros
+  limpiarFiltros(): void {
+    this.filtroCategoria = null;
+    this.filtroMarca = null;
+    this.productosFiltrados = [...this.productos];
+    this.currentPage = 1;
   }
 
   cargarProductos(): void {

@@ -19,19 +19,68 @@
 
   <!-- Filtros y Estadísticas -->
   <div class="p-24 p-md-32 border-bottom border-gray-100">
+    <!-- ✅ FILA 1: Filtros de Categoría y Marca -->
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-16 mb-20">
+      <div class="d-flex align-items-end gap-12 flex-wrap">
+        <!-- Filtro por Categoría -->
+        <div>
+          <label class="text-sm fw-medium text-neutral-600 mb-8 d-block">
+            <i class="ph ph-squares-four me-4"></i>
+            Categoría
+          </label>
+          <select class="form-select rounded-8 border-neutral-100"
+                  style="min-width: 180px; padding: 10px 16px;"
+                  [(ngModel)]="filtroCategoria"
+                  (change)="aplicarFiltros()">
+            <option [value]="null">Todas </option>
+            <option *ngFor="let categoria of categorias" [value]="categoria.id">
+              {{ categoria.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Filtro por Marca -->
+        <div>
+          <label class="text-sm fw-medium text-neutral-600 mb-8 d-block">
+            <i class="ph ph-tag me-4"></i>
+            Marca
+          </label>
+          <select class="form-select rounded-8 border-neutral-100"
+                  style="min-width: 180px; padding: 10px 16px;"
+                  [(ngModel)]="filtroMarca"
+                  (change)="aplicarFiltros()">
+            <option [value]="null">Todas las marcas</option>
+            <option *ngFor="let marca of marcas" [value]="marca.id">
+              {{ marca.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Botón para limpiar filtros -->
+        <button *ngIf="filtroCategoria !== null || filtroMarca !== null"
+                class="btn bg-danger-50 text-danger-600 hover-bg-danger-600 hover-text-white rounded-8"
+                (click)="limpiarFiltros()"
+                style="padding: 10px 20px; border: 1px solid transparent;">
+          <i class="ph ph-x me-8"></i>
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+
+    <!-- ✅ FILA 2: Estadísticas -->
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-12">
       <div class="d-flex align-items-center gap-16">
         <span class="text-sm text-gray-600">{{ selectionText }}</span>
       </div>
-      <div class="d-flex align-items-center gap-4">
-        <span class="text-sm fw-medium text-dark">Total:</span>
-        <span class="badge bg-main-50 text-main-600">{{ productos.length }}</span>
-        <span class="text-sm fw-medium text-dark">Activos:</span>
-        <span class="badge bg-success-50 text-success-600">{{ getProductosActivos() }}</span>
-        <span class="text-sm fw-medium text-dark">Inactivos:</span>
-        <span class="badge bg-danger-50 text-danger-600">{{ getProductosInactivos() }}</span>
-        <span class="text-sm fw-medium text-dark">Stock bajo:</span>
-        <span class="badge bg-warning-50 text-warning-600">{{ getProductosStockBajo() }}</span>
+      <div class="d-flex align-items-center gap-8 flex-wrap">
+        <span class="text-sm fw-medium text-neutral-600">Total:</span>
+        <span class="badge bg-main-50 text-main-600 px-12 py-6">{{ productos.length }}</span>
+        <span class="text-sm fw-medium text-neutral-600">Activos:</span>
+        <span class="badge bg-success-50 text-success-600 px-12 py-6">{{ getProductosActivos() }}</span>
+        <span class="text-sm fw-medium text-neutral-600">Inactivos:</span>
+        <span class="badge bg-danger-50 text-danger-600 px-12 py-6">{{ getProductosInactivos() }}</span>
+        <span class="text-sm fw-medium text-neutral-600">Stock bajo:</span>
+        <span class="badge bg-warning-50 text-warning-600 px-12 py-6">{{ getProductosStockBajo() }}</span>
       </div>
     </div>
   </div>
