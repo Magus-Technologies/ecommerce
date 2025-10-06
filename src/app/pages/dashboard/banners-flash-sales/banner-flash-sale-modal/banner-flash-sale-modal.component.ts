@@ -26,24 +26,48 @@ import Swal from 'sweetalert2';
                 <div class="col-md-8">
                   <h6 class="text-heading fw-semibold mb-16">Información Básica</h6>
 
-                  <!-- Título y Subtítulo -->
+                  <!-- Nombre del Banner (con diseño de badge) -->
                   <div class="mb-16">
-                    <label class="form-label text-heading fw-medium mb-8">Título *</label>
-                    <input type="text"
-                           class="form-control px-16 py-12 border rounded-8"
-                           [(ngModel)]="formData.titulo"
-                           name="titulo"
-                           placeholder="Ej: ¡Super Flash Sale!"
-                           required>
+                    <label class="form-label text-heading fw-medium mb-12">Nombre del Banner *</label>
+                    <div class="position-relative">
+                      <input type="text"
+                             class="form-control px-16 py-12 border rounded-8"
+                             [(ngModel)]="formData.nombre"
+                             name="nombre"
+                             placeholder="Ej: Flash Sale del Día - 50% OFF"
+                             required>
+                    </div>
                   </div>
 
+                  <!-- Color del Badge -->
                   <div class="mb-16">
-                    <label class="form-label text-heading fw-medium mb-8">Subtítulo</label>
-                    <input type="text"
-                           class="form-control px-16 py-12 border rounded-8"
-                           [(ngModel)]="formData.subtitulo"
-                           name="subtitulo"
-                           placeholder="Ej: Descuentos por tiempo limitado">
+                    <label class="form-label text-heading fw-medium mb-8">Color del Badge</label>
+                    <div class="d-flex align-items-center gap-12">
+                      <input type="color"
+                             class="form-control form-control-color"
+                             [(ngModel)]="formData.color_badge"
+                             name="color_badge"
+                             style="width: 60px; height: 40px;">
+                      <input type="text"
+                             class="form-control px-16 py-12 border rounded-8"
+                             [(ngModel)]="formData.color_badge"
+                             name="color_badge_text"
+                             placeholder="#DC2626">
+                    </div>
+                    <!-- Preview del badge -->
+                    <div *ngIf="formData.nombre" class="mt-12">
+                      <small class="text-muted d-block mb-8">Vista previa del badge:</small>
+                      <span class="badge text-white px-16 py-8 rounded-pill"
+                            [style.background-color]="formData.color_badge || '#DC2626'"
+                            style="font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                        <i class="ph ph-lightning me-6"></i>
+                        {{ formData.nombre }}
+                      </span>
+                    </div>
+                    <small class="text-muted mt-8 d-block">
+                      <i class="ph ph-info me-4"></i>
+                      Este badge aparecerá destacado sobre la imagen del banner
+                    </small>
                   </div>
 
                   <hr class="my-20">
@@ -125,13 +149,23 @@ import Swal from 'sweetalert2';
                 <!-- Columna Derecha: Imagen -->
                 <div class="col-md-4">
                   <h6 class="text-heading fw-semibold mb-16">Imagen del Banner</h6>
+
+                  <!-- Recomendaciones de imagen -->
+                  <small class="text-info text-xs d-block mb-8">
+                    <i class="ph ph-lightbulb me-4"></i>
+                    <strong>Tamaño recomendado:</strong> 1400x500px (panorámico) para mejor visualización
+                  </small>
+                  <small class="text-warning text-xs d-block mb-12">
+                    ⚠️ Imágenes muy cuadradas o verticales pueden verse deformadas en el banner
+                  </small>
+
                   <div class="upload-area border-2 border-dashed border-gray-200 rounded-8 p-16 text-center"
                        [class.border-main-600]="imagenPreview">
 
                     <div *ngIf="!imagenPreview" class="text-center">
                       <i class="ph ph-image text-gray-400 text-4xl mb-12"></i>
                       <p class="text-gray-500 text-sm mb-12">Seleccionar imagen</p>
-                      <small class="text-muted d-block mb-12">Recomendado: 1200x400px</small>
+                      <small class="text-muted d-block mb-12">JPG, PNG, GIF, WEBP (Máx. 2MB)</small>
                       <label class="btn bg-main-600 text-white px-16 py-8 rounded-8 cursor-pointer">
                         <i class="ph ph-upload me-6"></i>
                         Subir imagen
@@ -240,11 +274,11 @@ export class BannerFlashSaleModalComponent implements OnChanges {
 
   getEmptyForm(): BannerFlashSale {
     return {
-      titulo: '',
-      subtitulo: '',
+      nombre: '',
+      color_badge: '#DC2626',
       fecha_inicio: '',
       fecha_fin: '',
-      color_boton: '#3B82F6',
+      color_boton: '#DC2626',
       texto_boton: 'Compra ahora',
       enlace_url: '/shop',
       activo: true

@@ -7,6 +7,8 @@ import { ShippingComponent } from "../../component/shipping/shipping.component"
 import { ProductosService, ProductoPublico, type CategoriaParaSidebar } from "../../services/productos.service"
 import { CartService } from "../../services/cart.service"
 import { CartNotificationService } from '../../services/cart-notification.service';
+import { AlmacenService } from '../../services/almacen.service'; // ✅ NUEVO
+import { MarcaProducto } from '../../types/almacen.types'; // ✅ NUEVO
 import { SlugHelper } from '../../helpers/slug.helper'; // ✅ NUEVO
 import Swal from 'sweetalert2'
 
@@ -21,9 +23,11 @@ export class ShopComponent implements OnInit {
 
   productos: ProductoPublico[] = []
   categorias: CategoriaParaSidebar[] = []
+  marcas: MarcaProducto[] = [] // ✅ NUEVO: Marcas desde el backend
   isLoading = false
   categoriaSeleccionada?: number
-  searchTerm: string = ''; 
+  marcaSeleccionada?: number // ✅ NUEVO
+  searchTerm: string = '';
 
   // pagination
   currentPage = 1
@@ -50,16 +54,7 @@ export class ShopComponent implements OnInit {
     { id: "color7", name: "Purple", count: 12, class: "checked-purple" },
   ]
 
-  // brands
-  brands = [
-    { id: "brand1", name: "Apple" },
-    { id: "brand2", name: "Samsung" },
-    { id: "brand3", name: "Microsoft" },
-    { id: "brand4", name: "Apple" },
-    { id: "brand5", name: "HP" },
-    { id: "DELL", name: "DELL" },
-    { id: "Redmi", name: "Redmi" },
-  ]
+  // ✅ ELIMINADO: Ya no usamos brands hardcodeado, ahora usamos marcas del backend
 
   constructor(
     private productosService: ProductosService,
@@ -67,11 +62,13 @@ export class ShopComponent implements OnInit {
     private cartNotificationService: CartNotificationService,
     private route: ActivatedRoute,
     private router: Router,
+    private almacenService: AlmacenService, // ✅ NUEVO
   ) {}
 
   ngOnInit(): void {
     // Cargar categorías para el sidebar
     this.cargarCategorias();
+    this.cargarMarcas(); // ✅ NUEVO: Cargar marcas desde el backend
 
     // ✅ NUEVO: Escuchar cambios en los parámetros de ruta (para slug)
     this.route.params.subscribe(async (params) => {
@@ -82,7 +79,7 @@ export class ShopComponent implements OnInit {
         await this.buscarCategoriaPorSlug(slug);
       }
 
-      this.cargarProductos();
+      // this.cargarProductos();
     });
 
     // Escuchar cambios en los query parameters (mantener compatibilidad)
@@ -90,6 +87,11 @@ export class ShopComponent implements OnInit {
       // Si viene categoria por query param (compatibilidad con URLs antiguas)
       if (params['categoria']) {
         this.categoriaSeleccionada = +params['categoria'];
+      }
+      if (params['marca']) {
+        this.marcaSeleccionada = +params['marca'];
+      }else{
+        this.marcaSeleccionada = undefined;
       }
 
       this.searchTerm = params['search'] || '';
@@ -143,6 +145,16 @@ export class ShopComponent implements OnInit {
       },
     })
   }
+  cargarMarcas(): void {
+    this.almacenService.obtenerMarcasPublicas().subscribe({
+      next: (marcas) => {
+        this.marcas = marcas;
+      },
+      error: (error) => {
+        console.error("Error al cargar marcas:", error);
+      },
+    })
+  }
 
   // Modifica el método existente cargarProductos():
   cargarProductos(): void {
@@ -150,35 +162,39 @@ export class ShopComponent implements OnInit {
 
     const filtros: any = {
       categoria: this.categoriaSeleccionada,
-      page: this.currentPage
+      marca: this.marcaSeleccionada,
+      page: this.currentPage,
+      search: this.searchTerm, // Mantener search en filtros
     };
+     Object.keys(filtros).forEach(key => {
+          if (filtros[key] === undefined || filtros[key] === null || filtros[key] === '') {
+          delete filtros[key];
+        }
+      });
 
-    // ✅ NUEVO: Agregar término de búsqueda si existe
-    if (this.searchTerm) {
-      filtros.search = this.searchTerm;
-    }
-
-    // ✅ NUEVO: Agregar sección si se especifica en query params
-    this.route.queryParams.subscribe(params => {
-      if (params['seccion']) {
-        filtros.seccion = +params['seccion'];
+       const seccion = this.route.snapshot.queryParamMap.get('seccion');
+        if (seccion) {
+          filtros.seccion = +seccion;
+        }
+   
+        this.productosService.obtenerProductosPublicos(filtros).subscribe({
+          next: (response) => {
+            this.productos = response.productos;
+            this.currentPage = response.pagination.current_page;
+            this.totalPages = response.pagination.last_page;
+            this.totalProductos = response.pagination.total;
+            this.isLoading = false;
+          },
+          error: (error) => {
+            console.error('Error al cargar productos:', error);
+            this.isLoading = false;
+          }
+        });
+   
       }
-    });
 
-    this.productosService.obtenerProductosPublicos(filtros).subscribe({
-      next: (response) => {
-        this.productos = response.productos;
-        this.currentPage = response.pagination.current_page;
-        this.totalPages = response.pagination.last_page;
-        this.totalProductos = response.pagination.total;
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar productos:', error);
-        this.isLoading = false;
-      }
-    });
-  }
+  
+  
 
   seleccionarCategoria(categoriaId: number): void {
     // ✅ MEJORADO: Navegar con slug en lugar de query parameter

@@ -57,6 +57,7 @@ interface BrandSlide {
   dataAosDuration: number;
   imgSrc: string;
   imgAlt: string;
+  marcaId?: number; // ✅ NUEVO: ID de la marca para redirección
 }
 
 interface BrandSlideGroup {
@@ -570,10 +571,7 @@ ofertasEspecialesSlideConfig: any = {
         this.isLoadingProductosFiltrados = false;
 
         if (this.debugMode) {
-          console.log(
-            '✅ Todos los productos cargados:',
-            this.todosLosProductos
-          );
+          console.log('✅ Todos los productos cargados:', this.todosLosProductos.length);
         }
       },
       error: (error) => {
@@ -620,9 +618,9 @@ ofertasEspecialesSlideConfig: any = {
         // Mostrar todos los productos
         this.productosFiltrados = [...this.todosLosProductos];
       } else {
-        // Filtrar por categoría específica
+        // Filtrar por categoría específica - CONVERTIR AMBOS A NÚMERO PARA COMPARAR
         this.productosFiltrados = this.todosLosProductos.filter(
-          (producto) => producto.categoria_id === categoriaId
+          (producto) => Number(producto.categoria_id) === Number(categoriaId)
         );
       }
 
@@ -684,6 +682,7 @@ ofertasEspecialesSlideConfig: any = {
           dataAosDuration: 200 + index * 200,
           imgSrc: marca.imagen_url || 'assets/images/thumbs/brand-default.png',
           imgAlt: marca.nombre,
+          marcaId: marca.id, // ✅ NUEVO: Incluir ID de marca
         }));
         this.isLoadingMarcas = false;
 
