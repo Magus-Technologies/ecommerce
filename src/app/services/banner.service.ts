@@ -41,9 +41,10 @@ export interface BannerPromocional {
   enlace_url: string;
   orden: number;
   animacion_delay: number;
-  color_fondo?: string;
   color_boton?: string;
   color_texto?: string;
+  color_badge_nombre?: string;
+  color_badge_precio?: string;
   activo: boolean;
   created_at?: string;
   updated_at?: string;
@@ -57,9 +58,10 @@ export interface BannerPromocionalCreate {
   enlace_url: string;
   orden: number;
   animacion_delay?: number;
-  color_fondo?: string;
   color_boton?: string;
   color_texto?: string;
+  color_badge_nombre?: string;
+  color_badge_precio?: string;
   activo: boolean;
 }
 
@@ -190,10 +192,10 @@ export class BannersService {
     if (bannerData.animacion_delay) formData.append('animacion_delay', bannerData.animacion_delay.toString());
     formData.append('activo', bannerData.activo ? '1' : '0');
     
-    // Agrega después de estas líneas:
-    if (bannerData.color_fondo) formData.append('color_fondo', bannerData.color_fondo);
     if (bannerData.color_boton) formData.append('color_boton', bannerData.color_boton);
     if (bannerData.color_texto) formData.append('color_texto', bannerData.color_texto);
+    if (bannerData.color_badge_nombre) formData.append('color_badge_nombre', bannerData.color_badge_nombre);
+    if (bannerData.color_badge_precio) formData.append('color_badge_precio', bannerData.color_badge_precio);
 
     if (bannerData.imagen) {
       formData.append('imagen', bannerData.imagen);
@@ -213,10 +215,10 @@ export class BannersService {
     if (bannerData.animacion_delay !== undefined) formData.append('animacion_delay', bannerData.animacion_delay.toString());
     if (bannerData.activo !== undefined) formData.append('activo', bannerData.activo ? '1' : '0');
     
-    // Agrega después de estas líneas:
-    if (bannerData.color_fondo) formData.append('color_fondo', bannerData.color_fondo);
     if (bannerData.color_boton) formData.append('color_boton', bannerData.color_boton);
     if (bannerData.color_texto) formData.append('color_texto', bannerData.color_texto);
+    if (bannerData.color_badge_nombre) formData.append('color_badge_nombre', bannerData.color_badge_nombre);
+    if (bannerData.color_badge_precio) formData.append('color_badge_precio', bannerData.color_badge_precio);
 
     if (bannerData.imagen) {
       formData.append('imagen', bannerData.imagen);
