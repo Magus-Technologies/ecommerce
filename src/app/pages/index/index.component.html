@@ -1,14 +1,16 @@
 <!-- src/app/pages/index/index.component.html -->
 <!-- ============================ Banner Section Start =============================== -->
-<div class="banner w-100 p-0">
+<!-- Solo mostrar la sección si hay banners o está cargando -->
+<div class="banner w-100 p-0" *ngIf="isLoadingBanners || bannersDinamicos.length > 0">
   <div
     class="banner-item position-relative overflow-hidden w-100"
     style="padding: 0; margin: 0"
   >
     <!-- ✅ SIN IMAGEN DE FONDO - Solo banners dinámicos -->
 
-    <!-- ✅ BOTONES DE NAVEGACIÓN CON ESTILOS CORRECTOS -->
+    <!-- ✅ BOTONES DE NAVEGACIÓN CON ESTILOS CORRECTOS (solo si hay banners) -->
     <button
+      *ngIf="!isLoadingBanners && bannersDinamicos.length > 0"
       type="button"
       id="banner-prev"
       class="banner-nav-btn flex-center rounded-circle box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
@@ -17,6 +19,7 @@
       <i class="ph ph-caret-left"></i>
     </button>
     <button
+      *ngIf="!isLoadingBanners && bannersDinamicos.length > 0"
       type="button"
       id="banner-next"
       class="banner-nav-btn flex-center rounded-circle box-shadow-4xl bg-white text-xl text-main-600 hover-bg-main-600 hover-text-white transition-1"
@@ -83,48 +86,6 @@
               "
             ></div>
           </a>
-        </div>
-      </div>
-
-      <!-- Mensaje cuando no hay banners dinámicos -->
-      <div
-        ngxSlickItem
-        *ngIf="!isLoadingBanners && bannersDinamicos.length === 0"
-        class="slide"
-      >
-        <div
-          class="w-100 d-flex align-items-center justify-content-center"
-          style="
-            height: 450px;
-            background: linear-gradient(
-              135deg,
-              var(--main-600) 0%,
-              var(--main-800) 100%
-            );
-          "
-        >
-          <div class="text-center text-white px-4">
-            <span
-              class="d-inline-block bg-white bg-opacity-20 backdrop-blur px-16 py-8 rounded-pill text-sm fw-semibold mb-16"
-            >
-              Descuento por apertura
-            </span>
-            <h1
-              class="fw-bold mb-24"
-              style="font-size: 2.5rem; line-height: 1.2"
-            >
-              Pedidos en la tienda en tecnología con descuentos
-            </h1>
-            <a
-              [routerLink]="['shop']"
-              class="btn btn-light d-inline-flex align-items-center rounded-pill gap-8 px-24 py-12 fw-semibold"
-            >
-              Ir a la tienda
-              <span class="icon text-xl d-flex">
-                <i class="ph ph-shopping-cart-simple"></i>
-              </span>
-            </a>
-          </div>
         </div>
       </div>
     </ngx-slick-carousel>
