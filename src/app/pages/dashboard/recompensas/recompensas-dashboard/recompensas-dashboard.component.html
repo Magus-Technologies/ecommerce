@@ -137,7 +137,7 @@
               <th>Estado</th>
               <th>Fecha Inicio</th>
               <th>Beneficiarios</th>
-              <th>Acciones</th>
+              <th class="text-center" style="width: 90px;">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -155,14 +155,15 @@
               </td>
               <td>{{ recompensa.fecha_inicio | date:'dd/MM/yyyy' }}</td>
               <td>{{ recompensa.beneficiarios | number }}</td>
-              <td>
-                <div class="btn-group" role="group">
-                  <button class="btn btn-sm btn-outline-primary" (click)="editarRecompensa(recompensa.id)">
-                    <i class="fas fa-edit"></i>
+              <td class="text-center">
+                <div class="dropdown acciones-dropdown">
+                  <button class="btn btn-sm acciones-trigger" type="button" (click)="$event.stopPropagation(); openMenuId = (openMenuId === recompensa.id ? null : recompensa.id)">
+                    <i class="fas fa-ellipsis-h" title="Acciones"></i>
                   </button>
-                  <button class="btn btn-sm btn-outline-secondary" (click)="toggleEstado(recompensa)">
-                    <i [class]="recompensa.estado === 'activa' ? 'fas fa-pause' : 'fas fa-play'"></i>
-                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end show" *ngIf="openMenuId === recompensa.id">
+                    <li><button class="dropdown-item" type="button" (click)="editarRecompensa(recompensa.id)"><i class="fas fa-edit me-2"></i>Editar</button></li>
+                    <li><button class="dropdown-item" type="button" (click)="toggleEstado(recompensa)"><i class="me-2" [class]="recompensa.estado === 'activa' ? 'fas fa-pause' : 'fas fa-play'"></i>{{ recompensa.estado === 'activa' ? 'Pausar' : 'Activar' }}</button></li>
+                  </ul>
                 </div>
               </td>
             </tr>
@@ -224,4 +225,63 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal de Editar Recompensa (compacto) -->
+  <div class="modal fade" [class.show]="mostrarModalEditar" [style.display]="mostrarModalEditar ? 'block' : 'none'" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-edit me-2 text-primary"></i>Editar Recompensa</h5>
+          <button type="button" class="btn-close" (click)="cerrarModalEditar()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form *ngIf="recompensaEditando">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Nombre de la Recompensa *</label>
+                <input type="text" class="form-control" [(ngModel)]="recompensaEditando.nombre" name="nombre">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Tipo de Recompensa *</label>
+                <input type="text" class="form-control" [(ngModel)]="recompensaEditando.tipo" name="tipo">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Descripción *</label>
+                <textarea class="form-control" rows="3" [(ngModel)]="recompensaEditando.descripcion" name="descripcion"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Fecha de Inicio *</label>
+                <input type="date" class="form-control" [(ngModel)]="recompensaEditando.fecha_inicio" name="fecha_inicio">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Fecha de Fin *</label>
+                <input type="date" class="form-control" [(ngModel)]="recompensaEditando.fecha_fin" name="fecha_fin">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Estado</label>
+                <select class="form-select" [(ngModel)]="recompensaEditando.estado" name="estado">
+                  <option value="activa">Activa</option>
+                  <option value="pausada">Pausada</option>
+                  <option value="programada">Programada</option>
+                  <option value="expirada">Expirada</option>
+                  <option value="cancelada">Cancelada</option>
+                </select>
+              </div>
+            </div>
+            <div *ngIf="errorEdicion" class="alert alert-danger mt-3">{{ errorEdicion }}</div>
+          </form>
+          <div *ngIf="!recompensaEditando && !errorEdicion" class="text-center py-3">
+            <div class="spinner-border text-primary" role="status"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cerrarModalEditar()" [disabled]="cargandoEdicion">Cancelar</button>
+          <button type="button" class="btn btn-primary" (click)="guardarEdicion()" [disabled]="cargandoEdicion || !recompensaEditando?.nombre">Guardar Cambios</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  <div *ngIf="mostrarModalEditar" class="modal-backdrop fade show"></div>
 </div>
