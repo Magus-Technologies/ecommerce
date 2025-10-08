@@ -200,6 +200,13 @@ export class PopupsService {
     return this.http.patch<PopupResponse>(`${this.clienteApiUrl}/popups/${popupId}/cerrar`, {});
   }
 
+  /**
+   * Obtener diagnóstico de popups (útil para debugging)
+   */
+  obtenerDiagnosticoPopups(): Observable<any> {
+    return this.http.get<any>(`${this.clienteApiUrl}/popups-diagnostico`);
+  }
+
   // ===== MÉTODOS AUXILIARES =====
 
   /**

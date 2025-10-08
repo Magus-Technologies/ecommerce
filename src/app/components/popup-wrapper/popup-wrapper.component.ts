@@ -16,7 +16,6 @@ import { environment } from '../../../environments/environment';
 export class PopupWrapperComponent implements OnInit, OnDestroy {
   popups = signal<Popup[]>([]);
   visible = signal<boolean>(false);
-  private triedAllSegment = false;
 
   private loadTimeout?: any;
 
@@ -36,8 +35,22 @@ export class PopupWrapperComponent implements OnInit, OnDestroy {
 
   private cargarPopups(): void {
     const isCliente = this.auth.isCliente();
-    const userType = this.auth.getUserType?.() as any;
+    const isMotorizado = this.auth.isMotorizado();
+    const isAdmin = this.auth.isAdmin();
     const hasToken = !!this.auth.getToken?.();
+
+    // Según la nueva lógica corregida:
+    // - Motorizados y admins: NO ven popups (error 403)
+    // - Clientes autenticados: usan endpoint de cliente
+    // - Visitantes no autenticados: usan endpoint público
+
+    if (isMotorizado || isAdmin) {
+      // Motorizados y admins no deben ver popups según la nueva lógica
+      console.log('Motorizado o admin detectado - no se cargan popups');
+      this.visible.set(false);
+      return;
+    }
+
     const obs = isCliente
       ? this.popupsService.obtenerPopupsActivos()
       : this.popupsService.obtenerPopupsPublicosActivos('no_registrados');
@@ -45,14 +58,33 @@ export class PopupWrapperComponent implements OnInit, OnDestroy {
     obs.subscribe({
       next: (resp) => this.renderRespuesta(resp),
       error: (err) => {
+        console.error('Error cargando popups:', err);
+        
+        // Manejo de errores según la nueva lógica:
+        if (err?.status === 403) {
+          if (isCliente) {
+            console.log('Cliente sin acceso a popups - posible error de permisos');
+          } else {
+            console.log('Usuario autenticado no autorizado para popups públicos');
+          }
+          this.visible.set(false);
+          return;
+        }
+        
         // Fallback: si falla el endpoint de cliente con 401, intentar público
         if (isCliente && err?.status === 401) {
+          console.log('Cliente no autenticado - intentando endpoint público');
           this.popupsService.obtenerPopupsPublicosActivos('no_registrados').subscribe({
             next: (resp2) => this.renderRespuesta(resp2),
-            error: (err2) => {}
+            error: (err2) => {
+              console.error('Error en fallback público:', err2);
+              this.visible.set(false);
+            }
           });
           return;
         }
+        
+        this.visible.set(false);
       }
     });
   }
@@ -64,15 +96,8 @@ export class PopupWrapperComponent implements OnInit, OnDestroy {
       this.popups.set(lista);
       this.visible.set(true);
     } else {
-      // Fallback de desarrollo: si no hay popups para 'no_registrados', probar 'all' una sola vez
-      if (!environment.production && !this.auth.isCliente() && !this.triedAllSegment) {
-        this.triedAllSegment = true;
-        this.popupsService.obtenerPopupsPublicosActivos('all').subscribe({
-          next: (resp2) => this.renderRespuesta(resp2),
-          error: () => this.visible.set(false)
-        });
-        return;
-      }
+      // Según la nueva lógica corregida, no hay fallbacks de segmentos
+      // Los segmentos están bien definidos: 'no_registrados' para visitantes, otros para clientes
       this.visible.set(false);
     }
   }
@@ -80,14 +105,28 @@ export class PopupWrapperComponent implements OnInit, OnDestroy {
   onCerrar(popup: Popup): void {
     this.popupsService.cerrarPopup(popup.id).subscribe({
       next: () => this.removerPopup(popup.id),
-      error: () => this.removerPopup(popup.id)
+      error: (err) => {
+        console.error('Error cerrando popup:', err);
+        // Si es error 403, significa que el usuario no tiene permisos para cerrar popups
+        // pero aún así removemos el popup del frontend para mejor UX
+        if (err?.status === 403) {
+          console.log('Usuario sin permisos para cerrar popup - removiendo del frontend');
+        }
+        this.removerPopup(popup.id);
+      }
     });
   }
 
   onVisto(popup: Popup): void {
     this.popupsService.marcarPopupVisto(popup.id).subscribe({
       next: () => {},
-      error: () => {}
+      error: (err) => {
+        console.error('Error marcando popup como visto:', err);
+        // No es crítico si falla marcar como visto, solo logueamos el error
+        if (err?.status === 403) {
+          console.log('Usuario sin permisos para marcar popup como visto');
+        }
+      }
     });
   }
 

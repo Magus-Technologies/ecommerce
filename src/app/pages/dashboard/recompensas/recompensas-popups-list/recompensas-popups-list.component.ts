@@ -1,8 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { forkJoin, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { PopupsService } from '../../../../services/popups.service';
 import { RecompensasService } from '../../../../services/recompensas.service';
 import {
@@ -65,11 +67,33 @@ export class RecompensasPopupsListComponent implements OnInit, OnDestroy {
   selectedPopup: Popup | null = null;
   loadingPopupDetail = false;
 
+  // Modal de eliminación
+  showDeleteConfirmModal = false;
+  popupToDelete: Popup | null = null;
+  eliminandoPopup = false;
+
+  // Modal de edición
+  showEditModal = false;
+  popupEditando: Popup | null = null;
+  guardandoPopup = false;
+  nuevaImagenPreview: string | null = null;
+  nuevaImagenFile: File | null = null;
+
+  // Caché para optimización
+  private cacheKey = '';
+  private cacheTimestamp = 0;
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+  
+  // Indicadores de progreso
+  recompensasCargadas = 0;
+  totalRecompensas = 0;
+
   constructor(
     public router: Router,
     private http: HttpClient,
     private popupsService: PopupsService,
-    private recompensasService: RecompensasService
+    private recompensasService: RecompensasService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -87,6 +111,16 @@ export class RecompensasPopupsListComponent implements OnInit, OnDestroy {
   // ===== MÉTODOS PRINCIPALES =====
 
   cargarPopups(): void {
+    // Generar clave de caché basada en filtros
+    const newCacheKey = this.generarCacheKey();
+    
+    // Verificar si tenemos datos en caché válidos
+    if (this.cacheKey === newCacheKey && this.esCacheValido() && this.popups.length > 0) {
+      console.log('📦 Usando datos en caché');
+      this.loading = false;
+      return;
+    }
+
     this.loading = true;
     this.error = null;
     this.popups = [];
@@ -302,5 +336,175 @@ export class RecompensasPopupsListComponent implements OnInit, OnDestroy {
 
   onImageLoad(event: any): void {
     console.log('Imagen cargada correctamente:', event.target.src);
+  }
+
+  // ===== MÉTODOS DE ELIMINACIÓN =====
+
+  confirmarEliminarPopup(popup: Popup): void {
+    this.popupToDelete = popup;
+    this.showDeleteConfirmModal = true;
+  }
+
+  cerrarModalEliminar(): void {
+    this.showDeleteConfirmModal = false;
+    this.popupToDelete = null;
+    this.eliminandoPopup = false;
+  }
+
+  eliminarPopup(): void {
+    if (!this.popupToDelete) return;
+
+    const recompensaId = this.popupToDelete.recompensa_id || this.popupToDelete.recompensa_info?.id || this.popupToDelete.recompensa?.id;
+    if (!recompensaId) {
+      console.error('No se pudo obtener el ID de la recompensa');
+      return;
+    }
+
+    this.eliminandoPopup = true;
+
+    this.popupsService.eliminarPopup(recompensaId as number, this.popupToDelete.id).subscribe({
+      next: (response) => {
+        console.log('Popup eliminado exitosamente:', response);
+        
+        // Remover el popup de la lista local
+        const index = this.popups.findIndex(p => p.id === this.popupToDelete!.id);
+        if (index !== -1) {
+          this.popups.splice(index, 1);
+          this.totalPopups = this.popups.length;
+          
+          // Forzar detección de cambios para actualizar la vista
+          this.cdr.detectChanges();
+        }
+        
+        this.cerrarModalEliminar();
+        
+        // Invalidar caché después de eliminar
+        this.invalidarCache();
+      },
+      error: (error) => {
+        console.error('Error eliminando popup:', error);
+        this.eliminandoPopup = false;
+        // Aquí podrías mostrar un toast de error
+      }
+    });
+  }
+
+  // ===== MÉTODOS DE EDICIÓN =====
+
+  editarPopup(popup: Popup): void {
+    this.popupEditando = { ...popup }; // Crear copia para edición
+    this.nuevaImagenPreview = null;
+    this.nuevaImagenFile = null;
+    this.showEditModal = true;
+  }
+
+  cerrarModalEditar(): void {
+    this.showEditModal = false;
+    this.popupEditando = null;
+    this.guardandoPopup = false;
+    this.nuevaImagenPreview = null;
+    this.nuevaImagenFile = null;
+  }
+
+  onEditImageChange(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.nuevaImagenFile = file;
+      this.nuevaImagenPreview = this.obtenerPreviewImagen(file);
+    }
+  }
+
+  guardarEdicionPopup(): void {
+    if (!this.popupEditando) return;
+
+    const recompensaId = this.popupEditando.recompensa_id || this.popupEditando.recompensa_info?.id || this.popupEditando.recompensa?.id;
+    if (!recompensaId) {
+      console.error('No se pudo obtener el ID de la recompensa');
+      return;
+    }
+
+    this.guardandoPopup = true;
+
+    // Preparar datos para actualización
+    const updateData: PopupUpdateRequest = {
+      titulo: this.popupEditando.titulo,
+      descripcion: this.popupEditando.descripcion,
+      texto_boton: this.popupEditando.texto_boton,
+      url_destino: this.popupEditando.url_destino,
+      mostrar_cerrar: this.popupEditando.mostrar_cerrar,
+      auto_cerrar_segundos: this.popupEditando.auto_cerrar_segundos,
+      popup_activo: this.popupEditando.popup_activo,
+      imagen_popup: this.nuevaImagenFile || undefined
+    };
+
+    this.popupsService.actualizarPopup(recompensaId as number, this.popupEditando.id, updateData).subscribe({
+      next: (response) => {
+        console.log('Popup actualizado exitosamente:', response);
+        
+        // Actualizar el popup en la lista local con los datos actualizados del backend
+        const index = this.popups.findIndex(p => p.id === this.popupEditando!.id);
+        if (index !== -1 && (response as any).data) {
+          // Mantener la información de la recompensa y actualizar solo los campos del popup
+          this.popups[index] = {
+            ...this.popups[index],
+            ...(response as any).data,
+            // Mantener la información de la recompensa
+            recompensa_info: this.popups[index].recompensa_info,
+            recompensa: this.popups[index].recompensa,
+            recompensa_id: this.popups[index].recompensa_id
+          };
+          
+          console.log('Popup actualizado en la lista local:', this.popups[index]);
+          
+          // Forzar detección de cambios para actualizar la vista
+          this.cdr.detectChanges();
+        }
+        
+        this.cerrarModalEditar();
+        
+        // Invalidar caché después de editar
+        this.invalidarCache();
+      },
+      error: (error) => {
+        console.error('Error actualizando popup:', error);
+        this.guardandoPopup = false;
+        // Aquí podrías mostrar un toast de error
+      }
+    });
+  }
+
+  // Método alternativo para recargar la lista si es necesario
+  recargarLista(): void {
+    console.log('🔄 Recargando lista de popups...');
+    this.invalidarCache();
+    this.cargarPopups();
+  }
+
+  // ===== MÉTODOS DE CACHÉ =====
+
+  private generarCacheKey(): string {
+    return JSON.stringify({
+      nombre: this.filtros.nombre,
+      tipo: this.filtros.tipo,
+      estado: this.filtros.estado,
+      vigente: this.filtros.vigente,
+      page: this.filtros.page,
+      per_page: this.filtros.per_page
+    });
+  }
+
+  private esCacheValido(): boolean {
+    const ahora = Date.now();
+    return (ahora - this.cacheTimestamp) < this.CACHE_DURATION;
+  }
+
+  private invalidarCache(): void {
+    this.cacheKey = '';
+    this.cacheTimestamp = 0;
+  }
+
+  private actualizarCache(): void {
+    this.cacheKey = this.generarCacheKey();
+    this.cacheTimestamp = Date.now();
   }
 }
