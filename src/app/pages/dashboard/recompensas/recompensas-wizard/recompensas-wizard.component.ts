@@ -166,7 +166,8 @@ export class RecompensasWizardComponent implements OnInit {
           // Siempre filtrar estados no permitidos en creación
           const fechaInicioActual = this.datosGeneralesForm.get('fecha_inicio')?.value;
           const estadosCrudos = (response.data.estados || []).map((e: any) => ({ value: e.value, label: e.label }));
-          this.estadosRecompensa = this.filtrarEstadosParaCreacion(estadosCrudos, fechaInicioActual);
+          // Basarse en la lista del backend y normalizar etiquetas/seguridad para creación
+          this.estadosRecompensa = this.normalizarEstadosDesdeBackend(estadosCrudos);
           
           // Si no hay tipos cargados, usar valores por defecto
           if (this.tiposRecompensa.length === 0) {
@@ -181,7 +182,7 @@ export class RecompensasWizardComponent implements OnInit {
           // Asegurar un estado válido por defecto después de filtrar
           const estadoActual = this.datosGeneralesForm.get('estado')?.value;
           const estadoValido = this.estadosRecompensa.find(e => e.value === estadoActual)?.value
-            || this.obtenerEstadoPorDefecto(fechaInicioActual);
+            || this.obtenerEstadoDefaultDesdeLista(this.estadosRecompensa);
           this.datosGeneralesForm.patchValue({ estado: estadoValido }, { emitEvent: false });
         }
       },
@@ -226,19 +227,20 @@ export class RecompensasWizardComponent implements OnInit {
             value: estado.value,
             label: estado.label
           }));
-          this.estadosRecompensa = this.filtrarEstadosParaCreacion(estadosCrudos, fechaInicio);
+          // Basarnos en la decisión del backend y normalizar para creación
+          this.estadosRecompensa = this.normalizarEstadosDesdeBackend(estadosCrudos);
 
           // Aplicar el estado por defecto si no hay uno seleccionado
           const estadoActual = this.datosGeneralesForm.get('estado')?.value;
           const estadoValido = (!estadoActual || !this.estadosRecompensa.find(e => e.value === estadoActual))
-            ? this.obtenerEstadoPorDefecto(fechaInicio)
+            ? this.obtenerEstadoDefaultDesdeLista(this.estadosRecompensa)
             : estadoActual;
           this.datosGeneralesForm.patchValue({ estado: estadoValido }, { emitEvent: false });
 
           console.log('Estados disponibles actualizados:', {
             fechaInicio,
             estados: this.estadosRecompensa,
-            estadoPorDefecto: this.obtenerEstadoPorDefecto(fechaInicio),
+            estadoPorDefecto: this.obtenerEstadoDefaultDesdeLista(this.estadosRecompensa),
             mensaje: response.data.mensaje
           });
         }
@@ -259,12 +261,71 @@ export class RecompensasWizardComponent implements OnInit {
     // Nunca permitir expirada ni cancelada al crear
     const baseSinProhibidos = estados.filter(e => e.value !== 'expirada' && e.value !== 'cancelada');
 
-    if (esFuturo) {
-      // Solo programada o pausada
-      return baseSinProhibidos.filter(e => e.value === 'programada' || e.value === 'pausada');
+    // Conjunto permitido según fecha
+    const permitidos = esFuturo ? ['programada', 'pausada'] : ['activa', 'pausada'];
+
+    // Tomar solo los permitidos que vengan del backend
+    let resultado = baseSinProhibidos.filter(e => permitidos.includes(e.value));
+
+    // Asegurar que 'pausada' siempre esté disponible
+    if (!resultado.find(e => e.value === 'pausada')) {
+      resultado.push({ value: 'pausada', label: 'Pausada' });
     }
-    // Fecha hoy o pasada: activa o pausada
-    return baseSinProhibidos.filter(e => e.value === 'activa' || e.value === 'pausada');
+
+    // Si es futuro, renombrar etiqueta de programada; si no, garantizar activa
+    if (esFuturo) {
+      resultado = resultado.map(e => e.value === 'programada' ? { ...e, label: 'Programada (Borrador)' } : e);
+      // En futuro no debe aparecer 'activa'
+      resultado = resultado.filter(e => e.value !== 'activa');
+    } else {
+      // Hoy/pasado: asegurar que 'activa' esté
+      if (!resultado.find(e => e.value === 'activa')) {
+        resultado.push({ value: 'activa', label: 'Activa' });
+      }
+      // Y no mostrar 'programada'
+      resultado = resultado.filter(e => e.value !== 'programada');
+    }
+
+    return resultado;
+  }
+
+  // Normaliza y asegura consistencia con reglas de creación basadas en lista del backend
+  private normalizarEstadosDesdeBackend(estados: { value: string; label: string }[]): { value: string; label: string }[] {
+    const fechaInicioActual = this.datosGeneralesForm.get('fecha_inicio')?.value as string | undefined;
+    const hoy = new Date();
+    const fecha = fechaInicioActual ? new Date(fechaInicioActual + 'T00:00:00') : null;
+    const esFuturo = fecha ? fecha > new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) : false;
+
+    // Preferir lo que diga backend pero ajustando etiquetas y asegurando pausada
+    let lista = [...estados];
+    if (esFuturo) {
+      // En futuro debería estar programada y/o pausada
+      lista = lista.filter(e => e.value === 'programada' || e.value === 'pausada');
+      if (!lista.find(e => e.value === 'programada')) {
+        lista.push({ value: 'programada', label: 'Programada (Borrador)' });
+      }
+      // Etiqueta amigable
+      lista = lista.map(e => e.value === 'programada' ? { ...e, label: 'Programada (Borrador)' } : e);
+    } else {
+      // Hoy/pasado: activa y/o pausada
+      lista = lista.filter(e => e.value === 'activa' || e.value === 'pausada');
+      if (!lista.find(e => e.value === 'activa')) {
+        lista.push({ value: 'activa', label: 'Activa' });
+      }
+    }
+    // Asegurar 'pausada'
+    if (!lista.find(e => e.value === 'pausada')) {
+      lista.push({ value: 'pausada', label: 'Pausada' });
+    }
+    return lista;
+  }
+
+  private obtenerEstadoDefaultDesdeLista(estados: { value: string; label: string }[]): 'programada' | 'activa' | 'pausada' {
+    const hayActiva = !!estados.find(e => e.value === 'activa');
+    const hayProgramada = !!estados.find(e => e.value === 'programada');
+    if (hayActiva) return 'activa';
+    if (hayProgramada) return 'programada';
+    return 'pausada';
   }
 
   private obtenerEstadoPorDefecto(fechaInicio?: string): 'programada' | 'activa' | 'pausada' {
@@ -272,6 +333,14 @@ export class RecompensasWizardComponent implements OnInit {
     const fecha = fechaInicio ? new Date(fechaInicio + 'T00:00:00') : null;
     const esFuturo = fecha ? fecha > new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) : false;
     return esFuturo ? 'programada' : 'activa';
+  }
+
+  private esFechaFutura(fechaInicio?: string): boolean {
+    if (!fechaInicio) return false;
+    const hoy = new Date();
+    const hoySinHora = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    const fecha = new Date(fechaInicio + 'T00:00:00');
+    return fecha > hoySinHora;
   }
 
   // Validator: no permitir fecha de inicio pasada
@@ -406,7 +475,20 @@ export class RecompensasWizardComponent implements OnInit {
   // Acciones del wizard
   guardarBorrador(): void {
     this.actualizarWizard();
-    console.log('Guardando borrador:', this.wizard);
+    // Forzar estado programada para borrador, sin depender del select
+    const fechaInicioStr = this.wizard.datos_generales.fecha_inicio;
+    const payload: any = {
+      nombre: this.wizard.datos_generales.nombre?.trim(),
+      descripcion: this.wizard.datos_generales.descripcion?.trim(),
+      tipo: this.wizard.datos_generales.tipo,
+      fecha_inicio: this.wizard.datos_generales.fecha_inicio,
+      fecha_fin: this.wizard.datos_generales.fecha_fin
+    };
+    if (this.esFechaFutura(fechaInicioStr)) {
+      payload.estado = 'programada';
+    }
+    console.log('Guardando borrador (payload normalizado):', payload);
+    // Aquí podrías llamar a un endpoint específico de borrador si existe.
   }
 
   activarRecompensa(): void {
@@ -419,14 +501,15 @@ export class RecompensasWizardComponent implements OnInit {
       this.actualizarWizard();
       
       // Preparar datos para crear la recompensa
-      const datosRecompensa = {
+      const datosRecompensa: any = {
         nombre: this.wizard.datos_generales.nombre?.trim(),
         descripcion: this.wizard.datos_generales.descripcion?.trim(),
         tipo: this.wizard.datos_generales.tipo,
         fecha_inicio: this.wizard.datos_generales.fecha_inicio,
-        fecha_fin: this.wizard.datos_generales.fecha_fin,
-        estado: this.wizard.datos_generales.estado
+        fecha_fin: this.wizard.datos_generales.fecha_fin
       };
+
+      // Importante: no enviar 'estado' al crear; el backend decidirá según la fecha
 
       // Validar que los datos requeridos no estén vacíos
       if (!datosRecompensa.nombre || !datosRecompensa.descripcion || !datosRecompensa.fecha_inicio || !datosRecompensa.fecha_fin) {
