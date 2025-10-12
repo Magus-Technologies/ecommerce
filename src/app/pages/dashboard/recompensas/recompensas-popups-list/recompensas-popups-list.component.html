@@ -6,6 +6,14 @@
       <p class="text-muted mb-0">Gestiona todos los popups creados en el sistema</p>
     </div>
     <div class="d-flex gap-2">
+      <button class="btn btn-success" (click)="abrirModalCrearRecompensa()" title="Crear Nueva Recompensa">
+        <i class="fas fa-plus me-2"></i>
+        Crear Recompensa
+      </button>
+      <button class="btn btn-outline-secondary" (click)="recargarLista()" title="Recargar Lista">
+        <i class="fas fa-sync-alt me-2"></i>
+        Recargar
+      </button>
       <button class="btn btn-outline-primary" (click)="router.navigate(['/dashboard/recompensas/popups'])">
         <i class="fas fa-arrow-left me-2"></i>
         Volver a Gestión
@@ -84,6 +92,28 @@
       <span class="sr-only">Cargando...</span>
     </div>
     <p class="mt-3 text-muted">Cargando popups...</p>
+    
+    <!-- Progreso detallado -->
+    <div class="progress mt-3" style="height: 8px;">
+      <div class="progress-bar progress-bar-striped progress-bar-animated" 
+           role="progressbar" 
+           [style.width.%]="totalRecompensas > 0 ? (recompensasCargadas / totalRecompensas) * 100 : 0">
+      </div>
+    </div>
+    
+    <div class="mt-2">
+      <small class="text-muted">
+        <i class="fas fa-database me-1"></i>
+        Procesando {{ recompensasCargadas }} de {{ totalRecompensas }} recompensas...
+      </small>
+    </div>
+    
+    <div class="mt-1">
+      <small class="text-info">
+        <i class="fas fa-bolt me-1"></i>
+        Optimizando carga paralela de datos...
+      </small>
+    </div>
   </div>
 
   <!-- Error -->
@@ -204,12 +234,26 @@
                     <i class="fas fa-eye"></i>
                   </button>
                   <button 
+                    class="btn btn-sm btn-outline-info" 
+                    (click)="editarPopup(popup)"
+                    title="Editar Popup"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button 
                     class="btn btn-sm" 
                     [ngClass]="popup.popup_activo ? 'btn-outline-warning' : 'btn-outline-success'"
                     (click)="togglePopup(popup)"
                     [title]="popup.popup_activo ? 'Desactivar' : 'Activar'"
                   >
                     <i class="fas fa-power-off"></i>
+                  </button>
+                  <button 
+                    class="btn btn-sm btn-outline-danger" 
+                    (click)="confirmarEliminarPopup(popup)"
+                    title="Eliminar Popup"
+                  >
+                    <i class="fas fa-trash"></i>
                   </button>
                 </div>
               </td>
@@ -376,5 +420,234 @@
   </div>
 </div>
 
+<!-- Modal de confirmación para eliminar popup -->
+<div *ngIf="showDeleteConfirmModal" class="modal fade show d-block" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+          Confirmar Eliminación
+        </h5>
+        <button type="button" class="btn-close" (click)="cerrarModalEliminar()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <i class="fas fa-warning me-2"></i>
+          <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+        </div>
+        <p>¿Estás seguro de que deseas eliminar el popup <strong>"{{ popupToDelete?.titulo }}"</strong>?</p>
+        <div class="bg-light p-3 rounded">
+          <small class="text-muted">
+            <strong>Recompensa:</strong> {{ popupToDelete?.recompensa_info?.nombre || popupToDelete?.recompensa?.nombre || 'N/A' }}<br>
+            <strong>ID:</strong> {{ popupToDelete?.id }}
+          </small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalEliminar()">
+          <i class="fas fa-times me-2"></i>
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" (click)="eliminarPopup()" [disabled]="eliminandoPopup">
+          <i class="fas fa-trash me-2" *ngIf="!eliminandoPopup"></i>
+          <i class="fas fa-spinner fa-spin me-2" *ngIf="eliminandoPopup"></i>
+          {{ eliminandoPopup ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de edición de popup -->
+<div *ngIf="showEditModal" class="modal fade show d-block" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-edit text-info me-2"></i>
+          Editar Popup
+        </h5>
+        <button type="button" class="btn-close" (click)="cerrarModalEditar()"></button>
+      </div>
+      <div class="modal-body">
+        <form #editForm="ngForm" (ngSubmit)="guardarEdicionPopup()">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="editTitulo" class="form-label">Título *</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="editTitulo"
+                  name="titulo"
+                  [ngModel]="popupEditando?.titulo"
+                  (ngModelChange)="popupEditando && (popupEditando.titulo = $event)"
+                  required
+                  maxlength="255"
+                >
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="editTextoBoton" class="form-label">Texto del Botón</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="editTextoBoton"
+                  name="texto_boton"
+                  [ngModel]="popupEditando?.texto_boton"
+                  (ngModelChange)="popupEditando && (popupEditando.texto_boton = $event)"
+                  maxlength="100"
+                >
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="editDescripcion" class="form-label">Descripción</label>
+            <textarea 
+              class="form-control" 
+              id="editDescripcion"
+              name="descripcion"
+              [ngModel]="popupEditando?.descripcion"
+              (ngModelChange)="popupEditando && (popupEditando.descripcion = $event)"
+              rows="3"
+            ></textarea>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="editUrlDestino" class="form-label">URL Destino</label>
+                <input 
+                  type="url" 
+                  class="form-control" 
+                  id="editUrlDestino"
+                  name="url_destino"
+                  [ngModel]="popupEditando?.url_destino"
+                  (ngModelChange)="popupEditando && (popupEditando.url_destino = $event)"
+                  maxlength="500"
+                >
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="editAutoCerrar" class="form-label">Auto-cierre (segundos)</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  id="editAutoCerrar"
+                  name="auto_cerrar_segundos"
+                  [ngModel]="popupEditando?.auto_cerrar_segundos"
+                  (ngModelChange)="popupEditando && (popupEditando.auto_cerrar_segundos = $event)"
+                  min="1"
+                  max="300"
+                >
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="editImagen" class="form-label">Imagen del Popup</label>
+                <input 
+                  type="file" 
+                  class="form-control" 
+                  id="editImagen"
+                  name="imagen_popup"
+                  accept="image/*"
+                  (change)="onEditImageChange($event)"
+                >
+                <div class="form-text">Formatos: JPEG, PNG, JPG, GIF, WebP. Máximo 2MB</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <div class="form-check">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    id="editMostrarCerrar"
+                    name="mostrar_cerrar"
+                    [ngModel]="popupEditando?.mostrar_cerrar"
+                    (ngModelChange)="popupEditando && (popupEditando.mostrar_cerrar = $event)"
+                  >
+                  <label class="form-check-label" for="editMostrarCerrar">
+                    Mostrar botón cerrar
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    id="editPopupActivo"
+                    name="popup_activo"
+                    [ngModel]="popupEditando?.popup_activo"
+                    (ngModelChange)="popupEditando && (popupEditando.popup_activo = $event)"
+                  >
+                  <label class="form-check-label" for="editPopupActivo">
+                    Popup activo
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Preview de imagen actual -->
+          <div *ngIf="popupEditando?.imagen_popup_url && !nuevaImagenPreview" class="mb-3">
+            <label class="form-label">Imagen actual:</label>
+            <div class="popup-edit-image-preview">
+              <img 
+                [src]="obtenerUrlImagen(popupEditando?.imagen_popup_url || '')" 
+                [alt]="popupEditando?.titulo"
+                class="img-thumbnail"
+                style="max-width: 200px; max-height: 150px;"
+              >
+            </div>
+          </div>
+          
+          <!-- Preview de nueva imagen -->
+          <div *ngIf="nuevaImagenPreview" class="mb-3">
+            <label class="form-label">Nueva imagen:</label>
+            <div class="popup-edit-image-preview">
+              <img 
+                [src]="nuevaImagenPreview" 
+                [alt]="popupEditando?.titulo"
+                class="img-thumbnail"
+                style="max-width: 200px; max-height: 150px;"
+              >
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalEditar()">
+          <i class="fas fa-times me-2"></i>
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="guardarEdicionPopup()" [disabled]="editForm.invalid || guardandoPopup">
+          <i class="fas fa-save me-2" *ngIf="!guardandoPopup"></i>
+          <i class="fas fa-spinner fa-spin me-2" *ngIf="guardandoPopup"></i>
+          {{ guardandoPopup ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+        <button type="button" class="btn btn-outline-secondary ms-2" (click)="recargarLista()" title="Recargar Lista">
+          <i class="fas fa-sync-alt me-2"></i>
+          Recargar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Overlay para modales -->
-<div *ngIf="showPopupDetailModal" class="modal-backdrop fade show"></div>
+<div *ngIf="showPopupDetailModal || showDeleteConfirmModal || showEditModal" class="modal-backdrop fade show"></div>
+
+<!-- Modal de Creación de Recompensa -->
+<app-recompensas-crear-modal
+  [mostrar]="showCrearRecompensaModal"
+  (cerrar)="cerrarModalCrearRecompensa()"
+  (recompensaCreada)="onRecompensaCreada($event)"
+></app-recompensas-crear-modal>
+

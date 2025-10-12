@@ -1,17 +1,18 @@
 // src\app\pages\my-account\my-account.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
 import { DireccionesService, Direccion } from '../../services/direcciones.service';
 import { UbigeoService, Departamento, Provincia, Distrito } from '../../services/ubigeo.service';
+import { ModalFotoComponent } from '../../component/modal-foto/modal-foto.component';
 
 @Component({
   selector: 'app-my-account',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, RouterOutlet, ModalFotoComponent],
   templateUrl: './my-account.component.html',
   styleUrl: './my-account.component.scss'
 })
@@ -19,6 +20,8 @@ export class MyAccountComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   isLoading: boolean = true;
   private destroy$ = new Subject<void>();
+  // Compatibilidad con template
+  showModalFoto: boolean = false;
 
   // Propiedades para direcciones
   direcciones: Direccion[] = [];
@@ -209,4 +212,11 @@ export class MyAccountComponent implements OnInit, OnDestroy {
       });
     }
   }
+
+  // Métodos mínimos requeridos por el template (stubs para pruebas / lint)
+  getUserPhotoUrl(): string | null { return null; }
+  onImageError(_event: any): void {}
+  abrirModalFoto(): void { this.showModalFoto = true; }
+  cerrarModalFoto(): void { this.showModalFoto = false; }
+  onFotoActualizada(): void {}
 }

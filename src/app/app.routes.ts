@@ -127,6 +127,14 @@ export const routes: Routes = [
                 (m) => m.ReclamosComponent
               ),
             title: 'Mis Reclamos'
+          },
+          {
+            path: 'recompensas',
+            loadComponent: () =>
+              import('./pages/my-account/recompensas/recompensas.component').then(
+                (m) => m.RecompensasMiCuentaComponent
+              ),
+            title: 'Mis Recompensas'
           }
         ]
       },

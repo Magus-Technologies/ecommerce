@@ -143,6 +143,10 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Prerender
   },
   {
+    path: 'my-account/recompensas',
+    renderMode: RenderMode.Prerender
+  },
+  {
     path: 'dashboard/motorizados',
     renderMode: RenderMode.Server
   },

@@ -88,11 +88,25 @@ export class PopupsService {
     if (popupData.imagen_popup) formData.append('imagen_popup', popupData.imagen_popup);
     if (popupData.texto_boton) formData.append('texto_boton', popupData.texto_boton);
     if (popupData.url_destino) formData.append('url_destino', popupData.url_destino);
-    if (popupData.mostrar_cerrar !== undefined) formData.append('mostrar_cerrar', popupData.mostrar_cerrar.toString());
-    if (popupData.auto_cerrar_segundos !== undefined) formData.append('auto_cerrar_segundos', popupData.auto_cerrar_segundos.toString());
-    if (popupData.popup_activo !== undefined) formData.append('popup_activo', popupData.popup_activo.toString());
+    // Enviar booleanos como '1'/'0' para alinearnos con el backend
+    if (popupData.mostrar_cerrar !== undefined) {
+      formData.append('mostrar_cerrar', popupData.mostrar_cerrar ? '1' : '0');
+    }
+    // Solo enviar auto_cerrar_segundos si es un número válido (permitimos 0 para desactivar)
+    if (popupData.auto_cerrar_segundos !== undefined && popupData.auto_cerrar_segundos !== null) {
+      const secs = Number(popupData.auto_cerrar_segundos);
+      if (!Number.isNaN(secs)) {
+        formData.append('auto_cerrar_segundos', String(secs));
+      }
+    }
+    if (popupData.popup_activo !== undefined) {
+      formData.append('popup_activo', popupData.popup_activo ? '1' : '0');
+    }
 
-    return this.http.put<PopupResponse>(`${this.apiUrl}/${recompensaId}/popups/${popupId}`, formData);
+    // Algunos backends (p.ej., Laravel) no aceptan multipart/form-data con PUT.
+    // Usamos POST con _method=PUT para compatibilidad.
+    formData.append('_method', 'PUT');
+    return this.http.post<PopupResponse>(`${this.apiUrl}/${recompensaId}/popups/${popupId}`, formData);
   }
 
   /**
@@ -198,6 +212,13 @@ export class PopupsService {
    */
   cerrarPopup(popupId: number): Observable<PopupResponse> {
     return this.http.patch<PopupResponse>(`${this.clienteApiUrl}/popups/${popupId}/cerrar`, {});
+  }
+
+  /**
+   * Obtener diagnóstico de popups (útil para debugging)
+   */
+  obtenerDiagnosticoPopups(): Observable<any> {
+    return this.http.get<any>(`${this.clienteApiUrl}/popups-diagnostico`);
   }
 
   // ===== MÉTODOS AUXILIARES =====

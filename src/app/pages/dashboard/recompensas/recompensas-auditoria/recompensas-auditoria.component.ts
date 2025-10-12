@@ -184,16 +184,16 @@ export class RecompensasAuditoriaComponent implements OnInit {
   // Métodos auxiliares
   getAccionClass(accion: TipoAccionAuditoria): string {
     const classes: { [key in TipoAccionAuditoria]: string } = {
-      'creacion': 'bg-success',
-      'modificacion': 'bg-warning',
-      'activacion': 'bg-primary',
-      'pausa': 'bg-secondary',
-      'reanudacion': 'bg-info',
-      'eliminacion': 'bg-danger',
-      'duplicacion': 'bg-purple',
-      'configuracion_cambio': 'bg-dark'
+      'creacion': 'bg-success-50 text-success-600',
+      'modificacion': 'bg-warning-50 text-warning-600',
+      'activacion': 'bg-main-50 text-main-600',
+      'pausa': 'bg-gray-50 text-gray-600',
+      'reanudacion': 'bg-info-50 text-info-600',
+      'eliminacion': 'bg-danger-50 text-danger-600',
+      'duplicacion': 'bg-purple-50 text-purple-600',
+      'configuracion_cambio': 'bg-secondary-50 text-secondary-600'
     };
-    return classes[accion] || 'bg-secondary';
+    return classes[accion] || 'bg-gray-50 text-gray-600';
   }
 
   getAccionIcon(accion: TipoAccionAuditoria): string {

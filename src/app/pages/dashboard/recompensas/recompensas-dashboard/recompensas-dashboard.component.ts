@@ -51,6 +51,13 @@ export class RecompensasDashboardComponent implements OnInit {
     private router: Router
   ) {}
 
+  // Método para abrir el modal de crear recompensa
+  crearRecompensa(): void {
+    this.router.navigate(['/dashboard/recompensas/lista'], { 
+      queryParams: { crear: 'true' } 
+    });
+  }
+
   ngOnInit(): void {
     this.cargarStats();
     this.cargarRecompensasRecientes();

@@ -201,10 +201,7 @@ toggleRecompensas(): void {
     this.showRecompensasDropdown = false;
     
     // Navegar según el submódulo
-    if (submodulo === 'crear') {
-      // Navegar al wizard de creación
-      this.router.navigate(['/dashboard/recompensas/crear']);
-    } else if (submodulo === 'lista') {
+    if (submodulo === 'lista') {
       // Navegar a la lista de recompensas
       this.router.navigate(['/dashboard/recompensas/lista']);
     } else {
