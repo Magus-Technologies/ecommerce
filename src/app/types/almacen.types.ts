@@ -25,6 +25,7 @@ export interface CategoriaCreate {
 export interface MarcaProducto {
   id: number
   nombre: string
+  slug?: string  // ✅ NUEVO: Slug para URLs amigables
   descripcion?: string
   imagen?: string
   imagen_url?: string

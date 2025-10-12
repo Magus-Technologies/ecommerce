@@ -2,6 +2,7 @@
 import { Component, OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { RouterLink, ActivatedRoute, Router } from "@angular/router"
+import { FormsModule } from "@angular/forms"
 import { BreadcrumbComponent } from "../../component/breadcrumb/breadcrumb.component"
 import { ShippingComponent } from "../../component/shipping/shipping.component"
 import { ProductosService, ProductoPublico, type CategoriaParaSidebar } from "../../services/productos.service"
@@ -10,11 +11,12 @@ import { CartNotificationService } from '../../services/cart-notification.servic
 import { AlmacenService } from '../../services/almacen.service'; // ✅ NUEVO
 import { MarcaProducto } from '../../types/almacen.types'; // ✅ NUEVO
 import { SlugHelper } from '../../helpers/slug.helper'; // ✅ NUEVO
+import { BannersService, Banner } from '../../services/banner.service'; // ✅ NUEVO
 import Swal from 'sweetalert2'
 
 @Component({
   selector: "app-shop",
-  imports: [CommonModule, RouterLink, BreadcrumbComponent, ShippingComponent],
+  imports: [CommonModule, RouterLink, BreadcrumbComponent, ShippingComponent, FormsModule],
   templateUrl: "./shop.component.html",
   styleUrl: "./shop.component.scss",
 })
@@ -24,10 +26,17 @@ export class ShopComponent implements OnInit {
   productos: ProductoPublico[] = []
   categorias: CategoriaParaSidebar[] = []
   marcas: MarcaProducto[] = [] // ✅ NUEVO: Marcas desde el backend
+  bannerSidebar: Banner | null = null // ✅ NUEVO: Banner sidebar
   isLoading = false
   categoriaSeleccionada?: number
   marcaSeleccionada?: number // ✅ NUEVO
   searchTerm: string = '';
+
+  // ✅ FILTRO POR PRECIO
+  minPrice: number = 0;
+  maxPrice: number = 10000;
+  currentMinPrice: number = 0;
+  currentMaxPrice: number = 10000;
 
   // pagination
   currentPage = 1
@@ -63,23 +72,29 @@ export class ShopComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private almacenService: AlmacenService, // ✅ NUEVO
+    private bannersService: BannersService, // ✅ NUEVO
   ) {}
 
   ngOnInit(): void {
     // Cargar categorías para el sidebar
     this.cargarCategorias();
     this.cargarMarcas(); // ✅ NUEVO: Cargar marcas desde el backend
+    this.cargarBannerSidebar(); // ✅ NUEVO: Cargar banner del sidebar
 
-    // ✅ NUEVO: Escuchar cambios en los parámetros de ruta (para slug)
+    // ✅ NUEVO: Escuchar cambios en los parámetros de ruta (para slug de categoría y marca)
     this.route.params.subscribe(async (params) => {
-      const slug = params['slug'];
+      const categoriaSlug = params['categoriaSlug'];
+      const marcaSlug = params['marcaSlug'];
 
-      if (slug) {
-        // Si hay slug en la URL, buscar la categoría por slug
-        await this.buscarCategoriaPorSlug(slug);
+      if (categoriaSlug) {
+        // Si hay slug de categoría en la URL, buscar la categoría por slug
+        await this.buscarCategoriaPorSlug(categoriaSlug);
       }
 
-      // this.cargarProductos();
+      if (marcaSlug) {
+        // Si hay slug de marca en la URL, buscar la marca por slug
+        await this.buscarMarcaPorSlug(marcaSlug);
+      }
     });
 
     // Escuchar cambios en los query parameters (mantener compatibilidad)
@@ -98,14 +113,14 @@ export class ShopComponent implements OnInit {
       this.currentPage = 1;
 
       // Solo recargar si no hay slug en la ruta (evitar doble carga)
-      if (!this.route.snapshot.params['slug']) {
+      if (!this.route.snapshot.params['categoriaSlug'] && !this.route.snapshot.params['marcaSlug']) {
         this.cargarProductos();
       }
     });
   }
 
   // ✅ NUEVO: Buscar categoría por slug
-  private buscarCategoriaPorSlug(slug: string): Promise<void> {
+  private async buscarCategoriaPorSlug(slug: string): Promise<void> {
     return new Promise((resolve) => {
       // Esperar a que las categorías se carguen
       const checkCategorias = () => {
@@ -125,6 +140,9 @@ export class ShopComponent implements OnInit {
             console.warn(`Categoría no encontrada para slug: ${slug}`);
             this.categoriaSeleccionada = undefined;
           }
+
+          // ✅ SOLUCIÓN: Cargar productos después de establecer la categoría
+          this.cargarProductos();
           resolve();
         } else {
           // Reintentar después de 100ms
@@ -156,6 +174,18 @@ export class ShopComponent implements OnInit {
     })
   }
 
+  // ✅ NUEVO: Cargar banner del sidebar
+  cargarBannerSidebar(): void {
+    this.bannersService.obtenerBannerSidebarShop().subscribe({
+      next: (banner) => {
+        this.bannerSidebar = banner;
+      },
+      error: (error) => {
+        console.error("Error al cargar banner sidebar:", error);
+      },
+    })
+  }
+
   // Modifica el método existente cargarProductos():
   cargarProductos(): void {
     this.isLoading = true;
@@ -164,7 +194,9 @@ export class ShopComponent implements OnInit {
       categoria: this.categoriaSeleccionada,
       marca: this.marcaSeleccionada,
       page: this.currentPage,
-      search: this.searchTerm, // Mantener search en filtros
+      search: this.searchTerm,
+      minPrice: this.currentMinPrice > 0 ? this.currentMinPrice : undefined,
+      maxPrice: this.currentMaxPrice < 10000 ? this.currentMaxPrice : undefined,
     };
      Object.keys(filtros).forEach(key => {
           if (filtros[key] === undefined || filtros[key] === null || filtros[key] === '') {
@@ -176,7 +208,7 @@ export class ShopComponent implements OnInit {
         if (seccion) {
           filtros.seccion = +seccion;
         }
-   
+
         this.productosService.obtenerProductosPublicos(filtros).subscribe({
           next: (response) => {
             this.productos = response.productos;
@@ -190,7 +222,7 @@ export class ShopComponent implements OnInit {
             this.isLoading = false;
           }
         });
-   
+
       }
 
   
@@ -215,12 +247,68 @@ export class ShopComponent implements OnInit {
     }
   }
 
-  // ✅ NUEVO: Método para seleccionar marca
-  seleccionarMarca(marcaId: number): void {
-    this.router.navigate(['/shop'], {
-      queryParams: { marca: marcaId },
-      queryParamsHandling: "merge",
+  // ✅ NUEVO: Buscar marca por slug
+  private async buscarMarcaPorSlug(slug: string): Promise<void> {
+    return new Promise((resolve) => {
+      const checkMarcas = () => {
+        if (this.marcas.length > 0) {
+          const marca = this.marcas.find(m => {
+            const marcaSlug = SlugHelper.getSlugFromCategoria({
+              nombre: m.nombre,
+              slug: m.slug
+            });
+            return marcaSlug === SlugHelper.normalizeSlug(slug);
+          });
+
+          if (marca) {
+            this.marcaSeleccionada = marca.id;
+          } else {
+            console.warn(`Marca no encontrada para slug: ${slug}`);
+            this.marcaSeleccionada = undefined;
+          }
+
+          this.cargarProductos();
+          resolve();
+        } else {
+          setTimeout(checkMarcas, 100);
+        }
+      };
+      checkMarcas();
     });
+  }
+
+  // ✅ MEJORADO: Método para seleccionar marca con slug
+  seleccionarMarca(marcaId: number): void {
+    const marca = this.marcas.find(m => m.id === marcaId);
+    if (marca) {
+      const slug = SlugHelper.getSlugFromCategoria({
+        nombre: marca.nombre,
+        slug: marca.slug
+      });
+      this.router.navigate(['/shop/marca', slug]);
+    } else {
+      this.router.navigate(['/shop'], {
+        queryParams: { marca: marcaId },
+        queryParamsHandling: "merge",
+      });
+    }
+  }
+
+  // ✅ NUEVO: Aplicar filtro por precio
+  aplicarFiltroPrecio(): void {
+    this.currentMinPrice = this.minPrice;
+    this.currentMaxPrice = this.maxPrice;
+    this.currentPage = 1;
+    this.cargarProductos();
+  }
+
+  // ✅ NUEVO: Limpiar filtro de precio
+  limpiarFiltroPrecio(): void {
+    this.minPrice = 0;
+    this.maxPrice = 10000;
+    this.currentMinPrice = 0;
+    this.currentMaxPrice = 10000;
+    this.cargarProductos();
   }
 
   limpiarFiltros(): void {

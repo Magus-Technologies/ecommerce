@@ -165,7 +165,7 @@ ofertasCarousel!: SlickCarouselComponent;
   bannersDinamicos: Banner[] = [];
   isLoadingBanners = false;
 
-  // ✅ NUEVO: Banners horizontales
+  // ✅ NUEVO: Banners horizontales (solo para index)
   bannersHorizontales: {
     debajo_ofertas_especiales: Banner | null;
     debajo_categorias: Banner | null;
@@ -653,10 +653,11 @@ ofertasEspecialesSlideConfig: any = {
     this.isLoadingBannersHorizontales = true;
     this.bannersService.obtenerBannersHorizontalesPublicos().subscribe({
       next: (banners) => {
-        // Organizar banners por posición
+        // Organizar banners por posición (solo posiciones válidas para index)
         banners.forEach(banner => {
-          if (banner.posicion_horizontal) {
-            this.bannersHorizontales[banner.posicion_horizontal] = banner;
+          if (banner.posicion_horizontal && banner.posicion_horizontal !== 'sidebar_shop') {
+            const posicion = banner.posicion_horizontal as 'debajo_ofertas_especiales' | 'debajo_categorias' | 'debajo_ventas_flash';
+            this.bannersHorizontales[posicion] = banner;
           }
         });
         this.isLoadingBannersHorizontales = false;
