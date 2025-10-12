@@ -162,7 +162,14 @@ export const routes: Routes = [
       },
       // ✅ NUEVO: Ruta SEO-friendly para categorías con slug
       {
-        path: 'shop/categoria/:slug',
+        path: 'shop/categoria/:categoriaSlug',
+        loadComponent: () =>
+          import('./pages/shop/shop.component').then((m) => m.ShopComponent),
+        title: 'Shop',
+      },
+      // ✅ NUEVO: Ruta SEO-friendly para marcas con slug
+      {
+        path: 'shop/marca/:marcaSlug',
         loadComponent: () =>
           import('./pages/shop/shop.component').then((m) => m.ShopComponent),
         title: 'Shop',

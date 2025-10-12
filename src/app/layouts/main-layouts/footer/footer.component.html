@@ -6,23 +6,35 @@
             <!-- Logo y información de contacto -->
             <div class="col-lg-3 col-md-6 mb-40" data-aos="fade-up" data-aos-duration="200">
                 <div class="footer-item__logo mb-24">
-                    <a [routerLink]="['index']"> 
-                        <img src="/assets/images/logo/logo3.png" alt="MAGUS E-COMMERCE" class="img-fluid">
+                    <a [routerLink]="['/']">
+                        <img [src]="empresaInfo.logo_url || '/assets/images/logo/logo3.png'"
+                             [alt]="empresaInfo.nombre_empresa"
+                             class="img-fluid">
                     </a>
                 </div>
-                
+
                 <div class="mb-24">
-                    <p class="text-white mb-16 fw-medium">{{ contactInfo.description }}</p>
-                    <p class="text-white mb-8">{{ contactInfo.email }}</p>
-                    <p class="text-white mb-16">{{ contactInfo.schedule }}</p>
+                    <p class="text-white mb-16 fw-medium">
+                        Escríbenos a: {{ empresaInfo.email }}
+                    </p>
+                    <p class="text-white mb-8" *ngIf="empresaInfo.telefono">
+                        Teléfono: {{ empresaInfo.telefono }}
+                    </p>
+                    <p class="text-white mb-8" *ngIf="empresaInfo.celular">
+                        Celular: {{ empresaInfo.celular }}
+                    </p>
+                    <p class="text-white mb-16" *ngIf="empresaInfo.horario_atencion">
+                        {{ empresaInfo.horario_atencion }}
+                    </p>
                 </div>
 
-                <!-- Redes sociales -->
-                <div class="d-flex gap-12">
-                    <a *ngFor="let social of socialLinks" 
-                       [href]="social.url" 
+                <!-- Redes sociales dinámicas -->
+                <div class="d-flex gap-12" *ngIf="socialLinks.length > 0">
+                    <a *ngFor="let social of socialLinks"
+                       [href]="social.url"
                        target="_blank"
-                       class="w-36 h-36 rounded-circle  bg-opacity-10 hover-bg-danger-10 d-flex align-items-center justify-content-center text-white hover-text-white transition-all">
+                       rel="noopener noreferrer"
+                       class="w-36 h-36 rounded-circle bg-opacity-10 hover-bg-danger-10 d-flex align-items-center justify-content-center text-white hover-text-white transition-all">
                         <i [class]="social.icon" class="text-lg"></i>
                     </a>
                 </div>

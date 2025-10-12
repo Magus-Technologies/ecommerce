@@ -16,8 +16,8 @@ export interface Banner {
   enlace_url: string;
   activo: boolean;
   orden: number;
-  tipo_banner?: 'principal' | 'horizontal'; // ✅ NUEVO
-  posicion_horizontal?: 'debajo_ofertas_especiales' | 'debajo_categorias' | 'debajo_ventas_flash'; // ✅ NUEVO
+  tipo_banner?: 'principal' | 'horizontal' | 'sidebar'; // ✅ ACTUALIZADO: incluye sidebar
+  posicion_horizontal?: 'debajo_ofertas_especiales' | 'debajo_categorias' | 'debajo_ventas_flash' | 'sidebar_shop'; // ✅ ACTUALIZADO
   created_at?: string;
   updated_at?: string;
 }
@@ -32,8 +32,8 @@ export interface BannerCreate {
   enlace_url: string;
   activo: boolean;
   orden: number;
-  tipo_banner?: 'principal' | 'horizontal'; // ✅ NUEVO
-  posicion_horizontal?: 'debajo_ofertas_especiales' | 'debajo_categorias' | 'debajo_ventas_flash'; // ✅ NUEVO
+  tipo_banner?: 'principal' | 'horizontal' | 'sidebar'; // ✅ ACTUALIZADO: incluye sidebar
+  posicion_horizontal?: 'debajo_ofertas_especiales' | 'debajo_categorias' | 'debajo_ventas_flash' | 'sidebar_shop'; // ✅ ACTUALIZADO
 }
 
 export interface BannerPromocional {
@@ -105,6 +105,14 @@ export class BannersService {
   // ✅ NUEVO: Obtener banners horizontales públicos
   obtenerBannersHorizontalesPublicos(): Observable<Banner[]> {
     return this.http.get<ApiResponse<Banner[]>>(`${this.apiUrl}/banners-horizontales/publicos`)
+      .pipe(
+        map(response => response.data)
+      );
+  }
+
+  // ✅ NUEVO: Obtener banner para sidebar de shop
+  obtenerBannerSidebarShop(): Observable<Banner | null> {
+    return this.http.get<ApiResponse<Banner | null>>(`${this.apiUrl}/banners-sidebar-shop/publico`)
       .pipe(
         map(response => response.data)
       );
