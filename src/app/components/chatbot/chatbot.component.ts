@@ -225,7 +225,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
         next: (categorias) => {
           this.categorias = categorias;
           this.actualizarOpcionesCategorias();
-          console.log('Categorías cargadas:', categorias.length);
+          // console.log('Categorías cargadas:', categorias.length);
         },
         error: (error) => console.error('Error al cargar categorías:', error)
       });
@@ -237,7 +237,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
         next: (marcas) => {
           this.marcas = marcas;
           this.actualizarOpcionesMarcas();
-          console.log('Marcas cargadas:', marcas.length);
+          // console.log('Marcas cargadas:', marcas.length);
         },
         error: (error) => console.error('Error al cargar marcas:', error)
       });
@@ -249,7 +249,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
         next: (productos) => {
           this.productosEnOferta = productos;
           this.isLoadingData = false;
-          console.log('Ofertas cargadas:', productos.length);
+          // console.log('Ofertas cargadas:', productos.length);
         },
         error: (error) => {
           console.error('Error al cargar ofertas:', error);

@@ -38,7 +38,7 @@ export class RecompensasDetalleComponent implements OnInit {
 
     this.recompensasService.obtenerDetalle(parseInt(id)).subscribe({
       next: (response: any) => {
-        console.log('Respuesta del backend:', response);
+        // console.log('Respuesta del backend:', response);
         
         // Manejar diferentes estructuras de respuesta
         if (response.data) {

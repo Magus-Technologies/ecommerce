@@ -6,7 +6,7 @@ export const logInterceptor: HttpInterceptorFn = (req, next) => { // ✅ interce
   return next(req).pipe( // ✅ usamos pipe para "interceptar" lo que viene después
     tap(event => { // ✅ usamos tap para ejecutar una acción cuando llegue una respuesta
       if (event instanceof HttpResponse) { // ✅ verificamos si el evento es una respuesta HTTP
-        console.log('Respuesta del backend:', event.body); // ✅ mostramos la respuesta en consola
+        // console.log('Respuesta del backend:', event.body); // ✅ mostramos la respuesta en consola
       }
     })
   );

@@ -56,19 +56,19 @@ export class CartService {
     this.authService.currentUser.subscribe(user => {
       console.log('CartService - Usuario cambió:', user);
       if (user) {
-        console.log('CartService - Cargando carrito desde API');
+        // console.log('CartService - Cargando carrito desde API');
         this.loadCartFromApi().subscribe({
           next: (items) => {
-            console.log('CartService - Carrito cargado desde API:', items);
+            // console.log('CartService - Carrito cargado desde API:', items);
           },
           error: (error) => {
-            console.error('CartService - Error cargando carrito desde API:', error);
+            // console.error('CartService - Error cargando carrito desde API:', error);
             // Si falla la carga desde API, cargar desde storage como fallback
             this.loadCartFromStorage();
           }
         });
       } else {
-        console.log('CartService - Cargando carrito desde localStorage');
+        // console.log('CartService - Cargando carrito desde localStorage');
         this.loadCartFromStorage();
       }
     });
@@ -79,9 +79,9 @@ export class CartService {
   // =================================================================
 
   public addToCart(producto: any, cantidad: number = 1): Observable<any> {
-    console.log('Producto recibido en addToCart:', producto);
+    // console.log('Producto recibido en addToCart:', producto);
     const normalizedProduct = this.normalizeProduct(producto);
-    console.log('Producto normalizado:', normalizedProduct);
+    // console.log('Producto normalizado:', normalizedProduct);
     if (this.authService.isLoggedIn()) {
       return this.addToCartApi(normalizedProduct.id, cantidad);
     } else {
