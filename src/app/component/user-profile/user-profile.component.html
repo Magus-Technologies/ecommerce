@@ -1,22 +1,23 @@
- <!-- SOLUCIÓN DEFINITIVA: Solo un bloque puede estar activo -->
-    <div class="user-profile-container">
+<!-- SOLUCIÓN DEFINITIVA: Prevenir renderizado en servidor -->
+<ng-container *ngIf="isBrowser">
+  <div class="user-profile-container">
 
-      <!-- ESTADO 1: CARGANDO -->
-      <ng-container *ngIf="isInitializing">
-        <div class="user-profile position-relative">
-          <div class="flex-align gap-4 item-hover-white">
-            <span class="text-xl text-white d-flex position-relative item-hover__text">
-              <i class="ph ph-user"></i>
-            </span>
-            <span class="text-md text-white item-hover__text d-none d-lg-flex">
-              Cargando...
-            </span>
-          </div>
+    <!-- ESTADO 1: CARGANDO -->
+    <ng-container *ngIf="isInitializing">
+      <div class="user-profile position-relative">
+        <div class="flex-align gap-4 item-hover-white">
+          <span class="text-xl text-white d-flex position-relative item-hover__text">
+            <i class="ph ph-user"></i>
+          </span>
+          <span class="text-md text-white item-hover__text d-none d-lg-flex">
+            Cargando...
+          </span>
         </div>
-      </ng-container>
+      </div>
+    </ng-container>
 
-      <!-- ESTADO 2: USUARIO LOGUEADO -->
-      <ng-container *ngIf="!isInitializing && isLoggedIn && user">
+    <!-- ESTADO 2: USUARIO LOGUEADO -->
+    <ng-container *ngIf="!isInitializing && isLoggedIn && user">
         <div class="user-profile position-relative">
           <button
             type="button"
@@ -132,4 +133,5 @@
         </div>
       </ng-container>
 
-    </div>
+  </div>
+</ng-container>
