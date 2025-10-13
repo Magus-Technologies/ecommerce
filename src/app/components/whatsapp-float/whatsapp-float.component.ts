@@ -52,17 +52,17 @@ export class WhatsappFloatComponent implements OnInit, OnDestroy {
   }
 
   cargarAsesorDisponibles(): void {
-    console.log('Cargando asesores disponibles...');
+    // console.log('Cargando asesores disponibles...');
     this.isLoadingAsesores = true;
     
     this.horariosService.obtenerAsesorDisponibles().subscribe({
       next: (response) => {
-        console.log('Asesores recibidos:', response);
+        // console.log('Asesores recibidos:', response);
         this.asesorDisponibles = response.asesores_disponibles;
         this.isLoadingAsesores = false;
       },
       error: (error) => {
-        console.error('Error al cargar asesores disponibles:', error);
+        // console.error('Error al cargar asesores disponibles:', error);
         this.isLoadingAsesores = false;
         this.asesorDisponibles = [];
       }
@@ -74,7 +74,7 @@ export class WhatsappFloatComponent implements OnInit, OnDestroy {
 
     const telefono = this.limpiarTelefono(asesor.telefono);
     if (!telefono) {
-      console.warn('Asesor sin teléfono configurado:', asesor.name);
+      // console.warn('Asesor sin teléfono configurado:', asesor.name);
       return;
     }
 

@@ -304,9 +304,9 @@ ofertasEspecialesSlideConfig: any = {
     this.isLoadingPromotionalBanners = true;
     this.bannersService.obtenerBannersPromocionalesPublicos().subscribe({
       next: (banners) => {
-        console.log('Debug: Banners Promocionales recibidos:', banners); // <-- DEBUG
+        // console.log('Debug: Banners Promocionales recibidos:', banners); 
         
-        console.log('Debug: Primer banner completo:', JSON.stringify(banners[0], null, 2));
+        // console.log('Debug: Primer banner completo:', JSON.stringify(banners[0], null, 2));
         this.promotionalBanners = banners;
         this.isLoadingPromotionalBanners = false;
         this.promotionalBanners = banners;
