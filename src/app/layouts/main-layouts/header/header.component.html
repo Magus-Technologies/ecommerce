@@ -623,6 +623,17 @@
               <ul
                 class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
               >
+               <li
+                  class="common-dropdown__item nav-submenu__item"
+                  [class.activePage]="isRouteActive('/shop')"
+                >
+                  <a
+                    [routerLink]="['shop']"
+                    class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
+                  >
+                    Productos</a
+                  >
+                </li>
                 <li
                   class="common-dropdown__item nav-submenu__item"
                   [class.activePage]="isRouteActive('/index-two')"

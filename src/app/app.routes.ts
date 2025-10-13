@@ -160,6 +160,13 @@ export const routes: Routes = [
           import('./pages/shop/shop.component').then((m) => m.ShopComponent),
         title: 'Shop',
       },
+      // ✅ NUEVO: Página de Ofertas
+      {
+        path: 'ofertas',
+        loadComponent: () =>
+          import('./pages/ofertas/ofertas.component').then((m) => m.OfertasComponent),
+        title: 'Ofertas Especiales',
+      },
       // ✅ NUEVO: Ruta SEO-friendly para categorías con slug
       {
         path: 'shop/categoria/:categoriaSlug',

@@ -177,6 +177,10 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'politica-cookies',
     renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'ofertas',
+    renderMode: RenderMode.Prerender
   }
 
   
