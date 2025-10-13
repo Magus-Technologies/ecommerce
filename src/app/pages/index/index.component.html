@@ -564,7 +564,7 @@
         <h5 class="mb-0 wow fadeInLeft">Ofertas Especiales</h5>
         <div class="flex-align gap-16 wow fadeInRight">
           <a
-            [routerLink]="['shop']"
+            [routerLink]="['/ofertas']"
             class="text-sm fw-medium text-gray-700 hover-text-main-600 hover-text-decoration-underline"
             >Ver Todas las ofertas</a
           >
@@ -1375,13 +1375,13 @@
             </h6>
           </div>
           <div class="short-product-list arrow-style-two max-h-unset">
-            <!-- ✅ PRODUCTOS EN OFERTA DINÁMICOS -->
+            <!-- ✅ PRODUCTOS EN OFERTA DINÁMICOS (Ahora usando bannerOfertaActivo.productos) -->
             <div
-              *ngIf="productosEnOferta.length > 0"
+              *ngIf="(bannerOfertaActivo?.productos?.length || 0) > 0"
               class="d-flex flex-column gap-44"
             >
               <div
-                *ngFor="let producto of productosEnOferta.slice(0, 4)"
+                *ngFor="let producto of bannerOfertaActivo?.productos?.slice(0, 4)"
                 class="flex-align gap-16"
               >
                 <div
@@ -1390,7 +1390,7 @@
                   <a [routerLink]="getProductLink(producto)" class="link">
                     <img
                       [src]="
-                        producto.imagen_url ||
+                        producto.imagen_principal ||
                         'assets/images/thumbs/short-product-img9.png'
                       "
                       [alt]="producto.nombre"
@@ -1421,12 +1421,12 @@
                   </h6>
                   <div class="product-card__price flex-align gap-8">
                     <span class="text-heading text-md fw-semibold d-block">
-                      S/ {{ producto.precio_oferta | number : "1.2-2" }}
+                      S/ {{ producto.precio_con_descuento | number : "1.2-2" }}
                     </span>
                     <span
                       class="text-gray-400 text-md fw-semibold d-block text-decoration-line-through"
                     >
-                      S/ {{ producto.precio_original | number : "1.2-2" }}
+                      S/ {{ producto.precio | number : "1.2-2" }}
                     </span>
                   </div>
                 </div>
@@ -1435,7 +1435,7 @@
 
             <!-- ✅ MENSAJE CUANDO NO HAY PRODUCTOS EN OFERTA -->
             <div
-              *ngIf="productosEnOferta.length === 0"
+              *ngIf="!bannerOfertaActivo?.productos?.length"
               class="text-center py-40"
             >
               <div class="bg-gray-50 rounded-12 py-30 px-20">

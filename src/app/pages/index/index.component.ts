@@ -350,8 +350,8 @@ ofertasEspecialesSlideConfig: any = {
     this.cargarMarcasDinamicas();
     this.cargarOfertasActivas();
     this.cargarFlashSales();
-    this.cargarBannerOfertaActivo(); // ✅ NUEVO
-    this.cargarProductosEnOferta();
+    this.cargarBannerOfertaActivo(); // ✅ Este ya trae los productos dentro
+    // ❌ ELIMINADO: this.cargarProductosEnOferta() - Ya no se usa, los productos vienen en bannerOfertaActivo
     this.cargarCuponesActivos();
     this.cargarOfertaPrincipalDelDia(); // ✅ NUEVA FUNCIÓN
     this.cargarCategoriasParaFiltro(); // ✅ NUEVA FUNCIÓN
