@@ -1,6 +1,12 @@
 // src/app/component/user-profile/user-profile.component.ts
-import { Component, OnInit, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  OnInit,
+  HostListener,
+  Inject,
+  PLATFORM_ID,
+} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
@@ -9,8 +15,8 @@ import { User } from '../../models/user.model';
   selector: 'app-user-profile',
   standalone: true,
   imports: [CommonModule, RouterLink],
-  templateUrl: "./user-profile.component.html",
-  styleUrl: "./user-profile.component.scss"
+  templateUrl: './user-profile.component.html',
+  styleUrl: './user-profile.component.scss',
 })
 export class UserProfileComponent implements OnInit {
   user: User | null = null;
@@ -21,12 +27,31 @@ export class UserProfileComponent implements OnInit {
   showUserDropdown = false;
   isInitializing = true;
 
-  constructor(private authService: AuthService) {}
+  // Variable pública para usar en el template
+  isBrowser: boolean;
 
-ngOnInit(): void {
-    // Obtener estado inicial SÍNCRONAMENTE
+  constructor(
+    private authService: AuthService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
+
+  ngOnInit(): void {
+    // CRÍTICO: Solo ejecutar lógica de autenticación en el navegador
+    if (!this.isBrowser) {
+      // En el servidor, siempre mostrar estado "cargando"
+      // Esto evita que se renderice el botón "Iniciar Sesión" en el servidor
+      this.isInitializing = true;
+      return;
+    }
+
+    // Solo ejecutar esto en el navegador - SÍNCRONAMENTE y UNA SOLA VEZ
     const token = this.authService.getToken();
     const currentUser = this.authService.getCurrentUser();
+
+    // Guardar el ID del usuario actual para detectar cambios
+    let previousUserId = currentUser?.id;
 
     // Inicializar estado una sola vez
     if (token && currentUser && Object.keys(currentUser).length > 0) {
@@ -35,75 +60,69 @@ ngOnInit(): void {
       this.updateUserState(null);
     }
 
-    // SOLO suscribirse a cambios FUTUROS (no ejecutar inmediatamente)
-    this.authService.currentUser.subscribe(user => {
-      // Solo actualizar si el estado realmente cambió
-      if (this.isInitializing || this.user?.id !== user?.id) {
+    // Suscribirse a cambios REALES de autenticación (login/logout)
+    this.authService.currentUser.subscribe((user) => {
+      const currentUserId = user?.id;
+
+      // Solo actualizar si el usuario cambió (login/logout) o si pasó de null a usuario
+      if (previousUserId !== currentUserId) {
+        console.log('🔄 Cambio de usuario detectado:', { previousUserId, currentUserId });
         this.updateUserState(user);
-        console.log('UserProfile updated:', {
-          user: this.user,
-          isLoggedIn: this.isLoggedIn,
-          esCliente: this.esCliente,
-          esSuperadmin: this.esSuperadmin,
-          isInitializing: this.isInitializing
-        });
+        previousUserId = currentUserId;
       }
     });
   }
 
+  private updateUserState(user: any): void {
+    console.log('🔧 Actualizando estado con usuario:', user);
 
+    const hasValidToken = !!this.authService.getToken();
 
+    // CRÍTICO: Validación exhaustiva
+    const isValidUser =
+      user &&
+      typeof user === 'object' &&
+      Object.keys(user).length > 0 &&
+      user.id &&
+      user.tipo_usuario;
 
-private updateUserState(user: any): void {
-  console.log('🔧 Actualizando estado con usuario:', user);
+    console.log('🔍 Validación:', {
+      hasValidToken,
+      isValidUser,
+      userType: user?.tipo_usuario,
+    });
 
-  const hasValidToken = !!this.authService.getToken();
+    if (isValidUser && hasValidToken) {
+      // Usuario válido con token
+      this.user = user;
+      this.isLoggedIn = true;
 
-  // CRÍTICO: Validación exhaustiva
-  const isValidUser = user && 
-                     typeof user === 'object' && 
-                     Object.keys(user).length > 0 &&
-                     user.id &&
-                     user.tipo_usuario;
+      // Determinar tipo de usuario
+      this.esSuperadmin =
+        user.roles?.includes('superadmin') ||
+        user.roles?.includes('admin') ||
+        user.tipo_usuario === 'admin';
+      this.esCliente = user.tipo_usuario === 'cliente';
+    } else {
+      // Estado inválido - resetear TODO
+      this.user = null;
+      this.isLoggedIn = false;
+      this.esSuperadmin = false;
+      this.esCliente = false;
+    }
 
-  console.log('🔍 Validación:', { 
-    hasValidToken, 
-    isValidUser,
-    userType: user?.tipo_usuario 
-  });
+    // Finalizar inicialización
+    this.isInitializing = false;
 
-  if (isValidUser && hasValidToken) {
-    // Usuario válido con token
-    this.user = user;
-    this.isLoggedIn = true;
-    
-    // Determinar tipo de usuario
-    this.esSuperadmin = user.roles?.includes('superadmin') ||
-                       user.roles?.includes('admin') ||
-                       user.tipo_usuario === 'admin';
-    this.esCliente = user.tipo_usuario === 'cliente';
-  } else {
-    // Estado inválido - resetear TODO
-    this.user = null;
-    this.isLoggedIn = false;
-    this.esSuperadmin = false;
-    this.esCliente = false;
+    console.log('✅ Estado final:', {
+      isLoggedIn: this.isLoggedIn,
+      esCliente: this.esCliente,
+      esSuperadmin: this.esSuperadmin,
+      isInitializing: this.isInitializing,
+      hasValidToken,
+      userName: this.user?.name,
+    });
   }
-
-  // Finalizar inicialización
-  this.isInitializing = false;
-
-  console.log('✅ Estado final:', {
-    isLoggedIn: this.isLoggedIn,
-    esCliente: this.esCliente,
-    esSuperadmin: this.esSuperadmin,
-    isInitializing: this.isInitializing,
-    hasValidToken,
-    userName: this.user?.name
-  });
-}
-
-
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
