@@ -1684,7 +1684,7 @@
           [attr.data-aos]="slide.dataAos"
           [attr.data-aos-duration]="slide.dataAosDuration"
         >
-          <a [routerLink]="['/shop']" [queryParams]="{marca: slide.marcaId}" style="cursor: pointer; display: block;">
+          <a [routerLink]="getMarcaLink(slide)" style="cursor: pointer; display: block;">
             <img
               [src]="slide.imgSrc"
               [alt]="slide.imgAlt"

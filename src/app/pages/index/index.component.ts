@@ -57,7 +57,9 @@ interface BrandSlide {
   dataAosDuration: number;
   imgSrc: string;
   imgAlt: string;
-  marcaId?: number; // ✅ NUEVO: ID de la marca para redirección
+  marcaId?: number; // ✅ ID de la marca para redirección
+  marcaSlug?: string; // ✅ NUEVO: Slug de la marca para URLs SEO-friendly
+  marcaNombre?: string; // ✅ NUEVO: Nombre de la marca para generar slug si no existe
 }
 
 interface BrandSlideGroup {
@@ -683,7 +685,9 @@ ofertasEspecialesSlideConfig: any = {
           dataAosDuration: 200 + index * 200,
           imgSrc: marca.imagen_url || 'assets/images/thumbs/brand-default.png',
           imgAlt: marca.nombre,
-          marcaId: marca.id, // ✅ NUEVO: Incluir ID de marca
+          marcaId: marca.id, // ✅ ID de marca
+          marcaSlug: marca.slug, // ✅ NUEVO: Slug de la marca para SEO
+          marcaNombre: marca.nombre, // ✅ NUEVO: Nombre para generar slug si no existe
         }));
         this.isLoadingMarcas = false;
 
@@ -1608,5 +1612,13 @@ siguienteOfertaEspecial(): void {
     const slug = producto.slug || SlugHelper.generateSlug(producto.nombre);
     // Formato: /product/:id/:slug (el ID va primero para facilitar la búsqueda en el componente de detalles)
     return ['/product', producto.id.toString(), slug];
+  }
+
+  // ✅ NUEVO: Método para obtener el link de marca con slug para SEO
+  getMarcaLink(slide: BrandSlide): string[] {
+    // Usar el slug de la marca si existe, sino generar uno desde el nombre
+    const slug = slide.marcaSlug || SlugHelper.generateSlug(slide.marcaNombre || 'marca');
+    // Formato: /shop/marca/:slug (ej: /shop/marca/antryx)
+    return ['/shop/marca', slug];
   }
 }
