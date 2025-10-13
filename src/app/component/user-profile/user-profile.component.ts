@@ -23,64 +23,87 @@ export class UserProfileComponent implements OnInit {
 
   constructor(private authService: AuthService) {}
 
-  ngOnInit(): void {
-    // Obtener estado inmediatamente de forma síncrona
-    this.initializeUserState();
-
-    // Suscribirse a cambios del usuario
-    this.authService.currentUser.subscribe(user => {
-      this.updateUserState(user);
-      console.log('UserProfile updated:', {
-        user: this.user,
-        isLoggedIn: this.isLoggedIn,
-        esCliente: this.esCliente,
-        esSuperadmin: this.esSuperadmin,
-        isInitializing: this.isInitializing
-      });
-    });
-  }
-
-  private initializeUserState(): void {
-    // Obtener el usuario actual de forma síncrona para evitar estados duplicados
+ngOnInit(): void {
+    // Obtener estado inicial SÍNCRONAMENTE
+    const token = this.authService.getToken();
     const currentUser = this.authService.getCurrentUser();
-    const isLoggedIn = this.authService.isLoggedIn();
 
-    console.log('🔄 Inicializando estado:', { currentUser, isLoggedIn });
-
-    if (isLoggedIn && currentUser) {
+    // Inicializar estado una sola vez
+    if (token && currentUser && Object.keys(currentUser).length > 0) {
       this.updateUserState(currentUser);
     } else {
       this.updateUserState(null);
     }
-  }
 
-  private updateUserState(user: any): void {
-    console.log('🔧 Actualizando estado con usuario:', user);
-
-    this.user = user;
-    this.isLoggedIn = !!user;
-
-    if (user) {
-      // Verificar si es superadmin (puede estar en roles array o como propiedad)
-      this.esSuperadmin = user.roles?.includes('superadmin') ||
-                         user.roles?.includes('admin') ||
-                         user.tipo_usuario === 'admin';
-      this.esCliente = user.tipo_usuario === 'cliente';
-    } else {
-      this.esSuperadmin = false;
-      this.esCliente = false;
-    }
-
-    // CRÍTICO: Finalizar inicialización inmediatamente
-    this.isInitializing = false;
-
-    console.log('✅ Estado actualizado:', {
-      isLoggedIn: this.isLoggedIn,
-      esCliente: this.esCliente,
-      esSuperadmin: this.esSuperadmin,
-      isInitializing: this.isInitializing
+    // SOLO suscribirse a cambios FUTUROS (no ejecutar inmediatamente)
+    this.authService.currentUser.subscribe(user => {
+      // Solo actualizar si el estado realmente cambió
+      if (this.isInitializing || this.user?.id !== user?.id) {
+        this.updateUserState(user);
+        console.log('UserProfile updated:', {
+          user: this.user,
+          isLoggedIn: this.isLoggedIn,
+          esCliente: this.esCliente,
+          esSuperadmin: this.esSuperadmin,
+          isInitializing: this.isInitializing
+        });
+      }
     });
   }
+
+
+
+
+private updateUserState(user: any): void {
+  console.log('🔧 Actualizando estado con usuario:', user);
+
+  const hasValidToken = !!this.authService.getToken();
+
+  // CRÍTICO: Validación exhaustiva
+  const isValidUser = user && 
+                     typeof user === 'object' && 
+                     Object.keys(user).length > 0 &&
+                     user.id &&
+                     user.tipo_usuario;
+
+  console.log('🔍 Validación:', { 
+    hasValidToken, 
+    isValidUser,
+    userType: user?.tipo_usuario 
+  });
+
+  if (isValidUser && hasValidToken) {
+    // Usuario válido con token
+    this.user = user;
+    this.isLoggedIn = true;
+    
+    // Determinar tipo de usuario
+    this.esSuperadmin = user.roles?.includes('superadmin') ||
+                       user.roles?.includes('admin') ||
+                       user.tipo_usuario === 'admin';
+    this.esCliente = user.tipo_usuario === 'cliente';
+  } else {
+    // Estado inválido - resetear TODO
+    this.user = null;
+    this.isLoggedIn = false;
+    this.esSuperadmin = false;
+    this.esCliente = false;
+  }
+
+  // Finalizar inicialización
+  this.isInitializing = false;
+
+  console.log('✅ Estado final:', {
+    isLoggedIn: this.isLoggedIn,
+    esCliente: this.esCliente,
+    esSuperadmin: this.esSuperadmin,
+    isInitializing: this.isInitializing,
+    hasValidToken,
+    userName: this.user?.name
+  });
+}
+
+
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
