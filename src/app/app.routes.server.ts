@@ -173,6 +173,11 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'motorizado/historial',
     renderMode: RenderMode.Server
+  },
+  {
+    path: 'politica-cookies',
+    renderMode: RenderMode.Prerender
   }
+
   
 ];

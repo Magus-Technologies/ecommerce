@@ -7,11 +7,13 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from './services/auth.service';
 import { CartNotificationService, CartNotificationData } from './services/cart-notification.service';
 import { CartNotificationComponent } from './components/cart-notification/cart-notification.component';
+import { CookieBannerComponent } from './components/cookie-banner/cookie-banner.component';
+import { CookieConsentService } from './services/cookie-consent.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CartNotificationComponent],
+  imports: [RouterOutlet, CartNotificationComponent, CookieBannerComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
@@ -32,12 +34,19 @@ export class AppComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private authService: AuthService,
-    private cartNotificationService: CartNotificationService
+    private cartNotificationService: CartNotificationService,
+    private cookieConsentService: CookieConsentService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   async ngOnInit() {
+    // Inicializar el sistema de consentimiento de cookies
+    this.cookieConsentService.initialize().subscribe({
+      next: () => console.log('✅ Sistema de cookies inicializado'),
+      error: (err) => console.error('❌ Error al inicializar cookies:', err)
+    });
+
     // Suscribirse a las notificaciones del carrito
     this.cartNotificationService.notification$.subscribe(data => {
       this.cartNotificationData = data;

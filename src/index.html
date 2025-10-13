@@ -10,6 +10,43 @@
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.2/src/fill/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.2/src/regular/style.css">
 
+  <!-- =====================================================
+       GOOGLE ANALYTICS CON CONSENT MODE V2
+       ===================================================== -->
+  <!--
+    IMPORTANTE: Reemplaza 'G-XXXXXXXXXX' con tu ID real de Google Analytics
+    Puedes obtenerlo desde: https://analytics.google.com/
+  -->
+  <script>
+    // Configurar el modo de consentimiento por defecto ANTES de cargar gtag
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+
+    // Establecer el modo de consentimiento por defecto como 'denied'
+    // Esto cumple con GDPR, LGPD, y CCPA
+    gtag('consent', 'default', {
+      'ad_storage': 'denied',
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied',
+      'analytics_storage': 'denied',
+      'functionality_storage': 'denied',
+      'personalization_storage': 'denied',
+      'security_storage': 'granted', // Siempre permitido para seguridad
+      'wait_for_update': 500
+    });
+
+    // Configuración adicional de Google Analytics
+    gtag('js', new Date());
+
+    // NOTA: El ID de medición se configura dinámicamente desde el backend
+    // Si necesitas configurarlo manualmente, descomenta la siguiente línea:
+    // gtag('config', 'G-XXXXXXXXXX', { 'anonymize_ip': true });
+  </script>
+
+  <!-- Cargar Google Analytics (gtag.js) -->
+  <!-- NOTA: Reemplaza 'G-XXXXXXXXXX' con tu ID real de Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+
   <!-- Estilos del loader de carga inicial -->
   <style>
     #initial-loader {
