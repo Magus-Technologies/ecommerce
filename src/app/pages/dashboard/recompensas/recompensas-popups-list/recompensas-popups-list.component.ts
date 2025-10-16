@@ -430,7 +430,7 @@ export class RecompensasPopupsListComponent implements OnInit, OnDestroy {
     this.guardandoPopup = true;
 
     // Preparar datos para actualización
-    const updateData: PopupUpdateRequest = {
+    const updateData: any = {
       titulo: this.popupEditando.titulo,
       descripcion: this.popupEditando.descripcion,
       texto_boton: this.popupEditando.texto_boton,
@@ -438,7 +438,15 @@ export class RecompensasPopupsListComponent implements OnInit, OnDestroy {
       mostrar_cerrar: this.popupEditando.mostrar_cerrar,
       auto_cerrar_segundos: this.popupEditando.auto_cerrar_segundos,
       popup_activo: this.popupEditando.popup_activo,
-      imagen_popup: this.nuevaImagenFile || undefined
+      imagen_popup: this.nuevaImagenFile || undefined,
+      // Nuevas propiedades de configuración visual
+      size: this.popupEditando.size || 'medium',
+      position: this.popupEditando.position || 'center',
+      theme: this.popupEditando.theme || 'light',
+      blur_backdrop: this.popupEditando.blur_backdrop ?? true,
+      close_on_backdrop: this.popupEditando.close_on_backdrop ?? false,
+      animation: this.popupEditando.animation || 'fade',
+      imagen_aspect_ratio: this.popupEditando.imagen_aspect_ratio || '16:9'
     };
 
     this.popupsService.actualizarPopup(recompensaId as number, this.popupEditando.id, updateData).subscribe({

@@ -6,10 +6,6 @@
       <p class="text-muted mb-0">Gestiona todos los popups creados en el sistema</p>
     </div>
     <div class="d-flex gap-2">
-      <button class="btn btn-success" (click)="abrirModalCrearRecompensa()" title="Crear Nueva Recompensa">
-        <i class="fas fa-plus me-2"></i>
-        Crear Recompensa
-      </button>
       <button class="btn btn-outline-secondary" (click)="recargarLista()" title="Recargar Lista">
         <i class="fas fa-sync-alt me-2"></i>
         Recargar
@@ -552,9 +548,9 @@
             <div class="col-md-6">
               <div class="mb-3">
                 <label for="editImagen" class="form-label">Imagen del Popup</label>
-                <input 
-                  type="file" 
-                  class="form-control" 
+                <input
+                  type="file"
+                  class="form-control"
                   id="editImagen"
                   name="imagen_popup"
                   accept="image/*"
@@ -566,9 +562,9 @@
             <div class="col-md-6">
               <div class="mb-3">
                 <div class="form-check">
-                  <input 
-                    class="form-check-input" 
-                    type="checkbox" 
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
                     id="editMostrarCerrar"
                     name="mostrar_cerrar"
                     [ngModel]="popupEditando?.mostrar_cerrar"
@@ -579,9 +575,9 @@
                   </label>
                 </div>
                 <div class="form-check">
-                  <input 
-                    class="form-check-input" 
-                    type="checkbox" 
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
                     id="editPopupActivo"
                     name="popup_activo"
                     [ngModel]="popupEditando?.popup_activo"
@@ -590,6 +586,136 @@
                   <label class="form-check-label" for="editPopupActivo">
                     Popup activo
                   </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Configuración Visual Avanzada -->
+          <div class="card bg-light mb-3">
+            <div class="card-header">
+              <h6 class="mb-0">
+                <i class="fas fa-palette me-2"></i>
+                Configuración Visual
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label for="editSize" class="form-label">Tamaño del Popup</label>
+                    <select
+                      class="form-select"
+                      id="editSize"
+                      name="size"
+                      [ngModel]="popupEditando?.size || 'medium'"
+                      (ngModelChange)="popupEditando && (popupEditando.size = $event)"
+                    >
+                      <option value="small">Pequeño (400px)</option>
+                      <option value="medium">Mediano (520px)</option>
+                      <option value="large">Grande (700px)</option>
+                      <option value="fullscreen">Pantalla completa (95%)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label for="editPosition" class="form-label">Posición</label>
+                    <select
+                      class="form-select"
+                      id="editPosition"
+                      name="position"
+                      [ngModel]="popupEditando?.position || 'center'"
+                      (ngModelChange)="popupEditando && (popupEditando.position = $event)"
+                    >
+                      <option value="center">Centro</option>
+                      <option value="bottom-right">Abajo derecha (Toast)</option>
+                      <option value="top-center">Arriba centro</option>
+                      <option value="bottom-center">Abajo centro</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label for="editTheme" class="form-label">Tema</label>
+                    <select
+                      class="form-select"
+                      id="editTheme"
+                      name="theme"
+                      [ngModel]="popupEditando?.theme || 'light'"
+                      (ngModelChange)="popupEditando && (popupEditando.theme = $event)"
+                    >
+                      <option value="light">Claro</option>
+                      <option value="dark">Oscuro</option>
+                      <option value="gradient">Gradiente</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label for="editAnimation" class="form-label">Animación</label>
+                    <select
+                      class="form-select"
+                      id="editAnimation"
+                      name="animation"
+                      [ngModel]="popupEditando?.animation || 'fade'"
+                      (ngModelChange)="popupEditando && (popupEditando.animation = $event)"
+                    >
+                      <option value="fade">Fade (Desvanecer)</option>
+                      <option value="slide">Slide (Deslizar)</option>
+                      <option value="zoom">Zoom (Escalar)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label for="editAspectRatio" class="form-label">Proporción de Imagen</label>
+                    <select
+                      class="form-select"
+                      id="editAspectRatio"
+                      name="imagen_aspect_ratio"
+                      [ngModel]="popupEditando?.imagen_aspect_ratio || '16:9'"
+                      (ngModelChange)="popupEditando && (popupEditando.imagen_aspect_ratio = $event)"
+                    >
+                      <option value="16:9">16:9 (Panorámica)</option>
+                      <option value="4:3">4:3 (Clásica)</option>
+                      <option value="1:1">1:1 (Cuadrada)</option>
+                      <option value="auto">Automática</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label d-block">Opciones Avanzadas</label>
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="editBlurBackdrop"
+                        name="blur_backdrop"
+                        [ngModel]="popupEditando?.blur_backdrop ?? true"
+                        (ngModelChange)="popupEditando && (popupEditando.blur_backdrop = $event)"
+                      >
+                      <label class="form-check-label" for="editBlurBackdrop">
+                        Desenfoque de fondo
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="editCloseOnBackdrop"
+                        name="close_on_backdrop"
+                        [ngModel]="popupEditando?.close_on_backdrop ?? false"
+                        (ngModelChange)="popupEditando && (popupEditando.close_on_backdrop = $event)"
+                      >
+                      <label class="form-check-label" for="editCloseOnBackdrop">
+                        Cerrar al hacer click fuera
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -644,10 +770,4 @@
 <!-- Overlay para modales -->
 <div *ngIf="showPopupDetailModal || showDeleteConfirmModal || showEditModal" class="modal-backdrop fade show"></div>
 
-<!-- Modal de Creación de Recompensa -->
-<app-recompensas-crear-modal
-  [mostrar]="showCrearRecompensaModal"
-  (cerrar)="cerrarModalCrearRecompensa()"
-  (recompensaCreada)="onRecompensaCreada($event)"
-></app-recompensas-crear-modal>
-
+ 

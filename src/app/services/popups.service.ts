@@ -190,10 +190,30 @@ export class PopupsService {
   }
 
   /**
+   * Obtener popups activos con user_cliente_id (endpoint de cliente)
+   * Según especificaciones del backend, este endpoint ahora acepta user_cliente_id
+   */
+  obtenerPopupsActivosConUserId(userClienteId: number): Observable<PopupResponse> {
+    const params = new HttpParams().set('user_cliente_id', userClienteId.toString());
+    return this.http.get<PopupResponse>(`${this.clienteApiUrl}/popups-activos`, { params });
+  }
+
+  /**
    * Obtener popups activos para invitados (público, sin token)
    */
   obtenerPopupsPublicosActivos(segmento?: string): Observable<PopupResponse> {
     let params = new HttpParams();
+    if (segmento && segmento.trim() !== '') {
+      params = params.set('segmento', segmento);
+    }
+    return this.http.get<PopupResponse>(`${this.publicoApiUrl}/popups-activos`, { params });
+  }
+
+  /**
+   * Obtener popups activos para cliente registrado SIN token (usando user_cliente_id)
+   */
+  obtenerPopupsPublicosActivosConUserId(userClienteId: number, segmento?: string): Observable<PopupResponse> {
+    let params = new HttpParams().set('user_cliente_id', userClienteId.toString());
     if (segmento && segmento.trim() !== '') {
       params = params.set('segmento', segmento);
     }

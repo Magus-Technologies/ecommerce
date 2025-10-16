@@ -1,3 +1,9 @@
+export type PopupSize = 'small' | 'medium' | 'large' | 'fullscreen';
+export type PopupPosition = 'center' | 'bottom-right' | 'top-center' | 'bottom-center';
+export type PopupTheme = 'light' | 'dark' | 'gradient';
+export type PopupAnimation = 'fade' | 'slide' | 'zoom';
+export type PopupAspectRatio = '16:9' | '4:3' | '1:1' | 'auto';
+
 export interface Popup {
   id: number;
   recompensa_id: number;
@@ -12,6 +18,14 @@ export interface Popup {
   popup_activo: boolean;
   esta_activo: boolean;
   tiene_auto_cierre: boolean;
+  // Nuevas propiedades de configuración visual
+  size?: PopupSize;
+  position?: PopupPosition;
+  theme?: PopupTheme;
+  blur_backdrop?: boolean;
+  close_on_backdrop?: boolean;
+  animation?: PopupAnimation;
+  imagen_aspect_ratio?: PopupAspectRatio;
   recompensa?: {
     id: number;
     nombre: string;
@@ -40,6 +54,14 @@ export interface PopupCreateRequest {
   mostrar_cerrar?: boolean;
   auto_cerrar_segundos?: number;
   popup_activo?: boolean;
+  // Nuevas propiedades de configuración visual
+  size?: PopupSize;
+  position?: PopupPosition;
+  theme?: PopupTheme;
+  blur_backdrop?: boolean;
+  close_on_backdrop?: boolean;
+  animation?: PopupAnimation;
+  imagen_aspect_ratio?: PopupAspectRatio;
 }
 
 export interface PopupUpdateRequest {
@@ -51,6 +73,14 @@ export interface PopupUpdateRequest {
   mostrar_cerrar?: boolean;
   auto_cerrar_segundos?: number;
   popup_activo?: boolean;
+  // Nuevas propiedades de configuración visual
+  size?: PopupSize;
+  position?: PopupPosition;
+  theme?: PopupTheme;
+  blur_backdrop?: boolean;
+  close_on_backdrop?: boolean;
+  animation?: PopupAnimation;
+  imagen_aspect_ratio?: PopupAspectRatio;
 }
 
 export interface PopupStats {

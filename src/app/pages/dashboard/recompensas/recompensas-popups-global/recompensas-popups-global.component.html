@@ -505,6 +505,141 @@
             </div>
           </div>
 
+          <!-- Configuración Visual Avanzada -->
+          <div class="row mt-4">
+            <div class="col-12">
+              <div class="card bg-light">
+                <div class="card-header">
+                  <h6 class="mb-0">
+                    <i class="fas fa-palette me-2"></i>
+                    Configuración Visual
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-3">
+                      <div class="form-group">
+                        <label for="size" class="form-label">Tamaño del Popup</label>
+                        <select
+                          id="size"
+                          class="form-control"
+                          [(ngModel)]="$any(popupModalData).size"
+                          name="size"
+                        >
+                          <option value="small">Pequeño (400px)</option>
+                          <option value="medium" selected>Mediano (520px)</option>
+                          <option value="large">Grande (700px)</option>
+                          <option value="fullscreen">Pantalla completa (95%)</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="form-group">
+                        <label for="position" class="form-label">Posición</label>
+                        <select
+                          id="position"
+                          class="form-control"
+                          [(ngModel)]="$any(popupModalData).position"
+                          name="position"
+                        >
+                          <option value="center" selected>Centro</option>
+                          <option value="bottom-right">Abajo derecha (Toast)</option>
+                          <option value="top-center">Arriba centro</option>
+                          <option value="bottom-center">Abajo centro</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="form-group">
+                        <label for="theme" class="form-label">Tema</label>
+                        <select
+                          id="theme"
+                          class="form-control"
+                          [(ngModel)]="$any(popupModalData).theme"
+                          name="theme"
+                        >
+                          <option value="light" selected>Claro</option>
+                          <option value="dark">Oscuro</option>
+                          <option value="gradient">Gradiente</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="form-group">
+                        <label for="animation" class="form-label">Animación</label>
+                        <select
+                          id="animation"
+                          class="form-control"
+                          [(ngModel)]="$any(popupModalData).animation"
+                          name="animation"
+                        >
+                          <option value="fade" selected>Fade (Desvanecer)</option>
+                          <option value="slide">Slide (Deslizar)</option>
+                          <option value="zoom">Zoom (Escalar)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row mt-3">
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label for="aspect_ratio" class="form-label">Proporción de Imagen</label>
+                        <select
+                          id="aspect_ratio"
+                          class="form-control"
+                          [(ngModel)]="$any(popupModalData).imagen_aspect_ratio"
+                          name="imagen_aspect_ratio"
+                        >
+                          <option value="16:9" selected>16:9 (Panorámica)</option>
+                          <option value="4:3">4:3 (Clásica)</option>
+                          <option value="1:1">1:1 (Cuadrada)</option>
+                          <option value="auto">Automática</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label class="form-label d-block">Opciones Avanzadas</label>
+                        <div class="form-check">
+                          <input
+                            type="checkbox"
+                            id="blur_backdrop"
+                            class="form-check-input"
+                            [(ngModel)]="$any(popupModalData).blur_backdrop"
+                            name="blur_backdrop"
+                          >
+                          <label class="form-check-label" for="blur_backdrop">
+                            Desenfoque de fondo
+                          </label>
+                        </div>
+                        <div class="form-check">
+                          <input
+                            type="checkbox"
+                            id="close_on_backdrop"
+                            class="form-check-input"
+                            [(ngModel)]="$any(popupModalData).close_on_backdrop"
+                            name="close_on_backdrop"
+                          >
+                          <label class="form-check-label" for="close_on_backdrop">
+                            Cerrar al hacer click fuera
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="alert alert-info mb-0">
+                        <small>
+                          <i class="fas fa-info-circle me-1"></i>
+                          <strong>Tip:</strong> Usa el tema "Gradiente" y posición "Centro" para popups promocionales destacados.
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Error del modal -->
           <div *ngIf="popupModalError" class="alert alert-danger mt-3">
             <i class="fas fa-exclamation-triangle"></i> {{ popupModalError }}

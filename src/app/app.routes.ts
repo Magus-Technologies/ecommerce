@@ -621,6 +621,37 @@ export const routes: Routes = [
         canActivate: [permissionGuard],
         data: { permission: 'envio_correos.ver' },
       },
+      // ✅ RUTAS DE FACTURACIÓN ELECTRÓNICA
+      {
+        path: 'pos',
+        loadComponent: () =>
+          import('./pages/dashboard/pos/pos.component').then(
+            (m) => m.PosComponent
+          ),
+        title: 'Punto de Venta',
+        canActivate: [permissionGuard],
+        data: { permission: 'ventas.create' },
+      },
+      {
+        path: 'facturacion-config',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion-config/facturacion-config.component').then(
+            (m) => m.FacturacionConfigComponent
+          ),
+        title: 'Configuración de Facturación',
+        canActivate: [permissionGuard],
+        data: { permission: 'configuracion.ver' },
+      },
+      {
+        path: 'facturacion-test',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion-test/facturacion-test.component').then(
+            (m) => m.FacturacionTestComponent
+          ),
+        title: 'Prueba de Facturación',
+        canActivate: [permissionGuard],
+        data: { permission: 'ventas.create' },
+      },
     ],
   },
   // ✅ RUTAS PARA MOTORIZADOS (App de Delivery)

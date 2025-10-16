@@ -40,6 +40,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
 
   isCollapsed = false;
   isEcommerceOpen = false;
+  isFacturacionOpen = false;
   isUsuariosOpen = false;
   isOperacionesOpen = false;
   isAlmacenOpen = false;
@@ -164,6 +165,10 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   toggleEcommerce(): void {
   this.isEcommerceOpen = !this.isEcommerceOpen;
 }
+
+  toggleFacturacion(): void {
+    this.isFacturacionOpen = !this.isFacturacionOpen;
+  }
 
 toggleUsuarios(): void {
   this.isUsuariosOpen = !this.isUsuariosOpen;

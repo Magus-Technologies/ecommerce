@@ -1,252 +1,70 @@
 // src/app/pages/dashboard/ventas/nueva-venta.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { VentasService } from '../../../services/ventas.service';
 import { AlmacenService } from '../../../services/almacen.service';
+import { FacturacionService } from '../../../services/facturacion.service';
 import { Producto } from '../../../types/almacen.types';
+import { Serie, TIPOS_DOCUMENTO } from '../../../models/facturacion.model';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-nueva-venta',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  template: `
-    <div class="d-flex justify-content-between align-items-center mb-24">
-      <div>
-        <h5 class="text-heading fw-semibold mb-8">Nueva Venta</h5>
-        <p class="text-gray-500 mb-0">Registra una nueva venta en el sistema</p>
-      </div>
-      <button 
-        class="btn bg-gray-100 hover-bg-gray-200 text-gray-600 px-16 py-8 rounded-8"
-        routerLink="/dashboard/ventas">
-        <i class="ph ph-arrow-left me-8"></i>
-        Volver
-      </button>
-    </div>
-
-    <form [formGroup]="ventaForm" (ngSubmit)="onSubmit()">
-      <div class="row">
-        <!-- Información de la venta -->
-        <div class="col-lg-8">
-          <div class="card border-0 shadow-sm rounded-12 mb-24">
-            <div class="card-header bg-gray-50 border-0 rounded-top-12 p-24">
-              <h6 class="text-heading fw-semibold mb-0">Información de la Venta</h6>
-            </div>
-            <div class="card-body p-24">
-              <div class="row">
-                <div class="col-md-6 mb-16">
-                  <label class="form-label text-heading fw-medium mb-8">Método de Pago</label>
-                  <select class="form-select px-16 py-12 border rounded-8" formControlName="metodo_pago">
-                    <option value="">Seleccionar método</option>
-                    <option value="efectivo">Efectivo</option>
-                    <option value="tarjeta">Tarjeta</option>
-                    <option value="transferencia">Transferencia</option>
-                    <option value="yape">Yape</option>
-                    <option value="plin">Plin</option>
-                  </select>
-                </div>
-                <div class="col-md-6 mb-16">
-                  <div class="form-check mt-32">
-                    <input 
-                      class="form-check-input" 
-                      type="checkbox" 
-                      formControlName="requiere_factura"
-                      id="requiere_factura">
-                    <label class="form-check-label text-heading fw-medium" for="requiere_factura">
-                      Requiere factura
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <div class="mb-16">
-                <label class="form-label text-heading fw-medium mb-8">Observaciones</label>
-                <textarea 
-                  class="form-control px-16 py-12 border rounded-8" 
-                  rows="3"
-                  formControlName="observaciones"
-                  placeholder="Observaciones adicionales..."></textarea>
-              </div>
-            </div>
-          </div>
-
-          <!-- Productos -->
-          <div class="card border-0 shadow-sm rounded-12">
-            <div class="card-header bg-gray-50 border-0 rounded-top-12 p-24">
-              <div class="d-flex justify-content-between align-items-center">
-                <h6 class="text-heading fw-semibold mb-0">Productos</h6>
-                <button 
-                  type="button"
-                  class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
-                  (click)="agregarProducto()">
-                  <i class="ph ph-plus me-8"></i>
-                  Agregar Producto
-                </button>
-              </div>
-            </div>
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                  <thead class="bg-gray-50">
-                    <tr>
-                      <th class="px-24 py-16 text-heading fw-semibold border-0">Producto</th>
-                      <th class="px-24 py-16 text-heading fw-semibold border-0">Precio</th>
-                      <th class="px-24 py-16 text-heading fw-semibold border-0">Cantidad</th>
-                      <th class="px-24 py-16 text-heading fw-semibold border-0">Descuento</th>
-                      <th class="px-24 py-16 text-heading fw-semibold border-0">Subtotal</th>
-                      <th class="px-24 py-16 text-heading fw-semibold border-0 text-center">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody formArrayName="productos">
-                    <tr *ngFor="let producto of productosArray.controls; let i = index" [formGroupName]="i">
-                      <td class="px-24 py-16">
-                        <select 
-                          class="form-select px-16 py-12 border rounded-8"
-                          formControlName="producto_id"
-                          (change)="onProductoChange(i)">
-                          <option value="">Seleccionar producto</option>
-                          <option *ngFor="let prod of productos" [value]="prod.id">
-                            {{ prod.nombre }} ({{ prod.codigo_producto }})
-                          </option>
-                        </select>
-                      </td>
-                      <td class="px-24 py-16">
-                        <input 
-                          type="number" 
-                          class="form-control px-16 py-12 border rounded-8"
-                          formControlName="precio_unitario"
-                          step="0.01"
-                          min="0"
-                          (input)="calcularSubtotal(i)">
-                      </td>
-                      <td class="px-24 py-16">
-                        <input 
-                          type="number" 
-                          class="form-control px-16 py-12 border rounded-8"
-                          formControlName="cantidad"
-                          min="1"
-                          (input)="calcularSubtotal(i)">
-                      </td>
-                      <td class="px-24 py-16">
-                        <input 
-                          type="number" 
-                          class="form-control px-16 py-12 border rounded-8"
-                          formControlName="descuento_unitario"
-                          step="0.01"
-                          min="0"
-                          (input)="calcularSubtotal(i)">
-                      </td>
-                      <td class="px-24 py-16">
-                        <span class="text-heading fw-semibold">
-                          S/ {{ getSubtotalLinea(i) }}
-                        </span>
-                      </td>
-                      <td class="px-24 py-16 text-center">
-                        <button 
-                          type="button"
-                          class="btn bg-danger-50 hover-bg-danger-100 text-danger-600 w-32 h-32 rounded-6 flex-center transition-2"
-                          (click)="eliminarProducto(i)">
-                          <i class="ph ph-trash text-sm"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                <!-- Empty state -->
-                <div *ngIf="productosArray.length === 0" class="text-center py-40">
-                  <i class="ph ph-package text-gray-300 text-4xl mb-16"></i>
-                  <h6 class="text-heading fw-semibold mb-8">No hay productos</h6>
-                  <p class="text-gray-500 mb-16">Agrega productos para crear la venta</p>
-                  <button 
-                    type="button"
-                    class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
-                    (click)="agregarProducto()">
-                    <i class="ph ph-plus me-8"></i>
-                    Agregar primer producto
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Resumen -->
-        <div class="col-lg-4">
-          <div class="card border-0 shadow-sm rounded-12 position-sticky" style="top: 24px;">
-            <div class="card-header bg-gray-50 border-0 rounded-top-12 p-24">
-              <h6 class="text-heading fw-semibold mb-0">Resumen de Venta</h6>
-            </div>
-            <div class="card-body p-24">
-              <div class="d-flex justify-content-between mb-12">
-                <span class="text-gray-600">Subtotal:</span>
-                <span class="text-heading fw-medium">S/ {{ subtotal.toFixed(2) }}</span>
-              </div>
-              <div class="d-flex justify-content-between mb-12">
-                <span class="text-gray-600">IGV (18%):</span>
-                <span class="text-heading fw-medium">S/ {{ igv.toFixed(2) }}</span>
-              </div>
-              <div class="mb-16">
-                <label class="form-label text-gray-600 mb-8">Descuento adicional:</label>
-                <div class="input-group">
-                  <span class="input-group-text bg-gray-50 border-end-0">S/</span>
-                  <input 
-                    type="number" 
-                    class="form-control px-16 py-12 border-start-0"
-                    formControlName="descuento_total"
-                    step="0.01"
-                    min="0"
-                    (input)="calcularTotales()">
-                </div>
-              </div>
-              <hr class="border-gray-200 my-16">
-              <div class="d-flex justify-content-between mb-24">
-                <span class="text-heading fw-semibold">Total:</span>
-                <span class="text-heading fw-bold text-xl">S/ {{ total.toFixed(2) }}</span>
-              </div>
-              
-              <button 
-                type="submit" 
-                class="btn bg-main-600 hover-bg-main-700 text-white w-100 py-12 rounded-8"
-                [disabled]="isLoading || ventaForm.invalid || productosArray.length === 0">
-                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-8"></span>
-                <i *ngIf="!isLoading" class="ph ph-check me-8"></i>
-                {{ isLoading ? 'Guardando...' : 'Registrar Venta' }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </form>
-  `,
-  styles: [
-    `
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  templateUrl: './nueva-venta.component.html',
+  styles: [`
     .table td {
       vertical-align: middle;
     }
-  `,
-  ],
+    .border-primary {
+      border-color: #007bff !important;
+    }
+  `],
 })
 export class NuevaVentaComponent implements OnInit {
   ventaForm: FormGroup;
   productos: Producto[] = [];
   isLoading = false;
-  
+
   // Totales
   subtotal = 0;
   igv = 0;
   total = 0;
 
+  // Facturación electrónica
+  seriesDisponibles = signal<Serie[]>([]);
+  serieSeleccionada = signal<Serie | null>(null);
+  fechaActual = new Date().toISOString().split('T')[0];
+
+  // Mensajes
+  errorMessage: string | null = null;
+  successMessage: string | null = null;
+
+  // Constantes
+  readonly TIPOS_DOCUMENTO = TIPOS_DOCUMENTO;
+
   constructor(
     private fb: FormBuilder,
     private ventasService: VentasService,
     private almacenService: AlmacenService,
+    private facturacionService: FacturacionService,
     private router: Router
   ) {
     this.ventaForm = this.fb.group({
+      tipo_comprobante: ['03', Validators.required],
+      serie_id: ['', Validators.required],
+      cliente: this.fb.group({
+        tipo_documento: ['-', Validators.required],
+        numero_documento: [''],
+        nombre: ['', Validators.required],
+        direccion: [''],
+        email: [''],
+        telefono: ['']
+      }),
       metodo_pago: ['', Validators.required],
-      requiere_factura: [false],
       observaciones: [''],
       descuento_total: [0, [Validators.min(0)]],
       productos: this.fb.array([])
@@ -255,7 +73,94 @@ export class NuevaVentaComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarProductos();
+    this.cargarSeriesDisponibles();
     this.agregarProducto(); // Agregar una línea inicial
+  }
+
+  cargarSeriesDisponibles(): void {
+    this.facturacionService.getSeries({ estado: 'activo' }).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.seriesDisponibles.set(response.data);
+          this.actualizarSerieSegunTipo();
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar series:', error);
+        this.errorMessage = 'Error al cargar series de facturación';
+      }
+    });
+  }
+
+  actualizarSerieSegunTipo(): void {
+    const series = this.seriesDisponibles();
+    const tipo = this.ventaForm.get('tipo_comprobante')?.value;
+
+    const seriesPorTipo = series.filter(s => s.tipo_comprobante === tipo);
+    if (seriesPorTipo.length > 0) {
+      this.serieSeleccionada.set(seriesPorTipo[0]);
+      this.ventaForm.patchValue({ serie_id: seriesPorTipo[0].id });
+    } else {
+      this.serieSeleccionada.set(null);
+      this.ventaForm.patchValue({ serie_id: '' });
+    }
+  }
+
+  onTipoComprobanteChange(): void {
+    const tipoComprobante = this.ventaForm.get('tipo_comprobante')?.value;
+
+    // Validar que para Factura (01) se requiere RUC
+    if (tipoComprobante === '01') {
+      const tipoDocumento = this.ventaForm.get('cliente.tipo_documento')?.value;
+      if (tipoDocumento !== '6') {
+        this.errorMessage = 'Para emitir Factura se requiere RUC del cliente';
+        this.ventaForm.patchValue({ tipo_comprobante: '03' });
+        return;
+      }
+
+      const ruc = this.ventaForm.get('cliente.numero_documento')?.value;
+      if (!ruc || ruc.length !== 11 || !/^\d+$/.test(ruc)) {
+        this.errorMessage = 'El RUC ingresado no es válido (debe tener 11 dígitos)';
+        this.ventaForm.patchValue({ tipo_comprobante: '03' });
+        return;
+      }
+    }
+
+    this.actualizarSerieSegunTipo();
+    this.errorMessage = null;
+  }
+
+  buscarCliente(): void {
+    const numeroDocumento = this.ventaForm.get('cliente.numero_documento')?.value;
+    if (!numeroDocumento) return;
+
+    this.facturacionService.getClientes({ numero_documento: numeroDocumento }).subscribe({
+      next: (response) => {
+        if (response.data && response.data.length > 0) {
+          const cliente = response.data[0];
+          this.ventaForm.patchValue({
+            cliente: {
+              tipo_documento: cliente.tipo_documento,
+              numero_documento: cliente.numero_documento,
+              nombre: cliente.nombre,
+              direccion: cliente.direccion || '',
+              email: cliente.email || '',
+              telefono: cliente.telefono || ''
+            }
+          });
+          this.successMessage = 'Cliente encontrado y cargado';
+        }
+      },
+      error: (error) => {
+        console.error('Error al buscar cliente:', error);
+        this.errorMessage = 'Cliente no encontrado. Puede continuar con los datos manuales.';
+      }
+    });
+  }
+
+  cerrarMensajes(): void {
+    this.errorMessage = null;
+    this.successMessage = null;
   }
 
   get productosArray(): FormArray {
@@ -276,9 +181,12 @@ export class NuevaVentaComponent implements OnInit {
   agregarProducto(): void {
     const productoGroup = this.fb.group({
       producto_id: ['', Validators.required],
+      codigo_producto: ['', Validators.required],
       cantidad: [1, [Validators.required, Validators.min(1)]],
+      unidad_medida: ['NIU', Validators.required],
       precio_unitario: [0, [Validators.required, Validators.min(0)]],
-      descuento_unitario: [0, [Validators.min(0)]]
+      descuento_unitario: [0, [Validators.min(0)]],
+      tipo_afectacion_igv: ['10', Validators.required]
     });
 
     this.productosArray.push(productoGroup);
@@ -292,9 +200,10 @@ export class NuevaVentaComponent implements OnInit {
   onProductoChange(index: number): void {
     const productoId = this.productosArray.at(index).get('producto_id')?.value;
     const producto = this.productos.find(p => p.id == productoId);
-    
+
     if (producto) {
       this.productosArray.at(index).patchValue({
+        codigo_producto: producto.codigo_producto || `PROD-${producto.id}`,
         precio_unitario: producto.precio_venta
       });
       this.calcularSubtotal(index);
@@ -327,19 +236,26 @@ export class NuevaVentaComponent implements OnInit {
 
   calcularTotales(): void {
     let subtotalSinIgv = 0;
-    
+    let igvTotal = 0;
+
     this.productosArray.controls.forEach(control => {
       const cantidad = control.get('cantidad')?.value || 0;
       const precio = control.get('precio_unitario')?.value || 0;
       const descuento = control.get('descuento_unitario')?.value || 0;
-      
+      const tipoAfectacion = control.get('tipo_afectacion_igv')?.value || '10';
+
       const precioSinIgv = precio / 1.18;
       const subtotalLinea = (cantidad * precioSinIgv) - (descuento * cantidad);
       subtotalSinIgv += subtotalLinea;
+
+      // Solo calcular IGV si es gravado (tipo 10)
+      if (tipoAfectacion === '10') {
+        igvTotal += subtotalLinea * 0.18;
+      }
     });
-    
+
     this.subtotal = subtotalSinIgv;
-    this.igv = subtotalSinIgv * 0.18;
+    this.igv = igvTotal;
     const descuentoTotal = this.ventaForm.get('descuento_total')?.value || 0;
     this.total = this.subtotal + this.igv - descuentoTotal;
   }

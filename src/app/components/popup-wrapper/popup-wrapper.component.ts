@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Observable } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { PopupsService } from '../../services/popups.service';
 import { Popup } from '../../models/popup.model';
@@ -34,57 +35,47 @@ export class PopupWrapperComponent implements OnInit, OnDestroy {
   }
 
   private cargarPopups(): void {
-    const isCliente = this.auth.isCliente();
-    const isMotorizado = this.auth.isMotorizado();
-    const isAdmin = this.auth.isAdmin();
     const hasToken = !!this.auth.getToken?.();
+    const userId = this.auth.getUserId?.();
 
-    // Según la nueva lógica corregida:
-    // - Motorizados y admins: NO ven popups (error 403)
-    // - Clientes autenticados: usan endpoint de cliente
-    // - Visitantes no autenticados: usan endpoint público
+    // Nueva lógica según especificaciones del backend:
+    // - Si tiene userId (logueado o guardado): usar endpoint de cliente con user_cliente_id
+    // - Si NO tiene userId: usar endpoint público con segmento 'no_registrados'
+    // - El BACKEND es responsable de bloquear admins/motorizados con error 403
 
-    // En producción: bloquear para motorizados y admins.
-    // En desarrollo: permitir a admins para facilitar pruebas de popups.
-    if (isMotorizado || (isAdmin && environment.production)) {
-      console.log('Motorizado o admin (en producción) detectado - no se cargan popups');
-      this.visible.set(false);
-      return;
+    let obs: Observable<any>;
+
+    if (userId) {
+      // Usuario con ID (puede ser cliente, admin, o motorizado)
+      // El backend decidirá si debe ver popups o devolver 403
+      console.log(`👤 Usuario con ID ${userId} - usando endpoint de cliente con user_cliente_id`);
+      obs = this.popupsService.obtenerPopupsActivosConUserId(userId);
+    } else {
+      // Visitante sin identificar
+      console.log('👋 Visitante no registrado - usando endpoint público con segmento no_registrados');
+      obs = this.popupsService.obtenerPopupsPublicosActivos('no_registrados');
     }
-
-    const obs = isCliente
-      ? this.popupsService.obtenerPopupsActivos()
-      : this.popupsService.obtenerPopupsPublicosActivos('no_registrados');
 
     obs.subscribe({
       next: (resp) => this.renderRespuesta(resp),
       error: (err) => {
-        console.error('Error cargando popups:', err);
-        
-        // Manejo de errores según la nueva lógica:
+        console.error('❌ Error cargando popups:', err);
+
+        // Manejo de errores:
         if (err?.status === 403) {
-          if (isCliente) {
-            console.log('Cliente sin acceso a popups - posible error de permisos');
-          } else {
-            console.log('Usuario autenticado no autorizado para popups públicos');
-          }
+          console.log('🚫 Usuario sin permisos para popups (bloqueado por backend)');
           this.visible.set(false);
           return;
         }
-        
-        // Fallback: si falla el endpoint de cliente con 401, intentar público
-        if (isCliente && err?.status === 401) {
-          console.log('Cliente no autenticado - intentando endpoint público');
-          this.popupsService.obtenerPopupsPublicosActivos('no_registrados').subscribe({
-            next: (resp2) => this.renderRespuesta(resp2),
-            error: (err2) => {
-              console.error('Error en fallback público:', err2);
-              this.visible.set(false);
-            }
-          });
+
+        if (err?.status === 401) {
+          console.log('🔓 Token inválido o expirado');
+          this.visible.set(false);
           return;
         }
-        
+
+        // Cualquier otro error
+        console.log('⚠️ Error genérico al cargar popups');
         this.visible.set(false);
       }
     });

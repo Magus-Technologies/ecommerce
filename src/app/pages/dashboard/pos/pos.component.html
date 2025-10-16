@@ -1,0 +1,641 @@
+<div class="pos-container">
+  <!-- Header -->
+  <div class="pos-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2 class="mb-0">
+        <i class="fas fa-cash-register me-2"></i>
+        Punto de Venta
+      </h2>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" (click)="irAVentas()">
+          <i class="fas fa-list me-2"></i>
+          Ver Ventas
+        </button>
+        <button class="btn btn-outline-success" (click)="irAComprobantes()">
+          <i class="fas fa-file-invoice me-2"></i>
+          Comprobantes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alertas -->
+  <div class="pos-alerts" *ngIf="error || success">
+    <div class="alert alert-danger alert-dismissible fade show" *ngIf="error" role="alert">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      {{ error }}
+      <button type="button" class="btn-close" (click)="cerrarMensajes()"></button>
+    </div>
+    <div class="alert alert-success alert-dismissible fade show" *ngIf="success" role="alert">
+      <i class="fas fa-check-circle me-2"></i>
+      {{ success }}
+      <button type="button" class="btn-close" (click)="cerrarMensajes()"></button>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Panel Izquierdo - Productos -->
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-boxes me-2"></i>
+            Productos Disponibles
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="productos-grid">
+            <div 
+              class="producto-item" 
+              *ngFor="let producto of productos"
+              (click)="agregarProducto(producto)"
+            >
+              <div class="producto-info">
+                <h6 class="producto-nombre">{{ producto.nombre }}</h6>
+                <p class="producto-codigo">{{ producto.codigo }}</p>
+                <div class="producto-precio">
+                  S/ {{ producto.precio | number:'1.2-2' }}
+                </div>
+                <div class="producto-stock">
+                  Stock: {{ producto.stock }}
+                </div>
+              </div>
+              <div class="producto-accion">
+                <i class="fas fa-plus-circle"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Central - Venta -->
+    <div class="col-lg-8">
+      <div class="row g-4">
+        <!-- NUEVO: Tipo de Comprobante y Serie -->
+        <div class="col-12">
+          <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">
+                <i class="fas fa-file-invoice me-2"></i>
+                Tipo de Comprobante
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Tipo de Comprobante *</label>
+                  <select
+                    class="form-select"
+                    [ngModel]="tipoComprobanteSeleccionado()"
+                    (ngModelChange)="tipoComprobanteSeleccionado.set($event); onTipoComprobanteChange()"
+                    name="tipo_comprobante">
+                    <option value="03">Boleta de Venta (B001)</option>
+                    <option value="01">Factura Electrónica (F001)</option>
+                  </select>
+                  <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Facturas requieren RUC del cliente
+                  </small>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Serie *</label>
+                  <select
+                    class="form-select"
+                    [ngModel]="serieSeleccionada()"
+                    (ngModelChange)="serieSeleccionada.set($event)"
+                    name="serie"
+                    [disabled]="seriesDisponibles().length === 0">
+                    <option
+                      *ngFor="let serie of seriesDisponibles()"
+                      [ngValue]="serie">
+                      {{ serie.serie }} (Actual: {{ serie.correlativo_actual }})
+                    </option>
+                  </select>
+                  <small class="text-muted" *ngIf="serieSeleccionada()">
+                    <i class="fas fa-hashtag me-1"></i>
+                    Próximo: {{ serieSeleccionada()!.serie }}-{{ serieSeleccionada()!.correlativo_actual + 1 }}
+                  </small>
+                  <small class="text-danger" *ngIf="seriesDisponibles().length === 0">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    No hay series disponibles
+                  </small>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Fecha de Emisión</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    [value]="fechaActual"
+                    readonly>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información del Cliente -->
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-user me-2"></i>
+                Información del Cliente
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-2">
+                  <label class="form-label">Tipo Doc.</label>
+                  <select 
+                    class="form-select" 
+                    [(ngModel)]="ventaForm.cliente.tipo_documento"
+                    name="tipo_documento"
+                  >
+                    <option [value]="TIPOS_DOCUMENTO.SIN_DOC">Sin Doc</option>
+                    <option [value]="TIPOS_DOCUMENTO.DNI">DNI</option>
+                    <option [value]="TIPOS_DOCUMENTO.RUC">RUC</option>
+                    <option [value]="TIPOS_DOCUMENTO.CE">CE</option>
+                    <option [value]="TIPOS_DOCUMENTO.PASS">PASS</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Número</label>
+                  <div class="input-group">
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      [(ngModel)]="ventaForm.cliente.numero_documento"
+                      name="numero_documento"
+                      placeholder="Número de documento"
+                    >
+                    <button 
+                      class="btn btn-outline-secondary" 
+                      type="button"
+                      (click)="buscarCliente()"
+                      [disabled]="!ventaForm.cliente.numero_documento"
+                    >
+                      <i class="fas fa-search"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-7">
+                  <label class="form-label">Nombre / Razón Social</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [(ngModel)]="ventaForm.cliente.nombre"
+                    name="nombre"
+                    placeholder="Nombre completo o razón social"
+                    required
+                  >
+                  <div class="mt-2">
+                    <button
+                      class="btn btn-sm btn-outline-primary"
+                      type="button"
+                      (click)="abrirClienteModal()"
+                    >
+                      <i class="fas fa-user-edit me-2"></i>
+                      Editar/Crear Cliente (F2)
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Dirección</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [(ngModel)]="ventaForm.cliente.direccion"
+                    name="direccion"
+                    placeholder="Dirección del cliente"
+                  >
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Email</label>
+                  <input 
+                    type="email" 
+                    class="form-control" 
+                    [(ngModel)]="ventaForm.cliente.email"
+                    name="email"
+                    placeholder="email@ejemplo.com"
+                  >
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Teléfono</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    [(ngModel)]="ventaForm.cliente.telefono"
+                    name="telefono"
+                    placeholder="Teléfono"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Items de Venta -->
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-shopping-cart me-2"></i>
+                Productos / Servicios
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                  <thead>
+                    <tr>
+                      <th width="80">Código</th>
+                      <th>Descripción</th>
+                      <th width="60">Cant.</th>
+                      <th width="100">U.M.</th>
+                      <th width="100">Precio</th>
+                      <th width="80">Desc.</th>
+                      <th width="120">Afect. IGV</th>
+                      <th width="100">Subtotal</th>
+                      <th width="50"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of ventaForm.items; let i = index">
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="item.codigo_producto"
+                          name="codigo_{{i}}"
+                          placeholder="COD"
+                          required>
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="item.descripcion"
+                          name="descripcion_{{i}}"
+                          placeholder="Descripción del producto"
+                          required>
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="item.cantidad"
+                          name="cantidad_{{i}}"
+                          min="1"
+                          (ngModelChange)="calcularItem(item)"
+                          required>
+                      </td>
+                      <td>
+                        <select
+                          class="form-select form-select-sm"
+                          [(ngModel)]="item.unidad_medida"
+                          name="unidad_{{i}}">
+                          <option
+                            *ngFor="let unidad of UNIDADES_MEDIDA"
+                            [value]="unidad.codigo">
+                            {{ unidad.codigo }}
+                          </option>
+                        </select>
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="item.precio_unitario"
+                          name="precio_{{i}}"
+                          min="0"
+                          step="0.01"
+                          (ngModelChange)="calcularItem(item)"
+                          required>
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="item.descuento"
+                          name="descuento_{{i}}"
+                          min="0"
+                          step="0.01"
+                          (ngModelChange)="calcularItem(item)">
+                      </td>
+                      <td>
+                        <select
+                          class="form-select form-select-sm"
+                          [(ngModel)]="item.tipo_afectacion_igv"
+                          name="afectacion_{{i}}"
+                          (ngModelChange)="calcularItem(item)">
+                          <option value="10">10 - Gravado</option>
+                          <option value="20">20 - Exonerado</option>
+                          <option value="30">30 - Inafecto</option>
+                          <option value="40">40 - Exportación</option>
+                        </select>
+                      </td>
+                      <td class="text-end">
+                        <strong>S/ {{ item.subtotal | number:'1.2-2' }}</strong>
+                      </td>
+                      <td>
+                        <button
+                          class="btn btn-sm btn-outline-danger"
+                          (click)="eliminarItem(i)"
+                          [disabled]="ventaForm.items.length === 1">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <button 
+                class="btn btn-outline-primary btn-sm"
+                (click)="agregarItemVacio()"
+              >
+                <i class="fas fa-plus me-2"></i>
+                Agregar Item
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen y Acciones -->
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-8">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Descuento Global</label>
+                      <input 
+                        type="number" 
+                        class="form-control" 
+                        [(ngModel)]="ventaForm.descuento_global"
+                        name="descuento_global"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                      >
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Método de Pago</label>
+                      <select 
+                        class="form-select" 
+                        [(ngModel)]="ventaForm.metodo_pago"
+                        name="metodo_pago"
+                      >
+                        <option [value]="METODOS_PAGO.EFECTIVO">Efectivo</option>
+                        <option [value]="METODOS_PAGO.TARJETA">Tarjeta</option>
+                        <option [value]="METODOS_PAGO.TRANSFERENCIA">Transferencia</option>
+                        <option [value]="METODOS_PAGO.CREDITO">Crédito</option>
+                        <option [value]="METODOS_PAGO.YAPE">Yape</option>
+                        <option [value]="METODOS_PAGO.PLIN">Plin</option>
+                      </select>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label">Observaciones</label>
+                      <textarea 
+                        class="form-control" 
+                        [(ngModel)]="ventaForm.observaciones"
+                        name="observaciones"
+                        rows="2"
+                        placeholder="Observaciones adicionales..."
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="resumen-venta">
+                    <h6 class="mb-3">Resumen de Venta</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Subtotal:</span>
+                      <span>S/ {{ subtotal | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Descuentos:</span>
+                      <span class="text-danger">-S/ {{ descuentoTotal | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Subtotal Neto:</span>
+                      <span>S/ {{ subtotalNeto | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>IGV (18%):</span>
+                      <span>S/ {{ igv | number:'1.2-2' }}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                      <strong>TOTAL:</strong>
+                      <strong class="text-primary">S/ {{ total | number:'1.2-2' }}</strong>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                      <!-- Botón Guardar Venta -->
+                      <button
+                        class="btn btn-primary btn-lg"
+                        (click)="guardarVenta()"
+                        [disabled]="loading || total <= 0 || !serieSeleccionada()"
+                        *ngIf="!ventaGuardada">
+                        <i class="fas fa-save me-2" *ngIf="!loading"></i>
+                        <span class="spinner-border spinner-border-sm me-2" *ngIf="loading"></span>
+                        Guardar Venta
+                      </button>
+
+                      <!-- Panel de Acciones de Comprobante -->
+                      <div
+                        class="card border-success"
+                        *ngIf="ventaGuardada && !mostrarPanelComprobante()">
+                        <div class="card-body p-2">
+                          <button
+                            class="btn btn-success w-100"
+                            (click)="facturarVenta()"
+                            [disabled]="facturando()">
+                            <i class="fas fa-file-invoice me-2" *ngIf="!facturando()"></i>
+                            <span class="spinner-border spinner-border-sm me-2" *ngIf="facturando()"></span>
+                            Emitir Comprobante Electrónico
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NUEVO: Panel de Comprobante Generado -->
+        <div class="col-12" *ngIf="mostrarPanelComprobante() && comprobanteGenerado()">
+          <div class="card border-success">
+            <div class="card-header bg-success text-white">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                  <i class="fas fa-check-circle me-2"></i>
+                  Comprobante Electrónico Generado
+                </h5>
+                <button
+                  class="btn btn-sm btn-light"
+                  (click)="cerrarPanelComprobante()">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <!-- Información del Comprobante -->
+                <div class="col-md-12">
+                  <div class="alert alert-success mb-3">
+                    <div class="row">
+                      <div class="col-md-4">
+                        <strong>Número:</strong><br>
+                        <span class="fs-5">{{ comprobanteGenerado()!.numero_completo }}</span>
+                      </div>
+                      <div class="col-md-4">
+                        <strong>Tipo:</strong><br>
+                        {{ comprobanteGenerado()!.tipo_comprobante === '01' ? 'Factura' : 'Boleta' }}
+                      </div>
+                      <div class="col-md-4">
+                        <strong>Estado SUNAT:</strong><br>
+                        <span
+                          class="badge"
+                          [class.bg-success]="comprobanteGenerado()!.estado_sunat === 'ACEPTADO'"
+                          [class.bg-warning]="comprobanteGenerado()!.estado_sunat === 'PENDIENTE'"
+                          [class.bg-danger]="comprobanteGenerado()!.estado_sunat === 'RECHAZADO'">
+                          {{ comprobanteGenerado()!.estado_sunat }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="mt-2" *ngIf="comprobanteGenerado()!.mensaje_sunat">
+                      <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        {{ comprobanteGenerado()!.mensaje_sunat }}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Código QR (placeholder) -->
+                <div class="col-md-3 text-center" *ngIf="comprobanteGenerado()!.qr_path">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="qr-placeholder">
+                        <i class="fas fa-qrcode fa-5x text-primary"></i>
+                      </div>
+                      <p class="text-muted small mb-0 mt-2">Código QR</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Acciones -->
+                <div [class]="comprobanteGenerado()!.qr_path ? 'col-md-9' : 'col-md-12'">
+                  <div class="row g-2">
+                    <!-- Descargar PDF -->
+                    <div class="col-md-6">
+                      <button
+                        class="btn btn-danger w-100"
+                        (click)="descargarPDF()"
+                        [disabled]="descargandoPDF()">
+                        <i class="fas fa-file-pdf me-2" *ngIf="!descargandoPDF()"></i>
+                        <span class="spinner-border spinner-border-sm me-2" *ngIf="descargandoPDF()"></span>
+                        Descargar PDF
+                      </button>
+                    </div>
+
+                    <!-- Descargar XML -->
+                    <div class="col-md-6">
+                      <button
+                        class="btn btn-info w-100 text-white"
+                        (click)="descargarXML()"
+                        [disabled]="descargandoXML()">
+                        <i class="fas fa-file-code me-2" *ngIf="!descargandoXML()"></i>
+                        <span class="spinner-border spinner-border-sm me-2" *ngIf="descargandoXML()"></span>
+                        Descargar XML
+                      </button>
+                    </div>
+
+                    <!-- Enviar por Email -->
+                    <div class="col-md-6">
+                      <button
+                        class="btn btn-primary w-100"
+                        (click)="enviarPorEmail()"
+                        [disabled]="enviandoEmail() || !ventaForm.cliente.email">
+                        <i class="fas fa-envelope me-2" *ngIf="!enviandoEmail()"></i>
+                        <span class="spinner-border spinner-border-sm me-2" *ngIf="enviandoEmail()"></span>
+                        Enviar por Email
+                      </button>
+                      <small class="text-muted" *ngIf="!ventaForm.cliente.email">
+                        Email no disponible
+                      </small>
+                    </div>
+
+                    <!-- Consultar Estado SUNAT -->
+                    <div class="col-md-6">
+                      <button
+                        class="btn btn-warning w-100"
+                        (click)="consultarEstadoSunat()"
+                        [disabled]="consultandoSunat()">
+                        <i class="fas fa-sync me-2" *ngIf="!consultandoSunat()"></i>
+                        <span class="spinner-border spinner-border-sm me-2" *ngIf="consultandoSunat()"></span>
+                        Consultar SUNAT
+                      </button>
+                    </div>
+
+                    <!-- Imprimir Ticket -->
+                    <div class="col-md-12">
+                      <button
+                        class="btn btn-secondary w-100"
+                        onclick="window.print()">
+                        <i class="fas fa-print me-2"></i>
+                        Imprimir Ticket
+                      </button>
+                    </div>
+
+                    <!-- Nueva Venta -->
+                    <div class="col-md-12">
+                      <button
+                        class="btn btn-success w-100"
+                        (click)="cerrarPanelComprobante()">
+                        <i class="fas fa-plus me-2"></i>
+                        Nueva Venta
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hash y Fecha -->
+              <div class="row mt-3">
+                <div class="col-md-12">
+                  <small class="text-muted">
+                    <strong>Código Hash:</strong>
+                    {{ comprobanteGenerado()!.hash || 'Pendiente' }}
+                  </small>
+                  <br>
+                  <small class="text-muted">
+                    <strong>Fecha Emisión:</strong>
+                    {{ comprobanteGenerado()!.fecha_emision }} {{ comprobanteGenerado()!.hora_emision }}
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      <!-- Modal de Cliente -->
+      <app-cliente-edit-modal
+        *ngIf="mostrarClienteModal"
+        [cliente]="clienteParaModal"
+        (cerrar)="cerrarClienteModal()"
+        (clienteActualizado)="onClienteActualizado($event)"
+      ></app-cliente-edit-modal>
+
+      </div>
+    </div>
+  </div>
+</div>

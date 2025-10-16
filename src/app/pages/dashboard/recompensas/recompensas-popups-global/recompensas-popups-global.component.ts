@@ -12,6 +12,7 @@ import {
   PopupCreateRequest,
   PopupUpdateRequest
 } from '../../../../models/popup.model';
+type PopupFormData = PopupCreateRequest & PopupUpdateRequest;
 import { environment } from '../../../../../environments/environment';
 
 @Component({
@@ -72,7 +73,7 @@ export class RecompensasPopupsGlobalComponent implements OnInit, OnDestroy {
   showPopupModal = false;
   popupModalTitle = '';
   popupModalMode: 'create' | 'edit' = 'create';
-  popupModalData: PopupCreateRequest | PopupUpdateRequest = {
+  popupModalData: PopupFormData = {
     titulo: '',
     descripcion: '',
     texto_boton: 'Ver más',
@@ -272,7 +273,15 @@ export class RecompensasPopupsGlobalComponent implements OnInit, OnDestroy {
       url_destino: this.popupsService.generarUrlDestinoDefault(recompensa.id),
       mostrar_cerrar: true,
       auto_cerrar_segundos: 30,
-      popup_activo: false
+      popup_activo: false,
+      // Nuevas propiedades de configuración visual con valores por defecto
+      size: 'medium',
+      position: 'center',
+      theme: 'light',
+      blur_backdrop: true,
+      close_on_backdrop: false,
+      animation: 'fade',
+      imagen_aspect_ratio: '16:9'
     };
     this.popupModalError = null;
     this.showPopupModal = true;
@@ -290,7 +299,15 @@ export class RecompensasPopupsGlobalComponent implements OnInit, OnDestroy {
       url_destino: popup.url_destino,
       mostrar_cerrar: popup.mostrar_cerrar,
       auto_cerrar_segundos: popup.auto_cerrar_segundos,
-      popup_activo: popup.popup_activo
+      popup_activo: popup.popup_activo,
+      // Nuevas propiedades de configuración visual (con fallback a valores por defecto)
+      size: popup.size || 'medium',
+      position: popup.position || 'center',
+      theme: popup.theme || 'light',
+      blur_backdrop: popup.blur_backdrop ?? true,
+      close_on_backdrop: popup.close_on_backdrop ?? false,
+      animation: popup.animation || 'fade',
+      imagen_aspect_ratio: popup.imagen_aspect_ratio || '16:9'
     };
     this.popupModalError = null;
     this.showPopupModal = true;

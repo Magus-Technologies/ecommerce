@@ -1,0 +1,502 @@
+.pos-container {
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.pos-header {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 1.5rem;
+}
+
+.pos-alerts {
+  margin-bottom: 1.5rem;
+}
+
+// Productos Grid
+.productos-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.producto-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+  border-radius: 0.5rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.15);
+    transform: translateY(-1px);
+  }
+}
+
+.producto-info {
+  flex: 1;
+}
+
+.producto-nombre {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #333;
+}
+
+.producto-codigo {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+}
+
+.producto-precio {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #28a745;
+}
+
+.producto-stock {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.producto-accion {
+  color: #007bff;
+  font-size: 1.2rem;
+  margin-left: 1rem;
+}
+
+// Cards
+.card {
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 0.75rem;
+}
+
+.card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 0.75rem 0.75rem 0 0 !important;
+  border: none;
+  padding: 1rem 1.5rem;
+}
+
+.card-header h5 {
+  margin: 0;
+  font-weight: 600;
+}
+
+// Formularios
+.form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+  border-radius: 0.5rem;
+  border: 1px solid #ced4da;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+  }
+}
+
+// Tabla
+.table {
+  margin-bottom: 0;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  border-top: none;
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.875rem;
+}
+
+.table td {
+  vertical-align: middle;
+  border-top: 1px solid #e9ecef;
+}
+
+// Resumen de Venta
+.resumen-venta {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e9ecef;
+}
+
+.resumen-venta h6 {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+// Botones
+.btn {
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border: none;
+  
+  &:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+  }
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  border: none;
+  
+  &:hover {
+    background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
+  }
+}
+
+.btn-outline-primary {
+  border-color: #007bff;
+  color: #007bff;
+  
+  &:hover {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+}
+
+.btn-outline-success {
+  border-color: #28a745;
+  color: #28a745;
+  
+  &:hover {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+}
+
+.btn-outline-secondary {
+  border-color: #6c757d;
+  color: #6c757d;
+  
+  &:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+  }
+}
+
+.btn-outline-danger {
+  border-color: #dc3545;
+  color: #dc3545;
+  
+  &:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+  }
+}
+
+// Alertas
+.alert {
+  border-radius: 0.75rem;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.alert-danger {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  color: #721c24;
+}
+
+.alert-success {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #155724;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .pos-container {
+    padding: 1rem;
+  }
+  
+  .pos-header {
+    padding: 1rem;
+  }
+  
+  .productos-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .producto-item {
+    padding: 0.75rem;
+  }
+  
+  .resumen-venta {
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+// Estados de carga
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+// Iconos
+.fas {
+  transition: all 0.2s ease;
+}
+
+.btn:hover .fas {
+  transform: scale(1.1);
+}
+
+// ============================================
+// ESTILOS PARA FACTURACIÓN ELECTRÓNICA
+// ============================================
+
+// Card de tipo de comprobante
+.card.border-primary {
+  border-width: 2px !important;
+  border-color: #007bff !important;
+
+  .card-header.bg-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+  }
+}
+
+// Card de comprobante generado
+.card.border-success {
+  border-width: 2px !important;
+  border-color: #28a745 !important;
+
+  .card-header.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+  }
+}
+
+// Badges de estado SUNAT
+.badge {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+
+  &.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+  }
+
+  &.bg-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%) !important;
+    color: #212529 !important;
+  }
+
+  &.bg-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+  }
+}
+
+// Botones de acciones de comprobante
+.btn-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  border: none;
+
+  &:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+  }
+}
+
+.btn-info {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  border: none;
+
+  &:hover {
+    background: linear-gradient(135deg, #138496 0%, #117a8b 100%);
+  }
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+  border: none;
+  color: #212529;
+
+  &:hover {
+    background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
+    color: #212529;
+  }
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  border: none;
+
+  &:hover {
+    background: linear-gradient(135deg, #5a6268 0%, #545b62 100%);
+  }
+}
+
+// Placeholder de código QR
+.qr-placeholder {
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  min-height: 150px;
+}
+
+// Tabla más compacta para productos
+.table-sm {
+  font-size: 0.875rem;
+
+  .form-control-sm, .form-select-sm {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+// Animación para panel de comprobante
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card.border-success {
+  animation: slideDown 0.4s ease-out;
+}
+
+// Estilos para labels con asterisco (obligatorios)
+.form-label.fw-bold {
+  color: #212529;
+  font-size: 0.875rem;
+}
+
+// Mensajes pequeños de ayuda
+small.text-muted {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+}
+
+small.text-danger {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+// Alert personalizado para comprobante generado
+.alert-success {
+  border-left: 4px solid #28a745;
+
+  .fs-5 {
+    font-weight: 700;
+    color: #155724;
+  }
+
+  strong {
+    color: #155724;
+  }
+}
+
+// Responsive para tabla de productos
+@media (max-width: 1200px) {
+  .table-sm {
+    font-size: 0.75rem;
+
+    th, td {
+      padding: 0.5rem 0.25rem;
+    }
+
+    .form-control-sm, .form-select-sm {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.4rem;
+    }
+  }
+}
+
+// Estado deshabilitado para inputs
+.form-control:disabled,
+.form-select:disabled {
+  background-color: #e9ecef;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+// Mejoras para botones deshabilitados
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+
+  &:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+// Estilos para inputs de número (quitar flechas en Chrome)
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+// Mejoras para input-group
+.input-group {
+  .btn {
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+
+  .form-control {
+    border-radius: 0.5rem 0 0 0.5rem;
+  }
+}
