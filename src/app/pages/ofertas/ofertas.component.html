@@ -41,47 +41,6 @@
                         </ul>
                     </div>
 
-                    <!-- Filtro por Precio -->
-                    <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
-                        <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">Filtrar por Precio</h6>
-                        <div class="custom--range">
-                            <div class="mb-3">
-                                <label class="text-sm text-gray-600">Precio mínimo: S/ {{ minPrice }}</label>
-                                <input
-                                    type="range"
-                                    class="form-range w-100"
-                                    [(ngModel)]="minPrice"
-                                    [min]="0"
-                                    [max]="maxPrice"
-                                    step="10">
-                            </div>
-                            <div class="mb-3">
-                                <label class="text-sm text-gray-600">Precio máximo: S/ {{ maxPrice }}</label>
-                                <input
-                                    type="range"
-                                    class="form-range w-100"
-                                    [(ngModel)]="maxPrice"
-                                    [min]="minPrice"
-                                    [max]="10000"
-                                    step="10">
-                            </div>
-                            <div class="flex-between flex-wrap gap-8 mt-24">
-                                <button
-                                    type="button"
-                                    class="btn btn-main h-40 flex-align"
-                                    (click)="aplicarFiltroPrecio()">
-                                    Filtrar
-                                </button>
-                                <button
-                                    type="button"
-                                    class="btn btn-outline-main h-40 flex-align"
-                                    (click)="limpiarFiltroPrecio()">
-                                    Limpiar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Filtro por Marca -->
                     <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
                         <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">Marcas</h6>
@@ -117,6 +76,28 @@
                                 </div>
                             </li>
                         </ul>
+                    </div>
+
+                    <!-- Precio -->
+                    <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
+                        <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">Precio</h6>
+                        <div class="d-flex align-items-center gap-8">
+                            <input type="number" class="form-control" placeholder="PEN Min" [(ngModel)]="minPrice" style="flex: 1; font-size: 12px;">
+                            <span>-</span>
+                            <input type="number" class="form-control" placeholder="PEN Max" [(ngModel)]="maxPrice" style="flex: 1; font-size: 12px;">
+                            <button class="btn btn-sm btn-main" (click)="aplicarFiltroPrecio()" style="height: 43px;">OK</button>
+                        </div>
+                    </div>
+
+                    <!-- Ordenar por -->
+                    <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
+                        <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">Ordenar por</h6>
+                        <select class="form-select" [(ngModel)]="sortBy" (change)="aplicarOrdenamiento()">
+                            <option value="price_asc">Precio ascendente</option>
+                            <option value="price_desc">Precio descendente</option>
+                            <option value="name_asc">Nombre ascendente</option>
+                            <option value="popularity_desc">Popularidad descendente</option>
+                        </select>
                     </div>
 
                     <!-- Botón Limpiar Filtros -->

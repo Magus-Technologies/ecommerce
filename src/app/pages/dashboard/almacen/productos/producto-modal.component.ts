@@ -69,7 +69,7 @@ import {
 })
 export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
   @Input() producto: Producto | null = null;
-  @Output() productoGuardado = new EventEmitter<void>();
+  @Output() productoGuardado = new EventEmitter<Producto>(); // ✅ CAMBIO: Emitir el producto
   @Output() modalCerrado = new EventEmitter<void>();
 
   // Formularios
@@ -153,7 +153,10 @@ export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(): void {
     if (this.producto) {
-      console.log('ngOnChanges - Cargando producto para edición:', this.producto);
+      console.log(
+        'ngOnChanges - Cargando producto para edición:',
+        this.producto
+      );
       this.cargarProductoParaEdicion();
     } else {
       console.log('ngOnChanges - Creando nuevo producto');
@@ -474,7 +477,10 @@ export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  private showImageValidation(message: string, type: 'error' | 'warning'): void {
+  private showImageValidation(
+    message: string,
+    type: 'error' | 'warning'
+  ): void {
     this.imageValidationMessage = message;
     this.imageValidationType = type;
   }
@@ -507,11 +513,17 @@ export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
 
             // Mostrar advertencia si las dimensiones no son ideales
             if (width < 200 || height < 200) {
-              console.warn(`Imagen ${file.name} muy pequeña (${width}x${height}px). Se recomienda usar al menos 400x400px.`);
+              console.warn(
+                `Imagen ${file.name} muy pequeña (${width}x${height}px). Se recomienda usar al menos 400x400px.`
+              );
             } else if (Math.abs(width - height) > width * 0.3) {
-              console.warn(`Imagen ${file.name} no cuadrada (${width}x${height}px). Para mejor visualización usa imágenes cuadradas.`);
+              console.warn(
+                `Imagen ${file.name} no cuadrada (${width}x${height}px). Para mejor visualización usa imágenes cuadradas.`
+              );
             } else {
-              console.log(`✓ Imagen ${file.name} con dimensiones ideales (${width}x${height}px).`);
+              console.log(
+                `✓ Imagen ${file.name} con dimensiones ideales (${width}x${height}px).`
+              );
             }
 
             // Agregar la imagen al array
@@ -658,9 +670,7 @@ export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
       }
     }
 
-    const vimeoMatch = url.match(
-      /(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)/
-    );
+    const vimeoMatch = url.match(/(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)/);
     if (vimeoMatch) {
       return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
     }
@@ -685,9 +695,17 @@ export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
         imagen: this.selectedImage,
       };
 
-      if (!formValue.marca_id) {
+      // ✅ CORRECCIÓN: Convertir marca_id vacío o string vacío a null
+      const marcaId = this.productoForm.get('marca_id')?.value;
+      if (!marcaId || marcaId === '' || marcaId === 'null') {
         formValue.marca_id = null;
+      } else {
+        // Asegurar que sea un número
+        formValue.marca_id = Number(marcaId);
       }
+
+      console.log('📦 Datos a enviar:', formValue);
+      console.log('🏷️ Marca ID:', formValue.marca_id);
 
       const request = this.producto
         ? this.almacenService.actualizarProducto(this.producto.id, formValue)
@@ -697,12 +715,16 @@ export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
         next: (response) => {
           console.log('Producto guardado exitosamente:', response);
 
+          // ✅ OPTIMIZACIÓN: Guardar el producto para emitirlo después
+          const productoGuardado = response.producto;
+
           // Si hay detalles para guardar
           const productoId = this.producto?.id || response.producto?.id;
           if (productoId && this.tieneDetallesParaGuardar()) {
-            this.guardarDetalles(productoId);
+            this.guardarDetalles(productoId, productoGuardado);
           } else {
-            this.productoGuardado.emit();
+            // ✅ Emitir el producto guardado
+            this.productoGuardado.emit(productoGuardado);
             this.cerrarModal();
           }
         },
@@ -725,8 +747,12 @@ export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
       detalles.instrucciones_uso ||
       detalles.garantia ||
       detalles.politicas_devolucion ||
-      this.especificaciones.value.some((spec: any) => spec.nombre && spec.valor) ||
-      this.caracteristicasTecnicas.value.some((carac: any) => carac.caracteristica && carac.detalle) ||
+      this.especificaciones.value.some(
+        (spec: any) => spec.nombre && spec.valor
+      ) ||
+      this.caracteristicasTecnicas.value.some(
+        (carac: any) => carac.caracteristica && carac.detalle
+      ) ||
       this.videos.value.some((video: string) => video.trim()) ||
       this.imagenesSeleccionadas.length > 0 ||
       detalles.largo ||
@@ -736,7 +762,7 @@ export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
     );
   }
 
-  private guardarDetalles(productoId: number): void {
+  private guardarDetalles(productoId: number, productoGuardado?: any): void {
     const formData = new FormData();
 
     // Datos básicos
@@ -748,10 +774,7 @@ export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
       'instrucciones_uso',
       this.detallesForm.get('instrucciones_uso')?.value || ''
     );
-    formData.append(
-      'garantia',
-      this.detallesForm.get('garantia')?.value || ''
-    );
+    formData.append('garantia', this.detallesForm.get('garantia')?.value || '');
     formData.append(
       'politicas_devolucion',
       this.detallesForm.get('politicas_devolucion')?.value || ''
@@ -791,19 +814,23 @@ export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
     });
 
     // Enviar al servidor
-    this.almacenService.guardarDetallesProducto(productoId, formData).subscribe({
-      next: (response) => {
-        console.log('Detalles guardados exitosamente:', response);
-        this.productoGuardado.emit();
-        this.cerrarModal();
-      },
-      error: (error) => {
-        console.error('Error al guardar detalles:', error);
-        // Aunque los detalles fallen, el producto ya se guardó
-        this.productoGuardado.emit();
-        this.cerrarModal();
-      },
-    });
+    this.almacenService
+      .guardarDetallesProducto(productoId, formData)
+      .subscribe({
+        next: (response) => {
+          console.log('Detalles guardados exitosamente:', response);
+          // ✅ Emitir el producto guardado
+          this.productoGuardado.emit(productoGuardado);
+          this.cerrarModal();
+        },
+        error: (error) => {
+          console.error('Error al guardar detalles:', error);
+          // Aunque los detalles fallen, el producto ya se guardó
+          // ✅ Emitir el producto guardado
+          this.productoGuardado.emit(productoGuardado);
+          this.cerrarModal();
+        },
+      });
   }
 
   private markFormGroupTouched(): void {
