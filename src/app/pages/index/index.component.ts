@@ -36,10 +36,16 @@ import {
   ProductoOferta,
   Cupon,
   OfertaPrincipalResponse,
-  OfertaSemanaResponse
+  OfertaSemanaResponse,
 } from '../../services/ofertas.service';
-import { BannerFlashSalesService, BannerFlashSale } from '../../services/banner-flash-sales.service';
-import { BannerOfertaService, BannerOferta } from '../../services/banner-oferta.service';
+import {
+  BannerFlashSalesService,
+  BannerFlashSale,
+} from '../../services/banner-flash-sales.service';
+import {
+  BannerOfertaService,
+  BannerOferta,
+} from '../../services/banner-oferta.service';
 import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 import { WhatsappFloatComponent } from '../../components/whatsapp-float/whatsapp-float.component';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
@@ -92,8 +98,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   categoriasCarousel!: SlickCarouselComponent;
 
   @ViewChild('ofertasCarousel', { static: false })
-ofertasCarousel!: SlickCarouselComponent;
-
+  ofertasCarousel!: SlickCarouselComponent;
 
   // ✅ CONFIGURACIÓN DE DEBUG - CAMBIAR A false PARA PRODUCCIÓN
   private readonly debugMode = false; // Cambiar a true solo para debugging
@@ -175,7 +180,7 @@ ofertasCarousel!: SlickCarouselComponent;
   } = {
     debajo_ofertas_especiales: null,
     debajo_categorias: null,
-    debajo_ventas_flash: null
+    debajo_ventas_flash: null,
   };
   isLoadingBannersHorizontales = false;
 
@@ -248,39 +253,38 @@ ofertasCarousel!: SlickCarouselComponent;
     ],
   };
   // ✅ CONFIGURACIÓN PARA CARRUSEL DE OFERTAS ESPECIALES
-ofertasEspecialesSlideConfig: any = {
-  slidesToShow: 4,
-  slidesToScroll: 1,
-  arrows: false, // Usaremos botones personalizados
-  dots: false,
-  infinite: true,
-  speed: 500,
-  autoplay: true,
-  autoplaySpeed: 3000,
-  pauseOnHover: true,
-  draggable: true,
-  responsive: [
-    {
-      breakpoint: 1400,
-      settings: {
-        slidesToShow: 3,
+  ofertasEspecialesSlideConfig: any = {
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    arrows: false, // Usaremos botones personalizados
+    dots: false,
+    infinite: true,
+    speed: 500,
+    autoplay: true,
+    autoplaySpeed: 3000,
+    pauseOnHover: true,
+    draggable: true,
+    responsive: [
+      {
+        breakpoint: 1400,
+        settings: {
+          slidesToShow: 3,
+        },
       },
-    },
-    {
-      breakpoint: 992,
-      settings: {
-        slidesToShow: 2,
+      {
+        breakpoint: 992,
+        settings: {
+          slidesToShow: 2,
+        },
       },
-    },
-    {
-      breakpoint: 576,
-      settings: {
-        slidesToShow: 1,
+      {
+        breakpoint: 576,
+        settings: {
+          slidesToShow: 1,
+        },
       },
-    },
-  ],
-};
-
+    ],
+  };
 
   promotionalBanners: BannerPromocional[] = [];
   isLoadingPromotionalBanners = false;
@@ -306,8 +310,8 @@ ofertasEspecialesSlideConfig: any = {
     this.isLoadingPromotionalBanners = true;
     this.bannersService.obtenerBannersPromocionalesPublicos().subscribe({
       next: (banners) => {
-        // console.log('Debug: Banners Promocionales recibidos:', banners); 
-        
+        // console.log('Debug: Banners Promocionales recibidos:', banners);
+
         // console.log('Debug: Primer banner completo:', JSON.stringify(banners[0], null, 2));
         this.promotionalBanners = banners;
         this.isLoadingPromotionalBanners = false;
@@ -396,7 +400,7 @@ ofertasEspecialesSlideConfig: any = {
         // Método 2: Usando jQuery si está disponible
         if (typeof (window as any).$ !== 'undefined') {
           const $ = (window as any).$;
-          $('.slick-slider').each(function(this: any) {
+          $('.slick-slider').each(function (this: any) {
             if ($(this).hasClass('slick-initialized')) {
               $(this).slick('refresh');
               $(this).slick('setPosition');
@@ -524,7 +528,9 @@ ofertasEspecialesSlideConfig: any = {
 
   cargarCategoriasPublicas(): void {
     this.isLoadingCategorias = true;
-    this.categoriasPublicasService.obtenerCategoriasPublicas().subscribe({
+    // ✅ CORRECCIÓN: Llamar sin parámetro de sección para obtener TODAS las categorías
+    // No usar el SeccionFilterService aquí porque es una vista pública
+    this.categoriasPublicasService.obtenerCategoriasPublicas(undefined).subscribe({
       next: (categorias) => {
         this.featureItems = categorias.map((cat) => ({
           ...cat,
@@ -532,6 +538,7 @@ ofertasEspecialesSlideConfig: any = {
           title: cat.nombre,
         })) as CategoriaConImagen[];
         this.isLoadingCategorias = false;
+        console.log('✅ Categorías públicas cargadas:', categorias.length);
       },
       error: (error) => {
         console.error('Error al cargar categorías públicas:', error);
@@ -573,7 +580,10 @@ ofertasEspecialesSlideConfig: any = {
         this.isLoadingProductosFiltrados = false;
 
         if (this.debugMode) {
-          console.log('✅ Todos los productos cargados:', this.todosLosProductos.length);
+          console.log(
+            '✅ Todos los productos cargados:',
+            this.todosLosProductos.length
+          );
         }
       },
       error: (error) => {
@@ -593,11 +603,18 @@ ofertasEspecialesSlideConfig: any = {
     // ✅ Scroll suave al primer producto nuevo después de cargar
     if (this.isBrowser) {
       setTimeout(() => {
-        const productosContainer = document.querySelector('.recommended .row.g-12');
+        const productosContainer = document.querySelector(
+          '.recommended .row.g-12'
+        );
         if (productosContainer) {
-          const nuevoProducto = productosContainer.children[productosAntesDeCargar] as HTMLElement;
+          const nuevoProducto = productosContainer.children[
+            productosAntesDeCargar
+          ] as HTMLElement;
           if (nuevoProducto) {
-            nuevoProducto.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            nuevoProducto.scrollIntoView({
+              behavior: 'smooth',
+              block: 'nearest',
+            });
           }
         }
       }, 100);
@@ -656,16 +673,25 @@ ofertasEspecialesSlideConfig: any = {
     this.bannersService.obtenerBannersHorizontalesPublicos().subscribe({
       next: (banners) => {
         // Organizar banners por posición (solo posiciones válidas para index)
-        banners.forEach(banner => {
-          if (banner.posicion_horizontal && banner.posicion_horizontal !== 'sidebar_shop') {
-            const posicion = banner.posicion_horizontal as 'debajo_ofertas_especiales' | 'debajo_categorias' | 'debajo_ventas_flash';
+        banners.forEach((banner) => {
+          if (
+            banner.posicion_horizontal &&
+            banner.posicion_horizontal !== 'sidebar_shop'
+          ) {
+            const posicion = banner.posicion_horizontal as
+              | 'debajo_ofertas_especiales'
+              | 'debajo_categorias'
+              | 'debajo_ventas_flash';
             this.bannersHorizontales[posicion] = banner;
           }
         });
         this.isLoadingBannersHorizontales = false;
 
         if (this.debugMode) {
-          console.log('✅ Banners horizontales cargados:', this.bannersHorizontales);
+          console.log(
+            '✅ Banners horizontales cargados:',
+            this.bannersHorizontales
+          );
         }
       },
       error: (error) => {
@@ -732,7 +758,7 @@ ofertasEspecialesSlideConfig: any = {
 
         // Obtener productos sugeridos (primeros 3 productos diferentes al actual)
         const suggestedProducts = this.productosFiltrados
-          .filter(p => p.id !== product.id)
+          .filter((p) => p.id !== product.id)
           .slice(0, 3);
 
         // Mostrar notificación llamativa estilo Coolbox
@@ -747,11 +773,13 @@ ofertasEspecialesSlideConfig: any = {
       error: (err) => {
         Swal.fire({
           title: 'Error',
-          text: err.message || 'No se pudo agregar el producto al carrito. Revisa el stock disponible.',
+          text:
+            err.message ||
+            'No se pudo agregar el producto al carrito. Revisa el stock disponible.',
           icon: 'error',
           confirmButtonColor: '#dc3545',
         });
-      }
+      },
     });
   }
 
@@ -769,11 +797,13 @@ ofertasEspecialesSlideConfig: any = {
     this.cartService.addToCart(producto, 1).subscribe({
       next: () => {
         // Preparar imagen del producto
-        const productImage = producto.imagen_principal || 'assets/images/thumbs/product-default.png';
+        const productImage =
+          producto.imagen_principal ||
+          'assets/images/thumbs/product-default.png';
 
         // Obtener productos sugeridos (otros productos del banner)
         const suggestedProducts = (this.bannerOfertaActivo?.productos || [])
-          .filter(p => p.id !== producto.id)
+          .filter((p) => p.id !== producto.id)
           .slice(0, 3);
 
         // Mostrar notificación
@@ -788,11 +818,13 @@ ofertasEspecialesSlideConfig: any = {
       error: (err) => {
         Swal.fire({
           title: 'Error',
-          text: err.message || 'No se pudo agregar el producto al carrito. Revisa el stock disponible.',
+          text:
+            err.message ||
+            'No se pudo agregar el producto al carrito. Revisa el stock disponible.',
           icon: 'error',
           confirmButtonColor: '#dc3545',
         });
-      }
+      },
     });
   }
   // ✅ NUEVO MÉTODO: Agregar a wishlist con verificación de autenticación
@@ -860,7 +892,7 @@ ofertasEspecialesSlideConfig: any = {
   private inicializarWishlistState(): void {
     const wishlistItems = this.wishlistService.getCurrentItems();
     this.wishlistState.clear();
-    wishlistItems.forEach(item => {
+    wishlistItems.forEach((item) => {
       this.wishlistState.add(item.producto_id);
     });
   }
@@ -1343,8 +1375,6 @@ ofertasEspecialesSlideConfig: any = {
     }
   }
 
- 
-
   hotDealsSlideConfig = {
     slidesToShow: 4,
     slidesToScroll: 1,
@@ -1557,24 +1587,24 @@ ofertasEspecialesSlideConfig: any = {
   }
 
   siguienteFlashSale(): void {
-    const maxPage = Math.ceil(this.flashSalesActivas.length / this.flashSalesPerPage) - 1;
+    const maxPage =
+      Math.ceil(this.flashSalesActivas.length / this.flashSalesPerPage) - 1;
     if (this.flashSalesCurrentPage < maxPage) {
       this.flashSalesCurrentPage++;
     }
   }
   // ✅ FUNCIONES PARA NAVEGAR EN OFERTAS ESPECIALES
-anteriorOfertaEspecial(): void {
-  if (this.ofertasCarousel) {
-    this.ofertasCarousel.slickPrev();
+  anteriorOfertaEspecial(): void {
+    if (this.ofertasCarousel) {
+      this.ofertasCarousel.slickPrev();
+    }
   }
-}
 
-siguienteOfertaEspecial(): void {
-  if (this.ofertasCarousel) {
-    this.ofertasCarousel.slickNext();
+  siguienteOfertaEspecial(): void {
+    if (this.ofertasCarousel) {
+      this.ofertasCarousel.slickNext();
+    }
   }
-}
-
 
   getSafeUrl(url: string): SafeUrl {
     if (!url) {
@@ -1601,7 +1631,7 @@ siguienteOfertaEspecial(): void {
   getCategoriaLink(categoria: CategoriaConImagen): string[] {
     const slug = SlugHelper.getSlugFromCategoria({
       nombre: categoria.nombre,
-      slug: categoria.slug
+      slug: categoria.slug,
     });
     return ['/shop/categoria', slug];
   }
@@ -1617,7 +1647,8 @@ siguienteOfertaEspecial(): void {
   // ✅ NUEVO: Método para obtener el link de marca con slug para SEO
   getMarcaLink(slide: BrandSlide): string[] {
     // Usar el slug de la marca si existe, sino generar uno desde el nombre
-    const slug = slide.marcaSlug || SlugHelper.generateSlug(slide.marcaNombre || 'marca');
+    const slug =
+      slide.marcaSlug || SlugHelper.generateSlug(slide.marcaNombre || 'marca');
     // Formato: /shop/marca/:slug (ej: /shop/marca/antryx)
     return ['/shop/marca', slug];
   }

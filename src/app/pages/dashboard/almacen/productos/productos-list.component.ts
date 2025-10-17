@@ -34,6 +34,9 @@ export class ProductosListComponent implements OnInit, OnDestroy {
   marcas: any[] = [];
   filtroCategoria: number | null = null;
   filtroMarca: number | null = null;
+  
+  // ✅ NUEVO: Búsqueda de texto
+  searchTerm: string = '';
 
   // Paginación simple
   pageSize = 10;
@@ -84,22 +87,35 @@ export class ProductosListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ NUEVO: Aplicar filtros
+  // ✅ NUEVO: Aplicar filtros (incluye búsqueda de texto)
   aplicarFiltros(): void {
     this.productosFiltrados = this.productos.filter(producto => {
       let cumpleCategoria = true;
       let cumpleMarca = true;
+      let cumpleBusqueda = true;
 
-      // Convertir a número para comparar
+      // Filtro por categoría
       if (this.filtroCategoria !== null && this.filtroCategoria !== undefined) {
         cumpleCategoria = Number(producto.categoria_id) === Number(this.filtroCategoria);
       }
 
+      // Filtro por marca
       if (this.filtroMarca !== null && this.filtroMarca !== undefined) {
         cumpleMarca = Number(producto.marca_id) === Number(this.filtroMarca);
       }
 
-      return cumpleCategoria && cumpleMarca;
+      // ✅ NUEVO: Filtro por búsqueda de texto
+      if (this.searchTerm && this.searchTerm.trim() !== '') {
+        const searchLower = this.searchTerm.toLowerCase().trim();
+        cumpleBusqueda = 
+          producto.nombre.toLowerCase().includes(searchLower) ||
+          producto.codigo_producto.toLowerCase().includes(searchLower) ||
+          (producto.categoria?.nombre || '').toLowerCase().includes(searchLower) ||
+          (producto.marca?.nombre || '').toLowerCase().includes(searchLower) ||
+          (producto.descripcion || '').toLowerCase().includes(searchLower);
+      }
+
+      return cumpleCategoria && cumpleMarca && cumpleBusqueda;
     });
 
     // Resetear a la primera página
@@ -110,8 +126,14 @@ export class ProductosListComponent implements OnInit, OnDestroy {
   limpiarFiltros(): void {
     this.filtroCategoria = null;
     this.filtroMarca = null;
+    this.searchTerm = '';
     this.productosFiltrados = [...this.productos];
     this.currentPage = 1;
+  }
+
+  // ✅ NUEVO: Método para manejar la búsqueda con debounce
+  onSearchChange(): void {
+    this.aplicarFiltros();
   }
 
   cargarProductos(): void {
@@ -171,6 +193,11 @@ export class ProductosListComponent implements OnInit, OnDestroy {
       if (result.isConfirmed) {
         this.almacenService.eliminarProducto(producto.id).subscribe({
           next: () => {
+            // ✅ OPTIMIZACIÓN: Eliminar solo del array local sin recargar
+            this.productos = this.productos.filter(p => p.id !== producto.id);
+            this.aplicarFiltros();
+            console.log('✅ Producto eliminado de la lista:', producto.nombre);
+            
             Swal.fire({
               title: '¡Eliminado!',
               text: 'El producto ha sido eliminado exitosamente.',
@@ -181,7 +208,6 @@ export class ProductosListComponent implements OnInit, OnDestroy {
                 confirmButton: 'rounded-8',
               },
             });
-            this.cargarProductos();
           },
           error: (error) => {
             Swal.fire({
@@ -206,7 +232,13 @@ export class ProductosListComponent implements OnInit, OnDestroy {
       .toggleEstadoProducto(producto.id, !producto.activo)
       .subscribe({
         next: () => {
-          this.cargarProductos();
+          // ✅ OPTIMIZACIÓN: Actualizar solo el producto en el array local
+          const index = this.productos.findIndex(p => p.id === producto.id);
+          if (index !== -1) {
+            this.productos[index].activo = !producto.activo;
+            this.aplicarFiltros();
+            console.log('✅ Estado actualizado:', this.productos[index].nombre, '→', this.productos[index].activo ? 'Activo' : 'Inactivo');
+          }
         },
         error: (error) => {
           console.error('Error al actualizar estado del producto:', error);
@@ -214,8 +246,29 @@ export class ProductosListComponent implements OnInit, OnDestroy {
       });
   }
 
-  onProductoGuardado(): void {
-    this.cargarProductos();
+  onProductoGuardado(productoActualizado?: Producto): void {
+    // ✅ OPTIMIZACIÓN: Actualizar solo el producto específico sin recargar todo
+    if (productoActualizado) {
+      if (this.productoSeleccionado) {
+        // EDICIÓN: Actualizar producto existente en el array
+        const index = this.productos.findIndex(p => p.id === productoActualizado.id);
+        if (index !== -1) {
+          this.productos[index] = productoActualizado;
+          console.log('✅ Producto actualizado en la lista:', productoActualizado.nombre);
+        }
+      } else {
+        // CREACIÓN: Agregar nuevo producto al inicio del array
+        this.productos.unshift(productoActualizado);
+        console.log('✅ Nuevo producto agregado a la lista:', productoActualizado.nombre);
+      }
+      
+      // Actualizar productos filtrados
+      this.aplicarFiltros();
+    } else {
+      // Fallback: Recargar todos si no se proporciona el producto
+      this.cargarProductos();
+    }
+    
     this.productoSeleccionado = null;
   }
 
@@ -246,7 +299,13 @@ export class ProductosListComponent implements OnInit, OnDestroy {
       .toggleDestacadoProducto(producto.id, !producto.destacado)
       .subscribe({
         next: () => {
-          this.cargarProductos();
+          // ✅ OPTIMIZACIÓN: Actualizar solo el producto en el array local
+          const index = this.productos.findIndex(p => p.id === producto.id);
+          if (index !== -1) {
+            this.productos[index].destacado = !producto.destacado;
+            this.aplicarFiltros();
+            console.log('✅ Destacado actualizado:', this.productos[index].nombre, '→', this.productos[index].destacado ? 'Destacado' : 'Normal');
+          }
         },
         error: (error) => {
           console.error('Error al actualizar estado destacado:', error);

@@ -38,6 +38,9 @@ export class OfertasComponent implements OnInit {
   currentMinPrice: number = 0
   currentMaxPrice: number = 10000
 
+  // ✅ NUEVO: Ordenamiento
+  sortBy: string = 'price_desc' // Por defecto: Precio descendente
+
   // pagination
   currentPage = 1
   itemsPerPage = 12
@@ -54,6 +57,9 @@ export class OfertasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // ✅ SCROLL AL INICIO AL CARGAR LA PÁGINA
+    window.scrollTo({ top: 0, behavior: 'auto' })
+    
     this.cargarCategorias()
     this.cargarMarcas()
     this.cargarProductosEnOferta()
@@ -168,10 +174,35 @@ export class OfertasComponent implements OnInit {
       )
     }
 
+    // ✅ NUEVO: Aplicar ordenamiento
+    filtrados = this.ordenarProductos(filtrados)
+
     this.productosFiltrados = filtrados
     this.totalProductos = filtrados.length
     this.totalPages = Math.ceil(this.totalProductos / this.itemsPerPage)
     this.currentPage = 1
+  }
+
+  // ✅ NUEVO: Método para ordenar productos
+  ordenarProductos(productos: ProductoBannerOferta[]): ProductoBannerOferta[] {
+    switch (this.sortBy) {
+      case 'price_asc':
+        return productos.sort((a, b) => a.precio_con_descuento - b.precio_con_descuento)
+      case 'price_desc':
+        return productos.sort((a, b) => b.precio_con_descuento - a.precio_con_descuento)
+      case 'name_asc':
+        return productos.sort((a, b) => a.nombre.localeCompare(b.nombre))
+      case 'popularity_desc':
+        // Ordenar por descuento (mayor descuento = más popular)
+        return productos.sort((a, b) => b.descuento_porcentaje - a.descuento_porcentaje)
+      default:
+        return productos
+    }
+  }
+
+  // ✅ NUEVO: Método para aplicar ordenamiento
+  aplicarOrdenamiento(): void {
+    this.aplicarFiltros()
   }
 
   /**
