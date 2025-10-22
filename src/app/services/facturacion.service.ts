@@ -2,13 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { 
-  Empresa, 
-  Certificado, 
-  Serie, 
-  Cliente, 
-  Venta, 
-  VentaFormData, 
+import {
+  Empresa,
+  Certificado,
+  Serie,
+  Cliente,
+  Venta,
+  VentaFormData,
   FacturarFormData,
   Comprobante,
   NotaCreditoFormData,
@@ -65,7 +65,7 @@ export class FacturacionService {
    * Obtener catálogos de SUNAT
    */
   getCatalogos(tipo: string): Observable<ApiResponse<any[]>> {
-    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/catalogos-sunat/${tipo}`);
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/facturacion/catalogos/${tipo}`);
   }
 
   // ============================================
@@ -259,6 +259,13 @@ export class FacturacionService {
     return this.http.get(`${this.apiUrl}/comprobantes/${id}/cdr`, { responseType: 'blob' });
   }
 
+  /**
+   * Descargar PDF del comprobante
+   */
+  downloadComprobantePdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/comprobantes/${id}/pdf`, { responseType: 'blob' });
+  }
+
   // ============================================
   // NOTAS DE CRÉDITO
   // ============================================
@@ -326,7 +333,7 @@ export class FacturacionService {
    * Crear resumen diario
    */
   crearResumen(fecha: string, comprobantes: any[]): Observable<ApiResponse<Resumen>> {
-    return this.http.post<ApiResponse<Resumen>>(`${this.apiUrl}/resumenes`, {
+    return this.http.post<ApiResponse<Resumen>>(`${this.apiUrl}/facturacion/resumenes`, {
       fecha,
       comprobantes
     });
@@ -344,14 +351,14 @@ export class FacturacionService {
         }
       });
     }
-    return this.http.get<PaginatedResponse<Resumen>>(`${this.apiUrl}/resumenes`, { params: httpParams });
+    return this.http.get<PaginatedResponse<Resumen>>(`${this.apiUrl}/facturacion/resumenes`, { params: httpParams });
   }
 
   /**
    * Consultar estado de resumen
    */
   consultarEstadoResumen(ticket: string): Observable<ApiResponse<Resumen>> {
-    return this.http.get<ApiResponse<Resumen>>(`${this.apiUrl}/resumenes/${ticket}`);
+    return this.http.get<ApiResponse<Resumen>>(`${this.apiUrl}/facturacion/resumenes/${ticket}`);
   }
 
   // ============================================
@@ -362,7 +369,7 @@ export class FacturacionService {
    * Enviar comunicación de baja
    */
   enviarBaja(datos: BajaFormData): Observable<ApiResponse<Baja>> {
-    return this.http.post<ApiResponse<Baja>>(`${this.apiUrl}/bajas`, datos);
+    return this.http.post<ApiResponse<Baja>>(`${this.apiUrl}/facturacion/bajas`, datos);
   }
 
   /**
@@ -377,14 +384,14 @@ export class FacturacionService {
         }
       });
     }
-    return this.http.get<PaginatedResponse<Baja>>(`${this.apiUrl}/bajas`, { params: httpParams });
+    return this.http.get<PaginatedResponse<Baja>>(`${this.apiUrl}/facturacion/bajas`, { params: httpParams });
   }
 
   /**
    * Consultar estado de baja
    */
   consultarEstadoBaja(ticket: string): Observable<ApiResponse<Baja>> {
-    return this.http.get<ApiResponse<Baja>>(`${this.apiUrl}/bajas/${ticket}`);
+    return this.http.get<ApiResponse<Baja>>(`${this.apiUrl}/facturacion/bajas/${ticket}`);
   }
 
   // ============================================
@@ -403,7 +410,7 @@ export class FacturacionService {
         }
       });
     }
-    return this.http.get<PaginatedResponse<AuditoriaSunat>>(`${this.apiUrl}/auditoria-sunat`, { params: httpParams });
+    return this.http.get<PaginatedResponse<AuditoriaSunat>>(`${this.apiUrl}/facturacion/auditoria`, { params: httpParams });
   }
 
   /**
@@ -418,7 +425,7 @@ export class FacturacionService {
         }
       });
     }
-    return this.http.get<PaginatedResponse<any>>(`${this.apiUrl}/cola-reintentos`, { params: httpParams });
+    return this.http.get<PaginatedResponse<any>>(`${this.apiUrl}/facturacion/reintentos`, { params: httpParams });
   }
 
   /**
@@ -426,6 +433,91 @@ export class FacturacionService {
    */
   reintentarOperacion(id: number): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/cola-reintentos/${id}/reintentar`, {});
+  }
+
+  // ============================================
+  // FACTURACIÓN MANUAL
+  // ============================================
+
+  /**
+   * Obtener facturas manuales
+   */
+  getFacturas(params?: any): Observable<PaginatedResponse<any>> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined) {
+          httpParams = httpParams.set(key, params[key]);
+        }
+      });
+    }
+    return this.http.get<PaginatedResponse<any>>(`${this.apiUrl}/facturas`, { params: httpParams });
+  }
+
+  /**
+   * Crear factura/boleta manual
+   */
+  createFactura(factura: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/facturas`, factura);
+  }
+
+  /**
+   * Obtener detalle de factura manual
+   */
+  getFactura(id: number): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/facturas/${id}`);
+  }
+
+  /**
+   * Enviar factura a SUNAT
+   */
+  enviarFacturaSunat(id: number): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/facturas/${id}/enviar-sunat`, {});
+  }
+
+  /**
+   * Buscar productos para facturación
+   */
+  buscarProductosFacturacion(params?: any): Observable<ApiResponse<any[]>> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined) {
+          httpParams = httpParams.set(key, params[key]);
+        }
+      });
+    }
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/facturas/buscar-productos`, { params: httpParams });
+  }
+
+  /**
+   * Obtener clientes para facturación
+   */
+  getClientesFacturacion(params?: any): Observable<ApiResponse<any[]>> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined) {
+          httpParams = httpParams.set(key, params[key]);
+        }
+      });
+    }
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/facturas/clientes`, { params: httpParams });
+  }
+
+  /**
+   * Obtener series para facturación
+   */
+  getSeriesFacturacion(params?: any): Observable<ApiResponse<any[]>> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined) {
+          httpParams = httpParams.set(key, params[key]);
+        }
+      });
+    }
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/facturas/series`, { params: httpParams });
   }
 
   // ============================================
@@ -461,6 +553,7 @@ export class FacturacionService {
     return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/productos`, { params: httpParams });
   }
 
+
   /**
    * Obtener cliente por documento
    */
@@ -480,5 +573,162 @@ export class FacturacionService {
    */
   generarUrlDestinoDefault(recompensaId: number): string {
     return `/recompensas/${recompensaId}`;
+  }
+
+  // ============================================
+  // MÉTODOS DE PRUEBA Y DIAGNÓSTICO
+  // ============================================
+
+  /**
+   * Probar conectividad de APIs principales
+   */
+  probarConectividad(): Observable<any> {
+    const pruebas = {
+      ventas: this.http.get(`${this.apiUrl}/ventas?page=1&per_page=1`),
+      clientes: this.http.get(`${this.apiUrl}/clientes?page=1&per_page=1`),
+      productos: this.http.get(`${this.apiUrl}/productos?page=1&per_page=1`),
+      series: this.http.get(`${this.apiUrl}/series?page=1&per_page=1`),
+      comprobantes: this.http.get(`${this.apiUrl}/comprobantes?page=1&per_page=1`),
+      facturas: this.http.get(`${this.apiUrl}/facturas?page=1&per_page=1`),
+      estado: this.http.get(`${this.apiUrl}/facturacion/status`)
+    };
+
+    return this.http.get(`${this.apiUrl}/health-check`);
+  }
+
+  /**
+   * Verificar estado de un endpoint específico
+   */
+  verificarEndpoint(endpoint: string): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/${endpoint}`);
+  }
+
+  // ============================================
+  // CONFIGURACIÓN DE EMPRESA
+  // ============================================
+
+  /**
+   * Obtener datos de la empresa
+   */
+  getEmpresa(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/facturacion/empresa`);
+  }
+
+  /**
+   * Actualizar datos de la empresa
+   */
+  updateEmpresa(datos: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/facturacion/empresa`, datos);
+  }
+
+  // ============================================
+  // CERTIFICADOS DIGITALES
+  // ============================================
+
+  /**
+   * Obtener certificados
+   */
+  getCertificados(): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/facturacion/certificados`);
+  }
+
+  /**
+   * Subir certificado
+   */
+  subirCertificado(formData: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}/facturacion/certificados`, formData);
+  }
+
+  /**
+   * Validar certificado
+   */
+  validarCertificado(id: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/facturacion/certificados/${id}/validar`);
+  }
+
+  /**
+   * Activar certificado
+   */
+  activarCertificado(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/facturacion/certificados/${id}/activar`, {});
+  }
+
+  /**
+   * Eliminar certificado
+   */
+  eliminarCertificado(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/facturacion/certificados/${id}`);
+  }
+
+  /**
+   * Procesar reintentos
+   */
+  procesarReintentos(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/facturacion/reintentos/reintentar-todo`, {});
+  }
+
+  /**
+   * Verificar conexión SUNAT
+   */
+  verificarSUNAT(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/facturacion/test/estado-sunat`);
+  }
+
+  // ============================================
+  // NOTAS DE CRÉDITO (MÉTODOS ADICIONALES)
+  // ============================================
+
+  /**
+   * Crear nota de crédito
+   */
+  crearNotaCredito(datos: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/facturacion/notas-credito`, datos);
+  }
+
+  /**
+   * Obtener nota de crédito por ID
+   */
+  getNotaCredito(id: number): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/facturacion/notas-credito/${id}`);
+  }
+
+  // ============================================
+  // NOTAS DE DÉBITO (MÉTODOS ADICIONALES)
+  // ============================================
+
+  /**
+   * Crear nota de débito
+   */
+  crearNotaDebito(datos: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/facturacion/notas-debito`, datos);
+  }
+
+  /**
+   * Obtener nota de débito por ID
+   */
+  getNotaDebito(id: number): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/facturacion/notas-debito/${id}`);
+  }
+
+  // ============================================
+  // CATÁLOGOS SUNAT
+  // ============================================
+
+  /**
+   * Obtener catálogo SUNAT
+   */
+  getCatalogo(tipo: string): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/facturacion/catalogos/${tipo}`);
+  }
+
+  // ============================================
+  // DASHBOARD Y KPIs
+  // ============================================
+
+  /**
+   * Obtener KPIs de facturación
+   */
+  getKPIs(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/facturacion/kpis`);
   }
 }

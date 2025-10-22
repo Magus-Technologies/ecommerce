@@ -9,13 +9,13 @@ import { Cliente } from '../../models/cliente.model';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   template: `
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-      <div class="modal-dialog modal-lg">
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" (click)="cerrar.emit()">
+      <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
-              <i class="ph ph-pencil me-2"></i>
-              Editar Cliente
+              <i class="ph ph-user me-2"></i>
+              {{ cliente?.id_cliente ? 'Editar Cliente' : 'Nuevo Cliente' }}
             </h5>
             <button type="button" class="btn-close" (click)="cerrar.emit()"></button>
           </div>
@@ -23,30 +23,44 @@ import { Cliente } from '../../models/cliente.model';
           <form [formGroup]="formulario" (ngSubmit)="guardar()">
             <div class="modal-body">
               <div class="row">
-                <!-- Nombres -->
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Nombres <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" formControlName="nombres" placeholder="Nombres del cliente">
-                  <div *ngIf="formulario.get('nombres')?.invalid && formulario.get('nombres')?.touched" class="text-danger small">
-                    Los nombres son requeridos
+                <!-- Tipo de Documento -->
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Tipo Documento <span class="text-danger">*</span></label>
+                  <select class="form-select" formControlName="tipo_documento">
+                    <option value="0">Sin Documento</option>
+                    <option value="1">DNI</option>
+                    <option value="6">RUC</option>
+                    <option value="4">Carnet Ext.</option>
+                    <option value="7">Pasaporte</option>
+                  </select>
+                </div>
+
+                <!-- Número de Documento -->
+                <div class="col-md-8 mb-3">
+                  <label class="form-label">Número Documento</label>
+                  <input type="text" class="form-control" formControlName="numero_documento" placeholder="Número de documento">
+                </div>
+
+                <!-- Nombre Completo o Razón Social -->
+                <div class="col-12 mb-3">
+                  <label class="form-label">Nombre / Razón Social <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre completo o razón social">
+                  <div *ngIf="formulario.get('nombre')?.invalid && formulario.get('nombre')?.touched" class="text-danger small">
+                    El nombre es requerido
                   </div>
                 </div>
 
-                <!-- Apellidos -->
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Apellidos <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" formControlName="apellidos" placeholder="Apellidos del cliente">
-                  <div *ngIf="formulario.get('apellidos')?.invalid && formulario.get('apellidos')?.touched" class="text-danger small">
-                    Los apellidos son requeridos
-                  </div>
+                <!-- Dirección -->
+                <div class="col-12 mb-3">
+                  <label class="form-label">Dirección</label>
+                  <input type="text" class="form-control" formControlName="direccion" placeholder="Dirección fiscal o domicilio">
                 </div>
 
                 <!-- Email -->
                 <div class="col-md-6 mb-3">
-                  <label class="form-label">Correo Electrónico <span class="text-danger">*</span></label>
+                  <label class="form-label">Correo Electrónico</label>
                   <input type="email" class="form-control" formControlName="email" placeholder="correo@ejemplo.com">
                   <div *ngIf="formulario.get('email')?.invalid && formulario.get('email')?.touched" class="text-danger small">
-                    <div *ngIf="formulario.get('email')?.errors?.['required']">El email es requerido</div>
                     <div *ngIf="formulario.get('email')?.errors?.['email']">Ingrese un email válido</div>
                   </div>
                 </div>
@@ -56,65 +70,18 @@ import { Cliente } from '../../models/cliente.model';
                   <label class="form-label">Teléfono</label>
                   <input type="tel" class="form-control" formControlName="telefono" placeholder="987654321">
                 </div>
-
-                <!-- Fecha de Nacimiento -->
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Fecha de Nacimiento</label>
-                  <input type="date" class="form-control" formControlName="fecha_nacimiento">
-                </div>
-
-                <!-- Género -->
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Género</label>
-                  <select class="form-select" formControlName="genero">
-                    <option value="">Seleccionar...</option>
-                    <option value="M">Masculino</option>
-                    <option value="F">Femenino</option>
-                    <option value="Otro">Otro</option>
-                  </select>
-                </div>
-
-                <!-- Estado -->
-                <div class="col-12 mb-3">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" formControlName="estado" id="estado">
-                    <label class="form-check-label" for="estado">
-                      Cliente activo
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Información adicional (solo lectura) -->
-                <div class="col-12">
-                  <div class="row">
-                    <div class="col-md-4">
-                      <strong>Documento:</strong><br>
-                      <span class="text-muted">{{ cliente?.tipo_documento?.nombre }} {{ cliente?.numero_documento }}</span>
-                    </div>
-                    <div class="col-md-4">
-                      <strong>Tipo de Login:</strong><br>
-                      <span class="badge" [class]="getTipoLoginClass(cliente?.tipo_login || '')">
-                        {{ getTipoLoginText(cliente?.tipo_login || '') }}
-                      </span>
-                    </div>
-                    <div class="col-md-4">
-                      <strong>Fecha de Registro:</strong><br>
-                      <span class="text-muted">{{ formatDate(cliente?.fecha_registro || '') }}</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
             
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" (click)="cerrar.emit()" [disabled]="guardando">
+              <button type="button" class="btn btn-secondary" (click)="cerrar.emit()" [disabled]="guardando">
                 <i class="ph ph-x me-1"></i>
                 Cancelar
               </button>
               <button type="submit" class="btn btn-primary" [disabled]="formulario.invalid || guardando">
                 <i *ngIf="!guardando" class="ph ph-check me-1"></i>
                 <span *ngIf="guardando" class="spinner-border spinner-border-sm me-2"></span>
-                {{ guardando ? 'Guardando...' : 'Guardar Cambios' }}
+                {{ guardando ? 'Guardando...' : 'Guardar' }}
               </button>
             </div>
           </form>
@@ -141,65 +108,55 @@ export class ClienteEditModalComponent implements OnInit {
     }
 
     private inicializarFormulario(): void {
+      // Obtener nombre completo desde diferentes fuentes
+      const nombreCompleto = (this.cliente as any)?.nombre || 
+                            `${this.cliente?.nombres || ''} ${this.cliente?.apellidos || ''}`.trim();
+      
+      // Obtener dirección desde diferentes fuentes
+      const direccion = (this.cliente as any)?.direccion || 
+                       this.cliente?.direccion_principal?.direccion_completa || 
+                       '';
+
       this.formulario = this.fb.group({
-        nombres: [this.cliente?.nombres || '', Validators.required],
-        apellidos: [this.cliente?.apellidos || '', Validators.required],
-        email: [this.cliente?.email || '', [Validators.required, Validators.email]],
-        telefono: [this.cliente?.telefono || ''],
-        fecha_nacimiento: [this.cliente?.fecha_nacimiento || ''],
-        genero: [this.cliente?.genero || ''],
-        estado: [this.cliente?.estado ?? true]
+        tipo_documento: [(this.cliente as any)?.tipo_documento || this.cliente?.tipo_documento_id || '1'],
+        numero_documento: [this.cliente?.numero_documento || ''],
+        nombre: [nombreCompleto, Validators.required],
+        direccion: [direccion],
+        email: [this.cliente?.email || '', [Validators.email]],
+        telefono: [this.cliente?.telefono || '']
       });
     }
 
     guardar(): void {
-    if (this.formulario.invalid || !this.cliente) return;
+    if (this.formulario.invalid) return;
 
     this.guardando = true;
-    const datosActualizados = {
-      ...this.cliente,
-      ...this.formulario.value
-    };
+    const datosFormulario = this.formulario.value;
 
-    this.clienteService.updateCliente(this.cliente.id_cliente, this.formulario.value)
+    // Si es un cliente nuevo (sin ID), emitir directamente los datos
+    if (!this.cliente || !this.cliente.id_cliente) {
+      this.guardando = false;
+      this.clienteActualizado.emit(datosFormulario);
+      return;
+    }
+
+    // Si es un cliente existente, actualizar en el servidor
+    this.clienteService.updateCliente(this.cliente.id_cliente, datosFormulario)
       .subscribe({
         next: (response) => {
-          if (response.status === 'success') {
-            this.clienteActualizado.emit(datosActualizados);
-          }
           this.guardando = false;
+          if (response.status === 'success') {
+            this.clienteActualizado.emit({
+              ...this.cliente,
+              ...datosFormulario
+            });
+          }
         },
         error: (error) => {
           console.error('Error al actualizar cliente:', error);
           this.guardando = false;
         }
       });
-  }
-
-  getTipoLoginClass(tipo: string): string {
-    const classes = {
-      'manual': 'bg-primary',
-      'google': 'bg-danger',
-      'facebook': 'bg-info'
-    };
-    return classes[tipo as keyof typeof classes] || 'bg-secondary';
-  }
-
-  getTipoLoginText(tipo: string): string {
-    const texts = {
-      'manual': 'Manual',
-      'google': 'Google',
-      'facebook': 'Facebook'
-    };
-    return texts[tipo as keyof typeof texts] || tipo;
-  }
-
-  formatDate(fecha: string): string {
-    return new Date(fecha).toLocaleDateString('es-PE', {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit'
-    });
   }
 
 }

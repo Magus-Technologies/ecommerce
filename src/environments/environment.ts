@@ -1,6 +1,6 @@
 // src\environments\environment.ts
 export const environment = {
-    production : false,
+    production: false,
     apiUrl: 'http://localhost:8000/api',
-    baseUrl:  'http://localhost:8000',
+    baseUrl: 'http://localhost:8000',
 }

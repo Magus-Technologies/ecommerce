@@ -20,7 +20,7 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
 
   constructor(
     private cotizacionesService: CotizacionesService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.cargarCotizaciones();

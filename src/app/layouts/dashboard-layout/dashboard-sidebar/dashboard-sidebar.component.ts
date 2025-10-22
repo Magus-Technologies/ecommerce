@@ -46,6 +46,7 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   isAlmacenOpen = false;
   isConfiguracionOpen = false; // ✅ NUEVO
   isRecompensasOpen = false; // ✅ NUEVO
+  isContabilidadOpen = false; // ✅ NUEVO: Para Contabilidad
   esSuperadmin = false;
   showRecompensasDropdown = true;
 
@@ -68,6 +69,8 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   puedeConfigure = false; // ✅ NUEVO: Para Arma tu PC
   puedeVerRecompensas = false; // ✅ NUEVO: Para Recompensas
   puedeVerConfiguracion = false; // ✅ NUEVO: Para Formas de Envío y Tipos de Pago
+  puedeVerFacturacion = false; // ✅ NUEVO: Para Facturación
+  puedeVerContabilidad = false; // ✅ NUEVO: Para Contabilidad
 
   isDesktop = false;
   private permisosSub: Subscription | null = null;
@@ -108,6 +111,10 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   private checkPermissions(): void {
+    // Obtener usuario actual para verificar si es admin
+    const currentUser = this.authService.getCurrentUser();
+    const isAdmin = currentUser?.tipo_usuario === 'admin';
+
     // Todas las asignaciones de permisos en un solo lugar
     this.puedeVerUsuarios = this.permissionsService.hasPermission('usuarios.ver');
     this.puedeVerBanners = this.permissionsService.hasPermission('banners.ver');
@@ -127,6 +134,19 @@ export class DashboardSidebarComponent implements OnInit, AfterViewInit, OnDestr
     this.puedeConfigure = this.permissionsService.hasPermission('categorias.edit'); // ✅ NUEVO
     this.puedeVerRecompensas = this.permissionsService.hasPermission('recompensas.ver'); // ✅ NUEVO
     this.puedeVerConfiguracion = this.permissionsService.hasPermission('configuracion.ver'); // ✅ NUEVO
+    
+    // ✅ FACTURACIÓN: Permitir acceso a admins o usuarios con permiso específico
+    this.puedeVerFacturacion = isAdmin || this.permissionsService.hasPermission('facturacion.ver');
+    
+    // ✅ CONTABILIDAD: Permitir acceso a admins o usuarios con permiso específico
+    this.puedeVerContabilidad = isAdmin || this.permissionsService.hasPermission('contabilidad.ver');
+    
+    console.log('🔍 Permisos de Facturación:', {
+      isAdmin,
+      hasPermission: this.permissionsService.hasPermission('facturacion.ver'),
+      puedeVerFacturacion: this.puedeVerFacturacion,
+      userType: currentUser?.tipo_usuario
+    });
   }
 
   ngAfterViewInit(): void {
@@ -188,6 +208,10 @@ toggleConfiguracion(): void {
 
 toggleRecompensas(): void {
   this.isRecompensasOpen = !this.isRecompensasOpen;
+}
+
+toggleContabilidad(): void {
+  this.isContabilidadOpen = !this.isContabilidadOpen;
 }
   toggleRecompensasDropdown(): void {
     this.showRecompensasDropdown = !this.showRecompensasDropdown;

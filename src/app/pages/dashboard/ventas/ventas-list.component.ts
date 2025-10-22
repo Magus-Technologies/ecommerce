@@ -16,9 +16,9 @@ import Swal from 'sweetalert2';
         <h5 class="text-heading fw-semibold mb-8">Lista de Ventas</h5>
         <p class="text-gray-500 mb-0">Administra todas las ventas del sistema</p>
       </div>
-      <button 
+      <button
         class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
-        routerLink="/dashboard/ventas/nueva">
+        routerLink="/dashboard/pos">
         <i class="ph ph-plus me-8"></i>
         Nueva Venta
       </button>
@@ -181,9 +181,9 @@ import Swal from 'sweetalert2';
             <i class="ph ph-shopping-cart text-gray-300 text-6xl mb-16"></i>
             <h6 class="text-heading fw-semibold mb-8">No hay ventas</h6>
             <p class="text-gray-500 mb-16">No se encontraron ventas con los filtros aplicados</p>
-            <button 
+            <button
               class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
-              routerLink="/dashboard/ventas/nueva">
+              routerLink="/dashboard/pos">
               <i class="ph ph-plus me-8"></i>
               Crear primera venta
             </button>
