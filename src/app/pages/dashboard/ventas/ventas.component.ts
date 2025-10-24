@@ -10,7 +10,7 @@ import { filter } from 'rxjs/operators';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="container-fluid">
+    <div>
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-24">
         <div>
@@ -136,6 +136,6 @@ export class VentasComponent implements OnInit {
   }
 
   irAPOS(): void {
-    this.router.navigate(['/dashboard/pos']);
+    this.router.navigate(['/dashboard/ventas/nueva']);
   }
 }

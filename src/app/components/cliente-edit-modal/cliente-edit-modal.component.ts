@@ -9,8 +9,14 @@ import { Cliente } from '../../models/cliente.model';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   template: `
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" (click)="cerrar.emit()">
-      <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal show d-block" tabindex="-1" 
+      style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; 
+             width: 100vw !important; height: 100vh !important; display: flex !important; align-items: center !important; 
+             justify-content: center !important; background-color: rgba(0,0,0,0.6) !important; z-index: 99999 !important; 
+             padding: 20px !important; margin: 0 !important;" 
+      (click)="cerrar.emit()">
+      <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()" 
+        style="margin: 0 auto !important; max-width: 800px; width: 100%;">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">

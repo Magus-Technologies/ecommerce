@@ -243,11 +243,11 @@ export class EstadisticasVentasComponent implements OnInit {
     const { fecha_inicio, fecha_fin } = this.filtrosForm.value;
 
     this.ventasService.obtenerEstadisticas(fecha_inicio, fecha_fin).subscribe({
-      next: (estadisticas) => {
+      next: (estadisticas: EstadisticasVentas) => {
         this.estadisticas = estadisticas;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error al cargar estadísticas:', error);
         this.isLoading = false;
       }

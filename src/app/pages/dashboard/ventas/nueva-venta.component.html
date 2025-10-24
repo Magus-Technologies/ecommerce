@@ -29,65 +29,7 @@
   <div class="row">
     <!-- Panel Izquierdo -->
     <div class="col-lg-8">
-      <!-- NUEVO: Tipo de Comprobante y Serie -->
-      <div class="card border-0 shadow-sm rounded-12 mb-24 border-primary" style="border-width: 2px !important;">
-        <div class="card-header bg-primary text-white border-0 rounded-top-12 p-24">
-          <h6 class="text-white fw-semibold mb-0">
-            <i class="ph ph-file-text me-8"></i>
-            Tipo de Comprobante
-          </h6>
-        </div>
-        <div class="card-body p-24">
-          <div class="row">
-            <div class="col-md-4 mb-16">
-              <label class="form-label text-heading fw-semibold mb-8">Tipo de Comprobante *</label>
-              <select
-                class="form-select px-16 py-12 border rounded-8"
-                formControlName="tipo_comprobante"
-                (change)="onTipoComprobanteChange()">
-                <option value="03">Boleta de Venta (03)</option>
-                <option value="01">Factura Electrónica (01)</option>
-              </select>
-              <small class="text-muted d-block mt-8">
-                <i class="ph ph-info me-4"></i>
-                Facturas requieren RUC del cliente
-              </small>
-            </div>
-
-            <div class="col-md-4 mb-16">
-              <label class="form-label text-heading fw-semibold mb-8">Serie *</label>
-              <select
-                class="form-select px-16 py-12 border rounded-8"
-                formControlName="serie_id"
-                [disabled]="seriesDisponibles().length === 0">
-                <option value="">Seleccionar serie</option>
-                <option *ngFor="let serie of seriesDisponibles()" [value]="serie.id">
-                  {{ serie.serie }} (Actual: {{ serie.correlativo_actual }})
-                </option>
-              </select>
-              <small class="text-muted d-block mt-8" *ngIf="serieSeleccionada()">
-                <i class="ph ph-hash me-4"></i>
-                Próximo: {{ serieSeleccionada()!.serie }}-{{ serieSeleccionada()!.correlativo_actual + 1 }}
-              </small>
-              <small class="text-danger d-block mt-8" *ngIf="seriesDisponibles().length === 0">
-                <i class="ph ph-warning me-4"></i>
-                No hay series disponibles
-              </small>
-            </div>
-
-            <div class="col-md-4 mb-16">
-              <label class="form-label text-heading fw-semibold mb-8">Fecha de Emisión</label>
-              <input
-                type="date"
-                class="form-control px-16 py-12 border rounded-8"
-                [value]="fechaActual"
-                readonly>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- NUEVO: Información del Cliente -->
+      <!-- Información del Cliente -->
       <div class="card border-0 shadow-sm rounded-12 mb-24">
         <div class="card-header bg-gray-50 border-0 rounded-top-12 p-24">
           <h6 class="text-heading fw-semibold mb-0">
@@ -102,11 +44,11 @@
               <select
                 class="form-select px-16 py-12 border rounded-8"
                 formControlName="tipo_documento">
-                <option value="-">Sin Documento</option>
                 <option value="1">DNI</option>
                 <option value="6">RUC</option>
                 <option value="4">CE</option>
                 <option value="7">Pasaporte</option>
+                <option value="0">Otros</option>
               </select>
             </div>
 
@@ -371,15 +313,16 @@
             [disabled]="isLoading || ventaForm.invalid || productosArray.length === 0">
             <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-8"></span>
             <i *ngIf="!isLoading" class="ph ph-check me-8"></i>
-            {{ isLoading ? 'Guardando...' : 'Guardar y Facturar' }}
+            {{ isLoading ? 'Guardando...' : 'Registrar Venta' }}
           </button>
 
           <small class="text-muted text-center d-block">
             <i class="ph ph-info me-4"></i>
-            Se generará el comprobante automáticamente
+            Podrá generar el comprobante después
           </small>
         </div>
       </div>
     </div>
   </div>
 </form>
+

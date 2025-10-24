@@ -2,6 +2,11 @@
 // POS COMPONENT - USANDO VARIABLES GLOBALES
 // ==========================================
 
+// HOST - Asegurar que el componente no interfiera con el layout
+:host {
+  display: block;
+}
+
 // MIXINS
 @mixin transition($property: all) {
   transition: $property 0.2s ease;
@@ -14,7 +19,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 20px 0; // Removido padding horizontal
   background: white;
   border-bottom: 1px solid var(--gray-200);
   margin-bottom: 24px;
@@ -97,7 +102,7 @@
 // ==========================================
 .pos-alerts {
   margin-bottom: 20px;
-  padding: 0 24px;
+  padding: 0; // Removido padding horizontal
 
   .alert {
     display: flex;
@@ -146,9 +151,10 @@
   display: grid;
   grid-template-columns: 1fr 380px;
   gap: 24px;
-  padding: 0 24px 24px;
+  padding: 0 0 24px 0; // Removido padding horizontal para que respete el layout
   max-width: 1600px;
   margin: 0 auto;
+  width: 100%;
 }
 
 // ==========================================
@@ -886,22 +892,44 @@
 }
 
 // ==========================================
-// MODALES
+// MODALES - CENTRADOS Y CON FONDO QUE CUBRE TODO
 // ==========================================
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important; // MUY por encima del sidebar (1050) para cubrir TODO
   padding: 20px;
   animation: fadeIn 0.2s ease;
   backdrop-filter: blur(2px);
+  margin: 0 !important; // Sin márgenes
+
+  // IMPORTANTE: El modal overlay SIEMPRE debe cubrir toda la pantalla
+  // sin importar el estado del sidebar
+  &.modal-obligatorio {
+    // Ya tiene todos los estilos necesarios arriba
+    // Solo aseguramos que el contenido del modal esté centrado
+    .modal-container {
+      margin: 0 auto !important;
+      position: relative;
+
+      &.modal-config {
+        // El modal ya tiene max-width en el HTML inline
+        // Solo aseguramos que esté centrado SIN márgenes laterales
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+    }
+  }
+}
 
   @keyframes fadeIn {
     from {
@@ -1276,7 +1304,6 @@
       }
     }
   }
-}
 
 @keyframes spin {
   from {

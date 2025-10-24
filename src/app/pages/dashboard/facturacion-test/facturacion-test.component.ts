@@ -144,17 +144,35 @@ export class FacturacionTestComponent implements OnInit, OnDestroy {
     this.error = null;
     this.success = null;
 
+    // Convertir VentaFormData a formato de nueva API
+    const ventaData = {
+      cliente_id: 1, // TODO: Obtener desde un selector de clientes
+      productos: this.ventaForm.items.map(item => ({
+        producto_id: 1, // TODO: Obtener desde items reales
+        cantidad: item.cantidad,
+        precio_unitario: item.precio_unitario,
+        descuento_unitario: item.descuento || 0
+      })),
+      descuento_total: this.ventaForm.descuento_global || 0,
+      metodo_pago: this.ventaForm.metodo_pago || 'EFECTIVO',
+      observaciones: this.ventaForm.observaciones || null,
+      requiere_factura: tipoComprobante === '01'
+    };
+
     // Paso 1: Crear la venta
-    this.facturacionService.createVenta(this.ventaForm)
+    this.facturacionService.createVenta(ventaData)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           if (response.success && response.data) {
-            this.ventaGuardada = response.data;
             this.success = 'Venta creada exitosamente. ID: ' + response.data.id;
-            
-            // Paso 2: Facturar la venta
-            this.facturarVenta(response.data.id!, tipoComprobante);
+
+            // Si requiere facturación posterior
+            if (tipoComprobante === '01') {
+              this.facturarVenta(response.data.id, tipoComprobante);
+            } else {
+              this.loading = false;
+            }
           }
         },
         error: (err) => {
@@ -166,9 +184,13 @@ export class FacturacionTestComponent implements OnInit, OnDestroy {
 
   private facturarVenta(ventaId: number, tipoComprobante: string): void {
     const datosFacturacion = {
-      tipo_comprobante: tipoComprobante as '01' | '03',
-      metodo_pago: this.ventaForm.metodo_pago,
-      observaciones: this.ventaForm.observaciones
+      cliente_datos: {
+        tipo_documento: this.ventaForm.cliente.tipo_documento,
+        numero_documento: this.ventaForm.cliente.numero_documento,
+        razon_social: this.ventaForm.cliente.nombre,
+        direccion: this.ventaForm.cliente.direccion || 'LIMA - PERÚ',
+        email: this.ventaForm.cliente.email
+      }
     };
 
     this.facturacionService.facturarVenta(ventaId, datosFacturacion)
@@ -179,7 +201,8 @@ export class FacturacionTestComponent implements OnInit, OnDestroy {
           if (response.success && response.data) {
             this.comprobanteGenerado = response.data;
             this.mostrarComprobante = true;
-            this.success = `Comprobante ${tipoComprobante === '01' ? 'Factura' : 'Boleta'} generado exitosamente. Serie: ${response.data.serie} Número: ${response.data.numero}`;
+            const tipo = tipoComprobante === '01' ? 'Factura' : 'Boleta';
+            this.success = `Comprobante ${tipo} generado exitosamente. Serie: ${response.data.serie} Número: ${response.data.numero}`;
           }
         },
         error: (err) => {

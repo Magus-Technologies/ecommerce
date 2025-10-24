@@ -1,502 +1,238 @@
-# Documentación - Sistema de Facturación Electrónica
+# 📚 Documentación de APIs - Sistema E-commerce
 
-## Bienvenido
+## 📋 Índice de Documentación
 
-Esta es la documentación completa del **Sistema de Facturación Electrónica** con **Greenter** para SUNAT Perú. Incluye todos los módulos, APIs, endpoints, esquemas de base de datos, ejemplos de implementación y guías de configuración necesarias para implementar un sistema completo de emisión de comprobantes de pago electrónicos (CPE).
+Esta carpeta contiene la documentación completa de todas las APIs y endpoints del sistema.
 
----
+### 📄 Documentos Disponibles
 
-## Índice General
-
-### 1. [API de Facturación Electrónica](API_FACTURACION_ELECTRONICA.md)
-Documentación completa de todos los endpoints de la API REST.
-
-**Contenido:**
-- Introducción y autenticación
-- **Configuración de Emisor**
-  - GET/PUT `/facturacion/emisor`
-  - POST `/facturacion/emisor/certificado`
-- **Catálogos SUNAT**
-  - GET `/facturacion/catalogos/:tipo`
-  - Tipos de documento, afectación IGV, unidades, motivos NC/ND
-- **Series y Correlativos**
-  - CRUD de series
-  - Reserva segura de correlativos
-- **Ventas y Comprobantes**
-  - POST `/ventas` - Crear venta
-  - POST `/ventas/:id/facturar` - Emitir CPE
-  - GET `/ventas/:id/pdf` - Descargar PDF
-  - POST `/ventas/:id/email` - Enviar por correo
-- **Resumen Diario (RC)**
-  - POST `/facturacion/resumenes`
-  - GET `/facturacion/resumenes/:ticket`
-- **Comunicación de Baja (RA)**
-  - POST `/facturacion/bajas`
-  - GET `/facturacion/bajas/:ticket`
-- **Notas de Crédito/Débito**
-  - POST `/facturacion/notas-credito`
-  - POST `/facturacion/notas-debito`
-- Códigos de respuesta y manejo de errores
-- Modelos de datos
+1. **[API-COMPLETA.md](./API-COMPLETA.md)** - Documentación completa de todos los endpoints
+2. **[FACTURACION-API.md](./FACTURACION-API.md)** - API de Facturación Electrónica SUNAT
+3. **[ALMACEN-API.md](./ALMACEN-API.md)** - API de Gestión de Almacén y Productos
+4. **[VENTAS-API.md](./VENTAS-API.md)** - API de Ventas y POS
+5. **[NOTIFICACIONES-API.md](./NOTIFICACIONES-API.md)** - API de Notificaciones (Email, WhatsApp, SMS)
+6. **[EMPRESA-API.md](./EMPRESA-API.md)** - API de Información de Empresa
+7. **[CLIENTES-API.md](./CLIENTES-API.md)** - API de Gestión de Clientes
+8. **[COMPROBANTES-API.md](./COMPROBANTES-API.md)** - API de Comprobantes Electrónicos
+9. **[UTILIDADES-API.md](./UTILIDADES-API.md)** - APIs de Utilidades (Validación RUC, etc.)
+10. **[AUTENTICACION-API.md](./AUTENTICACION-API.md)** - API de Autenticación y Seguridad
 
 ---
 
-### 2. [Esquemas de Base de Datos](ESQUEMAS_BASE_DATOS.md)
-Diseño completo de la base de datos con todas las tablas necesarias.
+## 🌐 Información General
 
-**Contenido:**
-- Diagrama Entidad-Relación
-- **Tablas principales:**
-  - `empresas` - Datos del emisor
-  - `certificados` - Certificados digitales
-  - `series` - Series y correlativos por tipo de CPE
-  - `clientes` - Registro de clientes
-  - `ventas` y `ventas_items` - Ventas antes de facturar
-  - `comprobantes` y `comprobantes_items` - CPE emitidos
-  - `resumenes` y `resumenes_detalle` - Resúmenes Diarios (RC)
-  - `bajas` y `bajas_detalle` - Comunicaciones de Baja (RA)
-  - `auditoria_sunat` - Logs de comunicación con SUNAT
-  - `cola_reintentos` - Sistema de reintentos automáticos
-- Relaciones entre tablas
-- Índices y optimizaciones
-- Campos calculados y triggers
-- Políticas de backup
-
----
-
-### 3. [Ejemplos de Implementación](EJEMPLOS_IMPLEMENTACION.md)
-Código completo de ejemplo para todos los flujos.
-
-**Contenido:**
-- **Configuración Inicial**
-  - Configurar datos del emisor
-  - Subir certificado digital
-  - Crear series de comprobantes
-- **Emisión de Boleta (Tipo 03)**
-  - Frontend: Crear venta y emitir
-  - Backend: Controller completo con Greenter
-  - Manejo de respuesta SUNAT
-- **Emisión de Factura (Tipo 01)**
-  - Validación de RUC
-  - Construcción de XML UBL
-  - Firma digital y envío
-- **Nota de Crédito (Tipo 07)**
-  - Anulación total/parcial
-  - Devolución de productos
-  - Descuentos posteriores
-- **Nota de Débito (Tipo 08)**
-  - Intereses por mora
-  - Aumentos en el valor
-- **Resumen Diario (RC)**
-  - Generación automática
-  - Consulta de ticket (async)
-- **Comunicación de Baja (RA)**
-  - Anulación de comprobantes
-  - Restricciones de tiempo
-- **Integración con POS**
-  - Flujo completo de punto de venta
-  - Carrito, cálculo de totales, emisión
-- **Manejo de Errores**
-  - Interceptor global
-  - Sistema de reintentos con backoff exponencial
-
----
-
-### 4. [Flujos de Trabajo](FLUJOS_DE_TRABAJO.md)
-Diagramas detallados de todos los procesos.
-
-**Contenido:**
-- **Flujo General de Facturación**
-  - Desde creación de venta hasta emisión de CPE
-  - Validaciones, firma, envío, almacenamiento
-- **Flujo de Emisión de Boleta**
-  - Cliente con DNI/sin documento
-  - Validación de monto máximo sin DNI
-  - Envío síncrono a SUNAT
-  - Inclusión en Resumen Diario
-- **Flujo de Emisión de Factura**
-  - Validación de RUC obligatorio
-  - Tipos de pago (contado/crédito)
-  - Fecha de vencimiento
-- **Flujo de Nota de Crédito**
-  - Selección de CPE a anular/corregir
-  - Motivos de NC (catálogo 09)
-  - Definición de items (total/parcial)
-  - Actualización del CPE original
-- **Flujo de Resumen Diario**
-  - Cierre del día (23:30)
-  - Agrupación de boletas
-  - Envío asíncrono (ticket)
-  - Consulta de estado cada 30 seg
-  - Procesamiento por SUNAT (1-10 min)
-- **Flujo de Comunicación de Baja**
-  - Validaciones (estado ACEPTADO, plazo 7 días para boletas)
-  - Envío asíncrono con ticket
-  - Actualización de estado CPE a BAJA
-- **Flujo de Reintentos**
-  - Captura de errores de red/timeout
-  - Cola de reintentos con backoff exponencial
-  - Máximo 3 intentos en ~50 minutos
-  - Estado FALLIDO requiere intervención manual
-- **Flujo POS Completo**
-  - Desde apertura de caja hasta cierre
-  - Atención de clientes, carrito, facturación
-  - Resumen diario automático
-  - Arqueo de caja
-
----
-
-### 5. [Configuración y Variables de Entorno](CONFIGURACION_VARIABLES.md)
-Guía completa de configuración del sistema.
-
-**Contenido:**
-- **Variables de Entorno (.env)**
-  - Ambiente SUNAT (beta/prod)
-  - Credenciales SOL
-  - Datos del emisor (RUC, razón social, ubigeo)
-  - Rutas de certificados y storage
-  - Configuración de IGV, moneda, límites
-- **Configuración de Greenter**
-  - Instalación vía Composer
-  - Archivo `config/greenter.php`
-  - Endpoints SUNAT (beta/producción)
-- **Instalación de Dependencias**
-  - PHP: Greenter, DOMPDF, QR, Número a letras
-  - Sistema: OpenSSL, SOAP, XML, ZIP
-  - Configuración de `composer.json`
-- **Configuración del Servidor**
-  - Apache: VirtualHost, SSL, módulos
-  - Nginx: Server block, FastCGI
-  - PHP.ini: límites, extensiones, timezone
-- **Configuración de Almacenamiento**
-  - Creación de directorios (xml, cdr, pdf, qr, certificados)
-  - Permisos correctos (775, 700, 600)
-  - Filesystem disks en Laravel
-- **Configuración de Email**
-  - SMTP (Gmail, Outlook, etc.)
-  - Plantilla HTML para envío de comprobantes
-- **Configuración de Cron Jobs**
-  - Laravel Scheduler
-  - Tareas programadas:
-    - Reintentos cada 5 min
-    - Resumen Diario a las 23:30
-    - Consulta de tickets cada 2 min
-    - Limpieza de archivos viejos
-  - Configuración en crontab del servidor
-- **Permisos y Seguridad**
-  - Permisos de archivos y directorios
-  - Cifrado de certificado .pfx
-  - HTTPS obligatorio en producción
-  - Rate limiting
-  - Firewall
-- **Configuración de Base de Datos**
-  - Variables de entorno
-  - Optimizaciones de MySQL
-- **Checklist de Configuración Inicial**
-  - Pasos previos
-  - Instalación del proyecto
-  - Testing
-- **Troubleshooting**
-  - Errores comunes y soluciones
-  - Logs para debugging
-
----
-
-## Arquitectura del Sistema
-
+### Base URL
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         FRONTEND                                │
-│  (Vue.js / React / Angular)                                     │
-│                                                                 │
-│  - Componentes de Ventas                                        │
-│  - Punto de Venta (POS)                                         │
-│  - Administración de Series                                     │
-│  - Configuración de Emisor                                      │
-│  - Reportes y Consultas                                         │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         │ REST API (JSON)
-                         │
-┌────────────────────────▼────────────────────────────────────────┐
-│                         BACKEND                                 │
-│  (Laravel / PHP)                                                │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │              CONTROLLERS                                 │  │
-│  │  - VentasController                                      │  │
-│  │  - FacturacionController                                 │  │
-│  │  - SeriesController                                      │  │
-│  │  - NotasCreditoController                                │  │
-│  │  - ResumenController                                     │  │
-│  │  - BajasController                                       │  │
-│  └──────────────────────┬───────────────────────────────────┘  │
-│                         │                                       │
-│  ┌──────────────────────▼───────────────────────────────────┐  │
-│  │              SERVICES                                    │  │
-│  │  - GreenterService (integración Greenter)                │  │
-│  │  - PDFService (generación de PDFs)                       │  │
-│  │  - EmailService (envío de comprobantes)                  │  │
-│  │  - QRService (generación de QR)                          │  │
-│  │  - NumeroALetrasService                                  │  │
-│  └──────────────────────┬───────────────────────────────────┘  │
-│                         │                                       │
-│  ┌──────────────────────▼───────────────────────────────────┐  │
-│  │              MODELS (Eloquent)                           │  │
-│  │  - Venta, VentaItem                                      │  │
-│  │  - Comprobante, ComprobanteItem                          │  │
-│  │  - Serie, Certificado, Empresa, Cliente                  │  │
-│  │  - Resumen, Baja, AuditoriaSunat, ColaReintento         │  │
-│  └──────────────────────┬───────────────────────────────────┘  │
-│                         │                                       │
-└─────────────────────────┼───────────────────────────────────────┘
-                          │
-                          ▼
-                    ┌─────────────┐
-                    │  DATABASE   │
-                    │   (MySQL)   │
-                    └──────┬──────┘
-                           │
-        ┌──────────────────┼──────────────────┐
-        │                  │                  │
-        ▼                  ▼                  ▼
-┌───────────────┐  ┌───────────────┐  ┌───────────────┐
-│   STORAGE     │  │   GREENTER    │  │     SUNAT     │
-│               │  │   (Library)   │  │               │
-│ - XML         │  │               │  │ - Web Services│
-│ - CDR         │  │ - Build UBL   │  │ - Endpoints   │
-│ - PDF         │  │ - Sign XML    │  │   (beta/prod) │
-│ - QR          │  │ - Send SOAP   │  │               │
-│ - Certificados│  │ - Parse CDR   │  │               │
-└───────────────┘  └───────────────┘  └───────────────┘
+Desarrollo:  http://localhost:8000/api
+Producción:  https://api.tudominio.com/api
+```
+
+### Autenticación
+Todos los endpoints requieren autenticación mediante token Bearer (excepto endpoints públicos):
+```
+Authorization: Bearer {token}
+```
+
+### Formato de Respuesta
+Todas las respuestas están en formato JSON:
+
+**Éxito:**
+```json
+{
+  "success": true,
+  "data": {...},
+  "message": "Operación exitosa"
+}
+```
+
+**Error:**
+```json
+{
+  "success": false,
+  "error": "Mensaje de error",
+  "errors": {...}
+}
 ```
 
 ---
 
-## Módulos del Sistema
+## 🚀 Inicio Rápido
 
-### Módulos Core
+### 1. Autenticación
+```bash
+POST /api/login
+Content-Type: application/json
 
-1. **Gestión de Emisor**
-   - Configuración de empresa (RUC, datos fiscales)
-   - Gestión de certificados digitales
-   - Credenciales SOL SUNAT
+{
+  "email": "admin@example.com",
+  "password": "password"
+}
+```
 
-2. **Catálogos SUNAT**
-   - Tipos de documento de identidad
-   - Tipos de afectación IGV
-   - Unidades de medida
-   - Monedas
-   - Motivos de NC/ND
+**Respuesta:**
+```json
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "token_type": "Bearer",
+  "user": {...}
+}
+```
 
-3. **Series y Correlativos**
-   - CRUD de series por tipo de CPE
-   - Reserva transaccional de correlativos
-   - Control por sede/caja
-
-4. **Ventas**
-   - Registro de ventas (pre-facturación)
-   - Gestión de clientes
-   - Cálculo de totales e IGV
-   - Conversión de venta a CPE
-
-5. **Comprobantes Electrónicos**
-   - Emisión de Boletas (03)
-   - Emisión de Facturas (01)
-   - Notas de Crédito (07)
-   - Notas de Débito (08)
-   - Generación de PDF con QR
-   - Envío por email
-
-6. **Resumen Diario (RC)**
-   - Generación automática al cierre
-   - Envío asíncrono con ticket
-   - Consulta de estado
-   - Almacenamiento de CDR
-
-7. **Comunicación de Baja (RA)**
-   - Anulación de comprobantes
-   - Validación de plazos
-   - Envío asíncrono
-   - Actualización de estados
-
-8. **Auditoría y Reintentos**
-   - Registro completo de comunicaciones con SUNAT
-   - Cola de reintentos con backoff exponencial
-   - Logs detallados
-   - Notificaciones de errores
+### 2. Usar el Token
+```bash
+GET /api/productos
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
+```
 
 ---
 
-## Tecnologías Utilizadas
+## 📊 Endpoints Principales por Módulo
 
-### Backend
-- **PHP 8.1+**
-- **Laravel 10+**
-- **Greenter 6.0+** (biblioteca de facturación electrónica)
-- **MySQL 8.0+** o PostgreSQL
-- **DOMPDF / TCPDF** (generación de PDFs)
-- **BaconQrCode** (generación de códigos QR)
+### 🧾 Facturación
+- `POST /api/ventas` - Crear venta y generar comprobante
+- `POST /api/comprobantes/{id}/reenviar` - Reenviar a SUNAT
+- `GET /api/ventas/{id}/pdf` - Descargar PDF
 
-### Frontend
-- **Vue.js 3+** / React / Angular
-- **Axios** (HTTP client)
-- **SweetAlert2** (alertas)
-- **Bootstrap / Tailwind** (UI)
+### 📦 Almacén
+- `GET /api/productos` - Listar productos
+- `POST /api/productos` - Crear producto
+- `GET /api/categorias` - Listar categorías
 
-### Servidor
-- **Apache 2.4+** o **Nginx 1.18+**
-- **PHP-FPM**
-- **OpenSSL** (firma digital)
-- **SOAP** (comunicación con SUNAT)
+### 👥 Clientes
+- `GET /api/clientes` - Listar clientes
+- `POST /api/clientes` - Crear cliente
+- `GET /api/clientes/buscar-por-documento` - Buscar por documento
 
-### Otros
-- **Composer** (gestor de dependencias PHP)
-- **NPM / Yarn** (gestor de dependencias JS)
-- **Git** (control de versiones)
-- **Certbot** (certificados SSL gratuitos)
+### 📧 Notificaciones
+- `POST /api/notificaciones/enviar` - Enviar notificación
+- `POST /api/comprobantes/{id}/enviar-email` - Enviar comprobante por email
 
 ---
 
-## Ambientes de Trabajo
+## 🛠 Herramientas de Desarrollo
 
-### Desarrollo
-- Endpoint SUNAT: **Beta** (`e-beta.sunat.gob.pe`)
-- Credenciales SOL: **MODDATOS / moddatos**
-- RUC de prueba: **20000000001**
-- Certificado: Certificado de prueba proporcionado por SUNAT
+### Testing con Postman
+Importa la colección de Postman desde:
+```
+docs/postman/E-commerce-API.postman_collection.json
+```
 
-### Producción
-- Endpoint SUNAT: **Producción** (`e-factura.sunat.gob.pe`)
-- Credenciales SOL: **Credenciales reales del contribuyente**
-- RUC: **RUC real de la empresa**
-- Certificado: **Certificado digital real** emitido por una entidad certificadora autorizada
+### Testing con cURL
+Ejemplos de pruebas con cURL en cada documentación específica.
 
----
-
-## Requerimientos del Sistema
-
-### Requerimientos mínimos
-- **Servidor:** 2 CPU, 4GB RAM, 50GB disco
-- **PHP:** 8.1 o superior
-- **MySQL:** 8.0 o superior
-- **Espacio en disco:** 100GB (para almacenar XML/CDR/PDF)
-- **Ancho de banda:** Conexión estable a internet (mínimo 10 Mbps)
-
-### Requerimientos de SUNAT
-- RUC activo y válido
-- Certificado digital emitido por entidad certificadora autorizada
-- Credenciales SOL (Clave SOL SUNAT)
-- Afiliación al sistema de facturación electrónica en SUNAT
+### Logs y Debug
+Los logs del sistema se encuentran en:
+```
+storage/logs/laravel.log
+```
 
 ---
 
-## Guía Rápida de Inicio
+## 📖 Convenciones
 
-1. **Clonar el repositorio**
-   ```bash
-   git clone https://github.com/tu-usuario/ecommerce-back.git
-   cd ecommerce-back
-   ```
+### Códigos de Estado HTTP
+- `200` - OK
+- `201` - Created
+- `204` - No Content
+- `400` - Bad Request
+- `401` - Unauthorized
+- `403` - Forbidden
+- `404` - Not Found
+- `422` - Validation Error
+- `500` - Server Error
 
-2. **Instalar dependencias**
-   ```bash
-   composer install
-   npm install
-   ```
+### Parámetros de Paginación
+```
+?page=1
+?per_page=15
+```
 
-3. **Configurar variables de entorno**
-   ```bash
-   cp .env.example .env
-   php artisan key:generate
-   # Editar .env con tus configuraciones
-   ```
+### Parámetros de Filtrado
+```
+?estado=activo
+?fecha_inicio=2025-01-01
+?fecha_fin=2025-12-31
+?search=termino
+```
 
-4. **Migrar base de datos**
-   ```bash
-   php artisan migrate
-   php artisan db:seed
-   ```
-
-5. **Configurar storage**
-   ```bash
-   php artisan storage:link
-   mkdir -p storage/app/public/{xml,cdr,pdf,qr}
-   chmod -R 775 storage
-   ```
-
-6. **Subir certificado digital**
-   - Colocar archivo `.pfx` en `storage/app/certificados/`
-   - Configurar ruta y contraseña en `.env`
-
-7. **Configurar datos del emisor**
-   - Ir a `/api/facturacion/emisor`
-   - Ingresar RUC, razón social, ubigeo, etc.
-
-8. **Crear series de comprobantes**
-   - POST `/api/facturacion/series`
-   - Crear series para Boletas (B001), Facturas (F001), NC, ND
-
-9. **Probar emisión**
-   - Crear una venta de prueba
-   - Emitir boleta/factura
-   - Verificar en ambiente beta de SUNAT
-
-10. **Configurar cron jobs**
-    ```bash
-    crontab -e
-    * * * * * cd /var/www/ecommerce-back && php artisan schedule:run
-    ```
+### Parámetros de Ordenamiento
+```
+?sort_by=created_at
+?sort_order=desc
+```
 
 ---
 
-## Soporte y Contribución
+## 🔐 Seguridad
 
-### Documentación oficial
-- **Greenter:** https://greenter.dev
-- **SUNAT:** https://www.sunat.gob.pe
-- **Laravel:** https://laravel.com/docs
+### Rate Limiting
+- **API Pública:** 60 requests/minuto
+- **API Autenticada:** 120 requests/minuto
 
-### Contacto
-- **Email:** soporte@miempresa.com
-- **GitHub:** https://github.com/tu-usuario/ecommerce-back
+### CORS
+Configurado en `config/cors.php`
 
-### Contribuir
-Las contribuciones son bienvenidas. Por favor:
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit tus cambios (`git commit -am 'Agregar nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Abre un Pull Request
+### Validación de Datos
+Todos los endpoints validan datos de entrada usando Form Requests de Laravel.
 
 ---
 
-## Licencia
+## 🐛 Manejo de Errores
 
-Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detalles.
+### Errores de Validación (422)
+```json
+{
+  "message": "The given data was invalid.",
+  "errors": {
+    "email": ["El campo email es obligatorio."],
+    "password": ["La contraseña debe tener al menos 8 caracteres."]
+  }
+}
+```
+
+### Errores SUNAT
+```json
+{
+  "success": false,
+  "error": "Error SUNAT: 3127",
+  "codigo_error": "3127",
+  "descripcion": "El código de detracción es requerido",
+  "solucion": "Agregar el código de detracción según catálogo SUNAT"
+}
+```
 
 ---
 
-## Agradecimientos
+## 📞 Soporte
 
-- **Greenter Team** - Por la excelente biblioteca de facturación electrónica
-- **SUNAT** - Por la documentación y soporte técnico
-- **Laravel Community** - Por el framework y los paquetes
-
----
-
-## Changelog
-
-### v1.0.0 (2025-10-13)
-- Documentación completa inicial
-- API REST de facturación electrónica
-- Esquemas de base de datos
-- Ejemplos de implementación
-- Flujos de trabajo detallados
-- Guía de configuración
+Para dudas o problemas:
+- **Email:** soporte@tudominio.com
+- **GitHub Issues:** https://github.com/tu-repo/issues
+- **Documentación SUNAT:** https://cpe.sunat.gob.pe/
 
 ---
 
-**Última actualización:** 2025-10-13
-**Versión:** 1.0.0
-**Autor:** Equipo de Desarrollo
+## 🔄 Changelog
+
+### Versión 2.0.0 (2025-10-23)
+- ✅ Integración completa con SUNAT (Facturación Electrónica)
+- ✅ Sistema de firma digital con certificados
+- ✅ Generación de XML firmado según estándar UBL 2.1
+- ✅ Generación de PDF con código QR
+- ✅ Sistema de notificaciones (Email, WhatsApp, SMS)
+- ✅ API de validación de RUC con SUNAT
+- ✅ Sistema de reintentos automáticos
+- ✅ Auditoría completa de operaciones
+
+### Versión 1.0.0
+- ✅ API de Productos y Categorías
+- ✅ API de Ventas básica
+- ✅ API de Clientes
+- ✅ Sistema de autenticación
+
+---
+
+**Última actualización:** 2025-10-23
+**Versión de la API:** 2.0.0
+**Laravel:** 10.x
+**PHP:** 8.2+

@@ -551,7 +551,14 @@ export const routes: Routes = [
         component: VentasComponent,
         children: [
           { path: '', component: VentasListComponent },
-          { path: 'nueva', component: NuevaVentaComponent },
+          { 
+            path: 'nueva', 
+            loadComponent: () =>
+              import('./pages/dashboard/pos/pos.component').then(
+                (m) => m.PosComponent
+              ),
+            title: 'Nueva Venta - POS'
+          },
           { path: 'estadisticas', component: EstadisticasVentasComponent },
         ],
       },
@@ -792,16 +799,7 @@ export const routes: Routes = [
         data: { permission: 'envio_correos.ver' },
       },
       // ✅ RUTAS DE FACTURACIÓN ELECTRÓNICA
-      {
-        path: 'pos',
-        loadComponent: () =>
-          import('./pages/dashboard/pos/pos.component').then(
-            (m) => m.PosComponent
-          ),
-        title: 'Punto de Venta',
-        canActivate: [permissionGuard],
-        data: { permission: 'ventas.create' },
-      },
+      // La ruta POS ahora está en /dashboard/ventas/nueva
       {
         path: 'facturacion-config',
         loadComponent: () =>

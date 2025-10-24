@@ -143,58 +143,109 @@ export class FacturacionService {
     return this.http.put<ApiResponse<Cliente>>(`${this.apiUrl}/clientes/${id}`, cliente);
   }
 
+  /**
+   * Buscar cliente por número de documento
+   */
+  buscarClientePorDocumento(numeroDocumento: string): Observable<ApiResponse<Cliente[]>> {
+    return this.http.get<ApiResponse<Cliente[]>>(`${this.apiUrl}/clientes/buscar-por-documento`, {
+      params: { numero_documento: numeroDocumento }
+    });
+  }
+
   // ============================================
-  // VENTAS
+  // VENTAS - Documentación API actualizada
   // ============================================
 
   /**
-   * Obtener ventas
+   * 1. GET /api/ventas - Lista ventas con información de comprobantes electrónicos
+   * Query Params: estado, fecha_inicio, fecha_fin, search, page
    */
-  getVentas(params?: any): Observable<PaginatedResponse<Venta>> {
+  getVentas(params?: {
+    estado?: 'PENDIENTE' | 'FACTURADO' | 'ANULADO';
+    fecha_inicio?: string;
+    fecha_fin?: string;
+    search?: string;
+    page?: number;
+  }): Observable<any> {
     let httpParams = new HttpParams();
     if (params) {
       Object.keys(params).forEach(key => {
-        if (params[key] !== null && params[key] !== undefined) {
-          httpParams = httpParams.set(key, params[key]);
+        const value = params[key as keyof typeof params];
+        if (value !== null && value !== undefined) {
+          httpParams = httpParams.set(key, String(value));
         }
       });
     }
-    return this.http.get<PaginatedResponse<Venta>>(`${this.apiUrl}/ventas`, { params: httpParams });
+    return this.http.get<any>(`${this.apiUrl}/ventas`, { params: httpParams });
   }
 
   /**
-   * Obtener venta por ID
+   * 2. GET /api/ventas/{id} - Obtiene detalle completo de una venta
    */
-  getVenta(id: number): Observable<ApiResponse<Venta>> {
-    return this.http.get<ApiResponse<Venta>>(`${this.apiUrl}/ventas/${id}`);
+  getVenta(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/ventas/${id}`);
   }
 
   /**
-   * Crear venta manual
+   * 3. POST /api/ventas - Crea venta y genera comprobante electrónico automáticamente
    */
-  createVenta(venta: VentaFormData): Observable<ApiResponse<Venta>> {
-    return this.http.post<ApiResponse<Venta>>(`${this.apiUrl}/ventas`, venta);
+  createVenta(venta: {
+    cliente_id: number;
+    productos: {
+      producto_id: number;
+      cantidad: number;
+      precio_unitario: number;
+      descuento_unitario?: number;
+    }[];
+    descuento_total?: number;
+    metodo_pago: string;
+    observaciones?: string | null;
+    requiere_factura?: boolean;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/ventas`, venta);
   }
 
   /**
-   * Facturar venta (convertir a comprobante)
+   * 4. GET /api/ventas/{id}/xml - Descarga XML firmado digitalmente
    */
-  facturarVenta(id: number, datos: FacturarFormData): Observable<ApiResponse<Comprobante>> {
-    return this.http.post<ApiResponse<Comprobante>>(`${this.apiUrl}/ventas/${id}/facturar`, datos);
+  downloadXmlVenta(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/ventas/${id}/xml`, { responseType: 'blob' });
   }
 
   /**
-   * Anular venta
-   */
-  anularVenta(id: number, motivo: string): Observable<ApiResponse<any>> {
-    return this.http.patch<ApiResponse<any>>(`${this.apiUrl}/ventas/${id}/anular`, { motivo });
-  }
-
-  /**
-   * Descargar PDF de venta
+   * 5. GET /api/ventas/{id}/pdf - Descarga PDF del comprobante
    */
   downloadPdf(id: number): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/ventas/${id}/pdf`, { responseType: 'blob' });
+  }
+
+  /**
+   * 6. GET /api/ventas/{id}/cdr - Descarga CDR (Constancia de Recepción SUNAT)
+   */
+  downloadCdrVenta(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/ventas/${id}/cdr`, { responseType: 'blob' });
+  }
+
+  /**
+   * 7. POST /api/ventas/{id}/facturar - Genera comprobante para venta existente
+   */
+  facturarVenta(id: number, datos: {
+    cliente_datos: {
+      tipo_documento: string;
+      numero_documento: string;
+      razon_social: string;
+      direccion: string;
+      email?: string;
+    };
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/ventas/${id}/facturar`, datos);
+  }
+
+  /**
+   * 8. PUT /api/ventas/{id}/anular - Anula venta y restaura stock
+   */
+  anularVenta(id: number): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/ventas/${id}/anular`, {});
   }
 
   /**
@@ -730,5 +781,22 @@ export class FacturacionService {
    */
   getKPIs(): Observable<any> {
     return this.http.get(`${this.apiUrl}/facturacion/kpis`);
+  }
+
+  /**
+   * Generar comprobante desde venta
+   */
+  generarComprobanteVenta(ventaId: number, datos: {
+    tipo_comprobante: string;
+    cliente: {
+      tipo_documento: string;
+      numero_documento: string;
+      nombre: string;
+      direccion?: string;
+      email?: string;
+      telefono?: string;
+    };
+  }): Observable<ApiResponse<Comprobante>> {
+    return this.http.post<ApiResponse<Comprobante>>(`${this.apiUrl}/ventas/${ventaId}/generar-comprobante`, datos);
   }
 }

@@ -7,7 +7,6 @@ import { VentasService } from '../../../services/ventas.service';
 import { AlmacenService } from '../../../services/almacen.service';
 import { FacturacionService } from '../../../services/facturacion.service';
 import { Producto } from '../../../types/almacen.types';
-import { Serie, TIPOS_DOCUMENTO } from '../../../models/facturacion.model';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -34,17 +33,13 @@ export class NuevaVentaComponent implements OnInit {
   igv = 0;
   total = 0;
 
-  // Facturación electrónica
-  seriesDisponibles = signal<Serie[]>([]);
-  serieSeleccionada = signal<Serie | null>(null);
-  fechaActual = new Date().toISOString().split('T')[0];
-
   // Mensajes
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
-  // Constantes
-  readonly TIPOS_DOCUMENTO = TIPOS_DOCUMENTO;
+
+
+
 
   constructor(
     private fb: FormBuilder,
@@ -54,11 +49,9 @@ export class NuevaVentaComponent implements OnInit {
     private router: Router
   ) {
     this.ventaForm = this.fb.group({
-      tipo_comprobante: ['03', Validators.required],
-      serie_id: ['', Validators.required],
       cliente: this.fb.group({
-        tipo_documento: ['-', Validators.required],
-        numero_documento: [''],
+        tipo_documento: ['1', Validators.required],
+        numero_documento: ['', Validators.required],
         nombre: ['', Validators.required],
         direccion: [''],
         email: [''],
@@ -73,61 +66,7 @@ export class NuevaVentaComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarProductos();
-    this.cargarSeriesDisponibles();
     this.agregarProducto(); // Agregar una línea inicial
-  }
-
-  cargarSeriesDisponibles(): void {
-    this.facturacionService.getSeries({ estado: 'activo' }).subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.seriesDisponibles.set(response.data);
-          this.actualizarSerieSegunTipo();
-        }
-      },
-      error: (error) => {
-        console.error('Error al cargar series:', error);
-        this.errorMessage = 'Error al cargar series de facturación';
-      }
-    });
-  }
-
-  actualizarSerieSegunTipo(): void {
-    const series = this.seriesDisponibles();
-    const tipo = this.ventaForm.get('tipo_comprobante')?.value;
-
-    const seriesPorTipo = series.filter(s => s.tipo_comprobante === tipo);
-    if (seriesPorTipo.length > 0) {
-      this.serieSeleccionada.set(seriesPorTipo[0]);
-      this.ventaForm.patchValue({ serie_id: seriesPorTipo[0].id });
-    } else {
-      this.serieSeleccionada.set(null);
-      this.ventaForm.patchValue({ serie_id: '' });
-    }
-  }
-
-  onTipoComprobanteChange(): void {
-    const tipoComprobante = this.ventaForm.get('tipo_comprobante')?.value;
-
-    // Validar que para Factura (01) se requiere RUC
-    if (tipoComprobante === '01') {
-      const tipoDocumento = this.ventaForm.get('cliente.tipo_documento')?.value;
-      if (tipoDocumento !== '6') {
-        this.errorMessage = 'Para emitir Factura se requiere RUC del cliente';
-        this.ventaForm.patchValue({ tipo_comprobante: '03' });
-        return;
-      }
-
-      const ruc = this.ventaForm.get('cliente.numero_documento')?.value;
-      if (!ruc || ruc.length !== 11 || !/^\d+$/.test(ruc)) {
-        this.errorMessage = 'El RUC ingresado no es válido (debe tener 11 dígitos)';
-        this.ventaForm.patchValue({ tipo_comprobante: '03' });
-        return;
-      }
-    }
-
-    this.actualizarSerieSegunTipo();
-    this.errorMessage = null;
   }
 
   buscarCliente(): void {
@@ -215,11 +154,11 @@ export class NuevaVentaComponent implements OnInit {
     const cantidad = productoGroup.get('cantidad')?.value || 0;
     const precio = productoGroup.get('precio_unitario')?.value || 0;
     const descuento = productoGroup.get('descuento_unitario')?.value || 0;
-    
+
     // Validar stock
     const productoId = productoGroup.get('producto_id')?.value;
     const producto = this.productos.find(p => p.id == productoId);
-    
+
     if (producto && cantidad > producto.stock) {
       Swal.fire({
         title: 'Stock insuficiente',
@@ -230,7 +169,7 @@ export class NuevaVentaComponent implements OnInit {
       productoGroup.patchValue({ cantidad: producto.stock });
       return;
     }
-    
+
     this.calcularTotales();
   }
 
@@ -265,12 +204,12 @@ export class NuevaVentaComponent implements OnInit {
     const cantidad = productoGroup.get('cantidad')?.value || 0;
     const precio = productoGroup.get('precio_unitario')?.value || 0;
     const descuento = productoGroup.get('descuento_unitario')?.value || 0;
-    
+
     const precioSinIgv = precio / 1.18;
     const subtotalLinea = (cantidad * precioSinIgv) - (descuento * cantidad);
     const igvLinea = subtotalLinea * 0.18;
     const totalLinea = subtotalLinea + igvLinea;
-    
+
     return totalLinea.toFixed(2);
   }
 
@@ -278,27 +217,84 @@ export class NuevaVentaComponent implements OnInit {
     if (this.ventaForm.valid && this.productosArray.length > 0) {
       this.isLoading = true;
 
+      const clienteForm = this.ventaForm.get('cliente')?.value;
+
+      // PASO 1: Registrar venta POS (NO genera comprobante automáticamente)
       const ventaData = {
-        ...this.ventaForm.value,
-        productos: this.productosArray.value
+        cliente_id: null, // Se enviará cliente_datos en su lugar
+        productos: this.productosArray.value.map((p: any) => ({
+          producto_id: p.producto_id,
+          cantidad: p.cantidad,
+          precio_unitario: p.precio_unitario,
+          descuento_unitario: p.descuento_unitario || 0
+        })),
+        descuento_total: this.ventaForm.get('descuento_total')?.value || 0,
+        metodo_pago: this.ventaForm.get('metodo_pago')?.value,
+        observaciones: this.ventaForm.get('observaciones')?.value || null,
+        // NO enviar requiere_factura - La venta queda PENDIENTE
+        cliente_datos: {
+          tipo_documento: clienteForm.tipo_documento,
+          numero_documento: clienteForm.numero_documento,
+          razon_social: clienteForm.nombre,
+          direccion: clienteForm.direccion || '',
+          email: clienteForm.email || '',
+          telefono: clienteForm.telefono || ''
+        }
       };
 
       this.ventasService.crearVenta(ventaData).subscribe({
         next: (response) => {
+          this.isLoading = false;
+          
+          // Venta creada exitosamente con estado PENDIENTE
           Swal.fire({
-            title: '¡Venta registrada!',
-            text: 'La venta ha sido registrada exitosamente.',
+            title: '✅ Venta Registrada',
+            html: `
+              <div class="text-start">
+                <div class="alert alert-success mb-3">
+                  <strong>Código de Venta:</strong> ${response.data.codigo_venta}<br>
+                  <strong>Total:</strong> S/ ${response.data.total}<br>
+                  <strong>Estado:</strong> PENDIENTE
+                </div>
+                <p class="mb-2">La venta ha sido registrada correctamente.</p>
+                <div class="alert alert-info">
+                  <strong>Próximos pasos:</strong><br>
+                  1. Generar comprobante electrónico<br>
+                  2. Enviar a SUNAT para validación<br>
+                  3. Descargar PDF y enviar al cliente
+                </div>
+              </div>
+            `,
             icon: 'success',
-            confirmButtonColor: '#198754'
-          }).then(() => {
-            this.router.navigate(['/dashboard/ventas']);
+            confirmButtonText: '📋 Ver Ventas',
+            showCancelButton: true,
+            cancelButtonText: '➕ Nueva Venta',
+            confirmButtonColor: '#198754',
+            cancelButtonColor: '#0d6efd'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.router.navigate(['/dashboard/ventas']);
+            } else {
+              this.resetearFormulario();
+            }
           });
         },
         error: (error) => {
           this.isLoading = false;
           Swal.fire({
-            title: 'Error',
-            text: 'No se pudo registrar la venta. Inténtalo de nuevo.',
+            title: 'Error al registrar venta',
+            html: `
+              <div class="text-start">
+                <p class="mb-3">${error.error?.message || 'No se pudo registrar la venta. Inténtalo de nuevo.'}</p>
+                ${error.error?.errors ?
+                `<div class="alert alert-danger">
+                    <strong>Detalles:</strong><br>
+                    ${Object.values(error.error.errors).flat().join('<br>')}
+                  </div>` :
+                ''
+              }
+              </div>
+            `,
             icon: 'error',
             confirmButtonColor: '#dc3545'
           });
@@ -307,15 +303,45 @@ export class NuevaVentaComponent implements OnInit {
       });
     } else {
       this.markFormGroupTouched();
+      Swal.fire({
+        title: 'Formulario incompleto',
+        text: 'Por favor complete todos los campos requeridos y agregue al menos un producto',
+        icon: 'warning',
+        confirmButtonColor: '#ffc107'
+      });
     }
   }
+
+  /**
+   * Resetear formulario para nueva venta
+   */
+  private resetearFormulario(): void {
+    this.ventaForm.reset({
+      cliente: {
+        tipo_documento: '1',
+        numero_documento: '',
+        nombre: '',
+        direccion: '',
+        email: '',
+        telefono: ''
+      },
+      metodo_pago: '',
+      observaciones: '',
+      descuento_total: 0
+    });
+    this.productosArray.clear();
+    this.agregarProducto();
+    this.calcularTotales();
+  }
+
+
 
   private markFormGroupTouched(): void {
     Object.keys(this.ventaForm.controls).forEach(key => {
       const control = this.ventaForm.get(key);
       control?.markAsTouched();
     });
-    
+
     this.productosArray.controls.forEach(group => {
       const formGroup = group as FormGroup;
       Object.keys(formGroup.controls).forEach(key => {
@@ -323,4 +349,5 @@ export class NuevaVentaComponent implements OnInit {
       });
     });
   }
+
 }

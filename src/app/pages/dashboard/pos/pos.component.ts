@@ -8,6 +8,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
 import { FacturacionService } from '../../../services/facturacion.service';
 import { AlmacenService } from '../../../services/almacen.service';
 import { NotificacionesService } from '../../../services/notificaciones.service';
+import { EmpresaInfoService } from '../../../services/empresa-info.service';
 import { ClienteEditModalComponent } from '../../../components/cliente-edit-modal/cliente-edit-modal.component';
 import { ProductoQuickModalComponent, ProductoQuickItem } from '../../../components/producto-quick-modal/producto-quick-modal.component';
 import { PagoRapidoModalComponent, PagoResultado } from '../../../components/pago-rapido-modal/pago-rapido-modal.component';
@@ -16,7 +17,6 @@ import { SerieSelectorModalComponent } from '../../../components/serie-selector-
 import {
   VentaFormData,
   VentaItemFormData,
-  FacturarFormData,
   Cliente,
   Venta,
   Serie,
@@ -99,23 +99,23 @@ export class PosComponent implements OnInit, OnDestroy {
   loading = false;
   error: string | null = null;
   success: string | null = null;
-  
+
   // ID del cliente si ya existe en la base de datos
   clienteExistenteId: number | null = null;
-  
+
   // Checkboxes de progreso
   get clienteCompletado(): boolean {
     return !!this.ventaForm.cliente.nombre && this.ventaForm.cliente.nombre.trim() !== '';
   }
-  
+
   get productosCompletado(): boolean {
     return this.ventaForm.items.length > 0;
   }
-  
+
   get pagoCompletado(): boolean {
     return !!this.ventaForm.metodo_pago;
   }
-  
+
   get procesarHabilitado(): boolean {
     return this.clienteCompletado && this.productosCompletado && this.pagoCompletado;
   }
@@ -140,6 +140,12 @@ export class PosComponent implements OnInit, OnDestroy {
   // Estado de envío de notificación
   enviandoNotificacion = false;
   notificacionEnviada = false;
+
+  // Tipo de comprobante para enviar (ticket o boleta)
+  tipoComprobanteParaEnviar: 'ticket' | 'boleta' = 'ticket';
+
+  // Información de la empresa
+  empresaInfo: any = null;
 
   // FLUJO SECUENCIAL DE MODALES
   mostrarModalTipoComprobante = false;
@@ -179,9 +185,19 @@ export class PosComponent implements OnInit, OnDestroy {
 
   // Cálculos mejorados
   get subtotal(): number {
+    // El subtotal es la BASE IMPONIBLE (sin IGV)
     return this.ventaForm.items.reduce((sum, item) => {
-      const subtotalItem = item.cantidad * item.precio_unitario;
-      return sum + subtotalItem;
+      const totalConIgv = item.cantidad * item.precio_unitario;
+      const descuento = item.descuento || 0;
+      const totalConDescuento = totalConIgv - descuento;
+
+      // Si es gravado, el precio incluye IGV, así que lo desglosamos
+      if (item.tipo_afectacion_igv === TIPOS_AFECTACION_IGV.GRAVADO) {
+        const baseImponible = totalConDescuento / 1.18;
+        return sum + baseImponible;
+      }
+      // Si no es gravado (exonerado, inafecto), el precio es la base
+      return sum + totalConDescuento;
     }, 0);
   }
 
@@ -191,21 +207,29 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
   get subtotalNeto(): number {
-    return this.subtotal - this.descuentoTotal;
+    // El subtotal ya tiene los descuentos aplicados
+    return this.subtotal;
   }
 
   get igv(): number {
-    // Calcular IGV solo para items gravados
+    // El IGV se calcula sobre la base imponible (18%)
     return this.ventaForm.items.reduce((sum, item) => {
       if (item.tipo_afectacion_igv === TIPOS_AFECTACION_IGV.GRAVADO) {
-        const subtotalItem = (item.cantidad * item.precio_unitario) - (item.descuento || 0);
-        return sum + (subtotalItem * 0.18);
+        const totalConIgv = item.cantidad * item.precio_unitario;
+        const descuento = item.descuento || 0;
+        const totalConDescuento = totalConIgv - descuento;
+
+        // Desglosar el IGV del precio que ya lo incluye
+        const baseImponible = totalConDescuento / 1.18;
+        const igvItem = baseImponible * 0.18;
+        return sum + igvItem;
       }
       return sum;
     }, 0);
   }
 
   get total(): number {
+    // El total es Base Imponible + IGV
     return this.subtotalNeto + this.igv;
   }
 
@@ -247,6 +271,7 @@ export class PosComponent implements OnInit, OnDestroy {
     private facturacionService: FacturacionService,
     private almacenService: AlmacenService,
     private notificacionesService: NotificacionesService,
+    private empresaInfoService: EmpresaInfoService,
     private router: Router
   ) { }
 
@@ -254,6 +279,7 @@ export class PosComponent implements OnInit, OnDestroy {
     this.cargarDatosIniciales();
     this.cargarSeriesDisponibles();
     this.cargarProductos(); // Cargar productos desde la API
+    this.cargarEmpresaInfo(); // Cargar información de la empresa
     this.probarAPIs(); // Probar conectividad de APIs
 
     // FLUJO OBLIGATORIO: Mostrar modal de tipo de comprobante al iniciar
@@ -300,7 +326,8 @@ export class PosComponent implements OnInit, OnDestroy {
     this.comprobanteConfigurado = true;
     this.mostrarModalTipoComprobante = false;
 
-    // PASO 3: Abrir modal de datos del cliente
+    // PASO 3: Siempre abrir modal de datos del cliente para validar/actualizar
+    // Si se cambió el tipo de comprobante, los requisitos pueden ser diferentes
     this.abrirModalCliente();
   }
 
@@ -310,15 +337,22 @@ export class PosComponent implements OnInit, OnDestroy {
   abrirModalCliente(): void {
     console.log('📋 PASO 2: Configurar datos del cliente');
 
-    // Limpiar datos previos del cliente
-    this.ventaForm.cliente = {
-      tipo_documento: this.tipoDocumentoSeleccionado === '01' ? TIPOS_DOCUMENTO.RUC : TIPOS_DOCUMENTO.DNI,
-      numero_documento: '',
-      nombre: '',
-      direccion: '',
-      email: '',
-      telefono: ''
-    };
+    // Si no hay cliente configurado, inicializar con valores por defecto
+    if (!this.ventaForm.cliente.nombre) {
+      this.ventaForm.cliente = {
+        tipo_documento: this.tipoDocumentoSeleccionado === '01' ? TIPOS_DOCUMENTO.RUC : TIPOS_DOCUMENTO.DNI,
+        numero_documento: '',
+        nombre: '',
+        direccion: '',
+        email: '',
+        telefono: ''
+      };
+    } else {
+      // Si ya hay cliente, solo ajustar el tipo de documento si es necesario
+      if (this.tipoDocumentoSeleccionado === '01' && this.ventaForm.cliente.tipo_documento !== TIPOS_DOCUMENTO.RUC) {
+        this.ventaForm.cliente.tipo_documento = TIPOS_DOCUMENTO.RUC;
+      }
+    }
 
     this.mostrarModalDatosCliente = true;
   }
@@ -396,6 +430,32 @@ export class PosComponent implements OnInit, OnDestroy {
         error: (err: any) => {
           console.error('❌ Error al cargar productos:', err);
           // Mantener productos simulados como fallback
+        }
+      });
+  }
+
+  /**
+   * Cargar información de la empresa
+   */
+  cargarEmpresaInfo(): void {
+    this.empresaInfoService.obtenerEmpresaInfo()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (empresa) => {
+          this.empresaInfo = empresa;
+          console.log('✅ Información de empresa cargada:', this.empresaInfo);
+        },
+        error: (err) => {
+          console.error('❌ Error al cargar información de empresa:', err);
+          // Si falla, usar valores por defecto
+          this.empresaInfo = {
+            nombre_empresa: 'MI EMPRESA',
+            ruc: '20XXXXXXXXX',
+            razon_social: 'MI EMPRESA S.A.C.',
+            direccion: 'Dirección de la empresa',
+            telefono: '(01) 123-4567',
+            email: 'contacto@miempresa.com'
+          };
         }
       });
   }
@@ -505,6 +565,81 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
 
+  /**
+   * Buscar cliente en la base de datos local por número de documento
+   */
+  buscarClientePorDocumento(): void {
+    const numeroDoc = this.ventaForm.cliente.numero_documento;
+    if (!numeroDoc || numeroDoc.length < 8) {
+      return;
+    }
+
+    this.loading = true;
+    this.error = null;
+    this.success = null;
+
+    // Usar el endpoint específico de búsqueda por documento
+    this.facturacionService.buscarClientePorDocumento(numeroDoc)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.data && response.data.length > 0) {
+            const cliente = response.data[0];
+            this.loading = false;
+
+            // Debug: Ver qué datos retorna el backend
+            console.log('📋 Datos del cliente recibidos:', cliente);
+
+            // Construir nombre completo desde nombres y apellidos
+            let nombreCompleto = '';
+            const nombres = (cliente as any).nombres || '';
+            const apellidos = (cliente as any).apellidos || '';
+
+            if (nombres && apellidos) {
+              nombreCompleto = `${nombres} ${apellidos}`.trim();
+            } else if (nombres) {
+              nombreCompleto = nombres;
+            } else {
+              nombreCompleto = (cliente as any).nombre || '';
+            }
+
+            // Autocompletar todos los datos del cliente
+            this.ventaForm.cliente = {
+              tipo_documento: this.ventaForm.cliente.tipo_documento,
+              numero_documento: (cliente as any).numero_documento || this.ventaForm.cliente.numero_documento,
+              nombre: nombreCompleto,
+              direccion: (cliente as any).direccion || '',
+              email: (cliente as any).email || '',
+              telefono: (cliente as any).telefono || ''
+            };
+
+            console.log('✅ Datos autocompletados:', this.ventaForm.cliente);
+
+            // Guardar el ID del cliente si existe
+            this.clienteExistenteId = (cliente as any).id_cliente || (cliente as any).id || null;
+            this.success = '✅ Cliente encontrado y datos cargados automáticamente';
+            setTimeout(() => this.success = null, 3000);
+          } else {
+            // No encontrado
+            this.loading = false;
+            // Si es RUC, intentar validar con SUNAT
+            if (this.ventaForm.cliente.tipo_documento === TIPOS_DOCUMENTO.RUC) {
+              this.validarRUC();
+            }
+          }
+        },
+        error: (err) => {
+          this.loading = false;
+          console.error('Error al buscar cliente:', err);
+          this.error = 'Error al buscar cliente';
+          // Si es RUC, intentar validar con SUNAT
+          if (this.ventaForm.cliente.tipo_documento === TIPOS_DOCUMENTO.RUC) {
+            this.validarRUC();
+          }
+        }
+      });
+  }
+
   validarRUC(): void {
     if (!this.ventaForm.cliente.numero_documento) {
       return;
@@ -523,8 +658,9 @@ export class PosComponent implements OnInit, OnDestroy {
             // Actualizar datos del cliente con información de SUNAT
             this.ventaForm.cliente.nombre = response.data.razon_social || this.ventaForm.cliente.nombre;
             this.ventaForm.cliente.direccion = response.data.direccion || this.ventaForm.cliente.direccion;
-            this.success = 'RUC validado exitosamente con SUNAT';
+            this.success = '✅ RUC validado exitosamente con SUNAT';
             this.error = null;
+            setTimeout(() => this.success = null, 3000);
           }
         },
         error: (err: any) => {
@@ -583,18 +719,26 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
   calcularItem(item: VentaItemFormData): void {
-    const subtotal = item.cantidad * item.precio_unitario;
+    const totalConIgv = item.cantidad * item.precio_unitario;
     const descuento = item.descuento || 0;
-    const subtotalNeto = subtotal - descuento;
+    const totalConDescuento = totalConIgv - descuento;
 
+    let baseImponible = 0;
     let igv = 0;
+
     if (item.tipo_afectacion_igv === TIPOS_AFECTACION_IGV.GRAVADO) {
-      igv = subtotalNeto * 0.18;
+      // El precio incluye IGV, desglosarlo
+      baseImponible = totalConDescuento / 1.18;
+      igv = baseImponible * 0.18;
+    } else {
+      // Exonerado o inafecto - el precio es la base
+      baseImponible = totalConDescuento;
+      igv = 0;
     }
 
-    item.subtotal = subtotal;
+    item.subtotal = baseImponible;
     item.igv = igv;
-    item.total = subtotalNeto + igv;
+    item.total = totalConDescuento; // El total es el precio original (con IGV incluido)
   }
 
   eliminarItem(index: number): void {
@@ -914,11 +1058,15 @@ export class PosComponent implements OnInit, OnDestroy {
     this.facturando.set(true);
     this.error = null;
 
-    const datosFacturacion: FacturarFormData = {
-      tipo_comprobante: this.tipoDocumentoSeleccionado as '01' | '03',
-      serie: this.serieSeleccionada()!.serie,
-      metodo_pago: this.ventaForm.metodo_pago,
-      observaciones: this.ventaForm.observaciones
+    // Preparar datos de facturación según nueva API
+    const datosFacturacion = {
+      cliente_datos: {
+        tipo_documento: this.ventaForm.cliente.tipo_documento || '6',
+        numero_documento: this.ventaForm.cliente.numero_documento || '',
+        razon_social: this.ventaForm.cliente.nombre || 'CLIENTE GENERAL',
+        direccion: this.ventaForm.cliente.direccion || 'LIMA - PERÚ',
+        email: this.ventaForm.cliente.email
+      }
     };
 
     this.facturacionService.facturarVenta(this.ventaGuardada.id!, datosFacturacion)
@@ -1279,14 +1427,14 @@ export class PosComponent implements OnInit, OnDestroy {
       email: clienteActualizado.email || '',
       telefono: clienteActualizado.telefono || ''
     };
-    
+
     // Buscar si el cliente ya existe en la base de datos
     if (this.ventaForm.cliente.numero_documento) {
       this.buscarCliente();
     } else {
       this.clienteExistenteId = null;
     }
-    
+
     this.mostrarClienteModal = false;
   }
 
@@ -1439,6 +1587,7 @@ export class PosComponent implements OnInit, OnDestroy {
 
     // Preparar datos para envío según documentación API
     const datosVenta: any = {
+      user_cliente_id: null, // NULL = Venta POS (NO envía automáticamente a SUNAT)
       productos: this.ventaForm.items.map(item => ({
         producto_id: item.producto_id,
         cantidad: item.cantidad,
@@ -1455,9 +1604,20 @@ export class PosComponent implements OnInit, OnDestroy {
     if (this.clienteExistenteId) {
       datosVenta.cliente_id = this.clienteExistenteId;
       console.log('📤 Enviando venta con cliente existente ID:', this.clienteExistenteId);
+    } else if (this.ventaForm.cliente && this.ventaForm.cliente.numero_documento) {
+      // Si hay datos de cliente pero no tiene ID, enviar sus datos
+      datosVenta.cliente_datos = {
+        tipo_documento: this.ventaForm.cliente.tipo_documento || '1',
+        numero_documento: this.ventaForm.cliente.numero_documento,
+        razon_social: this.ventaForm.cliente.nombre || '',
+        direccion: this.ventaForm.cliente.direccion || '',
+        email: this.ventaForm.cliente.email || '',
+        telefono: this.ventaForm.cliente.telefono || ''
+      };
+      console.log('📤 Enviando venta con cliente_datos:', datosVenta.cliente_datos);
     } else {
-      // Si no hay cliente_id, el backend lo manejará
-      console.log('📤 Enviando venta sin cliente_id (backend creará cliente genérico)');
+      // Si no hay cliente, el backend usará CLIENTE GENERAL
+      console.log('📤 Enviando venta sin cliente (backend usará CLIENTE GENERAL)');
     }
 
     // Crear la venta
@@ -1636,44 +1796,7 @@ export class PosComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Buscar cliente por documento
-   */
-  buscarClientePorDocumento(documento: string): void {
-    if (!documento || documento.trim() === '') {
-      return;
-    }
 
-    this.facturacionService.getClientes({ documento }).subscribe({
-      next: (response) => {
-        if (response.success && response.data && response.data.length > 0) {
-          const cliente = response.data[0];
-          // Guardar el ID del cliente existente
-          this.clienteExistenteId = cliente.id || (cliente as any).id_cliente || null;
-
-          this.ventaForm.cliente = {
-            tipo_documento: cliente.tipo_documento,
-            numero_documento: cliente.numero_documento,
-            nombre: cliente.nombre,
-            direccion: cliente.direccion,
-            telefono: cliente.telefono,
-            email: cliente.email
-          };
-
-          console.log('✅ Cliente encontrado con ID:', this.clienteExistenteId);
-        } else {
-          // Si no se encuentra, limpiar el ID
-          this.clienteExistenteId = null;
-          console.log('ℹ️ Cliente no encontrado, se creará uno nuevo');
-        }
-      },
-      error: (error) => {
-        console.error('Error al buscar cliente:', error);
-        this.clienteExistenteId = null;
-        this.error = 'Error al buscar cliente';
-      }
-    });
-  }
 
   // ============================================
   // BÚSQUEDA Y FILTRADO DE PRODUCTOS
@@ -1754,19 +1877,18 @@ export class PosComponent implements OnInit, OnDestroy {
     // Resetear variables de notificación
     this.enviandoNotificacion = false;
     this.notificacionEnviada = false;
-
-    // Preguntar si desea nueva venta
-    if (confirm('¿Desea iniciar una nueva venta?')) {
-      this.limpiarFormulario();
-      this.ventaGuardada = null;
-    }
+    
+    // Redirigir a la lista de ventas
+    this.router.navigate(['/dashboard/ventas']);
   }
 
   imprimirComprobante(): void {
     if (!this.ventaGuardada) return;
 
-    // Generar contenido para imprimir
-    const contenido = this.generarContenidoImpresion();
+    // Generar contenido según el tipo seleccionado
+    const contenido = this.tipoComprobanteParaEnviar === 'ticket'
+      ? this.generarContenidoTicket()
+      : this.generarContenidoImpresion();
 
     // Abrir ventana de impresión
     const ventanaImpresion = window.open('', '_blank', 'width=800,height=600');
@@ -1778,74 +1900,465 @@ export class PosComponent implements OnInit, OnDestroy {
     }
   }
 
-  private generarContenidoImpresion(): string {
+  /**
+   * Obtener nombre del cliente desde venta o formulario
+   */
+  private obtenerNombreCliente(): string {
+    const venta = this.ventaGuardada;
+
+    // Intentar obtener desde venta guardada
+    if (venta?.cliente) {
+      return venta.cliente.nombre ||
+        venta.cliente.nombre_comercial ||
+        'Cliente General';
+    }
+
+    // Sino, desde el formulario
+    return this.ventaForm.cliente.nombre || 'Cliente General';
+  }
+
+  /**
+   * Obtener documento del cliente
+   */
+  private obtenerDocumentoCliente(): string {
+    const venta = this.ventaGuardada;
+
+    if (venta?.cliente?.numero_documento) {
+      return venta.cliente.numero_documento;
+    }
+
+    return this.ventaForm.cliente.numero_documento || '';
+  }
+
+  /**
+   * Obtener dirección del cliente
+   */
+  private obtenerDireccionCliente(): string {
+    const venta = this.ventaGuardada;
+
+    if (venta?.cliente?.direccion) {
+      return venta.cliente.direccion;
+    }
+
+    return this.ventaForm.cliente.direccion || '';
+  }
+
+  /**
+   * Genera HTML para ticket/voucher simple (58mm o 80mm)
+   */
+  private generarContenidoTicket(): string {
     const venta: any = this.ventaGuardada!;
     const fecha = new Date(venta.fecha_venta).toLocaleDateString('es-PE');
+    const hora = new Date(venta.fecha_venta).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+
+    const nombreCliente = this.obtenerNombreCliente();
+    const docCliente = this.obtenerDocumentoCliente();
 
     return `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="UTF-8">
-        <title>Comprobante - ${venta.codigo_venta}</title>
+        <title>Ticket - ${venta.codigo_venta}</title>
         <style>
-          body { font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 10px; }
-          .header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 10px; }
-          .header h2 { margin: 5px 0; font-size: 16px; }
-          .info { margin-bottom: 10px; font-size: 12px; }
-          .info div { margin: 3px 0; }
-          .items { margin: 10px 0; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 10px 0; }
-          .item { display: flex; justify-content: space-between; margin: 5px 0; font-size: 11px; }
-          .totals { margin-top: 10px; font-size: 12px; }
-          .totals div { display: flex; justify-content: space-between; margin: 3px 0; }
-          .total-final { font-weight: bold; font-size: 14px; border-top: 1px solid #000; padding-top: 5px; margin-top: 5px; }
-          .footer { text-align: center; margin-top: 15px; font-size: 10px; border-top: 1px dashed #000; padding-top: 10px; }
+          @media print {
+            body { margin: 0; padding: 0; }
+          }
+          body {
+            font-family: 'Courier New', monospace;
+            width: 58mm;
+            margin: 0 auto;
+            padding: 5px;
+            font-size: 11px;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 8px;
+          }
+          .header h2 {
+            margin: 3px 0;
+            font-size: 14px;
+            font-weight: bold;
+          }
+          .info {
+            margin-bottom: 8px;
+            font-size: 10px;
+          }
+          .info div {
+            margin: 2px 0;
+          }
+          .items {
+            margin: 8px 0;
+            border-top: 1px dashed #000;
+            border-bottom: 1px dashed #000;
+            padding: 8px 0;
+          }
+          .item {
+            margin: 4px 0;
+            font-size: 10px;
+          }
+          .item-name {
+            font-weight: bold;
+          }
+          .item-detail {
+            display: flex;
+            justify-content: space-between;
+          }
+          .totals {
+            margin-top: 8px;
+            font-size: 11px;
+          }
+          .totals div {
+            display: flex;
+            justify-content: space-between;
+            margin: 2px 0;
+          }
+          .total-final {
+            font-weight: bold;
+            font-size: 13px;
+            border-top: 1px solid #000;
+            padding-top: 4px;
+            margin-top: 4px;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 9px;
+            border-top: 1px dashed #000;
+            padding-top: 8px;
+          }
         </style>
       </head>
       <body>
         <div class="header">
-          <h2>COMPROBANTE DE VENTA</h2>
+          <h2>TICKET DE VENTA</h2>
           <div><strong>${venta.codigo_venta}</strong></div>
         </div>
-        
+
         <div class="info">
-          <div><strong>Fecha:</strong> ${fecha}</div>
-          <div><strong>Cliente:</strong> ${venta.cliente?.razon_social || venta.cliente?.nombre_comercial || 'Cliente General'}</div>
-          <div><strong>Documento:</strong> ${venta.cliente?.numero_documento || 'N/A'}</div>
-          <div><strong>Método de Pago:</strong> ${venta.metodo_pago}</div>
+          <div><strong>Fecha:</strong> ${fecha} ${hora}</div>
+          <div><strong>Cliente:</strong> ${nombreCliente}</div>
+          ${docCliente ? `<div><strong>Doc:</strong> ${docCliente}</div>` : ''}
         </div>
-        
+
         <div class="items">
-          <div style="font-weight: bold; margin-bottom: 5px;">DETALLE:</div>
+          <div style="font-weight: bold; margin-bottom: 4px;">PRODUCTOS:</div>
           ${venta.detalles?.map((item: any) => `
             <div class="item">
-              <div style="flex: 1;">${item.descripcion || item.producto?.nombre || 'Producto'}</div>
-            </div>
-            <div class="item" style="padding-left: 10px;">
-              <div>${item.cantidad} x S/ ${Number(item.precio_unitario).toFixed(2)}</div>
-              <div>S/ ${Number(item.subtotal).toFixed(2)}</div>
+              <div class="item-name">${item.descripcion || item.producto?.nombre || 'Producto'}</div>
+              <div class="item-detail">
+                <span>${item.cantidad} x S/ ${Number(item.precio_unitario).toFixed(2)}</span>
+                <span><strong>S/ ${Number(item.cantidad * item.precio_unitario).toFixed(2)}</strong></span>
+              </div>
             </div>
           `).join('') || ''}
         </div>
-        
+
         <div class="totals">
-          <div>
-            <span>Subtotal:</span>
-            <span>S/ ${Number(venta.subtotal).toFixed(2)}</span>
-          </div>
-          <div>
-            <span>IGV (18%):</span>
-            <span>S/ ${Number(venta.igv).toFixed(2)}</span>
-          </div>
           <div class="total-final">
             <span>TOTAL:</span>
             <span>S/ ${Number(venta.total).toFixed(2)}</span>
           </div>
+          <div style="margin-top: 4px;">
+            <span>Pago:</span>
+            <span>${venta.metodo_pago || 'EFECTIVO'}</span>
+          </div>
         </div>
-        
+
         <div class="footer">
           <div>¡Gracias por su compra!</div>
-          <div style="margin-top: 10px;">Este documento no tiene validez tributaria</div>
+          <div style="margin-top: 5px; font-size: 8px;">Vuelva pronto</div>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  /**
+   * Genera HTML para comprobante formal (boleta/factura) formato A4
+   */
+  private generarContenidoImpresion(): string {
+    const venta: any = this.ventaGuardada!;
+    const fecha = new Date(venta.fecha_venta).toLocaleDateString('es-PE');
+    const hora = new Date(venta.fecha_venta).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+
+    // Determinar tipo de comprobante
+    const tipoDoc = this.tipoDocumentoSeleccionado === '01' ? 'FACTURA ELECTRÓNICA' : 'BOLETA DE VENTA ELECTRÓNICA';
+    const tipoDocCliente = this.tipoDocumentoSeleccionado === '01' ? 'RUC' : 'DNI';
+
+    // Obtener datos del cliente
+    const nombreCliente = this.obtenerNombreCliente();
+    const docCliente = this.obtenerDocumentoCliente();
+    const direccionCliente = this.obtenerDireccionCliente();
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>${tipoDoc} - ${venta.codigo_venta}</title>
+        <style>
+          @page {
+            size: A4;
+            margin: 20mm;
+          }
+          @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+          }
+          body {
+            font-family: Arial, sans-serif;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+            color: #000;
+          }
+          .documento-header {
+            border: 2px solid #000;
+            padding: 15px;
+            margin-bottom: 20px;
+          }
+          .empresa-info {
+            text-align: center;
+            margin-bottom: 15px;
+          }
+          .empresa-info h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+          }
+          .empresa-info p {
+            margin: 3px 0;
+            font-size: 11px;
+          }
+          .comprobante-box {
+            border: 2px solid #000;
+            padding: 10px;
+            text-align: center;
+            background: #f0f0f0;
+          }
+          .comprobante-box h2 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+          }
+          .comprobante-box .numero {
+            font-size: 14px;
+            font-weight: bold;
+          }
+          .seccion {
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            padding: 10px;
+          }
+          .seccion-titulo {
+            background: #e0e0e0;
+            padding: 5px 10px;
+            font-weight: bold;
+            font-size: 12px;
+            margin: -10px -10px 10px -10px;
+          }
+          .datos-fila {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 5px 0;
+            font-size: 11px;
+          }
+          .datos-item {
+            display: flex;
+          }
+          .datos-label {
+            font-weight: bold;
+            min-width: 120px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 11px;
+          }
+          table th {
+            background: #e0e0e0;
+            border: 1px solid #000;
+            padding: 8px 5px;
+            text-align: left;
+            font-weight: bold;
+          }
+          table td {
+            border: 1px solid #ccc;
+            padding: 6px 5px;
+          }
+          .text-right { text-align: right; }
+          .text-center { text-align: center; }
+          .totales-box {
+            float: right;
+            width: 300px;
+            margin-top: 20px;
+          }
+          .totales-box table {
+            width: 100%;
+          }
+          .totales-box table td {
+            padding: 5px 10px;
+          }
+          .total-final {
+            font-weight: bold;
+            font-size: 14px;
+            background: #f0f0f0;
+          }
+          .footer-info {
+            clear: both;
+            margin-top: 60px;
+            padding-top: 10px;
+            border-top: 1px solid #ccc;
+            text-align: center;
+            font-size: 10px;
+          }
+          .observaciones {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+            font-size: 11px;
+          }
+        </style>
+      </head>
+      <body>
+        <!-- HEADER DEL DOCUMENTO -->
+        <div class="documento-header">
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+            <!-- Datos de la empresa -->
+            <div class="empresa-info" style="text-align: left;">
+              <h1>${this.empresaInfo?.nombre_empresa || this.empresaInfo?.razon_social || 'MI EMPRESA'}</h1>
+              <p><strong>RUC:</strong> ${this.empresaInfo?.ruc || '20XXXXXXXXX'}</p>
+              <p><strong>Dirección:</strong> ${this.empresaInfo?.direccion || 'Dirección de la empresa'}</p>
+              <p><strong>Teléfono:</strong> ${this.empresaInfo?.telefono || this.empresaInfo?.celular || '(01) 123-4567'} | <strong>Email:</strong> ${this.empresaInfo?.email || 'contacto@empresa.com'}</p>
+            </div>
+
+            <!-- Cuadro del comprobante -->
+            <div class="comprobante-box">
+              <h2>RUC: ${this.empresaInfo?.ruc || '20XXXXXXXXX'}</h2>
+              <h2>${tipoDoc}</h2>
+              <div class="numero">${venta.codigo_venta || 'N/A'}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DATOS DEL CLIENTE -->
+        <div class="seccion">
+          <div class="seccion-titulo">DATOS DEL CLIENTE</div>
+          <div class="datos-fila">
+            <div class="datos-item">
+              <span class="datos-label">${tipoDocCliente}:</span>
+              <span>${docCliente || 'Sin documento'}</span>
+            </div>
+            <div class="datos-item">
+              <span class="datos-label">Fecha de Emisión:</span>
+              <span>${fecha} ${hora}</span>
+            </div>
+          </div>
+          <div class="datos-fila">
+            <div class="datos-item">
+              <span class="datos-label">${this.tipoDocumentoSeleccionado === '01' ? 'Razón Social' : 'Nombre'}:</span>
+              <span>${nombreCliente}</span>
+            </div>
+            <div class="datos-item">
+              <span class="datos-label">Moneda:</span>
+              <span>Soles (PEN)</span>
+            </div>
+          </div>
+          ${direccionCliente ? `
+          <div class="datos-fila">
+            <div class="datos-item" style="grid-column: 1 / -1;">
+              <span class="datos-label">Dirección:</span>
+              <span>${direccionCliente}</span>
+            </div>
+          </div>
+          ` : ''}
+        </div>
+
+        <!-- DETALLE DE PRODUCTOS -->
+        <div class="seccion">
+          <div class="seccion-titulo">DETALLE DE PRODUCTOS/SERVICIOS</div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 8%;" class="text-center">CANT.</th>
+                <th style="width: 12%;">CÓDIGO</th>
+                <th style="width: 40%;">DESCRIPCIÓN</th>
+                <th style="width: 10%;" class="text-center">U.M.</th>
+                <th style="width: 15%;" class="text-right">P.UNIT</th>
+                <th style="width: 15%;" class="text-right">TOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${venta.detalles?.map((item: any) => `
+                <tr>
+                  <td class="text-center">${Number(item.cantidad).toFixed(2)}</td>
+                  <td>${item.codigo_producto || item.producto?.codigo_producto || 'N/A'}</td>
+                  <td>${item.descripcion || item.producto?.nombre || 'Producto'}</td>
+                  <td class="text-center">NIU</td>
+                  <td class="text-right">S/ ${Number(item.precio_unitario).toFixed(2)}</td>
+                  <td class="text-right">S/ ${Number(item.cantidad * item.precio_unitario - (item.descuento || 0)).toFixed(2)}</td>
+                </tr>
+              `).join('') || '<tr><td colspan="6" class="text-center">Sin productos</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TOTALES -->
+        <div class="totales-box">
+          <table>
+            <tr>
+              <td><strong>OP. GRAVADAS:</strong></td>
+              <td class="text-right">S/ ${Number(venta.subtotal || 0).toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td><strong>OP. EXONERADAS:</strong></td>
+              <td class="text-right">S/ 0.00</td>
+            </tr>
+            <tr>
+              <td><strong>OP. INAFECTAS:</strong></td>
+              <td class="text-right">S/ 0.00</td>
+            </tr>
+            ${venta.descuento_total && venta.descuento_total > 0 ? `
+            <tr>
+              <td><strong>DESCUENTOS:</strong></td>
+              <td class="text-right">-S/ ${Number(venta.descuento_total).toFixed(2)}</td>
+            </tr>
+            ` : ''}
+            <tr>
+              <td><strong>IGV (18%):</strong></td>
+              <td class="text-right">S/ ${Number(venta.igv || 0).toFixed(2)}</td>
+            </tr>
+            <tr class="total-final">
+              <td><strong>TOTAL A PAGAR:</strong></td>
+              <td class="text-right"><strong>S/ ${Number(venta.total).toFixed(2)}</strong></td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- OBSERVACIONES -->
+        ${venta.observaciones || this.ventaForm.observaciones ? `
+        <div class="observaciones" style="clear: both; margin-top: 20px;">
+          <strong>Observaciones:</strong><br>
+          ${venta.observaciones || this.ventaForm.observaciones || ''}
+        </div>
+        ` : ''}
+
+        <!-- PIE DE PÁGINA -->
+        <div class="footer-info" style="clear: both;">
+          <p><strong>Forma de Pago:</strong> ${venta.metodo_pago || 'EFECTIVO'}</p>
+          <p style="margin-top: 15px;">
+            <strong>REPRESENTACIÓN IMPRESA DEL COMPROBANTE ELECTRÓNICO</strong><br>
+            Este documento tiene validez tributaria y puede ser verificado en SUNAT
+          </p>
+          <p style="font-size: 9px; margin-top: 10px;">
+            Autorizado mediante Resolución de Superintendencia N° 097-2012/SUNAT<br>
+            Consulte su comprobante en: www.sunat.gob.pe
+          </p>
         </div>
       </body>
       </html>
@@ -1856,15 +2369,17 @@ export class PosComponent implements OnInit, OnDestroy {
     if (!this.ventaGuardada) return;
 
     const venta = this.ventaGuardada;
-    const telefono = venta.cliente?.telefono || '';
+    const telefono = venta.cliente?.telefono || this.ventaForm.cliente.telefono;
 
     if (!telefono) {
       this.error = 'El cliente no tiene teléfono registrado';
       return;
     }
 
-    // Generar mensaje para WhatsApp
-    const mensaje = this.generarMensajeWhatsApp();
+    // Generar mensaje según el tipo seleccionado
+    const mensaje = this.tipoComprobanteParaEnviar === 'ticket'
+      ? this.generarTicketWhatsApp()
+      : this.generarBoletaWhatsApp();
 
     // Limpiar número de teléfono (solo dígitos)
     const telefonoLimpio = telefono.replace(/\D/g, '');
@@ -1875,25 +2390,121 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
   private generarMensajeWhatsApp(): string {
+    // Método legacy - usar los nuevos métodos específicos
+    return this.generarTicketWhatsApp();
+  }
+
+  /**
+   * Genera un ticket/voucher simple para WhatsApp
+   */
+  private generarTicketWhatsApp(): string {
     const venta: any = this.ventaGuardada!;
     const fecha = new Date(venta.fecha_venta).toLocaleDateString('es-PE');
+    const hora = new Date(venta.fecha_venta).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
 
-    let mensaje = `*COMPROBANTE DE VENTA*\n\n`;
-    mensaje += `*Código:* ${venta.codigo_venta}\n`;
-    mensaje += `*Fecha:* ${fecha}\n`;
-    mensaje += `*Cliente:* ${venta.cliente?.razon_social || 'Cliente General'}\n\n`;
-    mensaje += `*DETALLE:*\n`;
+    const nombreCliente = this.obtenerNombreCliente();
 
-    venta.detalles?.forEach((item: any) => {
-      mensaje += `• ${item.descripcion || 'Producto'}\n`;
-      mensaje += `  ${item.cantidad} x S/ ${Number(item.precio_unitario).toFixed(2)} = S/ ${Number(item.subtotal).toFixed(2)}\n`;
+    let mensaje = `╔═══════════════════════╗\n`;
+    mensaje += `   🧾 *TICKET DE VENTA*\n`;
+    mensaje += `╚═══════════════════════╝\n\n`;
+
+    mensaje += `📅 *Fecha:* ${fecha} ${hora}\n`;
+    mensaje += `🔢 *Ticket:* ${venta.codigo_venta}\n`;
+    mensaje += `👤 *Cliente:* ${nombreCliente}\n`;
+    mensaje += `━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    mensaje += `🛒 *PRODUCTOS:*\n`;
+    venta.detalles?.forEach((item: any, index: number) => {
+      mensaje += `\n${index + 1}. ${item.descripcion || 'Producto'}\n`;
+      mensaje += `   ${item.cantidad} x S/ ${Number(item.precio_unitario).toFixed(2)} = *S/ ${Number(item.cantidad * item.precio_unitario).toFixed(2)}*\n`;
     });
 
-    mensaje += `\n*Subtotal:* S/ ${Number(venta.subtotal).toFixed(2)}\n`;
-    mensaje += `*IGV (18%):* S/ ${Number(venta.igv).toFixed(2)}\n`;
-    mensaje += `*TOTAL:* S/ ${Number(venta.total).toFixed(2)}\n\n`;
-    mensaje += `*Método de Pago:* ${venta.metodo_pago}\n\n`;
-    mensaje += `¡Gracias por su compra! 🎉`;
+    mensaje += `\n━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    mensaje += `💰 *TOTAL: S/ ${Number(venta.total).toFixed(2)}*\n`;
+    mensaje += `━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    mensaje += `💳 *Pago:* ${venta.metodo_pago || 'EFECTIVO'}\n\n`;
+    mensaje += `✨ _¡Gracias por su compra!_ ✨\n`;
+    mensaje += `📱 Vuelva pronto`;
+
+    return mensaje;
+  }
+
+  /**
+   * Genera un comprobante formal (boleta/factura) para WhatsApp
+   */
+  private generarBoletaWhatsApp(): string {
+    const venta: any = this.ventaGuardada!;
+    const fecha = new Date(venta.fecha_venta).toLocaleDateString('es-PE');
+    const hora = new Date(venta.fecha_venta).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+
+    // Determinar tipo de comprobante
+    const tipoDoc = this.tipoDocumentoSeleccionado === '01' ? 'FACTURA ELECTRÓNICA' : 'BOLETA DE VENTA ELECTRÓNICA';
+
+    // Obtener datos del cliente
+    const nombreCliente = this.obtenerNombreCliente();
+    const docCliente = this.obtenerDocumentoCliente();
+    const direccionCliente = this.obtenerDireccionCliente();
+    const tipoDocCliente = this.tipoDocumentoSeleccionado === '01' ? 'RUC' : 'DNI/Doc';
+
+    let mensaje = `═══════════════════════════\n`;
+    mensaje += `     📄 *${tipoDoc}*\n`;
+    mensaje += `═══════════════════════════\n\n`;
+
+    mensaje += `🏢 *DATOS DE LA EMPRESA*\n`;
+    mensaje += `Razón Social: ${this.empresaInfo?.razon_social || this.empresaInfo?.nombre_empresa || 'MI EMPRESA'}\n`;
+    mensaje += `RUC: ${this.empresaInfo?.ruc || '20XXXXXXXXX'}\n`;
+    mensaje += `Dirección: ${this.empresaInfo?.direccion || 'Dirección de la empresa'}\n\n`;
+
+    mensaje += `📋 *DATOS DEL COMPROBANTE*\n`;
+    mensaje += `Número: ${venta.codigo_venta}\n`;
+    mensaje += `Fecha de Emisión: ${fecha} ${hora}\n\n`;
+
+    mensaje += `👤 *DATOS DEL CLIENTE*\n`;
+    mensaje += `${tipoDocCliente}: ${docCliente || 'Sin documento'}\n`;
+    mensaje += `Cliente: ${nombreCliente}\n`;
+
+    if (direccionCliente) {
+      mensaje += `Dirección: ${direccionCliente}\n`;
+    }
+    mensaje += `\n━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    mensaje += `       *DETALLE DE VENTA*\n`;
+    mensaje += `━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    venta.detalles?.forEach((item: any, index: number) => {
+      mensaje += `*${index + 1}. ${item.descripcion || 'Producto'}*\n`;
+      mensaje += `   Cant: ${item.cantidad} | P.Unit: S/ ${Number(item.precio_unitario).toFixed(2)}\n`;
+      if (item.descuento && item.descuento > 0) {
+        mensaje += `   Descuento: -S/ ${Number(item.descuento).toFixed(2)}\n`;
+      }
+      mensaje += `   Subtotal: S/ ${Number(item.cantidad * item.precio_unitario - (item.descuento || 0)).toFixed(2)}\n\n`;
+    });
+
+    mensaje += `━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    mensaje += `*RESUMEN*\n`;
+    mensaje += `━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    mensaje += `Base Imponible: S/ ${Number(venta.subtotal || 0).toFixed(2)}\n`;
+    mensaje += `IGV (18%):      S/ ${Number(venta.igv || 0).toFixed(2)}\n`;
+
+    if (venta.descuento_total && venta.descuento_total > 0) {
+      mensaje += `Descuento:     -S/ ${Number(venta.descuento_total).toFixed(2)}\n`;
+    }
+
+    mensaje += `━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    mensaje += `*TOTAL: S/ ${Number(venta.total).toFixed(2)}*\n`;
+    mensaje += `━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    mensaje += `💳 *Forma de Pago:* ${venta.metodo_pago || 'EFECTIVO'}\n\n`;
+
+    if (venta.observaciones) {
+      mensaje += `📝 *Observaciones:*\n${venta.observaciones}\n\n`;
+    }
+
+    mensaje += `━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    mensaje += `✅ _Representación impresa de comprobante electrónico_\n\n`;
+    mensaje += `¡Gracias por su preferencia! 🙏\n`;
+    mensaje += `📧 Consultas: ${this.empresaInfo?.email || 'contacto@empresa.com'}\n`;
+    mensaje += `📱 Teléfono: ${this.empresaInfo?.telefono || this.empresaInfo?.celular || '(01) 123-4567'}`;
 
     return mensaje;
   }

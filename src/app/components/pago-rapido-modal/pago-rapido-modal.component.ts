@@ -18,8 +18,14 @@ export interface PagoResultado {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" (click)="cerrarModal()">
-      <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal show d-block" tabindex="-1" 
+      style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; 
+             width: 100vw !important; height: 100vh !important; display: flex !important; align-items: center !important; 
+             justify-content: center !important; background-color: rgba(0,0,0,0.6) !important; z-index: 99999 !important; 
+             padding: 20px !important; margin: 0 !important;" 
+      (click)="cerrarModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()" 
+        style="margin: 0 auto !important; max-width: 500px; width: 100%;">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
@@ -55,11 +61,11 @@ export interface PagoResultado {
                 Vuelto: <strong>S/ {{ (montoEntregado - totalPagar) | number:'1.2-2' }}</strong>
               </div>
               <div class="mt-2 d-flex gap-2 flex-wrap">
-                <button class="btn btn-sm btn-outline-secondary" (click)="montoEntregado = totalPagar">Exacto</button>
-                <button class="btn btn-sm btn-outline-secondary" (click)="montoEntregado = redondear(totalPagar, 0)">Redondear</button>
-                <button class="btn btn-sm btn-outline-secondary" (click)="montoEntregado = sugerencias[0]">S/ {{ sugerencias[0] }}</button>
-                <button class="btn btn-sm btn-outline-secondary" (click)="montoEntregado = sugerencias[1]">S/ {{ sugerencias[1] }}</button>
-                <button class="btn btn-sm btn-outline-secondary" (click)="montoEntregado = sugerencias[2]">S/ {{ sugerencias[2] }}</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="montoEntregado = totalPagar">Exacto</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="montoEntregado = redondear(totalPagar, 0)">Redondear</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="montoEntregado = sugerencias[0]">S/ {{ sugerencias[0] | number:'1.0-0' }}</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="montoEntregado = sugerencias[1]">S/ {{ sugerencias[1] | number:'1.0-0' }}</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="montoEntregado = sugerencias[2]">S/ {{ sugerencias[2] | number:'1.0-0' }}</button>
               </div>
             </div>
 

@@ -92,4 +92,13 @@ export class NotificacionesService {
     }
     return this.http.get(`${this.apiUrl}/estadisticas`, { params: httpParams });
   }
+
+  // Envío de comprobantes
+  enviarComprobantePorEmail(comprobanteId: number, email: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/comprobantes/${comprobanteId}/enviar-email`, { email });
+  }
+
+  enviarComprobantePorWhatsApp(comprobanteId: number, telefono: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/comprobantes/${comprobanteId}/enviar-whatsapp`, { telefono });
+  }
 }
