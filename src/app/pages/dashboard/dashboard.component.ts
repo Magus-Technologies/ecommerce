@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   trigger,
   transition,
@@ -64,7 +65,7 @@ interface OrderItem {
     ])
   ]
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   trackByOrderId(index: number, item: any): any {
       return item.orderId; // o la propiedad única que identifique cada item
     }
@@ -200,12 +201,34 @@ calendarEvents = [
   { day: 28, event: 'Reunión proveedores' }
 ];
 
+  // Propiedades para manejo de errores
+  showAccessDenied = false;
+
   constructor(
     private productosService: ProductosService,
-    private clienteService: ClienteService // ← NUEVA LÍNEA
+    private clienteService: ClienteService,
+    private route: ActivatedRoute,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
+    // Verificar si hay error de acceso denegado
+    this.route.queryParams.subscribe(params => {
+      if (params['error'] === 'access_denied') {
+        this.showAccessDenied = true;
+        // Limpiar el parámetro de la URL después de 5 segundos
+        setTimeout(() => {
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: {},
+            replaceUrl: true
+          });
+          this.showAccessDenied = false;
+        }, 5000);
+      }
+    });
+
+    
     setTimeout(() => this.animateEarnings(), 500);
     this.cargarEstadisticasProductos();
     this.cargarProductosStockCritico();
@@ -304,4 +327,5 @@ private cargarEstadisticasProductos(): void {
       }
     });
   }
+
 }

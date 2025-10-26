@@ -1,0 +1,336 @@
+<!-- Modal de Creación de Recompensa -->
+<div *ngIf="mostrar" class="modal fade show d-block" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-gift me-2"></i>
+          Crear Nueva Recompensa
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="cerrarModal()" [disabled]="loading"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <form [formGroup]="formulario" (ngSubmit)="crearRecompensa()">
+
+          <!-- Error Alert -->
+          <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            {{ error }}
+            <button type="button" class="btn-close" (click)="error = null"></button>
+          </div>
+
+          <!-- Sección: Datos Generales -->
+          <div class="card mb-3">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                Datos Generales
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <!-- Nombre -->
+                <div class="col-md-6 mb-3">
+                  <label for="nombre" class="form-label">Nombre de la Recompensa *</label>
+                  <input
+                    type="text"
+                    id="nombre"
+                    class="form-control"
+                    formControlName="nombre"
+                    placeholder="Ej: Bono de Bienvenida"
+                    [class.is-invalid]="formulario.get('nombre')?.invalid && formulario.get('nombre')?.touched"
+                  >
+                  <div class="invalid-feedback" *ngIf="formulario.get('nombre')?.hasError('required')">
+                    El nombre es requerido
+                  </div>
+                  <div class="invalid-feedback" *ngIf="formulario.get('nombre')?.hasError('minlength')">
+                    El nombre debe tener al menos 3 caracteres
+                  </div>
+                </div>
+
+                <!-- Tipo -->
+                <div class="col-md-6 mb-3">
+                  <label for="tipo" class="form-label">Tipo de Recompensa *</label>
+                  <select
+                    id="tipo"
+                    class="form-control"
+                    formControlName="tipo"
+                    [class.is-invalid]="formulario.get('tipo')?.invalid && formulario.get('tipo')?.touched"
+                  >
+                    <option *ngFor="let tipo of tiposRecompensa" [value]="tipo.value">
+                      {{ tipo.label }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Descripción -->
+                <div class="col-12 mb-3">
+                  <label for="descripcion" class="form-label">Descripción *</label>
+                  <textarea
+                    id="descripcion"
+                    class="form-control"
+                    formControlName="descripcion"
+                    rows="3"
+                    placeholder="Describe los detalles de la recompensa..."
+                    [class.is-invalid]="formulario.get('descripcion')?.invalid && formulario.get('descripcion')?.touched"
+                  ></textarea>
+                  <div class="invalid-feedback" *ngIf="formulario.get('descripcion')?.hasError('required')">
+                    La descripción es requerida
+                  </div>
+                  <div class="invalid-feedback" *ngIf="formulario.get('descripcion')?.hasError('minlength')">
+                    La descripción debe tener al menos 10 caracteres
+                  </div>
+                </div>
+
+                <!-- Fecha Inicio -->
+                <div class="col-md-4 mb-3">
+                  <label for="fecha_inicio" class="form-label">Fecha de Inicio *</label>
+                  <input
+                    type="date"
+                    id="fecha_inicio"
+                    class="form-control"
+                    formControlName="fecha_inicio"
+                    [min]="hoyStr"
+                    [class.is-invalid]="formulario.get('fecha_inicio')?.invalid && formulario.get('fecha_inicio')?.touched"
+                  >
+                  <div class="invalid-feedback" *ngIf="formulario.get('fecha_inicio')?.hasError('fechaPasada')">
+                    La fecha no puede ser anterior a hoy
+                  </div>
+                </div>
+
+                <!-- Fecha Fin -->
+                <div class="col-md-4 mb-3">
+                  <label for="fecha_fin" class="form-label">Fecha de Fin *</label>
+                  <input
+                    type="date"
+                    id="fecha_fin"
+                    class="form-control"
+                    formControlName="fecha_fin"
+                    [min]="formulario.get('fecha_inicio')?.value || hoyStr"
+                    [class.is-invalid]="formulario.get('fecha_fin')?.invalid && formulario.get('fecha_fin')?.touched"
+                  >
+                </div>
+
+                <!-- Estado -->
+                <div class="col-md-4 mb-3">
+                  <label for="estado" class="form-label">Estado Inicial</label>
+                  <select
+                    id="estado"
+                    class="form-control"
+                    formControlName="estado"
+                  >
+                    <option *ngFor="let estado of estadosRecompensa" [value]="estado.value">
+                      {{ estado.label }}
+                    </option>
+                  </select>
+                  <small class="form-text text-muted">
+                    El estado se ajusta automáticamente según la fecha de inicio
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección: Configuración según tipo -->
+          <div class="card mb-3">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fas fa-cog me-2"></i>
+                Configuración - {{ getTipoLabel(tipoSeleccionado) }}
+              </h6>
+            </div>
+            <div class="card-body">
+
+              <!-- Configuración: Puntos -->
+              <div *ngIf="tipoSeleccionado === 'puntos'" class="row">
+                <div class="col-md-4 mb-3">
+                  <label for="puntos_por_compra" class="form-label">Puntos por Compra</label>
+                  <input
+                    type="number"
+                    id="puntos_por_compra"
+                    class="form-control"
+                    formControlName="puntos_por_compra"
+                    min="0"
+                    placeholder="0"
+                  >
+                  <small class="form-text text-muted">Puntos fijos por cada compra</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="puntos_por_monto" class="form-label">Puntos por Monto</label>
+                  <input
+                    type="number"
+                    id="puntos_por_monto"
+                    class="form-control"
+                    formControlName="puntos_por_monto"
+                    min="0"
+                    placeholder="0"
+                  >
+                  <small class="form-text text-muted">Puntos por cada $ gastado</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="puntos_registro" class="form-label">Puntos por Registro</label>
+                  <input
+                    type="number"
+                    id="puntos_registro"
+                    class="form-control"
+                    formControlName="puntos_registro"
+                    min="0"
+                    placeholder="0"
+                  >
+                  <small class="form-text text-muted">Puntos al registrarse</small>
+                </div>
+              </div>
+
+              <!-- Configuración: Descuento -->
+              <div *ngIf="tipoSeleccionado === 'descuento'" class="row">
+                <div class="col-md-4 mb-3">
+                  <label for="tipo_descuento" class="form-label">Tipo de Descuento</label>
+                  <select
+                    id="tipo_descuento"
+                    class="form-control"
+                    formControlName="tipo_descuento"
+                  >
+                    <option value="porcentaje">Porcentaje (%)</option>
+                    <option value="monto_fijo">Monto Fijo ($)</option>
+                  </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="valor_descuento" class="form-label">Valor del Descuento *</label>
+                  <input
+                    type="number"
+                    id="valor_descuento"
+                    class="form-control"
+                    formControlName="valor_descuento"
+                    min="0"
+                    [max]="formulario.get('tipo_descuento')?.value === 'porcentaje' ? 100 : null"
+                    placeholder="0"
+                  >
+                  <small class="form-text text-muted">
+                    {{ formulario.get('tipo_descuento')?.value === 'porcentaje' ? 'Entre 0 y 100%' : 'Monto en $' }}
+                  </small>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="compra_minima" class="form-label">Compra Mínima ($)</label>
+                  <input
+                    type="number"
+                    id="compra_minima"
+                    class="form-control"
+                    formControlName="compra_minima"
+                    min="0"
+                    placeholder="0"
+                  >
+                  <small class="form-text text-muted">Monto mínimo para aplicar</small>
+                </div>
+              </div>
+
+              <!-- Configuración: Envío Gratis -->
+              <div *ngIf="tipoSeleccionado === 'envio_gratis'" class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="minimo_compra_envio" class="form-label">Compra Mínima ($)</label>
+                  <input
+                    type="number"
+                    id="minimo_compra_envio"
+                    class="form-control"
+                    formControlName="minimo_compra_envio"
+                    min="0"
+                    placeholder="0"
+                  >
+                  <small class="form-text text-muted">Monto mínimo para envío gratis</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="tipo_cobertura" class="form-label">Tipo de Cobertura</label>
+                  <select
+                    id="tipo_cobertura"
+                    class="form-control"
+                    formControlName="tipo_cobertura"
+                  >
+                    <option value="nacional">Nacional</option>
+                    <option value="regional">Regional</option>
+                    <option value="local">Local</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Configuración: Regalo -->
+              <div *ngIf="tipoSeleccionado === 'regalo'" class="row">
+                <div class="col-12">
+                  <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    La configuración de productos de regalo se puede ajustar después de crear la recompensa.
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Sección: Segmentación -->
+          <div class="card mb-3">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fas fa-users me-2"></i>
+                Segmentación de Clientes
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-12 mb-3">
+                  <label for="tipo_segmentacion" class="form-label">¿A quién va dirigida?</label>
+                  <select
+                    id="tipo_segmentacion"
+                    class="form-control"
+                    formControlName="tipo_segmentacion"
+                  >
+                    <option value="todos">Todos los clientes</option>
+                    <option value="nuevos">Solo clientes nuevos</option>
+                    <option value="frecuentes">Clientes frecuentes</option>
+                    <option value="vip">Clientes VIP</option>
+                  </select>
+                  <small class="form-text text-muted">
+                    Puedes configurar segmentación más específica después de crear la recompensa
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Info Footer -->
+          <div class="alert alert-info mb-0">
+            <i class="fas fa-lightbulb me-2"></i>
+            <strong>Tip:</strong> Después de crear la recompensa, podrás asignar productos específicos, categorías y configurar el popup asociado.
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="cerrarModal()"
+          [disabled]="loading"
+        >
+          <i class="fas fa-times me-2"></i>
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="crearRecompensa()"
+          [disabled]="formulario.invalid || loading"
+        >
+          <i class="fas fa-spinner fa-spin me-2" *ngIf="loading"></i>
+          <i class="fas fa-check me-2" *ngIf="!loading"></i>
+          {{ loading ? 'Creando...' : 'Crear Recompensa' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay -->
+<div *ngIf="mostrar" class="modal-backdrop fade show"></div>

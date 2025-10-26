@@ -127,6 +127,14 @@ export const routes: Routes = [
                 (m) => m.ReclamosComponent
               ),
             title: 'Mis Reclamos'
+          },
+          {
+            path: 'recompensas',
+            loadComponent: () =>
+              import('./pages/my-account/recompensas/recompensas.component').then(
+                (m) => m.RecompensasMiCuentaComponent
+              ),
+            title: 'Mis Recompensas'
           }
         ]
       },
@@ -321,6 +329,117 @@ export const routes: Routes = [
         canActivate: [permissionGuard],
         data: { permission: 'usuarios.ver' },
       },
+      // ✅ MÓDULO DE FACTURACIÓN ELECTRÓNICA
+      {
+        path: 'facturacion',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion/dashboard/dashboard-facturacion.component').then(
+            (m) => m.DashboardFacturacionComponent
+          ),
+        title: 'Dashboard Facturación',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.ver' },
+      },
+      {
+        path: 'facturacion/comprobantes',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion/comprobantes/comprobantes-list.component').then(
+            (m) => m.ComprobantesListComponent
+          ),
+        title: 'Comprobantes Electrónicos',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.ver' },
+      },
+      {
+        path: 'facturacion/series',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion/series/series-list.component').then(
+            (m) => m.SeriesListComponent
+          ),
+        title: 'Series de Comprobantes',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.ver' },
+      },
+      {
+        path: 'facturacion/resumenes',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion/resumenes/resumenes-list.component').then(
+            (m) => m.ResumenesListComponent
+          ),
+        title: 'Resúmenes Diarios',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.ver' },
+      },
+      {
+        path: 'facturacion/bajas',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion/bajas/bajas-list.component').then(
+            (m) => m.BajasListComponent
+          ),
+        title: 'Comunicaciones de Baja',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.ver' },
+      },
+      {
+        path: 'facturacion/auditoria',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion/auditoria/auditoria-list.component').then(
+            (m) => m.AuditoriaListComponent
+          ),
+        title: 'Auditoría SUNAT',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.ver' },
+      },
+      {
+        path: 'facturacion/certificados',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion/certificados/certificados-list.component').then(
+            (m) => m.CertificadosListComponent
+          ),
+        title: 'Certificados Digitales',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.ver' },
+      },
+      {
+        path: 'facturacion/notas-credito',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion/notas-credito/notas-credito-list.component').then(
+            (m) => m.NotasCreditoListComponent
+          ),
+        title: 'Notas de Crédito',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.ver' },
+      },
+      {
+        path: 'facturacion/notas-debito',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion/notas-debito/notas-debito-list.component').then(
+            (m) => m.NotasDebitoListComponent
+          ),
+        title: 'Notas de Débito',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.ver' },
+      },
+      {
+        path: 'facturacion/catalogos',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion/catalogos/catalogos-sunat.component').then(
+            (m) => m.CatalogosSunatComponent
+          ),
+        title: 'Catálogos SUNAT',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.ver' },
+      },
+      {
+        path: 'facturacion/configuracion',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion/configuracion/configuracion-empresa.component').then(
+            (m) => m.ConfiguracionEmpresaComponent
+          ),
+        title: 'Configuración de Empresa',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.ver' },
+      },
       {
         path: 'horarios',
         loadComponent: () =>
@@ -388,14 +507,80 @@ export const routes: Routes = [
               ).then((m) => m.MarcasListComponent),
             title: 'Marcas',
           },
+          {
+            path: 'kardex',
+            loadComponent: () =>
+              import(
+                './pages/dashboard/contabilidad/kardex/kardex-producto.component'
+              ).then((m) => m.KardexProductoComponent),
+            title: 'Kardex de Inventario',
+          },
         ],
+      },
+      // ✅ MÓDULO DE CONTABILIDAD
+      {
+        path: 'contabilidad/caja',
+        loadComponent: () =>
+          import('./pages/dashboard/contabilidad/caja/caja-list.component').then(
+            (m) => m.CajaListComponent
+          ),
+        title: 'Gestión de Caja',
+        canActivate: [permissionGuard],
+        data: { permission: 'contabilidad.ver' },
+      },
+      {
+        path: 'contabilidad/kardex',
+        loadComponent: () =>
+          import('./pages/dashboard/contabilidad/kardex/kardex-producto.component').then(
+            (m) => m.KardexProductoComponent
+          ),
+        title: 'Kardex de Inventario',
+        canActivate: [permissionGuard],
+        data: { permission: 'contabilidad.ver' },
+      },
+      {
+        path: 'contabilidad/cxc',
+        loadComponent: () =>
+          import('./pages/dashboard/contabilidad/cxc/cxc-list.component').then(
+            (m) => m.CxcListComponent
+          ),
+        title: 'Cuentas por Cobrar',
+        canActivate: [permissionGuard],
+        data: { permission: 'contabilidad.ver' },
+      },
+      {
+        path: 'contabilidad/cxp',
+        loadComponent: () =>
+          import('./pages/dashboard/contabilidad/cxp/cxp-list.component').then(
+            (m) => m.CxpListComponent
+          ),
+        title: 'Cuentas por Pagar',
+        canActivate: [permissionGuard],
+        data: { permission: 'contabilidad.ver' },
+      },
+      {
+        path: 'guias-remision',
+        loadComponent: () =>
+          import('./pages/dashboard/guias-remision/guias-remision-list.component').then(
+            (m) => m.GuiasRemisionListComponent
+          ),
+        title: 'Guías de Remisión',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.ver' },
       },
       {
         path: 'ventas',
         component: VentasComponent,
         children: [
           { path: '', component: VentasListComponent },
-          { path: 'nueva', component: NuevaVentaComponent },
+          { 
+            path: 'nueva', 
+            loadComponent: () =>
+              import('./pages/dashboard/pos/pos.component').then(
+                (m) => m.PosComponent
+              ),
+            title: 'Nueva Venta - POS'
+          },
           { path: 'estadisticas', component: EstadisticasVentasComponent },
         ],
       },
@@ -634,6 +819,28 @@ export const routes: Routes = [
         title: 'Gestión de Correos',
         canActivate: [permissionGuard],
         data: { permission: 'envio_correos.ver' },
+      },
+      // ✅ RUTAS DE FACTURACIÓN ELECTRÓNICA
+      // La ruta POS ahora está en /dashboard/ventas/nueva
+      {
+        path: 'facturacion-config',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion-config/facturacion-config.component').then(
+            (m) => m.FacturacionConfigComponent
+          ),
+        title: 'Configuración de Facturación',
+        canActivate: [permissionGuard],
+        data: { permission: 'configuracion.ver' },
+      },
+      {
+        path: 'facturacion-test',
+        loadComponent: () =>
+          import('./pages/dashboard/facturacion-test/facturacion-test.component').then(
+            (m) => m.FacturacionTestComponent
+          ),
+        title: 'Prueba de Facturación',
+        canActivate: [permissionGuard],
+        data: { permission: 'ventas.create' },
       },
     ],
   },

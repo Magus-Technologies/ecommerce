@@ -10,7 +10,7 @@ import { filter } from 'rxjs/operators';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="container-fluid">
+    <div>
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-24">
         <div>
@@ -39,8 +39,7 @@ import { filter } from 'rxjs/operators';
             </button>
             <button
               class="nav-link px-24 py-16 border-0 text-heading fw-medium"
-              [class.active]="activeTab === 'nueva'"
-              (click)="navigateToTab('nueva')"
+              (click)="irAPOS()"
               type="button"
             >
               <i class="ph ph-plus me-8"></i>
@@ -134,5 +133,9 @@ export class VentasComponent implements OnInit {
     } else {
       this.router.navigate(['/dashboard/ventas', tab]);
     }
+  }
+
+  irAPOS(): void {
+    this.router.navigate(['/dashboard/ventas/nueva']);
   }
 }

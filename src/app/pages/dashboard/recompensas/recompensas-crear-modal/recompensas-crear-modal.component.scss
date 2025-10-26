@@ -1,0 +1,316 @@
+// Estilos del Modal de Creación de Recompensa
+
+.modal {
+  &.show {
+    display: block;
+  }
+}
+
+.modal-dialog {
+  max-width: 900px;
+
+  &.modal-xl {
+    max-width: 1000px;
+  }
+}
+
+.modal-content {
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  border: none;
+}
+
+.modal-header {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px 12px 0 0;
+
+  .modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+
+    i {
+      font-size: 1.5rem;
+    }
+  }
+
+  .btn-close-white {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+
+  // Scrollbar personalizado
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+
+    &:hover {
+      background: #555;
+    }
+  }
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+  border-radius: 0 0 12px 12px;
+}
+
+// Estilos de Cards
+.card {
+  border: 1px solid #e3e6f0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+    padding: 0.875rem 1.25rem;
+    border-radius: 8px 8px 0 0;
+
+    h6 {
+      color: #4e73df;
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+
+      i {
+        color: #4e73df;
+        font-size: 1.1rem;
+      }
+    }
+  }
+
+  .card-body {
+    padding: 1.25rem;
+  }
+}
+
+// Estilos de Form Controls
+.form-label {
+  font-weight: 600;
+  color: #5a5c69;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.form-control,
+.form-select {
+  border: 1px solid #d1d3e2;
+  border-radius: 6px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+
+  &:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.15);
+  }
+
+  &.is-invalid {
+    border-color: #e74a3b;
+
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(231, 74, 59, 0.15);
+    }
+  }
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-text {
+  font-size: 0.8rem;
+  color: #858796;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.invalid-feedback {
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+// Estilos de Botones
+.btn {
+  border-radius: 6px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+
+  i {
+    font-size: 1rem;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &.btn-primary {
+    background-color: #4e73df;
+    border-color: #4e73df;
+
+    &:hover:not(:disabled) {
+      background-color: #2e59d9;
+      border-color: #2653d4;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(78, 115, 223, 0.3);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+  }
+
+  &.btn-secondary {
+    background-color: #858796;
+    border-color: #858796;
+
+    &:hover:not(:disabled) {
+      background-color: #717384;
+      border-color: #6b6d7d;
+    }
+  }
+}
+
+// Estilos de Alerts
+.alert {
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  border: none;
+  font-size: 0.9rem;
+
+  &.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+
+    i {
+      color: #e74a3b;
+    }
+  }
+
+  &.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+
+    i {
+      color: #36b9cc;
+    }
+  }
+
+  .btn-close {
+    padding: 0.5rem;
+  }
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .btn {
+    font-size: 0.85rem;
+    padding: 0.45rem 1rem;
+  }
+}
+
+// Dark mode support (opcional)
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: #2d3748;
+    border-color: #4a5568;
+
+    .card-header {
+      background-color: #1a202c;
+      border-bottom-color: #4a5568;
+
+      h6 {
+        color: #90cdf4;
+
+        i {
+          color: #90cdf4;
+        }
+      }
+    }
+  }
+
+  .form-label {
+    color: #e2e8f0;
+  }
+
+  .form-control,
+  .form-select {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+
+    &:focus {
+      background-color: #2d3748;
+      border-color: #4299e1;
+      color: #e2e8f0;
+    }
+  }
+
+  .form-text {
+    color: #a0aec0;
+  }
+}

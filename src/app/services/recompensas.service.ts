@@ -112,30 +112,10 @@ export class RecompensasService {
   }
 
   // ===== MÉTODOS PARA ANALYTICS =====
-  
+
   // Dashboard principal de analytics
   obtenerDashboardAnalytics(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/analytics/dashboard`);
-  }
-
-  // Tendencias detalladas
-  obtenerTendencias(filtros?: any): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/analytics/tendencias`, { params: filtros });
-  }
-
-  // Métricas de rendimiento
-  obtenerRendimiento(filtros?: any): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/analytics/rendimiento`, { params: filtros });
-  }
-
-  // Comparativa entre períodos
-  obtenerComparativa(filtros?: any): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/analytics/comparativa`, { params: filtros });
-  }
-
-  // Análisis de comportamiento de clientes
-  obtenerComportamientoClientes(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/analytics/comportamiento-clientes`);
   }
 
   // ===== MÉTODOS PARA GESTIÓN DE PRODUCTOS Y CATEGORÍAS =====
@@ -233,6 +213,11 @@ export class RecompensasService {
   // Obtener configuración de puntos
   obtenerConfiguracionPuntos(recompensaId: number): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/puntos`);
+  }
+
+  // Crear configuración de puntos
+  crearConfiguracionPuntos(recompensaId: number, configuracion: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/puntos`, configuracion);
   }
 
   // Actualizar configuración de puntos
@@ -393,5 +378,170 @@ export class RecompensasService {
       }
     });
     return this.http.get<ApiResponse<any[]>>(`${environment.apiUrl}/admin/recompensas/regalos/productos/buscar`, { params });
+  }
+
+  // ===== MÉTODOS PARA PRODUCTOS Y CATEGORÍAS =====
+  
+  // Obtener productos disponibles para recompensas
+  obtenerProductosDisponibles(filtros?: any): Observable<ApiResponse<any>> {
+    let params = new HttpParams();
+    if (filtros) {
+      Object.keys(filtros).forEach(key => {
+        const value = filtros[key];
+        if (value !== undefined && value !== null && value !== '') {
+          params = params.set(key, value.toString());
+        }
+      });
+    }
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/productos/buscar`, { params });
+  }
+
+  // Obtener categorías disponibles para recompensas
+  obtenerCategoriasDisponibles(filtros?: any): Observable<ApiResponse<any>> {
+    let params = new HttpParams();
+    if (filtros) {
+      Object.keys(filtros).forEach(key => {
+        const value = filtros[key];
+        if (value !== undefined && value !== null && value !== '') {
+          params = params.set(key, value.toString());
+        }
+      });
+    }
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/categorias/buscar`, { params });
+  }
+
+  // Asignar productos a una recompensa
+  asignarProductos(data: { recompensa_id: number, productos: number[] }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/${data.recompensa_id}/productos`, { productos: data.productos });
+  }
+
+  // Asignar categorías a una recompensa
+  asignarCategorias(data: { recompensa_id: number, categorias: number[] }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/${data.recompensa_id}/categorias`, { categorias: data.categorias });
+  }
+
+
+  // Obtener categorías asignadas a una recompensa
+  obtenerCategoriasAsignadas(recompensaId: number): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/categorias`);
+  }
+
+  // Remover producto de una recompensa
+  removerProducto(recompensaId: number, productoId: number): Observable<ApiResponse<any>> {
+    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/productos/${productoId}`);
+  }
+
+  // Remover categoría de una recompensa
+  removerCategoria(recompensaId: number, categoriaId: number): Observable<ApiResponse<any>> {
+    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/categorias/${categoriaId}`);
+  }
+
+  // ===== MÉTODOS PARA CLIENTES ESPECÍFICOS =====
+  
+  // Obtener clientes disponibles para recompensas
+  obtenerClientesDisponibles(filtros?: any): Observable<ApiResponse<any>> {
+    let params = new HttpParams();
+    if (filtros) {
+      Object.keys(filtros).forEach(key => {
+        const value = filtros[key];
+        if (value !== undefined && value !== null && value !== '') {
+          params = params.set(key, value.toString());
+        }
+      });
+    }
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/clientes/buscar`, { params });
+  }
+
+  // Asignar clientes específicos a una recompensa
+  asignarClientesEspecificos(recompensaId: number, clientes: any[]): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/clientes`, { clientes });
+  }
+
+  // Obtener clientes asignados a una recompensa
+  obtenerClientesAsignados(recompensaId: number): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/clientes`);
+  }
+
+  // Remover cliente específico de una recompensa
+  removerClienteEspecifico(recompensaId: number, clienteId: number): Observable<ApiResponse<any>> {
+    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/clientes/${clienteId}`);
+  }
+
+  // Obtener analytics de recompensas
+  obtenerAnalytics(filtros?: any): Observable<ApiResponse<any>> {
+    let params = new HttpParams();
+    
+    if (filtros) {
+      Object.keys(filtros).forEach(key => {
+        const value = filtros[key];
+        if (value !== undefined && value !== null && value !== '') {
+          params = params.set(key, value.toString());
+        }
+      });
+    }
+    
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/analytics/dashboard`, { params });
+  }
+
+  // Obtener tendencias de analytics
+  obtenerTendencias(periodo: string, fechaInicio?: string, fechaFin?: string): Observable<ApiResponse<any>> {
+    let params = new HttpParams().set('periodo', periodo);
+    
+    if (fechaInicio) {
+      params = params.set('fecha_inicio', fechaInicio);
+    }
+    if (fechaFin) {
+      params = params.set('fecha_fin', fechaFin);
+    }
+    
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/analytics/tendencias`, { params });
+  }
+
+  // Obtener métricas de rendimiento
+  obtenerRendimiento(recompensaId?: number, periodo?: number): Observable<ApiResponse<any>> {
+    let params = new HttpParams();
+    
+    if (recompensaId) {
+      params = params.set('recompensa_id', recompensaId.toString());
+    }
+    if (periodo) {
+      params = params.set('periodo', periodo.toString());
+    }
+    
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/analytics/rendimiento`, { params });
+  }
+
+  // Obtener comparativa entre períodos
+  obtenerComparativa(periodoActualInicio: string, periodoActualFin: string, periodoAnteriorInicio: string, periodoAnteriorFin: string): Observable<ApiResponse<any>> {
+    const params = new HttpParams()
+      .set('periodo_actual_inicio', periodoActualInicio)
+      .set('periodo_actual_fin', periodoActualFin)
+      .set('periodo_anterior_inicio', periodoAnteriorInicio)
+      .set('periodo_anterior_fin', periodoAnteriorFin);
+    
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/analytics/comparativa`, { params });
+  }
+
+  // Obtener comportamiento de clientes
+  obtenerComportamientoClientes(): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/analytics/comportamiento-clientes`);
+  }
+
+  // ===== MÉTODOS PARA ASIGNACIÓN DE PRODUCTOS Y CATEGORÍAS =====
+
+  // Crear configuración específica según el tipo
+  crearConfiguracion(configuracion: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/${configuracion.recompensa_id}/configuracion`, configuracion);
+  }
+
+
+  // Asignar segmentos
+  asignarSegmentos(data: { recompensa_id: number, segmentos: number[] }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/${data.recompensa_id}/segmentos`, { segmentos: data.segmentos });
+  }
+
+  // Asignar clientes específicos
+  asignarClientes(data: { recompensa_id: number, clientes: number[] }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/${data.recompensa_id}/clientes`, { clientes: data.clientes });
   }
 }

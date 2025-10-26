@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, Output, computed, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Popup } from '../../models/popup.model';
 import { PopupsService } from '../../services/popups.service';
@@ -15,7 +15,22 @@ export class PopupClienteComponent implements OnInit, OnDestroy {
   @Output() cerrar = new EventEmitter<void>();
   @Output() visto = new EventEmitter<void>();
 
+  imageLoaded = signal(false);
+  imageError = signal(false);
+
   imagenUrl = computed(() => this.popupsService.obtenerUrlImagen((this.popup as any)?.imagen_popup_url || (this.popup as any)?.imagen_popup));
+
+  // Computed properties para configuraciones con valores por defecto
+  size = computed(() => this.popup?.size || 'medium');
+  position = computed(() => this.popup?.position || 'center');
+  theme = computed(() => this.popup?.theme || 'light');
+  blurBackdrop = computed(() => this.popup?.blur_backdrop ?? true);
+  closeOnBackdrop = computed(() => this.popup?.close_on_backdrop ?? false);
+  animation = computed(() => this.popup?.animation || 'fade');
+  aspectRatio = computed(() => {
+    const ratio = this.popup?.imagen_aspect_ratio || '16:9';
+    return ratio.replace(':', '-');
+  });
 
   constructor(private popupsService: PopupsService) {}
 
@@ -25,6 +40,21 @@ export class PopupClienteComponent implements OnInit, OnDestroy {
 
   onView(): void {
     this.visto.emit();
+  }
+
+  onBackdropClick(event: MouseEvent): void {
+    if (this.closeOnBackdrop() && event.target === event.currentTarget) {
+      this.onClose();
+    }
+  }
+
+  onImageLoad(): void {
+    this.imageLoaded.set(true);
+  }
+
+  onImageError(): void {
+    this.imageError.set(true);
+    this.imageLoaded.set(true);
   }
 
   private autoCloseTimer: any;

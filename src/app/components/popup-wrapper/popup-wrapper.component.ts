@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Observable } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { PopupsService } from '../../services/popups.service';
 import { Popup } from '../../models/popup.model';
@@ -16,7 +17,6 @@ import { environment } from '../../../environments/environment';
 export class PopupWrapperComponent implements OnInit, OnDestroy {
   popups = signal<Popup[]>([]);
   visible = signal<boolean>(false);
-  private triedAllSegment = false;
 
   private loadTimeout?: any;
 
@@ -35,24 +35,48 @@ export class PopupWrapperComponent implements OnInit, OnDestroy {
   }
 
   private cargarPopups(): void {
-    const isCliente = this.auth.isCliente();
-    const userType = this.auth.getUserType?.() as any;
     const hasToken = !!this.auth.getToken?.();
-    const obs = isCliente
-      ? this.popupsService.obtenerPopupsActivos()
-      : this.popupsService.obtenerPopupsPublicosActivos('no_registrados');
+    const userId = this.auth.getUserId?.();
+
+    // Nueva lógica según especificaciones del backend:
+    // - Si tiene userId (logueado o guardado): usar endpoint de cliente con user_cliente_id
+    // - Si NO tiene userId: usar endpoint público con segmento 'no_registrados'
+    // - El BACKEND es responsable de bloquear admins/motorizados con error 403
+
+    let obs: Observable<any>;
+
+    if (userId) {
+      // Usuario con ID (puede ser cliente, admin, o motorizado)
+      // El backend decidirá si debe ver popups o devolver 403
+      console.log(`👤 Usuario con ID ${userId} - usando endpoint de cliente con user_cliente_id`);
+      obs = this.popupsService.obtenerPopupsActivosConUserId(userId);
+    } else {
+      // Visitante sin identificar
+      console.log('👋 Visitante no registrado - usando endpoint público con segmento no_registrados');
+      obs = this.popupsService.obtenerPopupsPublicosActivos('no_registrados');
+    }
 
     obs.subscribe({
       next: (resp) => this.renderRespuesta(resp),
       error: (err) => {
-        // Fallback: si falla el endpoint de cliente con 401, intentar público
-        if (isCliente && err?.status === 401) {
-          this.popupsService.obtenerPopupsPublicosActivos('no_registrados').subscribe({
-            next: (resp2) => this.renderRespuesta(resp2),
-            error: (err2) => {}
-          });
+        console.error('❌ Error cargando popups:', err);
+
+        // Manejo de errores:
+        if (err?.status === 403) {
+          console.log('🚫 Usuario sin permisos para popups (bloqueado por backend)');
+          this.visible.set(false);
           return;
         }
+
+        if (err?.status === 401) {
+          console.log('🔓 Token inválido o expirado');
+          this.visible.set(false);
+          return;
+        }
+
+        // Cualquier otro error
+        console.log('⚠️ Error genérico al cargar popups');
+        this.visible.set(false);
       }
     });
   }
@@ -64,15 +88,8 @@ export class PopupWrapperComponent implements OnInit, OnDestroy {
       this.popups.set(lista);
       this.visible.set(true);
     } else {
-      // Fallback de desarrollo: si no hay popups para 'no_registrados', probar 'all' una sola vez
-      if (!environment.production && !this.auth.isCliente() && !this.triedAllSegment) {
-        this.triedAllSegment = true;
-        this.popupsService.obtenerPopupsPublicosActivos('all').subscribe({
-          next: (resp2) => this.renderRespuesta(resp2),
-          error: () => this.visible.set(false)
-        });
-        return;
-      }
+      // Según la nueva lógica corregida, no hay fallbacks de segmentos
+      // Los segmentos están bien definidos: 'no_registrados' para visitantes, otros para clientes
       this.visible.set(false);
     }
   }
@@ -80,14 +97,28 @@ export class PopupWrapperComponent implements OnInit, OnDestroy {
   onCerrar(popup: Popup): void {
     this.popupsService.cerrarPopup(popup.id).subscribe({
       next: () => this.removerPopup(popup.id),
-      error: () => this.removerPopup(popup.id)
+      error: (err) => {
+        console.error('Error cerrando popup:', err);
+        // Si es error 403, significa que el usuario no tiene permisos para cerrar popups
+        // pero aún así removemos el popup del frontend para mejor UX
+        if (err?.status === 403) {
+          console.log('Usuario sin permisos para cerrar popup - removiendo del frontend');
+        }
+        this.removerPopup(popup.id);
+      }
     });
   }
 
   onVisto(popup: Popup): void {
     this.popupsService.marcarPopupVisto(popup.id).subscribe({
       next: () => {},
-      error: () => {}
+      error: (err) => {
+        console.error('Error marcando popup como visto:', err);
+        // No es crítico si falla marcar como visto, solo logueamos el error
+        if (err?.status === 403) {
+          console.log('Usuario sin permisos para marcar popup como visto');
+        }
+      }
     });
   }
 

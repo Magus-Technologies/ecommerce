@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy, ViewChild, TemplateRef, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, TemplateRef, inject, AfterViewInit, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { RecompensasService } from '../../../../services/recompensas.service';
 import { RecompensaAnalytics } from '../../../../models/recompensa-analytics.model';
 import { TipoRecompensa } from '../../../../models/recompensa.model';
+import { Chart, registerables } from 'chart.js';
 
 @Component({
   selector: 'app-recompensas-analytics',
@@ -16,17 +17,212 @@ import { TipoRecompensa } from '../../../../models/recompensa.model';
   templateUrl: './recompensas-analytics.component.html',
   styleUrls: ['./recompensas-analytics.component.scss']
 })
-export class RecompensasAnalyticsComponent implements OnInit, OnDestroy {
+export class RecompensasAnalyticsComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('exportModal', { static: true }) exportModal!: TemplateRef<any>;
   @ViewChild('filterModal', { static: true }) filterModal!: TemplateRef<any>;
+  
+  // ViewChild para los gráficos
+  @ViewChild('rendimientoChart', { static: false }) rendimientoChart!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('distribucionChart', { static: false }) distribucionChart!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('tendenciasChart', { static: false }) tendenciasChart!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('comparativaChart', { static: false }) comparativaChart!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('distribucionTipoChart', { static: false }) distribucionTipoChart!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('actividadSemanalChart', { static: false }) actividadSemanalChart!: ElementRef<HTMLCanvasElement>;
 
   private destroy$ = new Subject<void>();
+
+  // Instancias de gráficos
+  private charts: { [key: string]: any } = {};
 
   // Datos de analytics
   analytics: RecompensaAnalytics | null = null;
   loading = false;
   loadingCharts = false;
   periodoSeleccionado = 'Últimos 30 días';
+  
+  // Control de tabs
+  activeTab = 'resumen';
+  analisisSubTab = 'recompensas';
+  reportesSubTab = 'segmentos';
+
+  // Datos falsos para mostrar
+  topRecompensas = [
+    { id: 1, nombre: 'Descuento Black Friday', tipo: 'descuento', aplicaciones: 1250, conversion_rate: 85 },
+    { id: 2, nombre: 'Puntos por Compra', tipo: 'puntos', aplicaciones: 980, conversion_rate: 72 },
+    { id: 3, nombre: 'Envío Gratis Lima', tipo: 'envio_gratis', aplicaciones: 750, conversion_rate: 68 },
+    { id: 4, nombre: 'Regalo de Bienvenida', tipo: 'regalo', aplicaciones: 420, conversion_rate: 45 },
+    { id: 5, nombre: 'Descuento VIP 15%', tipo: 'descuento', aplicaciones: 380, conversion_rate: 92 },
+    { id: 6, nombre: 'Puntos Doble Fin de Semana', tipo: 'puntos', aplicaciones: 650, conversion_rate: 78 },
+    { id: 7, nombre: 'Descuento Primera Compra', tipo: 'descuento', aplicaciones: 920, conversion_rate: 82 },
+    { id: 8, nombre: 'Regalo Cumpleaños', tipo: 'regalo', aplicaciones: 340, conversion_rate: 88 }
+  ];
+
+  clientesActivos = [
+    { id: 1, nombre: 'María González', email: 'maria.gonzalez@email.com', total_recompensas: 15, valor_beneficios: 450 },
+    { id: 2, nombre: 'Carlos López', email: 'carlos.lopez@email.com', total_recompensas: 12, valor_beneficios: 380 },
+    { id: 3, nombre: 'Ana Rodríguez', email: 'ana.rodriguez@email.com', total_recompensas: 10, valor_beneficios: 320 },
+    { id: 4, nombre: 'Luis Martínez', email: 'luis.martinez@email.com', total_recompensas: 8, valor_beneficios: 280 },
+    { id: 5, nombre: 'Sofia Herrera', email: 'sofia.herrera@email.com', total_recompensas: 7, valor_beneficios: 250 },
+    { id: 6, nombre: 'Pedro Vargas', email: 'pedro.vargas@email.com', total_recompensas: 11, valor_beneficios: 420 },
+    { id: 7, nombre: 'Laura Sánchez', email: 'laura.sanchez@email.com', total_recompensas: 9, valor_beneficios: 310 },
+    { id: 8, nombre: 'Diego Torres', email: 'diego.torres@email.com', total_recompensas: 13, valor_beneficios: 520 }
+  ];
+
+  productosAnalisis = [
+    { producto: 'Laptop Gaming MSI', categoria: 'Electrónicos', metricas: { veces_recompensado: 45, valor_total_recompensado: 12500, conversion_rate: 78 } },
+    { producto: 'iPhone 15 Pro', categoria: 'Electrónicos', metricas: { veces_recompensado: 38, valor_total_recompensado: 9800, conversion_rate: 65 } },
+    { producto: 'Auriculares Sony WH-1000XM5', categoria: 'Accesorios', metricas: { veces_recompensado: 52, valor_total_recompensado: 3200, conversion_rate: 82 } },
+    { producto: 'iPad Air', categoria: 'Electrónicos', metricas: { veces_recompensado: 28, valor_total_recompensado: 7500, conversion_rate: 58 } },
+    { producto: 'Mouse Logitech MX Master', categoria: 'Accesorios', metricas: { veces_recompensado: 41, valor_total_recompensado: 1800, conversion_rate: 71 } },
+    { producto: 'Monitor LG UltraWide', categoria: 'Electrónicos', metricas: { veces_recompensado: 35, valor_total_recompensado: 8900, conversion_rate: 73 } },
+    { producto: 'Teclado Mecánico Keychron', categoria: 'Accesorios', metricas: { veces_recompensado: 48, valor_total_recompensado: 2400, conversion_rate: 69 } },
+    { producto: 'Webcam Logitech Brio', categoria: 'Accesorios', metricas: { veces_recompensado: 32, valor_total_recompensado: 1600, conversion_rate: 62 } }
+  ];
+
+  segmentosAnalisis = [
+    { segmento: 'Clientes Nuevos', metricas: { total_clientes: 1250, aplicaciones: 850, conversion_rate: 68 } },
+    { segmento: 'Clientes Recurrentes', metricas: { total_clientes: 980, aplicaciones: 1200, conversion_rate: 85 } },
+    { segmento: 'Clientes VIP', metricas: { total_clientes: 150, aplicaciones: 320, conversion_rate: 92 } },
+    { segmento: 'Clientes Inactivos', metricas: { total_clientes: 2100, aplicaciones: 180, conversion_rate: 12 } }
+  ];
+
+  alertas = [
+    { titulo: 'Recompensa Próxima a Vencer', mensaje: 'La recompensa "Descuento Black Friday" expira en 3 días' },
+    { titulo: 'Baja Conversión Detectada', mensaje: 'La recompensa "Regalo de Bienvenida" tiene una tasa de conversión del 45%' },
+    { titulo: 'Stock Bajo', mensaje: 'La recompensa "Regalo Cumpleaños" tiene stock limitado (15 unidades)' }
+  ];
+
+  recomendaciones = [
+    { titulo: 'Optimizar Horarios de Envío', descripcion: 'Las recompensas tienen mayor impacto entre 2-4 PM. Considera programar tus campañas en este horario.' },
+    { titulo: 'Segmentación VIP', descripcion: 'Los clientes VIP responden 40% mejor a descuentos exclusivos. Crea recompensas específicas para este segmento.' },
+    { titulo: 'Aumentar Puntos', descripcion: 'Las recompensas de puntos tienen alta retención. Considera duplicar los puntos en compras grandes.' }
+  ];
+
+  resumenEjecutivo = {
+    total_recompensas: 24,
+    clientes_beneficiados: 4850,
+    valor_total: 125000,
+    tasa_conversion: 78
+  };
+
+  // Datos para gráficos del tab Resumen
+  datosRendimiento = {
+    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+    datasets: [{
+      label: 'Aplicaciones',
+      data: [120, 190, 300, 500, 200, 300],
+      borderColor: '#10B981',
+      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+      tension: 0.4
+    }, {
+      label: 'Conversiones',
+      data: [80, 120, 200, 350, 150, 250],
+      borderColor: '#3B82F6',
+      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+      tension: 0.4
+    }]
+  };
+
+  datosDistribucion = {
+    labels: ['Descuentos', 'Puntos', 'Envío Gratis', 'Regalos'],
+    datasets: [{
+      data: [45, 25, 20, 10],
+      backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'],
+      borderWidth: 0
+    }]
+  };
+
+  // Datos para gráficos del tab Análisis Detallado
+  datosTendencias = {
+    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+    datasets: [{
+      label: 'Uso Diario',
+      data: [65, 59, 80, 81, 56, 55, 40],
+      borderColor: '#8B5CF6',
+      backgroundColor: 'rgba(139, 92, 246, 0.1)',
+      tension: 0.4
+    }]
+  };
+
+  datosComparativa = {
+    labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
+    datasets: [{
+      label: 'Este Año',
+      data: [1200, 1900, 3000, 5000, 2000, 3000],
+      backgroundColor: '#10B981'
+    }, {
+      label: 'Año Anterior',
+      data: [1000, 1500, 2500, 4000, 1800, 2500],
+      backgroundColor: '#6B7280'
+    }]
+  };
+
+  // Datos para gráficos del tab Reportes
+  datosDistribucionTipo = {
+    labels: ['Descuentos', 'Puntos', 'Envío Gratis', 'Regalos', 'Otros'],
+    datasets: [{
+      data: [40, 30, 15, 10, 5],
+      backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'],
+      borderWidth: 0
+    }]
+  };
+
+  datosActividadSemanal = {
+    labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
+    datasets: [{
+      label: 'Actividad',
+      data: [85, 92, 78, 95, 88, 65, 45],
+      backgroundColor: '#3B82F6',
+      borderColor: '#1D4ED8',
+      borderWidth: 2
+    }]
+  };
+
+  // Datos adicionales para métricas (solo los que están en endpoints reales)
+  metricasAdicionales = {
+    top_categorias: [
+      { categoria: 'Electrónicos', aplicaciones: 1250, conversion_rate: 82 },
+      { categoria: 'Ropa', aplicaciones: 980, conversion_rate: 75 },
+      { categoria: 'Hogar', aplicaciones: 750, conversion_rate: 68 },
+      { categoria: 'Deportes', aplicaciones: 420, conversion_rate: 58 },
+      { categoria: 'Libros', aplicaciones: 380, conversion_rate: 45 }
+    ]
+  };
+
+  // Datos para alertas y notificaciones
+  notificaciones = [
+    { tipo: 'success', titulo: 'Nueva Recompensa Creada', mensaje: 'La recompensa "Descuento Verano" ha sido activada exitosamente', fecha: '2024-01-15' },
+    { tipo: 'warning', titulo: 'Recompensa Próxima a Vencer', mensaje: 'La recompensa "Black Friday" expira en 2 días', fecha: '2024-01-14' },
+    { tipo: 'info', titulo: 'Meta Alcanzada', mensaje: 'Se ha alcanzado el 100% de la meta mensual de conversiones', fecha: '2024-01-13' }
+  ];
+
+  // Datos para comparativas (se cargarán desde el endpoint)
+  comparativas: any = {
+    periodo_actual: {
+      aplicaciones: 4210,
+      clientes: 1348,
+      valor_beneficios: 85640
+    },
+    periodo_anterior: {
+      aplicaciones: 3920,
+      clientes: 1256,
+      valor_beneficios: 79800
+    },
+    comparativa: {
+      aplicaciones: {
+        porcentaje_cambio: 7.4,
+        tendencia: 'creciente'
+      },
+      clientes: {
+        porcentaje_cambio: 7.3,
+        tendencia: 'creciente'
+      },
+      valor_beneficios: {
+        porcentaje_cambio: 7.3,
+        tendencia: 'creciente'
+      }
+    }
+  };
 
   // Filtros
   filtros = {
@@ -41,9 +237,6 @@ export class RecompensasAnalyticsComponent implements OnInit, OnDestroy {
   tiposRecompensa: TipoRecompensa[] = ['puntos', 'descuento', 'envio_gratis', 'regalo'];
   segmentos: string[] = ['todos', 'nuevos', 'recurrentes', 'vip'];
   productos: string[] = ['todos', 'electronica', 'hogar', 'deportes'];
-
-  // Referencias a los gráficos
-  private charts: { [key: string]: any } = {};
 
   // Configuración de gráficos
   chartOptions: any = {
@@ -86,7 +279,16 @@ export class RecompensasAnalyticsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadAnalytics();
-    this.initializeCharts();
+  }
+
+  ngAfterViewInit(): void {
+    // Registrar componentes de Chart.js
+    Chart.register(...registerables);
+    
+    // Crear gráficos después de un pequeño delay para asegurar que los ViewChild estén disponibles
+    setTimeout(() => {
+      this.crearGraficos();
+    }, 100);
   }
 
   ngOnDestroy(): void {
@@ -95,15 +297,205 @@ export class RecompensasAnalyticsComponent implements OnInit, OnDestroy {
     this.destroyCharts();
   }
 
+  private crearGraficos(): void {
+    this.destroyCharts(); // Limpiar gráficos existentes
+
+    // Crear gráfico de rendimiento
+    if (this.rendimientoChart) {
+      this.charts['rendimiento'] = new Chart(this.rendimientoChart.nativeElement, {
+        type: 'line',
+        data: this.datosRendimiento,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    // Crear gráfico de distribución
+    if (this.distribucionChart) {
+      this.charts['distribucion'] = new Chart(this.distribucionChart.nativeElement, {
+        type: 'doughnut',
+        data: this.datosDistribucion,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+            }
+          }
+        }
+      });
+    }
+
+    // Crear gráfico de tendencias
+    if (this.tendenciasChart) {
+      this.charts['tendencias'] = new Chart(this.tendenciasChart.nativeElement, {
+        type: 'line',
+        data: this.datosTendencias,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    // Crear gráfico de comparativa
+    if (this.comparativaChart) {
+      this.charts['comparativa'] = new Chart(this.comparativaChart.nativeElement, {
+        type: 'bar',
+        data: this.datosComparativa,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
+    // Crear gráfico de distribución por tipo
+    if (this.distribucionTipoChart) {
+      this.charts['distribucionTipo'] = new Chart(this.distribucionTipoChart.nativeElement, {
+        type: 'pie',
+        data: this.datosDistribucionTipo,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+            }
+          }
+        }
+      });
+    }
+
+    // Crear gráfico de actividad semanal
+    if (this.actividadSemanalChart) {
+      this.charts['actividadSemanal'] = new Chart(this.actividadSemanalChart.nativeElement, {
+        type: 'bar',
+        data: this.datosActividadSemanal,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100
+            }
+          }
+        }
+      });
+    }
+  }
+
+  private destroyCharts(): void {
+    Object.values(this.charts).forEach(chart => {
+      if (chart) {
+        chart.destroy();
+      }
+    });
+    this.charts = {};
+  }
+
   private loadAnalytics(): void {
     this.loading = true;
     
-    // Para esta vista, cargaremos datos falsos (mock) para visualización
-    setTimeout(() => {
-      this.analytics = this.getFakeAnalytics();
-      this.loading = false;
-      this.updateCharts();
-    }, 250);
+    // Cargar analytics reales desde el backend
+    this.recompensasService.obtenerAnalytics(this.filtros)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.analytics = response.data;
+            this.loading = false;
+            this.updateCharts();
+            // Cargar comparativas
+            this.loadComparativas();
+          } else {
+            console.error('Error al cargar analytics:', response.message);
+            this.loading = false;
+          }
+        },
+        error: (error) => {
+          console.error('Error al cargar analytics:', error);
+          this.loading = false;
+          // En caso de error, usar datos falsos como fallback
+          this.analytics = this.getFakeAnalytics();
+        }
+      });
+  }
+
+  private loadComparativas(): void {
+    // Calcular fechas para comparativa (mes actual vs mes anterior)
+    const fechaFin = new Date();
+    const fechaInicio = new Date();
+    fechaInicio.setDate(1); // Primer día del mes actual
+    
+    const mesAnteriorFin = new Date(fechaInicio);
+    mesAnteriorFin.setDate(0); // Último día del mes anterior
+    const mesAnteriorInicio = new Date(mesAnteriorFin);
+    mesAnteriorInicio.setDate(1); // Primer día del mes anterior
+    
+    const periodoActualInicio = fechaInicio.toISOString().split('T')[0];
+    const periodoActualFin = fechaFin.toISOString().split('T')[0];
+    const periodoAnteriorInicio = mesAnteriorInicio.toISOString().split('T')[0];
+    const periodoAnteriorFin = mesAnteriorFin.toISOString().split('T')[0];
+    
+    this.recompensasService.obtenerComparativa(
+      periodoActualInicio, 
+      periodoActualFin, 
+      periodoAnteriorInicio, 
+      periodoAnteriorFin
+    )
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.comparativas = response.data;
+        } else {
+          console.error('Error al cargar comparativas:', response.message);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar comparativas:', error);
+      }
+    });
   }
 
   private initializeCharts(): void {
@@ -324,15 +716,6 @@ export class RecompensasAnalyticsComponent implements OnInit, OnDestroy {
         this.charts['tendenciaValores'].update();
       }
     }
-  }
-
-  private destroyCharts(): void {
-    Object.values(this.charts).forEach(chart => {
-      if (chart) {
-        chart.destroy();
-      }
-    });
-    this.charts = {};
   }
 
   // Métodos para filtros
@@ -721,9 +1104,51 @@ export class RecompensasAnalyticsComponent implements OnInit, OnDestroy {
   }
 
   // Métodos faltantes para el template
+  cambiarTab(tab: string): void {
+    this.activeTab = tab;
+    console.log('Cambiando a tab:', tab);
+    
+    // Recrear gráficos cuando se cambie de tab para asegurar que se muestren correctamente
+    setTimeout(() => {
+      this.crearGraficos();
+    }, 100);
+  }
+
   cambiarPeriodo(periodo: string): void {
     console.log('Cambiando período a:', periodo);
-    // Implementar lógica de cambio de período
+    this.periodoSeleccionado = periodo;
+    
+    // Actualizar filtros según el período seleccionado
+    const fechaFin = new Date();
+    const fechaInicio = new Date();
+    
+    switch (periodo) {
+      case '7_dias':
+        fechaInicio.setDate(fechaFin.getDate() - 7);
+        break;
+      case '30_dias':
+        fechaInicio.setDate(fechaFin.getDate() - 30);
+        break;
+      case '90_dias':
+        fechaInicio.setDate(fechaFin.getDate() - 90);
+        break;
+      case 'este_mes':
+        fechaInicio.setDate(1);
+        break;
+      case 'mes_anterior':
+        fechaInicio.setMonth(fechaFin.getMonth() - 1, 1);
+        fechaFin.setDate(0);
+        break;
+      case 'este_ano':
+        fechaInicio.setMonth(0, 1);
+        break;
+    }
+    
+    this.filtros.fecha_desde = fechaInicio.toISOString().split('T')[0];
+    this.filtros.fecha_hasta = fechaFin.toISOString().split('T')[0];
+    
+    // Recargar datos con el nuevo período
+    this.loadAnalytics();
   }
 
   exportarReporte(): void {
@@ -734,5 +1159,15 @@ export class RecompensasAnalyticsComponent implements OnInit, OnDestroy {
   actualizarDatos(): void {
     console.log('Actualizando datos...');
     this.loadAnalytics();
+  }
+
+  cambiarAnalisisSubTab(subTab: string): void {
+    this.analisisSubTab = subTab;
+    console.log('Cambiando a sub-tab de análisis:', subTab);
+  }
+
+  cambiarReportesSubTab(subTab: string): void {
+    this.reportesSubTab = subTab;
+    console.log('Cambiando a sub-tab de reportes:', subTab);
   }
 }

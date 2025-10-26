@@ -213,6 +213,11 @@ export class AuthService {
     return localStorage.getItem('user_type');
   }
 
+  getUserId(): number | null {
+    const user = this.getCurrentUser();
+    return user?.id || null;
+  }
+
   getUserProfile(): Observable<any> {
     return this.http.get<any>(`${environment.apiUrl}/user`);
   }

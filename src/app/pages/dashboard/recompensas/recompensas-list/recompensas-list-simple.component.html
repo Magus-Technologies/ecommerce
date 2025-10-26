@@ -1,56 +1,175 @@
-<div class="recompensas-list-container">
-  <!-- Header con acciones principales -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h2 class="mb-1">
-        <i class="fas fa-gift me-2 text-primary"></i>
-        Gestión de Recompensas
-      </h2>
-      <p class="text-muted mb-0">Administra y configura las recompensas para tus clientes</p>
-    </div>
-    <div class="d-flex gap-2">
-      <!-- Botón crear recompensa -->
-      <button class="btn btn-primary" (click)="crearRecompensa()">
-        <i class="fas fa-plus me-2"></i>
-        Crear Recompensa
-      </button>
+<div class="modern-recompensas-container">
+  <!-- ========== HEADER MODERNO ========== -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-text">
+        <div class="header-icon-wrapper">
+          <svg class="header-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="page-title">Gestión de Recompensas</h1>
+          <p class="page-subtitle">Administra y configura las recompensas para tus clientes</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary-modern" (click)="crearRecompensa()">
+          <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          <span>Crear Recompensa</span>
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Filtros -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5 class="mb-0">
-        <i class="fas fa-filter me-2"></i>
-        Filtros de Búsqueda
-      </h5>
+  <!-- ========== TARJETAS DE MÉTRICAS RÁPIDAS ========== -->
+  <div class="metrics-grid" *ngIf="!loading">
+    <div class="metric-card">
+      <div class="metric-header">
+        <div class="metric-icon bg-blue">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <span class="metric-label">Total Activas</span>
+      </div>
+      <div class="metric-value">{{ totalElements }}</div>
+      <div class="metric-footer">
+        <span class="metric-change positive">
+          <svg class="metric-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd" />
+          </svg>
+          +12% este mes
+        </span>
+      </div>
     </div>
-    <div class="card-body">
-      <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Buscar</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            placeholder="Nombre, descripción..."
+
+    <div class="metric-card">
+      <div class="metric-header">
+        <div class="metric-icon bg-green">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+          </svg>
+        </div>
+        <span class="metric-label">Clientes Alcanzados</span>
+      </div>
+      <div class="metric-value">{{ getTotalClientesAlcanzados() | number }}</div>
+      <div class="metric-footer">
+        <span class="metric-change positive">
+          <svg class="metric-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd" />
+          </svg>
+          +8% este mes
+        </span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-header">
+        <div class="metric-icon bg-yellow">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <span class="metric-label">Valor Total Estimado</span>
+      </div>
+      <div class="metric-value">{{ formatearMoneda(getValorTotalEstimado()) }}</div>
+      <div class="metric-footer">
+        <span class="metric-change positive">
+          <svg class="metric-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd" />
+          </svg>
+          +15% este mes
+        </span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-header">
+        <div class="metric-icon bg-purple">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          </svg>
+        </div>
+        <span class="metric-label">Productos Aplicables</span>
+      </div>
+      <div class="metric-value">{{ getTotalProductosAplicables() | number }}</div>
+      <div class="metric-footer">
+        <span class="metric-change neutral">
+          <svg class="metric-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" clip-rule="evenodd" />
+          </svg>
+          Sin cambios
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== FILTROS MODERNOS ========== -->
+  <div class="filters-card">
+    <div class="filters-header">
+      <div class="filters-title">
+        <svg class="filters-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+        </svg>
+        <span>Filtros de Búsqueda</span>
+      </div>
+      <button class="btn-collapse" [class.expanded]="filtrosExpandidos" (click)="filtrosExpandidos = !filtrosExpandidos">
+        <svg class="collapse-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="filters-content" [class.collapsed]="!filtrosExpandidos">
+      <div class="filters-grid">
+        <!-- Búsqueda principal -->
+        <div class="filter-item full-width">
+          <label class="filter-label">
+            <svg class="label-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            Buscar
+          </label>
+          <input
+            type="text"
+            class="filter-input"
+            placeholder="Buscar por nombre, descripción..."
             [(ngModel)]="filtros.buscar"
             (keyup)="onBuscarChange()"
             (keyup.enter)="aplicarFiltros()"
           >
         </div>
-        <div class="col-md-2">
-          <label class="form-label">Tipo</label>
-          <select class="form-select" [(ngModel)]="filtros.tipo" (change)="onTipoChange()">
-            <option value="">Todos</option>
+
+        <!-- Tipo -->
+        <div class="filter-item">
+          <label class="filter-label">
+            <svg class="label-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+            </svg>
+            Tipo
+          </label>
+          <select class="filter-select" [(ngModel)]="filtros.tipo" (change)="onTipoChange()">
+            <option value="">Todos los tipos</option>
             <option *ngFor="let tipo of tiposRecompensa" [value]="tipo.value || tipo">
               {{ safeString(tipo) | titlecase }}
             </option>
           </select>
         </div>
-        <div class="col-md-2">
-          <label class="form-label">Estado</label>
-          <select class="form-select" [(ngModel)]="filtros.estado" (change)="onEstadoChange()">
-            <option value="">Todos</option>
+
+        <!-- Estado -->
+        <div class="filter-item">
+          <label class="filter-label">
+            <svg class="label-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Estado
+          </label>
+          <select class="filter-select" [(ngModel)]="filtros.estado" (change)="onEstadoChange()">
+            <option value="">Todos los estados</option>
             <option value="activa">Activas</option>
             <option value="pausada">Pausadas</option>
             <option value="programada">Programadas</option>
@@ -58,588 +177,1503 @@
             <option value="cancelada">Canceladas</option>
           </select>
         </div>
-        <div class="col-md-2">
-          <label class="form-label">Vigencia</label>
-          <select class="form-select" [(ngModel)]="filtros.vigente" (change)="onVigenciaChange()">
-            <option value="">Todos</option>
+
+        <!-- Vigencia -->
+        <div class="filter-item">
+          <label class="filter-label">
+            <svg class="label-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Vigencia
+          </label>
+          <select class="filter-select" [(ngModel)]="filtros.vigente" (change)="onVigenciaChange()">
+            <option value="">Todas</option>
             <option [value]="true">Vigentes</option>
             <option [value]="false">Expiradas</option>
           </select>
         </div>
-        <div class="col-md-2">
-          <label class="form-label">Fecha Desde</label>
-          <input 
-            type="date" 
-            class="form-control" 
+
+        <!-- Fecha Desde -->
+        <div class="filter-item">
+          <label class="filter-label">
+            <svg class="label-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+            Fecha Desde
+          </label>
+          <input
+            type="date"
+            class="filter-input"
             [(ngModel)]="filtros.fecha_inicio"
             (change)="onFechaChange()"
           >
         </div>
-        <div class="col-md-1 d-flex align-items-end">
-          <div class="btn-group w-100">
-            <button class="btn btn-primary" (click)="aplicarFiltros()">
-              <i class="fas fa-search"></i>
-            </button>
-            <button class="btn btn-outline-secondary" (click)="limpiarFiltros()">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="row g-3 mt-2">
-        <div class="col-md-2">
-          <label class="form-label">Fecha Hasta</label>
-          <input 
-            type="date" 
-            class="form-control" 
+
+        <!-- Fecha Hasta -->
+        <div class="filter-item">
+          <label class="filter-label">
+            <svg class="label-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+            Fecha Hasta
+          </label>
+          <input
+            type="date"
+            class="filter-input"
             [(ngModel)]="filtros.fecha_fin"
             (change)="onFechaChange()"
           >
         </div>
       </div>
+
+      <!-- Acciones de filtros -->
+      <div class="filters-actions">
+        <button class="btn btn-secondary-modern" (click)="limpiarFiltros()">
+          <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          <span>Limpiar</span>
+        </button>
+        <button class="btn btn-primary-modern" (click)="aplicarFiltros()">
+          <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+          <span>Buscar</span>
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Indicador de filtros activos -->
-  <div *ngIf="tieneFiltrosActivos()" class="mb-3">
-    <div class="alert alert-info d-flex justify-content-between align-items-center">
-      <div>
-        <i class="fas fa-filter me-2"></i>
-        <strong>Filtros activos:</strong>
-        <span *ngIf="filtros.buscar" class="badge bg-primary me-1">Búsqueda: "{{ filtros.buscar }}"</span>
-        <span *ngIf="filtros.tipo" class="badge bg-secondary me-1">Tipo: {{ safeString(filtros.tipo) | titlecase }}</span>
-        <span *ngIf="filtros.estado" class="badge bg-info me-1">
-          Estado: {{ getEstadoLabel(filtros.estado) }}
-        </span>
-        <span *ngIf="filtros.fecha_inicio" class="badge bg-warning me-1">Desde: {{ filtros.fecha_inicio }}</span>
-        <span *ngIf="filtros.fecha_fin" class="badge bg-warning me-1">Hasta: {{ filtros.fecha_fin }}</span>
+  <!-- ========== CHIPS DE FILTROS ACTIVOS ========== -->
+  <div class="active-filters" *ngIf="tieneFiltrosActivos()">
+    <div class="filters-label">Filtros activos:</div>
+    <div class="chips-container">
+      <div class="chip" *ngIf="filtros.buscar">
+        <span class="chip-label">Búsqueda:</span>
+        <span class="chip-value">"{{ filtros.buscar }}"</span>
+        <button class="chip-remove" (click)="filtros.buscar = ''; aplicarFiltros()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+          </svg>
+        </button>
       </div>
-      <button class="btn btn-sm btn-outline-secondary" (click)="limpiarFiltros()">
-        <i class="fas fa-times me-1"></i>
-        Limpiar
+      <div class="chip" *ngIf="filtros.tipo">
+        <span class="chip-label">Tipo:</span>
+        <span class="chip-value">{{ safeString(filtros.tipo) | titlecase }}</span>
+        <button class="chip-remove" (click)="filtros.tipo = undefined; aplicarFiltros()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+          </svg>
+        </button>
+      </div>
+      <div class="chip" *ngIf="filtros.estado">
+        <span class="chip-label">Estado:</span>
+        <span class="chip-value">{{ getEstadoLabel(filtros.estado) }}</span>
+        <button class="chip-remove" (click)="filtros.estado = undefined; aplicarFiltros()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+          </svg>
+        </button>
+      </div>
+      <div class="chip" *ngIf="filtros.fecha_inicio">
+        <span class="chip-label">Desde:</span>
+        <span class="chip-value">{{ filtros.fecha_inicio }}</span>
+        <button class="chip-remove" (click)="filtros.fecha_inicio = ''; aplicarFiltros()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+          </svg>
+        </button>
+      </div>
+      <div class="chip" *ngIf="filtros.fecha_fin">
+        <span class="chip-label">Hasta:</span>
+        <span class="chip-value">{{ filtros.fecha_fin }}</span>
+        <button class="chip-remove" (click)="filtros.fecha_fin = ''; aplicarFiltros()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+          </svg>
+        </button>
+      </div>
+      <button class="chip chip-clear-all" (click)="limpiarFiltros()">
+        <svg class="chip-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" />
+        </svg>
+        <span>Limpiar todo</span>
       </button>
     </div>
   </div>
 
-  <!-- Tabla de recompensas -->
-  <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0 header-title">
-        <i class="fas fa-list me-2"></i>
-        Lista de Recompensas
-        <span class="badge bg-primary ms-2">{{ totalElements }}</span>
-      </h5>
-      <div class="d-flex align-items-center gap-2 header-controls">
-        <span class="text-muted small">Mostrar:</span>
-        <select class="form-select form-select-sm" style="width: auto;" [(ngModel)]="pageSize" (change)="cargarRecompensas()">
-          <option [value]="10">10</option>
-          <option [value]="25">25</option>
-          <option [value]="50">50</option>
-          <option [value]="100">100</option>
-        </select>
-        <div class="btn-group btn-group-sm" role="group">
-          <button type="button" 
-                  class="btn btn-outline-primary" 
-                  [class.active]="vistaCompacta"
-                  (click)="cambiarVista(true)"
-                  title="Vista Compacta">
-            <i class="fas fa-compress"></i>
+  <!-- ========== TABLA MODERNA ========== -->
+  <div class="table-card">
+    <div class="table-header">
+      <div class="table-title-section">
+        <h2 class="table-title">
+          <svg class="title-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          </svg>
+          <span>Lista de Recompensas</span>
+          <span class="table-badge">{{ totalElements }}</span>
+        </h2>
+      </div>
+      <div class="table-controls">
+        <div class="control-group">
+          <span class="control-label">Mostrar:</span>
+          <select class="control-select" [(ngModel)]="pageSize" (change)="cargarRecompensas()">
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+        </div>
+        <div class="view-toggle">
+          <button
+            class="toggle-btn"
+            [class.active]="vistaCompacta"
+            (click)="cambiarVista(true)"
+            title="Vista Compacta">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10zm0 5.25a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75z" clip-rule="evenodd" />
+            </svg>
           </button>
-          <button type="button" 
-                  class="btn btn-outline-primary" 
-                  [class.active]="!vistaCompacta"
-                  (click)="cambiarVista(false)"
-                  title="Vista Expandida">
-            <i class="fas fa-expand"></i>
+          <button
+            class="toggle-btn"
+            [class.active]="!vistaCompacta"
+            (click)="cambiarVista(false)"
+            title="Vista Expandida">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 013.5 2h1.148a1.5 1.5 0 011.465 1.175l.716 3.223a1.5 1.5 0 01-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 006.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 011.767-1.052l3.223.716A1.5 1.5 0 0118 15.352V16.5a1.5 1.5 0 01-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 012.43 8.326 13.019 13.019 0 012 5V3.5z" clip-rule="evenodd" />
+            </svg>
           </button>
         </div>
       </div>
     </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0" [class.table-sm]="vistaCompacta">
-          <thead class="table-light">
-            <tr>
-              <th style="width: 60px;" class="text-center">ID</th>
-              <th style="width: 200px;">Nombre</th>
-              <th style="width: 100px;">Tipo</th>
-              <th style="width: 100px;">Estado</th>
-              <th style="width: 100px;">Inicio</th>
-              <th style="width: 100px;">Fin</th>
-              <th style="width: 80px;">Clientes</th>
-              <th style="width: 80px;">Productos</th>
-              <th style="width: 90px;">Valor</th>
-              <th style="width: 90px;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngIf="loading">
-              <td colspan="10" class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Cargando...</span>
-                </div>
-                <p class="mt-2 text-muted">Cargando recompensas...</p>
-              </td>
-            </tr>
-            <tr *ngIf="!loading && recompensas.length === 0">
-              <td colspan="10" class="text-center py-4">
-                <div class="empty-state">
-                  <i class="fas fa-gift fa-3x text-muted mb-3"></i>
-                  <h5 class="text-muted">No hay recompensas</h5>
-                  <p class="text-muted">No se encontraron recompensas con los filtros aplicados.</p>
-                  <button class="btn btn-primary" (click)="crearRecompensa()">
-                    <i class="fas fa-plus me-2"></i>
-                    Crear Primera Recompensa
+
+    <div class="table-container">
+      <!-- Loading State -->
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner">
+          <svg class="spinner-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+        <p class="loading-text">Cargando recompensas...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading && recompensas.length === 0" class="empty-state">
+        <div class="empty-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+          </svg>
+        </div>
+        <h3 class="empty-title">No hay recompensas</h3>
+        <p class="empty-description">No se encontraron recompensas con los filtros aplicados.</p>
+        <button class="btn btn-primary-modern" (click)="crearRecompensa()">
+          <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          <span>Crear Primera Recompensa</span>
+        </button>
+      </div>
+
+      <!-- Tabla -->
+      <table class="modern-table" *ngIf="!loading && recompensas.length > 0" [class.compact]="vistaCompacta">
+        <thead>
+          <tr>
+            <th class="col-id">ID</th>
+            <th class="col-name">Nombre</th>
+            <th class="col-type">Tipo</th>
+            <th class="col-status">Estado</th>
+            <th class="col-date">Inicio</th>
+            <th class="col-date">Fin</th>
+            <th class="col-number">Clientes</th>
+            <th class="col-number">Productos</th>
+            <th class="col-currency">Valor</th>
+            <th class="col-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Filas con datos -->
+          <tr *ngFor="let recompensa of recompensas; trackBy: trackByRecompensaId" class="table-row">
+            <td class="col-id">
+              <span class="id-badge">#{{ recompensa.id }}</span>
+            </td>
+            <td class="col-name">
+              <div class="name-cell" [title]="recompensa.nombre + (recompensa.descripcion ? '\n' + recompensa.descripcion : '')">
+                <span class="name-text">{{ recompensa.nombre }}</span>
+                <span class="description-text" *ngIf="!vistaCompacta">{{ recompensa.descripcion }}</span>
+              </div>
+            </td>
+            <td class="col-type">
+              <span class="type-badge" [attr.data-type]="recompensa.tipo">
+                <svg *ngIf="recompensa.tipo === 'puntos'" class="badge-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <svg *ngIf="recompensa.tipo === 'descuento'" class="badge-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 4.5h.008v.008h-.008V13.5zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+                <svg *ngIf="recompensa.tipo === 'envio_gratis'" class="badge-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                </svg>
+                <svg *ngIf="recompensa.tipo === 'regalo'" class="badge-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+                <span>{{ (recompensa.tipo || '') | titlecase }}</span>
+              </span>
+            </td>
+            <td class="col-status">
+              <span class="status-badge" [attr.data-status]="getEstadoReal(recompensa)">
+                <span class="status-dot"></span>
+                <span>{{ vistaCompacta ? ((getEstadoReal(recompensa) || '') | slice:0:3 | uppercase) : ((getEstadoReal(recompensa) || '') | titlecase) }}</span>
+              </span>
+            </td>
+            <td class="col-date">
+              <span class="date-text">{{ formatearFecha(recompensa.fecha_inicio) }}</span>
+            </td>
+            <td class="col-date">
+              <span class="date-text">{{ formatearFecha(recompensa.fecha_fin) }}</span>
+            </td>
+            <td class="col-number">
+              <span class="number-badge blue">{{ formatearNumero(recompensa.total_clientes_aplicables || 0) }}</span>
+            </td>
+            <td class="col-number">
+              <span class="number-badge yellow">{{ formatearNumero(recompensa.total_productos_aplicables || 0) }}</span>
+            </td>
+            <td class="col-currency">
+              <span class="currency-text">{{ formatearMoneda(calcularValorEstimado(recompensa)) }}</span>
+            </td>
+            <td class="col-actions">
+              <div class="actions-menu">
+                <button class="actions-trigger" (click)="toggleAccionesMenu(recompensa.id, $event)">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+                  </svg>
+                </button>
+                <div class="actions-dropdown" *ngIf="openMenuId === recompensa.id">
+                  <button class="action-item view" (click)="verDetalle(recompensa); closeAccionesMenu()">
+                    <svg class="action-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Ver detalle</span>
+                  </button>
+                  <button class="action-item edit" (click)="editarRecompensa(recompensa); closeAccionesMenu()">
+                    <svg class="action-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                    </svg>
+                    <span>Editar</span>
+                  </button>
+                  <button class="action-item toggle" (click)="cambiarEstadoRecompensa(recompensa); closeAccionesMenu()">
+                    <svg class="action-icon" *ngIf="getEstadoReal(recompensa) === 'activa'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+                    </svg>
+                    <svg class="action-icon" *ngIf="getEstadoReal(recompensa) !== 'activa'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                    </svg>
+                    <span>{{ getEstadoReal(recompensa) === 'activa' ? 'Pausar' : 'Activar' }}</span>
+                  </button>
+                  <button class="action-item duplicate" (click)="duplicarRecompensa(recompensa); closeAccionesMenu()">
+                    <svg class="action-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                    </svg>
+                    <span>Duplicar</span>
+                  </button>
+                  <div class="action-divider"></div>
+                  <button class="action-item delete" (click)="eliminarRecompensa(recompensa); closeAccionesMenu()">
+                    <svg class="action-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                    <span>Eliminar</span>
                   </button>
                 </div>
-              </td>
-            </tr>
-            <tr *ngFor="let recompensa of recompensas; trackBy: trackByRecompensaId">
-              <td class="text-center">
-                <span class="fw-medium">#{{ recompensa.id }}</span>
-              </td>
-              <td class="name-cell">
-                <div *ngIf="vistaCompacta" class="text-truncate" [title]="recompensa.nombre">
-                  <strong class="d-block">{{ recompensa.nombre | slice:0:20 }}{{ recompensa.nombre.length > 20 ? '...' : '' }}</strong>
-                  <small class="text-muted">{{ recompensa.descripcion | slice:0:30 }}{{ recompensa.descripcion.length > 30 ? '...' : '' }}</small>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Filas vacías para completar pageSize -->
+          <tr *ngFor="let empty of getEmptyRows(); trackBy: trackByIndex" class="table-row empty-row">
+            <td class="col-id">&nbsp;</td>
+            <td class="col-name">&nbsp;</td>
+            <td class="col-type">&nbsp;</td>
+            <td class="col-status">&nbsp;</td>
+            <td class="col-date">&nbsp;</td>
+            <td class="col-date">&nbsp;</td>
+            <td class="col-number">&nbsp;</td>
+            <td class="col-number">&nbsp;</td>
+            <td class="col-currency">&nbsp;</td>
+            <td class="col-actions">&nbsp;</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación Moderna -->
+    <div class="pagination-container" *ngIf="totalPages > 1 && !loading">
+      <div class="pagination-info">
+        Mostrando <span class="font-semibold">{{ (currentPage * pageSize) + 1 }}</span> a
+        <span class="font-semibold">{{ Math.min((currentPage + 1) * pageSize, totalElements) }}</span> de
+        <span class="font-semibold">{{ totalElements }}</span> resultados
+      </div>
+      <div class="pagination-controls">
+        <button
+          class="pagination-btn"
+          [disabled]="currentPage === 0"
+          (click)="previousPage()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+          </svg>
+          <span>Anterior</span>
+        </button>
+        <div class="pagination-pages">
+          <button
+            *ngFor="let page of getPages()"
+            class="page-btn"
+            [class.active]="page === currentPage"
+            (click)="goToPage(page)">
+            {{ page + 1 }}
+          </button>
+        </div>
+        <button
+          class="pagination-btn"
+          [disabled]="currentPage === totalPages - 1"
+          (click)="nextPage()">
+          <span>Siguiente</span>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== NOTIFICACIONES MODERNAS ========== -->
+  <div class="notification-container" *ngIf="mostrarNotificacion">
+    <div class="notification" [attr.data-type]="tipoNotificacion">
+      <div class="notification-icon">
+        <svg *ngIf="tipoNotificacion === 'success'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+        </svg>
+        <svg *ngIf="tipoNotificacion === 'error'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+        </svg>
+        <svg *ngIf="tipoNotificacion === 'info'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div class="notification-content">
+        <p class="notification-message">{{ mensajeNotificacion }}</p>
+      </div>
+      <button class="notification-close" (click)="cerrarNotificacion()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========== MODAL WIZARD COMPACTO ========== -->
+  <div class="modal-overlay" *ngIf="mostrarModalCarrusel" (click)="cerrarModalCarrusel()">
+    <div class="wizard-modal" (click)="$event.stopPropagation()">
+      <!-- Header del Modal -->
+      <div class="modal-header">
+        <div class="header-left">
+          <svg class="title-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+          </svg>
+          <div>
+            <h2 class="modal-title">{{ modoSoloLectura ? 'Detalle de Recompensa' : (modoEdicion ? 'Editar Recompensa' : 'Crear Nueva Recompensa') }}</h2>
+            <p class="modal-subtitle">{{ getTituloStep() }}</p>
+          </div>
+        </div>
+        <button class="close-btn" (click)="cerrarModalCarrusel()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Progress Steps -->
+      <div class="wizard-progress">
+        <div class="progress-steps">
+          <div class="step" [class.active]="carruselActivo === 0" [class.completed]="carruselActivo > 0">
+            <div class="step-number">1</div>
+            <span class="step-label">Datos</span>
+          </div>
+          <div class="step" [class.active]="carruselActivo === 1" [class.completed]="carruselActivo > 1">
+            <div class="step-number">2</div>
+            <span class="step-label">Segmento</span>
+          </div>
+          <div class="step" [class.active]="carruselActivo === 2" [class.completed]="carruselActivo > 2">
+            <div class="step-number">3</div>
+            <span class="step-label">Productos</span>
+          </div>
+          <div class="step" [class.active]="carruselActivo === 3" [class.completed]="carruselActivo > 3">
+            <div class="step-number">4</div>
+            <span class="step-label">Config</span>
+          </div>
+          <div class="step" [class.active]="carruselActivo === 4">
+            <div class="step-number">5</div>
+            <span class="step-label">Resumen</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carousel Container -->
+      <div class="carousel-container">
+        <div class="carousel-wrapper" [style.transform]="'translateX(-' + (carruselActivo * 100) + '%)'">
+          
+          <!-- STEP 1: Datos Generales -->
+          <div class="carousel-slide">
+            <div class="slide-content">
+              <div class="form-section">
+                <h3 class="section-title">
+                  <i class="ph ph-info-circle"></i>
+                  Datos Generales
+                </h3>
+                
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label">Nombre de la Recompensa *</label>
+                    <input type="text" class="form-input" [(ngModel)]="nuevaRecompensa.nombre"
+                           placeholder="Ej: Puntos por Compra" [disabled]="modoSoloLectura">
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Tipo de Recompensa *</label>
+                    <select class="form-input" [(ngModel)]="nuevaRecompensa.tipo" [disabled]="modoSoloLectura">
+                      <option value="">Seleccionar tipo</option>
+                      <option value="puntos">Sistema de Puntos</option>
+                      <option value="descuento">Descuento</option>
+                      <option value="envio_gratis">Envío Gratis</option>
+                      <option value="regalo">Regalo</option>
+                    </select>
+                    <div class="form-info" *ngIf="nuevaRecompensa.tipo === 'puntos'">
+                      <i class="ph ph-info-circle"></i>
+                      <span>Acumula puntos por compras y canjéalos por beneficios</span>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group full-width">
+                    <label class="form-label">Descripción *</label>
+                    <textarea class="form-input textarea" rows="3" [(ngModel)]="nuevaRecompensa.descripcion"
+                              placeholder="Describe los beneficios de esta recompensa..." [disabled]="modoSoloLectura"></textarea>
+                  </div>
+
+                  <div class="form-group half-width">
+                    <label class="form-label">Fecha de Inicio *</label>
+                    <input type="date"
+                           class="form-input"
+                           [(ngModel)]="nuevaRecompensa.fecha_inicio"
+                           [min]="fechaMinima"
+                           [disabled]="modoSoloLectura"
+                           (change)="onFechaInicioChange()">
+                  </div>
+
+                  <div class="form-group half-width">
+                    <label class="form-label">Fecha de Fin *</label>
+                    <input type="date"
+                           class="form-input"
+                           [(ngModel)]="nuevaRecompensa.fecha_fin"
+                           [min]="nuevaRecompensa.fecha_inicio || fechaMinima"
+                           [disabled]="modoSoloLectura"
+                           (change)="onFechaFinChange()">
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Estado Inicial</label>
+                    <select class="form-input" [(ngModel)]="nuevaRecompensa.estado"
+                            [disabled]="estadosDisponibles.length === 0 || modoSoloLectura">
+                      <option value="">Seleccionar estado</option>
+                      <option *ngFor="let estado of estadosDisponibles" [value]="estado.value">
+                        {{ estado.label }}
+                      </option>
+                    </select>
+                    <div class="form-info" *ngIf="estadosDisponibles.length === 0">
+                      <i class="ph ph-info-circle"></i>
+                      <span>Selecciona una fecha de inicio para ver los estados disponibles</span>
+                    </div>
+                    <div class="estado-info" *ngIf="nuevaRecompensa.estado">
+                      <i class="ph ph-info-circle"></i>
+                      <span>{{ getEstadoDescripcion(nuevaRecompensa.estado) }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group full-width" *ngIf="mensajeValidacionFecha">
+                    <div class="validation-message" [ngClass]="esFechaValida() ? 'success' : 'error'">
+                      <i class="ph" [ngClass]="esFechaValida() ? 'ph-check-circle' : 'ph-warning-circle'"></i>
+                      {{ mensajeValidacionFecha }}
+                    </div>
+                  </div>
                 </div>
-                <div *ngIf="!vistaCompacta">
-                  <strong>{{ recompensa.nombre }}</strong>
-                  <br>
-                  <small class="text-muted">{{ recompensa.descripcion | slice:0:50 }}{{ recompensa.descripcion.length > 50 ? '...' : '' }}</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2: Segmentación de Clientes -->
+          <div class="carousel-slide">
+            <div class="slide-content">
+              <div class="card">
+                <div class="card-header">
+                  <h5><i class="fas fa-users me-2"></i>Paso 2: Segmentación de Clientes</h5>
                 </div>
-              </td>
-              <td>
-                <span *ngIf="vistaCompacta" class="badge bg-secondary">{{ (recompensa.tipo || '') | titlecase }}</span>
-                <div *ngIf="!vistaCompacta" class="d-flex align-items-center">
-                  <i [class]="getTipoIcon(recompensa.tipo) + ' ' + getTipoColor(recompensa.tipo) + ' me-2'"></i>
-                  <span class="fw-medium">{{ (recompensa.tipo || '') | titlecase }}</span>
+                <div class="card-body">
+                  <!-- Tipo de Segmentación -->
+                  <div class="row mb-4">
+                    <div class="col-12">
+                      <label class="form-label">Tipo de Segmentación *</label>
+                      <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" id="todos_modal" value="todos"
+                               [(ngModel)]="nuevaRecompensa.tipoSegmentacion" (change)="onTipoSegmentacionChangeModal()"
+                               [disabled]="modoSoloLectura">
+                        <label class="btn btn-outline-primary" for="todos_modal">
+                          <i class="fas fa-globe me-2"></i>Todos los Clientes
+                        </label>
+
+                        <input type="radio" class="btn-check" id="segmentos_modal" value="segmentos"
+                               [(ngModel)]="nuevaRecompensa.tipoSegmentacion" (change)="onTipoSegmentacionChangeModal()"
+                               [disabled]="modoSoloLectura">
+                        <label class="btn btn-outline-primary" for="segmentos_modal">
+                          <i class="fas fa-layer-group me-2"></i>Por Segmentos
+                        </label>
+
+                        <input type="radio" class="btn-check" id="especificos_modal" value="especificos"
+                               [(ngModel)]="nuevaRecompensa.tipoSegmentacion" (change)="onTipoSegmentacionChangeModal()"
+                               [disabled]="modoSoloLectura">
+                        <label class="btn btn-outline-primary" for="especificos_modal">
+                          <i class="fas fa-user me-2"></i>Clientes Específicos
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Información del tipo seleccionado -->
+                  <div class="alert alert-info" *ngIf="nuevaRecompensa.tipoSegmentacion">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Información:</strong>
+                    <span *ngIf="nuevaRecompensa.tipoSegmentacion === 'todos'">
+                      La recompensa se aplicará a todos los clientes registrados en el sistema.
+                    </span>
+                    <span *ngIf="nuevaRecompensa.tipoSegmentacion === 'segmentos'">
+                      Selecciona los segmentos de clientes que podrán acceder a esta recompensa.
+                    </span>
+                    <span *ngIf="nuevaRecompensa.tipoSegmentacion === 'especificos'">
+                      Busca y selecciona clientes específicos para esta recompensa.
+                    </span>
+                  </div>
+
+                  <!-- Gestión de Segmentos -->
+                  <div *ngIf="nuevaRecompensa.tipoSegmentacion === 'segmentos'" class="mb-4">
+                    <h6><i class="fas fa-layer-group me-2"></i>Segmentos Disponibles</h6>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="card">
+                          <div class="card-body">
+                            <h6>Segmentos del Sistema</h6>
+                            <div class="segment-list" style="max-height: 300px; overflow-y: auto;">
+                              <div *ngIf="segmentosDisponibles.length === 0 && !cargandoSegmentos" class="text-center text-muted py-3">
+                                <i class="fas fa-search fa-2x mb-2"></i>
+                                <p>No hay segmentos disponibles</p>
+                              </div>
+                              <div *ngIf="cargandoSegmentos" class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                  <span class="visually-hidden">Cargando...</span>
+                                </div>
+                              </div>
+                              <div *ngFor="let segmento of segmentosDisponibles" class="form-check">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  [id]="'seg-modal-' + segmento.id"
+                                  [checked]="isSegmentoSeleccionado(segmento)"
+                                  [disabled]="modoSoloLectura"
+                                  (change)="toggleSegmento(segmento)"
+                                >
+                                <label class="form-check-label" [for]="'seg-modal-' + segmento.id">
+                                  {{ segmento.nombre }}
+                                  <small class="text-muted d-block">{{ segmento.descripcion || 'Sin descripción' }}</small>
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="card">
+                          <div class="card-body">
+                            <h6>Segmentos Seleccionados</h6>
+                            <div *ngIf="nuevaRecompensa.segmentosSeleccionados.length === 0" class="text-center text-muted py-3">
+                              <i class="fas fa-layer-group fa-2x mb-2"></i>
+                              <p>No has seleccionado segmentos</p>
+                            </div>
+                            <div *ngFor="let segmento of nuevaRecompensa.segmentosSeleccionados" class="mb-2">
+                              <div class="card card-body py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                  <div>
+                                    <strong>{{ segmento.nombre }}</strong>
+                                    <small class="text-muted d-block">{{ segmento.descripcion || 'Sin descripción' }}</small>
+                                  </div>
+                                  <button
+                                    class="btn btn-sm btn-outline-danger"
+                                    (click)="removeSegmento(segmento)"
+                                    title="Remover segmento"
+                                    *ngIf="!modoSoloLectura"
+                                  >
+                                    <i class="fas fa-times"></i>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Gestión de Clientes Específicos -->
+                  <div *ngIf="nuevaRecompensa.tipoSegmentacion === 'especificos'" class="mb-4">
+                    <h6><i class="fas fa-user me-2"></i>Clientes Específicos</h6>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="card">
+                          <div class="card-body">
+                            <h6>Buscar Clientes</h6>
+                            <div class="mb-3">
+                              <input
+                                type="text"
+                                class="form-control"
+                                placeholder="Buscar por nombre o email..."
+                                [(ngModel)]="filtroClientes"
+                                [disabled]="modoSoloLectura"
+                                (input)="filtrarClientes()"
+                              >
+                            </div>
+                            <div class="client-list" style="max-height: 300px; overflow-y: auto;">
+                              <div *ngIf="clientesFiltrados.length === 0 && !cargandoClientes" class="text-center text-muted py-3">
+                                <i class="fas fa-search fa-2x mb-2"></i>
+                                <p>Busca clientes para agregar</p>
+                              </div>
+                              <div *ngIf="cargandoClientes" class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                  <span class="visually-hidden">Cargando...</span>
+                                </div>
+                              </div>
+                              <div *ngFor="let cliente of clientesFiltrados" class="form-check">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  [id]="'cli-modal-' + cliente.id"
+                                  [checked]="isClienteSeleccionado(cliente)"
+                                  [disabled]="modoSoloLectura"
+                                  (change)="toggleClienteModal(cliente)"
+                                >
+                                <label class="form-check-label" [for]="'cli-modal-' + cliente.id">
+                                  <strong>{{ cliente.nombre }}</strong>
+                                  <small class="text-muted d-block">{{ cliente.email }}</small>
+                                  <small class="text-muted d-block" *ngIf="cliente.telefono">{{ cliente.telefono }}</small>
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="card">
+                          <div class="card-body">
+                            <h6>Clientes Seleccionados</h6>
+                            <div *ngIf="nuevaRecompensa.clientesSeleccionados.length === 0" class="text-center text-muted py-3">
+                              <i class="fas fa-user fa-2x mb-2"></i>
+                              <p>No has seleccionado clientes</p>
+                            </div>
+                            <div *ngFor="let cliente of nuevaRecompensa.clientesSeleccionados" class="mb-2">
+                              <div class="card card-body py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                  <div>
+                                    <strong>{{ cliente.nombre }}</strong>
+                                    <small class="text-muted d-block">{{ cliente.email }}</small>
+                                    <small class="text-muted d-block" *ngIf="cliente.telefono">{{ cliente.telefono }}</small>
+                                  </div>
+                                  <button
+                                    class="btn btn-sm btn-outline-danger"
+                                    (click)="removerCliente(cliente)"
+                                    title="Remover cliente"
+                                    *ngIf="!modoSoloLectura"
+                                  >
+                                    <i class="fas fa-times"></i>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Resumen de Segmentación -->
+                  <div class="card">
+                    <div class="card-body">
+                      <h6>Resumen de Segmentación</h6>
+
+                      <div *ngIf="nuevaRecompensa.tipoSegmentacion === 'todos'" class="alert alert-success">
+                        <i class="fas fa-globe me-2"></i>
+                        <strong>Recompensa para todos los clientes</strong>
+                        <small class="d-block text-muted">
+                          Todos los clientes registrados podrán acceder a esta recompensa
+                        </small>
+                      </div>
+
+                      <div *ngIf="nuevaRecompensa.tipoSegmentacion === 'segmentos' && nuevaRecompensa.segmentosSeleccionados.length > 0" class="alert alert-info">
+                        <i class="fas fa-layer-group me-2"></i>
+                        <strong>Recompensa para {{ nuevaRecompensa.segmentosSeleccionados.length }} segmento(s)</strong>
+                        <small class="d-block text-muted">
+                          Segmentos: {{ getSegmentosLabelsModal() }}
+                        </small>
+                      </div>
+
+                      <div *ngIf="nuevaRecompensa.tipoSegmentacion === 'especificos' && nuevaRecompensa.clientesSeleccionados.length > 0" class="alert alert-warning">
+                        <i class="fas fa-user me-2"></i>
+                        <strong>Recompensa para {{ nuevaRecompensa.clientesSeleccionados.length }} cliente(s) específico(s)</strong>
+                        <small class="d-block text-muted">
+                          Clientes seleccionados: {{ getClientesNombresModal() }}
+                        </small>
+                      </div>
+
+                      <div *ngIf="(nuevaRecompensa.tipoSegmentacion === 'segmentos' && nuevaRecompensa.segmentosSeleccionados.length === 0) ||
+                                  (nuevaRecompensa.tipoSegmentacion === 'especificos' && nuevaRecompensa.clientesSeleccionados.length === 0)"
+                           class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Configuración incompleta</strong>
+                        <small class="d-block text-muted">
+                          Debes seleccionar al menos un segmento o cliente para continuar
+                        </small>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </td>
-              <td>
-                <span class="badge" [ngClass]="getEstadoClass(getEstadoReal(recompensa))">
-                  {{ vistaCompacta ? ((getEstadoReal(recompensa) || '') | slice:0:3 | uppercase) : ((getEstadoReal(recompensa) || '') | titlecase) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 3: Productos y Categorías -->
+          <div class="carousel-slide">
+            <div class="slide-content">
+              <div class="card">
+                <div class="card-header">
+                  <h5><i class="fas fa-shopping-cart me-2"></i>Paso 3: Productos y Categorías</h5>
+                </div>
+                <div class="card-body">
+                  <div class="row mb-4">
+                    <!-- Productos Específicos -->
+                    <div class="col-md-6">
+                      <div class="card">
+                        <div class="card-body">
+                          <h6><i class="fas fa-box me-2"></i>Productos Específicos</h6>
+                          <div class="mb-3">
+                            <input
+                              type="text"
+                              class="form-control"
+                              placeholder="Buscar productos..."
+                              [(ngModel)]="filtroProductos"
+                              [disabled]="modoSoloLectura"
+                              (input)="filtrarProductos()"
+                            >
+                          </div>
+                          <div class="product-list" style="max-height: 300px; overflow-y: auto;">
+                            <div *ngIf="productosFiltrados.length === 0 && !cargandoProductos" class="text-center text-muted py-3">
+                              <i class="fas fa-search fa-2x mb-2"></i>
+                              <p>Busca productos para agregar</p>
+                            </div>
+                            <div *ngIf="cargandoProductos" class="text-center py-3">
+                              <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                              </div>
+                            </div>
+                            <div *ngFor="let producto of productosFiltrados" class="form-check">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                [id]="'prod-modal-' + producto.id"
+                                [checked]="isProductoSeleccionado(producto)"
+                                [disabled]="modoSoloLectura"
+                                (change)="toggleProducto(producto)"
+                              >
+                              <label class="form-check-label" [for]="'prod-modal-' + producto.id">
+                                {{ producto.nombre }} - S/{{ producto.precio_venta || producto.precio | number:'1.2-2' }}
+                                <small class="text-muted d-block">{{ producto.codigo_producto }}</small>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Categorías -->
+                    <div class="col-md-6">
+                      <div class="card">
+                        <div class="card-body">
+                          <h6><i class="fas fa-tags me-2"></i>Categorías</h6>
+                          <div class="mb-3">
+                            <input
+                              type="text"
+                              class="form-control"
+                              placeholder="Buscar categorías..."
+                              [(ngModel)]="filtroCategorias"
+                              [disabled]="modoSoloLectura"
+                              (input)="filtrarCategorias()"
+                            >
+                          </div>
+                          <div class="category-list" style="max-height: 300px; overflow-y: auto;">
+                            <div *ngIf="categoriasFiltradas.length === 0 && !cargandoCategorias" class="text-center text-muted py-3">
+                              <i class="fas fa-search fa-2x mb-2"></i>
+                              <p>Busca categorías para agregar</p>
+                            </div>
+                            <div *ngIf="cargandoCategorias" class="text-center py-3">
+                              <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                              </div>
+                            </div>
+                            <div *ngFor="let categoria of categoriasFiltradas" class="form-check">
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                [id]="'cat-modal-' + categoria.id"
+                                [checked]="isCategoriaSeleccionada(categoria)"
+                                [disabled]="modoSoloLectura"
+                                (change)="toggleCategoria(categoria)"
+                              >
+                              <label class="form-check-label" [for]="'cat-modal-' + categoria.id">
+                                {{ categoria.nombre }} ({{ categoria.productos_count }} productos)
+                                <small *ngIf="categoria.descripcion" class="text-muted d-block">{{ categoria.descripcion }}</small>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Productos y Categorías Seleccionados -->
+                  <div class="card">
+                    <div class="card-body">
+                      <h6>Productos y Categorías Seleccionados</h6>
+
+                      <!-- Alerta informativa -->
+                      <div *ngIf="nuevaRecompensa.productosSeleccionados.length === 0 && nuevaRecompensa.categoriasSeleccionadas.length === 0"
+                           class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No has seleccionado productos ni categorías. La recompensa se aplicará a todos los productos.
+                      </div>
+
+                      <!-- Lista de productos seleccionados -->
+                      <div *ngIf="nuevaRecompensa.productosSeleccionados.length > 0" class="mb-3">
+                        <h6 class="text-primary">
+                          <i class="fas fa-box me-2"></i>Productos Específicos ({{ nuevaRecompensa.productosSeleccionados.length }})
+                        </h6>
+                        <div class="row">
+                          <div *ngFor="let producto of nuevaRecompensa.productosSeleccionados" class="col-md-6 mb-2">
+                            <div class="card card-body py-2">
+                              <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                  <strong>{{ producto.nombre }}</strong>
+                                  <small class="text-muted d-block">{{ producto.codigo_producto }}</small>
+                                </div>
+                                <button
+                                  class="btn btn-sm btn-outline-danger"
+                                  (click)="removerProducto(producto)"
+                                  title="Remover producto"
+                                  *ngIf="!modoSoloLectura"
+                                >
+                                  <i class="fas fa-times"></i>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Lista de categorías seleccionadas -->
+                      <div *ngIf="nuevaRecompensa.categoriasSeleccionadas.length > 0" class="mb-3">
+                        <h6 class="text-success">
+                          <i class="fas fa-tags me-2"></i>Categorías ({{ nuevaRecompensa.categoriasSeleccionadas.length }})
+                        </h6>
+                        <div class="row">
+                          <div *ngFor="let categoria of nuevaRecompensa.categoriasSeleccionadas" class="col-md-6 mb-2">
+                            <div class="card card-body py-2">
+                              <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                  <strong>{{ categoria.nombre }}</strong>
+                                  <small class="text-muted d-block">{{ categoria.productos_count }} productos</small>
+                                </div>
+                                <button
+                                  class="btn btn-sm btn-outline-danger"
+                                  (click)="removerCategoria(categoria)"
+                                  title="Remover categoría"
+                                  *ngIf="!modoSoloLectura"
+                                >
+                                  <i class="fas fa-times"></i>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Resumen total -->
+                      <div *ngIf="nuevaRecompensa.productosSeleccionados.length > 0 || nuevaRecompensa.categoriasSeleccionadas.length > 0"
+                           class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Total de productos aplicables:</strong> {{ getTotalProductosAplicablesModal() }}
+                        <small class="d-block text-muted">
+                          {{ nuevaRecompensa.productosSeleccionados.length }} productos específicos +
+                          {{ getTotalProductosEnCategoriasModal() }} productos de categorías
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 4: Configuración de la Recompensa -->
+          <div class="carousel-slide">
+            <div class="slide-content">
+              <div class="form-section">
+                <h3 class="section-title">
+                  <i class="ph ph-gear"></i>
+                  Configuración de la Recompensa
+                </h3>
+                
+                <div class="config-section" *ngIf="nuevaRecompensa.tipo === 'puntos'">
+                  <h4 class="config-title">Sistema de Puntos</h4>
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label class="form-label">Puntos por S/ gastado</label>
+                      <input type="number" class="form-input" [(ngModel)]="nuevaRecompensa.config.puntos_por_sol"
+                             placeholder="1" min="1" [disabled]="modoSoloLectura">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Puntos mínimos para canje</label>
+                      <input type="number" class="form-input" [(ngModel)]="nuevaRecompensa.config.puntos_minimos"
+                             placeholder="100" min="1" [disabled]="modoSoloLectura">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="config-section" *ngIf="nuevaRecompensa.tipo === 'descuento'">
+                  <h4 class="config-title">Descuento</h4>
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label class="form-label">Tipo de Descuento</label>
+                      <select class="form-input" [(ngModel)]="nuevaRecompensa.config.tipo_descuento" [disabled]="modoSoloLectura">
+                        <option value="porcentaje">Porcentaje (%)</option>
+                        <option value="fijo">Monto Fijo (S/)</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Valor del Descuento</label>
+                      <input type="number" class="form-input" [(ngModel)]="nuevaRecompensa.config.valor_descuento"
+                             placeholder="10" min="1" [disabled]="modoSoloLectura">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Compra Mínima (S/)</label>
+                      <input type="number" class="form-input" [(ngModel)]="nuevaRecompensa.config.compra_minima"
+                             placeholder="0" min="0" [disabled]="modoSoloLectura">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="config-section" *ngIf="nuevaRecompensa.tipo === 'envio_gratis'">
+                  <h4 class="config-title">Envío Gratuito</h4>
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label class="form-label">Compra mínima (S/)</label>
+                      <input type="number" class="form-input" [(ngModel)]="nuevaRecompensa.config.compra_minima"
+                             placeholder="100" min="0" [disabled]="modoSoloLectura">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Zonas aplicables</label>
+                      <select class="form-input" [(ngModel)]="nuevaRecompensa.config.zonas" [disabled]="modoSoloLectura">
+                        <option value="todas">Todas las zonas</option>
+                        <option value="lima">Solo Lima</option>
+                        <option value="provincias">Solo Provincias</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="config-section" *ngIf="nuevaRecompensa.tipo === 'regalo'">
+                  <h4 class="config-title">Regalo</h4>
+                  <div class="form-grid">
+                    <div class="form-group full-width">
+                      <label class="form-label">Producto a regalar</label>
+                      <input type="text" class="form-input" [(ngModel)]="nuevaRecompensa.config.producto_regalo"
+                             placeholder="Buscar producto..." [disabled]="modoSoloLectura">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Compra mínima (S/)</label>
+                      <input type="number" class="form-input" [(ngModel)]="nuevaRecompensa.config.compra_minima_regalo"
+                             placeholder="200" min="0" [disabled]="modoSoloLectura">
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 5: Resumen y Confirmación -->
+          <div class="carousel-slide">
+            <div class="slide-content">
+              <div class="form-section">
+                <h3 class="section-title">
+                  <i class="ph ph-check-circle"></i>
+                  Resumen de la Recompensa
+                </h3>
+                
+                <div class="summary-card">
+                  <div class="summary-header">
+                    <div class="summary-icon" [ngClass]="'bg-' + getTipoColor(nuevaRecompensa.tipo)">
+                      <i [class]="getTipoIcon(nuevaRecompensa.tipo)"></i>
+                    </div>
+                    <div>
+                      <h4 class="summary-title">{{ nuevaRecompensa.nombre || 'Sin nombre' }}</h4>
+                      <p class="summary-type">{{ getTipoLabel(nuevaRecompensa.tipo) }}</p>
+                    </div>
+                  </div>
+                  
+                  <div class="summary-details">
+                    <div class="detail-row">
+                      <span class="detail-label">Descripción:</span>
+                      <span class="detail-value">{{ nuevaRecompensa.descripcion || 'Sin descripción' }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Vigencia:</span>
+                      <span class="detail-value">{{ nuevaRecompensa.fecha_inicio }} - {{ nuevaRecompensa.fecha_fin }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Estado:</span>
+                      <span class="detail-value">{{ getEstadoLabel(nuevaRecompensa.estado) }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Segmento:</span>
+                      <span class="detail-value">{{ getSegmentacionResumen() }}</span>
+                    </div>
+                    <div class="detail-row" *ngIf="nuevaRecompensa.productosSeleccionados.length > 0 || nuevaRecompensa.categoriasSeleccionadas.length > 0">
+                      <span class="detail-label">Productos/Categorías:</span>
+                      <span class="detail-value">
+                        <span *ngIf="nuevaRecompensa.productosSeleccionados.length > 0">
+                          <strong>Productos:</strong> {{ getProductosNombresModal() }}
+                        </span>
+                        <span *ngIf="nuevaRecompensa.productosSeleccionados.length > 0 && nuevaRecompensa.categoriasSeleccionadas.length > 0"> | </span>
+                        <span *ngIf="nuevaRecompensa.categoriasSeleccionadas.length > 0">
+                          <strong>Categorías:</strong> {{ getCategoriasNombresModal() }}
+                        </span>
+                      </span>
+                    </div>
+                    <div class="detail-row" *ngIf="nuevaRecompensa.tipo">
+                      <span class="detail-label">Configuración:</span>
+                      <span class="detail-value">{{ getConfigResumen() }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="final-actions" *ngIf="!modoSoloLectura">
+                  <button class="btn-save-draft" (click)="guardarBorrador()">
+                    <i class="ph ph-floppy-disk"></i>
+                    Guardar Borrador
+                  </button>
+                  <button class="btn-create" (click)="crearRecompensaFinal()" [disabled]="!esFormularioValido()">
+                    <i class="ph ph-check"></i>
+                    {{ modoEdicion ? 'Actualizar Recompensa' : 'Crear Recompensa' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Navigation Controls -->
+      <div class="wizard-navigation">
+        <button class="nav-btn secondary" (click)="anteriorStep()" [disabled]="carruselActivo === 0">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+          </svg>
+          Anterior
+        </button>
+
+        <div class="step-info">
+          Paso {{ carruselActivo + 1 }} de 5
+        </div>
+
+        <button class="nav-btn primary" (click)="siguienteStep()" [disabled]="carruselActivo === 4 || !puedeAvanzar()">
+          Siguiente
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL DETALLE RECOMPENSA ========== -->
+  <div class="modal-overlay" *ngIf="mostrarModalDetalle" (click)="cerrarModalDetalle()">
+    <div class="wizard-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg class="title-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          Detalle de Recompensa
+        </h3>
+        <button class="close-btn" (click)="cerrarModalDetalle()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-content" *ngIf="detalleRecompensa && !cargandoDetalle">
+        <!-- Paso 1: Datos Básicos -->
+        <div class="wizard-step active">
+          <div class="step-header">
+            <div class="step-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A8.237 8.237 0 016 18.75c1.995 0 3.823.707 5.25 1.886V4.533zM12.75 20.636A8.214 8.214 0 0118 18.75c.966 0 1.89.166 2.75.47a.75.75 0 001-.708V4.262a.75.75 0 00-.5-.707A9.735 9.735 0 0018 3a9.707 9.707 0 00-5.25 1.533v16.103z" />
+              </svg>
+            </div>
+            <h4 class="step-title">Información General</h4>
+          </div>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Nombre de la Recompensa</label>
+              <div class="readonly-field">{{ detalleRecompensa.recompensa?.nombre || detalleRecompensa.nombre }}</div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Descripción</label>
+              <div class="readonly-field">{{ detalleRecompensa.recompensa?.descripcion || detalleRecompensa.descripcion || 'Sin descripción' }}</div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Tipo de Recompensa</label>
+              <div class="readonly-field">{{ detalleRecompensa.recompensa?.tipo_nombre || detalleRecompensa.tipo_nombre || detalleRecompensa.tipo }}</div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Estado</label>
+              <div class="readonly-field">
+                <span class="status-badge" [attr.data-status]="detalleRecompensa.recompensa?.estado || detalleRecompensa.estado">
+                  {{ detalleRecompensa.recompensa?.estado_nombre || detalleRecompensa.estado_nombre || detalleRecompensa.estado }}
                 </span>
-              </td>
-              <td>
-                <span class="text-muted">{{ formatearFecha(recompensa.fecha_inicio) | slice:0:(vistaCompacta ? 5 : 10) }}</span>
-              </td>
-              <td>
-                <span class="text-muted">{{ formatearFecha(recompensa.fecha_fin) | slice:0:(vistaCompacta ? 5 : 10) }}</span>
-              </td>
-              <td class="text-center">
-                <span *ngIf="vistaCompacta" class="badge bg-info">{{ recompensa.total_clientes_aplicables || 0 }}</span>
-                <span *ngIf="!vistaCompacta" class="fw-medium">{{ formatearNumero(recompensa.total_clientes_aplicables || 0) }}</span>
-              </td>
-              <td class="text-center">
-                <span *ngIf="vistaCompacta" class="badge bg-warning">{{ recompensa.total_productos_aplicables || 0 }}</span>
-                <span *ngIf="!vistaCompacta" class="fw-medium">{{ formatearNumero(recompensa.total_productos_aplicables || 0) }}</span>
-              </td>
-              <td>
-                <span class="fw-medium text-success">{{ formatearMoneda(calcularValorEstimado(recompensa)) }}</span>
-              </td>
-              <td class="acciones-cell text-center">
-                <div class="dropdown acciones-dropdown">
-                  <button class="btn btn-sm acciones-trigger" type="button"
-                          (click)="toggleAccionesMenu(recompensa.id, $event)" [attr.aria-expanded]="openMenuId === recompensa.id">
-                    <i class="fas fa-ellipsis-h" title="Acciones"></i>
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end show" *ngIf="openMenuId === recompensa.id">
-                    <li><button class="dropdown-item" type="button" (click)="verDetalle(recompensa)"><i class="fas fa-eye me-2"></i>Ver detalle</button></li>
-                    <li><button class="dropdown-item" type="button" (click)="editarRecompensa(recompensa)"><i class="fas fa-edit me-2"></i>Editar</button></li>
-                    <li>
-                      <button class="dropdown-item" type="button" (click)="cambiarEstadoRecompensa(recompensa)">
-                        <i class="me-2" [class]="getEstadoReal(recompensa) === 'activa' ? 'fas fa-pause' : 'fas fa-play'"></i>
-                        {{ getEstadoReal(recompensa) === 'activa' ? 'Pausar' : 'Activar' }}
-                      </button>
-                    </li>
-                    <li><button class="dropdown-item" type="button" (click)="duplicarRecompensa(recompensa)"><i class="fas fa-copy me-2"></i>Duplicar</button></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><button class="dropdown-item text-danger" type="button" (click)="eliminarRecompensa(recompensa)"><i class="fas fa-trash me-2"></i>Eliminar</button></li>
-                  </ul>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Fecha de Inicio</label>
+              <div class="readonly-field">{{ formatearFecha(detalleRecompensa.recompensa?.fecha_inicio || detalleRecompensa.fecha_inicio) }}</div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Fecha de Fin</label>
+              <div class="readonly-field">{{ formatearFecha(detalleRecompensa.recompensa?.fecha_fin || detalleRecompensa.fecha_fin) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 2: Segmentación -->
+        <div class="wizard-step">
+          <div class="step-header">
+            <div class="step-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+              </svg>
+            </div>
+            <h4 class="step-title">Segmentación de Clientes</h4>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Tipo de Segmentación</label>
+            <div class="readonly-field">
+              <span class="segment-type-badge" [attr.data-type]="getTipoSegmentacionDetalle()">
+                {{ getTipoSegmentacionDetalle() }}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Segmentos Asignados -->
+          <div class="form-group" *ngIf="getSegmentosDetalle().length > 0">
+            <label class="form-label">Segmentos Asignados</label>
+            <div class="readonly-list">
+              <div class="readonly-item" *ngFor="let segmento of getSegmentosDetalle()">
+                <svg class="item-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ segmento.nombre }}
+              </div>
+            </div>
+          </div>
+          
+          <!-- Clientes Específicos -->
+          <div class="form-group" *ngIf="getClientesDetalle().length > 0">
+            <label class="form-label">Clientes Específicos</label>
+            <div class="readonly-list">
+              <div class="readonly-item" *ngFor="let cliente of getClientesDetalle()">
+                <svg class="item-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+                {{ cliente.nombre_completo || cliente.nombre }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 3: Productos y Categorías -->
+        <div class="wizard-step">
+          <div class="step-header">
+            <div class="step-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+              </svg>
+            </div>
+            <h4 class="step-title">Productos y Categorías</h4>
+          </div>
+          
+          <!-- Productos Asignados -->
+          <div class="form-group" *ngIf="getProductosDetalle().length > 0">
+            <label class="form-label">Productos Específicos</label>
+            <div class="readonly-list">
+              <div class="readonly-item" *ngFor="let producto of getProductosDetalle()">
+                <svg class="item-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ producto.nombre }}
+                <span class="item-price" *ngIf="producto.precio > 0">{{ formatearMoneda(producto.precio) }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Categorías Asignadas -->
+          <div class="form-group" *ngIf="getCategoriasDetalle().length > 0">
+            <label class="form-label">Categorías</label>
+            <div class="readonly-list">
+              <div class="readonly-item" *ngFor="let categoria of getCategoriasDetalle()">
+                <svg class="item-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+                </svg>
+                {{ categoria.nombre }}
+              </div>
+            </div>
+          </div>
+          
+          <!-- Sin productos/categorías -->
+          <div class="form-group" *ngIf="getProductosDetalle().length === 0 && getCategoriasDetalle().length === 0">
+            <div class="empty-state">
+              <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+              </svg>
+              <p>No hay productos o categorías específicas asignadas</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 4: Configuración -->
+        <div class="wizard-step">
+          <div class="step-header">
+            <div class="step-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <h4 class="step-title">Configuración de la Recompensa</h4>
+          </div>
+          
+          <!-- Configuración según el tipo -->
+          <div class="config-section" *ngIf="detalleRecompensa.recompensa?.tipo === 'descuento' || detalleRecompensa.tipo === 'descuento'">
+            <h5 class="config-title">Configuración de Descuento</h5>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Tipo de Descuento</label>
+                <div class="readonly-field">{{ getConfiguracionDescuento().tipo_descuento || 'Porcentaje' }}</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Valor del Descuento</label>
+                <div class="readonly-field">{{ getConfiguracionDescuento().valor_descuento || 0 }}%</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Compra Mínima</label>
+                <div class="readonly-field">{{ formatearMoneda(getConfiguracionDescuento().compra_minima || 0) }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="config-section" *ngIf="detalleRecompensa.recompensa?.tipo === 'puntos' || detalleRecompensa.tipo === 'puntos'">
+            <h5 class="config-title">Configuración de Puntos</h5>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Puntos por Sol</label>
+                <div class="readonly-field">{{ getConfiguracionPuntos().puntos_por_sol || 0 }}</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Puntos por Registro</label>
+                <div class="readonly-field">{{ getConfiguracionPuntos().puntos_registro || 0 }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="config-section" *ngIf="detalleRecompensa.recompensa?.tipo === 'envio_gratis' || detalleRecompensa.tipo === 'envio_gratis'">
+            <h5 class="config-title">Configuración de Envío Gratis</h5>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Compra Mínima</label>
+                <div class="readonly-field">{{ formatearMoneda(getConfiguracionEnvio().compra_minima || 0) }}</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Zonas Aplicables</label>
+                <div class="readonly-field">{{ getConfiguracionEnvio().zonas || 'Todas' }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="config-section" *ngIf="detalleRecompensa.recompensa?.tipo === 'regalo' || detalleRecompensa.tipo === 'regalo'">
+            <h5 class="config-title">Configuración de Regalo</h5>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Producto de Regalo</label>
+                <div class="readonly-field">{{ getConfiguracionRegalo().producto_regalo || 'No especificado' }}</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cantidad</label>
+                <div class="readonly-field">{{ getConfiguracionRegalo().cantidad || 1 }}</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Compra Mínima</label>
+                <div class="readonly-field">{{ formatearMoneda(getConfiguracionRegalo().compra_minima || 0) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 5: Estadísticas -->
+        <div class="wizard-step">
+          <div class="step-header">
+            <div class="step-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+              </svg>
+            </div>
+            <h4 class="step-title">Estadísticas y Rendimiento</h4>
+          </div>
+          
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon bg-blue">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">{{ detalleRecompensa.recompensa?.estadisticas?.clientes_asignados || detalleRecompensa.estadisticas?.clientes_asignados || 0 }}</div>
+                <div class="stat-label">Clientes Asignados</div>
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon bg-green">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">{{ detalleRecompensa.recompensa?.estadisticas?.productos_asignados || detalleRecompensa.estadisticas?.productos_asignados || 0 }}</div>
+                <div class="stat-label">Productos Asignados</div>
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon bg-purple">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">{{ detalleRecompensa.recompensa?.estadisticas?.aplicaciones_totales || detalleRecompensa.estadisticas?.aplicaciones_totales || 0 }}</div>
+                <div class="stat-label">Aplicaciones Totales</div>
+              </div>
+            </div>
+            
+            <div class="stat-card" *ngIf="detalleRecompensa.recompensa?.estadisticas?.puntos_otorgados || detalleRecompensa.estadisticas?.puntos_otorgados">
+              <div class="stat-icon bg-yellow">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-value">{{ detalleRecompensa.recompensa?.estadisticas?.puntos_otorgados || detalleRecompensa.estadisticas?.puntos_otorgados }}</div>
+                <div class="stat-label">Puntos Otorgados</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    
-    <!-- Paginación -->
-    <div class="card-footer" *ngIf="totalPages > 1">
-      <div class="d-flex justify-content-between align-items-center">
-        <div class="text-muted">
-          Mostrando {{ (currentPage * pageSize) + 1 }} a {{ Math.min((currentPage + 1) * pageSize, totalElements) }} de {{ totalElements }} resultados
-        </div>
-        <nav>
-          <ul class="pagination pagination-sm mb-0">
-            <li class="page-item" [class.disabled]="currentPage === 0">
-              <button class="page-link" (click)="previousPage()" [disabled]="currentPage === 0">
-                <i class="fas fa-chevron-left"></i>
-              </button>
-            </li>
-            <li class="page-item" *ngFor="let page of getPages()" [class.active]="page === currentPage">
-              <button class="page-link" (click)="goToPage(page)">
-                {{ page + 1 }}
-              </button>
-            </li>
-            <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
-              <button class="page-link" (click)="nextPage()" [disabled]="currentPage === totalPages - 1">
-                <i class="fas fa-chevron-right"></i>
-              </button>
-            </li>
-          </ul>
-        </nav>
+
+      <div class="modal-loading" *ngIf="cargandoDetalle">
+        <div class="loading-spinner"></div>
+        <p>Cargando detalle...</p>
       </div>
-    </div>
-  </div>
 
-  <!-- Modal de Detalle de Recompensa -->
-  <div class="modal fade" [class.show]="mostrarModalDetalle" [style.display]="mostrarModalDetalle ? 'block' : 'none'" 
-       tabindex="-1" role="dialog" aria-labelledby="modalDetalleLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalDetalleLabel">
-            <i class="fas fa-gift me-2 text-primary"></i>
-            Detalle de Recompensa
-          </h5>
-          <button type="button" class="btn-close" (click)="cerrarModalDetalle()" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <!-- Loading -->
-          <div *ngIf="cargandoDetalle" class="text-center py-4">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Cargando...</span>
-            </div>
-            <p class="mt-2 text-muted">Cargando detalles de la recompensa...</p>
-          </div>
-
-          <!-- Error -->
-          <div *ngIf="errorDetalle && !cargandoDetalle" class="alert alert-danger">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            {{ errorDetalle }}
-          </div>
-
-          <!-- Contenido del detalle -->
-          <div *ngIf="detalleRecompensa && !cargandoDetalle && !errorDetalle">
-            <!-- Header con información básica -->
-            <div class="row mb-4">
-              <div class="col-md-8">
-                <h4 class="mb-2">{{ detalleRecompensa.nombre }}</h4>
-                <p class="text-muted mb-3">{{ detalleRecompensa.descripcion }}</p>
-                <div class="d-flex flex-wrap gap-2">
-                  <span class="badge bg-primary">{{ (detalleRecompensa.tipo || '') | titlecase }}</span>
-                  <span class="badge" [ngClass]="getEstadoClass(getEstadoReal(detalleRecompensa))">
-                    {{ (getEstadoReal(detalleRecompensa) || '') | titlecase }}
-                  </span>
-                </div>
-              </div>
-              <div class="col-md-4 text-end">
-                <div class="card bg-light">
-                  <div class="card-body text-center">
-                    <h6 class="card-title text-muted">Valor Estimado</h6>
-                    <h4 class="text-success mb-0">{{ formatearMoneda(calcularValorEstimado(detalleRecompensa)) }}</h4>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Información de fechas -->
-            <div class="row mb-4">
-              <div class="col-md-6">
-                <div class="card">
-                  <div class="card-body">
-                    <h6 class="card-title">
-                      <i class="fas fa-calendar-alt me-2 text-primary"></i>
-                      Fechas de Vigencia
-                    </h6>
-                    <div class="row">
-                      <div class="col-6">
-                        <small class="text-muted">Fecha de Inicio</small>
-                        <p class="mb-0 fw-medium">{{ formatearFecha(detalleRecompensa.fecha_inicio) }}</p>
-                      </div>
-                      <div class="col-6">
-                        <small class="text-muted">Fecha de Fin</small>
-                        <p class="mb-0 fw-medium">{{ formatearFecha(detalleRecompensa.fecha_fin) }}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="card">
-                  <div class="card-body">
-                    <h6 class="card-title">
-                      <i class="fas fa-chart-bar me-2 text-info"></i>
-                      Estadísticas
-                    </h6>
-                    <div class="row">
-                      <div class="col-6">
-                        <small class="text-muted">Clientes</small>
-                        <p class="mb-0 fw-medium">{{ formatearNumero(detalleRecompensa.total_clientes_aplicables || 0) }}</p>
-                      </div>
-                      <div class="col-6">
-                        <small class="text-muted">Productos</small>
-                        <p class="mb-0 fw-medium">{{ formatearNumero(detalleRecompensa.total_productos_aplicables || 0) }}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Configuración específica del tipo -->
-            <div class="row mb-4" *ngIf="detalleRecompensa.configuracion">
-              <div class="col-12">
-                <div class="card">
-                  <div class="card-header">
-                    <h6 class="card-title mb-0">
-                      <i class="fas fa-cogs me-2"></i>
-                      Configuración de {{ (detalleRecompensa.tipo || '') | titlecase }}
-                    </h6>
-                  </div>
-                  <div class="card-body">
-                    <div *ngIf="detalleRecompensa.tipo === 'puntos' && detalleRecompensa.configuracion.puntos">
-                      <div class="row">
-                        <div class="col-md-4">
-                          <small class="text-muted">Puntos por Compra</small>
-                          <p class="mb-0 fw-medium">{{ detalleRecompensa.configuracion.puntos.puntos_por_compra || 0 }}</p>
-                        </div>
-                        <div class="col-md-4">
-                          <small class="text-muted">Puntos por Monto</small>
-                          <p class="mb-0 fw-medium">{{ detalleRecompensa.configuracion.puntos.puntos_por_monto || 0 }}</p>
-                        </div>
-                        <div class="col-md-4">
-                          <small class="text-muted">Puntos por Registro</small>
-                          <p class="mb-0 fw-medium">{{ detalleRecompensa.configuracion.puntos.puntos_registro || 0 }}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div *ngIf="detalleRecompensa.tipo === 'descuento' && detalleRecompensa.configuracion.descuento">
-                      <div class="row">
-                        <div class="col-md-4">
-                          <small class="text-muted">Tipo de Descuento</small>
-                          <p class="mb-0 fw-medium">{{ (detalleRecompensa.configuracion?.descuento?.tipo_descuento || '') | titlecase }}</p>
-                        </div>
-                        <div class="col-md-4">
-                          <small class="text-muted">Valor</small>
-                          <p class="mb-0 fw-medium">{{ detalleRecompensa.configuracion.descuento.valor_descuento || 0 }}%</p>
-                        </div>
-                        <div class="col-md-4">
-                          <small class="text-muted">Compra Mínima</small>
-                          <p class="mb-0 fw-medium">{{ formatearMoneda(detalleRecompensa.configuracion.descuento.compra_minima || 0) }}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div *ngIf="detalleRecompensa.tipo === 'envio_gratis' && detalleRecompensa.configuracion.envio">
-                      <div class="row">
-                        <div class="col-md-6">
-                          <small class="text-muted">Compra Mínima</small>
-                          <p class="mb-0 fw-medium">{{ formatearMoneda(detalleRecompensa.configuracion.envio.minimo_compra || 0) }}</p>
-                        </div>
-                        <div class="col-md-6">
-                          <small class="text-muted">Zonas Aplicables</small>
-                          <p class="mb-0 fw-medium">{{ detalleRecompensa.configuracion.envio.zonas_aplicables?.length || 0 }} zonas</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div *ngIf="detalleRecompensa.tipo === 'regalo' && detalleRecompensa.configuracion.regalo">
-                      <div class="row">
-                        <div class="col-md-6">
-                          <small class="text-muted">Compra Mínima</small>
-                          <p class="mb-0 fw-medium">{{ formatearMoneda(detalleRecompensa.configuracion.regalo.minimo_compra || 0) }}</p>
-                        </div>
-                        <div class="col-md-6">
-                          <small class="text-muted">Productos Regalo</small>
-                          <p class="mb-0 fw-medium">{{ detalleRecompensa.configuracion.regalo.productos_regalo?.length || 0 }} productos</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Historial reciente -->
-            <div class="row" *ngIf="detalleRecompensa.historial_reciente && detalleRecompensa.historial_reciente.length > 0">
-              <div class="col-12">
-                <div class="card">
-                  <div class="card-header">
-                    <h6 class="card-title mb-0">
-                      <i class="fas fa-history me-2"></i>
-                      Historial Reciente
-                    </h6>
-                  </div>
-                  <div class="card-body">
-                    <div class="timeline">
-                      <div *ngFor="let evento of detalleRecompensa.historial_reciente" class="timeline-item">
-                        <div class="timeline-marker"></div>
-                        <div class="timeline-content">
-                          <h6 class="timeline-title">{{ evento.accion }}</h6>
-                          <p class="timeline-text">{{ evento.descripcion }}</p>
-                          <small class="text-muted">{{ formatearFecha(evento.fecha) }}</small>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="cerrarModalDetalle()">
-            <i class="fas fa-times me-2"></i>
-            Cerrar
-          </button>
-          <button type="button" class="btn btn-primary" (click)="editarRecompensa(recompensaSeleccionada!)" *ngIf="recompensaSeleccionada">
-            <i class="fas fa-edit me-2"></i>
-            Editar Recompensa
-          </button>
-        </div>
+      <div class="modal-error" *ngIf="errorDetalle">
+        <p>{{ errorDetalle }}</p>
       </div>
     </div>
   </div>
 
-  <!-- Modal de Edición de Recompensa -->
-  <div class="modal fade" [class.show]="mostrarModalEditar" [style.display]="mostrarModalEditar ? 'block' : 'none'" 
-       tabindex="-1" role="dialog" aria-labelledby="modalEditarLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+  <!-- ========== MODAL CONFIRMACIÓN ELIMINAR ========== -->
+  <div class="modal-overlay" *ngIf="mostrarModalConfirmacion" (click)="cerrarModalConfirmacion()">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <svg class="title-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          Confirmar Eliminación
+        </h3>
+        <button class="close-btn" (click)="cerrarModalConfirmacion()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+          </svg>
+        </button>
+      </div>
+
       <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalEditarLabel">
-            <i class="fas fa-edit me-2 text-primary"></i>
-            Editar Recompensa
-          </h5>
-          <button type="button" class="btn-close" (click)="cerrarModalEditar()" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <!-- Loading -->
-          <div *ngIf="cargandoEdicion" class="text-center py-4">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Cargando...</span>
-            </div>
-            <p class="mt-2 text-muted">Cargando datos de la recompensa...</p>
+        <div class="confirm-message">
+          <p>¿Estás seguro de que quieres <strong>cancelar</strong> esta recompensa?</p>
+          <div class="recompensa-info" *ngIf="recompensaSeleccionada">
+            <p><strong>Nombre:</strong> {{ recompensaSeleccionada.nombre }}</p>
+            <p><strong>Estado actual:</strong> {{ recompensaSeleccionada.estado }}</p>
           </div>
-
-          <!-- Error -->
-          <div *ngIf="errorEdicion && !cargandoEdicion" class="alert alert-danger">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            {{ errorEdicion }}
-          </div>
-
-          <!-- Formulario de edición -->
-          <form *ngIf="recompensaEditando && !cargandoEdicion && !errorEdicion" (ngSubmit)="guardarEdicion()">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label">Nombre de la Recompensa *</label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  [(ngModel)]="recompensaEditando.nombre"
-                  name="nombre"
-                  placeholder="Ej: Puntos por Compra"
-                  required
-                >
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Tipo de Recompensa *</label>
-                <select class="form-select" [(ngModel)]="recompensaEditando.tipo" name="tipo" required>
-                  <option value="puntos">Puntos</option>
-                  <option value="descuento">Descuento</option>
-                  <option value="envio_gratis">Envío Gratis</option>
-                  <option value="regalo">Regalo</option>
-                </select>
-              </div>
-              <div class="col-12">
-                <label class="form-label">Descripción *</label>
-                <textarea 
-                  class="form-control" 
-                  [(ngModel)]="recompensaEditando.descripcion"
-                  name="descripcion"
-                  rows="3"
-                  placeholder="Describe los beneficios de esta recompensa..."
-                  required
-                ></textarea>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Fecha de Inicio *</label>
-                <input 
-                  type="date" 
-                  class="form-control" 
-                  [(ngModel)]="recompensaEditando.fecha_inicio"
-                  name="fecha_inicio"
-                  required
-                >
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Fecha de Fin *</label>
-                <input 
-                  type="date" 
-                  class="form-control" 
-                  [(ngModel)]="recompensaEditando.fecha_fin"
-                  name="fecha_fin"
-                  required
-                >
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Estado</label>
-                <select class="form-select" [(ngModel)]="recompensaEditando.estado" name="estado">
-                  <option *ngFor="let estado of estadosRecompensa" [value]="estado.value">
-                    {{ estado.label }}
-                  </option>
-                  <option *ngIf="estadosRecompensa.length === 0" value="programada">Programada</option>
-                  <option *ngIf="estadosRecompensa.length === 0" value="activa">Activa</option>
-                  <option *ngIf="estadosRecompensa.length === 0" value="pausada">Pausada</option>
-                  <option *ngIf="estadosRecompensa.length === 0" value="cancelada">Cancelada</option>
-                </select>
-              </div>
-            </div>
-          </form>
+          <p class="warning-text">Esta acción no se puede deshacer. La recompensa será cancelada y no podrá ser reactivada.</p>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="cerrarModalEditar()">
-            <i class="fas fa-times me-2"></i>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="cerrarModalConfirmacion()" [disabled]="loading">
             Cancelar
           </button>
-          <button 
-            type="button" 
-            class="btn btn-primary" 
-            (click)="guardarEdicion()"
-            [disabled]="cargandoEdicion || !recompensaEditando"
-          >
-            <i class="fas fa-save me-2" *ngIf="!cargandoEdicion"></i>
-            <span class="spinner-border spinner-border-sm me-2" *ngIf="cargandoEdicion"></span>
-            {{ cargandoEdicion ? 'Guardando...' : 'Guardar Cambios' }}
+          <button class="btn-delete" (click)="confirmarEliminacion()" [disabled]="loading">
+            <svg *ngIf="loading" class="loading-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ loading ? 'Cancelando...' : 'Sí, Cancelar' }}
           </button>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Backdrop del modal -->
-  <div class="modal-backdrop fade" [class.show]="mostrarModalDetalle || mostrarModalEditar" *ngIf="mostrarModalDetalle || mostrarModalEditar"></div>
-
-  <!-- Notificaciones -->
-  <div class="notificacion-container" *ngIf="mostrarNotificacion">
-    <div class="alert alert-dismissible fade show" 
-         [ngClass]="{
-           'alert-success': tipoNotificacion === 'success',
-           'alert-danger': tipoNotificacion === 'error',
-           'alert-info': tipoNotificacion === 'info'
-         }"
-         role="alert">
-      <div class="d-flex align-items-center">
-        <i class="fas me-2" 
-           [ngClass]="{
-             'fa-check-circle': tipoNotificacion === 'success',
-             'fa-exclamation-triangle': tipoNotificacion === 'error',
-             'fa-info-circle': tipoNotificacion === 'info'
-           }"></i>
-        <span>{{ mensajeNotificacion }}</span>
-      </div>
-      <button type="button" class="btn-close" (click)="cerrarNotificacion()" aria-label="Close"></button>
     </div>
   </div>
 </div>
