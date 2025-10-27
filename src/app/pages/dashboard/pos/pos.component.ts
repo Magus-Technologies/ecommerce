@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, computed, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -72,6 +72,20 @@ export class PosComponent implements OnInit, OnDestroy {
   // Búsqueda y filtrado
   terminoBusqueda = '';
   productosFiltrados: any[] = [];
+
+  // Getters para selección de resultados de búsqueda
+  get totalResultadosSeleccionados(): number {
+    return this.productosFiltrados.filter(p => p.seleccionado).length;
+  }
+
+  get todosResultadosSeleccionados(): boolean {
+    return this.productosFiltrados.length > 0 && this.productosFiltrados.every(p => p.seleccionado);
+  }
+
+  get algunosResultadosSeleccionados(): boolean {
+    const seleccionados = this.productosFiltrados.filter(p => p.seleccionado).length;
+    return seleccionados > 0 && seleccionados < this.productosFiltrados.length;
+  }
 
   // Producto seleccionado para agregar
   productoSeleccionado = {
@@ -274,7 +288,8 @@ export class PosComponent implements OnInit, OnDestroy {
     private notificacionesService: NotificacionesService,
     private empresaInfoService: EmpresaInfoService,
     private reniecService: ReniecService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -1777,6 +1792,13 @@ export class PosComponent implements OnInit, OnDestroy {
 
     if (!termino || termino.trim() === '') {
       this.productosFiltrados = [...this.productos];
+      // Inicializar propiedades de selección
+      this.productosFiltrados.forEach(p => {
+        if (!p.hasOwnProperty('seleccionado')) {
+          p.seleccionado = false;
+          p.cantidadSeleccionada = 1;
+        }
+      });
       console.log('📦 Productos sin filtro:', this.productosFiltrados.length);
       return;
     }
@@ -1815,6 +1837,14 @@ export class PosComponent implements OnInit, OnDestroy {
       return nombreA.localeCompare(nombreB);
     });
 
+    // Inicializar propiedades de selección en los resultados
+    this.productosFiltrados.forEach(p => {
+      if (!p.hasOwnProperty('seleccionado')) {
+        p.seleccionado = false;
+        p.cantidadSeleccionada = 1;
+      }
+    });
+
     console.log('📦 Productos encontrados:', this.productosFiltrados.length);
     if (this.productosFiltrados.length > 0) {
       console.log('🔝 Primeros 3 resultados:', this.productosFiltrados.slice(0, 3).map(p => p.nombre));
@@ -1830,6 +1860,13 @@ export class PosComponent implements OnInit, OnDestroy {
     // Si el término está vacío, mostrar todos los productos
     if (!this.terminoBusqueda || this.terminoBusqueda.trim() === '') {
       this.productosFiltrados = [...this.productos];
+      // Inicializar propiedades de selección
+      this.productosFiltrados.forEach(p => {
+        if (!p.hasOwnProperty('seleccionado')) {
+          p.seleccionado = false;
+          p.cantidadSeleccionada = 1;
+        }
+      });
       return;
     }
 
@@ -1845,6 +1882,157 @@ export class PosComponent implements OnInit, OnDestroy {
   onLimpiarBusqueda(): void {
     this.terminoBusqueda = '';
     this.productosFiltrados = [...this.productos];
+    // Limpiar selecciones
+    this.productosFiltrados.forEach(p => {
+      p.seleccionado = false;
+      p.cantidadSeleccionada = 1;
+    });
+  }
+
+  // ============================================
+  // SELECCIÓN MÚLTIPLE EN RESULTADOS DE BÚSQUEDA
+  // ============================================
+  toggleTodosResultados(event: any): void {
+    const checked = event.target.checked;
+    this.productosFiltrados.forEach(p => {
+      p.seleccionado = checked;
+      if (checked && !p.cantidadSeleccionada) {
+        p.cantidadSeleccionada = 1;
+      }
+    });
+  }
+
+  onCheckboxResultadoChange(producto: any): void {
+    if (producto.seleccionado && !producto.cantidadSeleccionada) {
+      producto.cantidadSeleccionada = 1;
+    }
+  }
+
+  incrementarResultado(producto: any): void {
+    const stockDisponible = this.getStockDisponible(producto);
+    if (producto.cantidadSeleccionada < stockDisponible) {
+      producto.cantidadSeleccionada++;
+    }
+  }
+
+  decrementarResultado(producto: any): void {
+    if (producto.cantidadSeleccionada > 1) {
+      producto.cantidadSeleccionada--;
+    }
+  }
+
+  validarCantidadResultado(producto: any): void {
+    const stockDisponible = this.getStockDisponible(producto);
+    
+    // Asegurar que sea un número válido
+    if (isNaN(producto.cantidadSeleccionada) || producto.cantidadSeleccionada < 1) {
+      producto.cantidadSeleccionada = 1;
+    }
+    
+    // No permitir más que el stock disponible
+    if (producto.cantidadSeleccionada > stockDisponible) {
+      producto.cantidadSeleccionada = stockDisponible;
+      this.error = `Stock máximo disponible: ${stockDisponible}`;
+      setTimeout(() => this.error = null, 3000);
+    }
+    
+    // Redondear a entero
+    producto.cantidadSeleccionada = Math.floor(producto.cantidadSeleccionada);
+  }
+
+  /**
+   * TrackBy para optimizar el ngFor
+   */
+  trackByProductoId(index: number, producto: any): number {
+    return producto.id;
+  }
+
+  /**
+   * Obtener stock disponible real (stock total - cantidad ya en el carrito)
+   */
+  getStockDisponible(producto: any): number {
+    if (!producto) return 0;
+    
+    const stockTotal = producto.stock ?? 0;
+    
+    // Buscar si el producto ya está en el carrito
+    const itemEnCarrito = this.ventaForm.items.find(item => item.producto_id === producto.id);
+    
+    if (itemEnCarrito) {
+      // Restar la cantidad que ya está en el carrito
+      const disponible = Math.max(0, stockTotal - itemEnCarrito.cantidad);
+      console.log(`📦 Stock de "${producto.nombre}": Total=${stockTotal}, EnCarrito=${itemEnCarrito.cantidad}, Disponible=${disponible}`);
+      return disponible;
+    }
+    
+    return stockTotal;
+  }
+
+  agregarResultadosSeleccionados(): void {
+    const seleccionados = this.productosFiltrados.filter(p => p.seleccionado);
+    
+    if (seleccionados.length === 0) {
+      return;
+    }
+
+    let productosAgregados = 0;
+    
+    seleccionados.forEach(producto => {
+      // Validar stock disponible REAL (considerando lo que ya está en el carrito)
+      const stockDisponible = this.getStockDisponible(producto);
+      const cantidadAgregar = producto.cantidadSeleccionada || 1;
+      
+      if (cantidadAgregar > stockDisponible) {
+        this.error = `El producto "${producto.nombre}" no tiene suficiente stock. Disponible: ${stockDisponible}`;
+        return;
+      }
+
+      // Verificar si el producto ya está en el carrito
+      const itemExistente = this.ventaForm.items.find(item => item.producto_id === producto.id);
+
+      if (itemExistente) {
+        // Si ya existe, sumar la cantidad
+        itemExistente.cantidad += cantidadAgregar;
+        this.calcularItem(itemExistente);
+        console.log(`📈 Cantidad actualizada para "${producto.nombre}": ${itemExistente.cantidad}`);
+        
+        // Crear nueva referencia del array para forzar detección de cambios
+        this.ventaForm.items = [...this.ventaForm.items];
+      } else {
+        // Si no existe, crear nuevo item
+        const nuevoItem: VentaItemFormData = {
+          producto_id: producto.id,
+          codigo_producto: producto.codigo_producto || producto.codigo || `PROD-${producto.id}`,
+          descripcion: producto.nombre,
+          unidad_medida: 'NIU',
+          cantidad: cantidadAgregar,
+          precio_unitario: producto.precio_venta || producto.precio || 0,
+          descuento: 0,
+          tipo_afectacion_igv: TIPOS_AFECTACION_IGV.GRAVADO
+        };
+
+        this.calcularItem(nuevoItem);
+        this.ventaForm.items = [...this.ventaForm.items, nuevoItem];
+        console.log(`✅ Producto agregado: "${producto.nombre}" x${cantidadAgregar}`);
+      }
+      
+      productosAgregados++;
+      
+      // Limpiar selección del producto
+      producto.seleccionado = false;
+      producto.cantidadSeleccionada = 1;
+    });
+
+    if (productosAgregados > 0) {
+      this.success = `✅ ${productosAgregados} producto(s) agregado(s) al carrito`;
+      setTimeout(() => this.success = null, 3000);
+      
+      // Forzar actualización de productosFiltrados para que Angular detecte el cambio
+      this.productosFiltrados = [...this.productosFiltrados];
+      
+      // Forzar detección de cambios para actualizar el stock en la vista
+      this.cdr.detectChanges();
+    }
   }
 
   onSeleccionarProducto(producto: any): void {

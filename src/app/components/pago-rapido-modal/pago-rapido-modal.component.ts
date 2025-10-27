@@ -43,7 +43,7 @@ export interface PagoResultado {
             </div>
 
             <div class="mb-3">
-              <label class="form-label">Método de pago</label>
+              <label class="form-label">Conifrmacion pago</label>
               <select class="form-select" [(ngModel)]="metodo">
                 <option value="EFECTIVO">Efectivo</option>
                 <option value="TARJETA">Tarjeta</option>

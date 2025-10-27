@@ -44,25 +44,91 @@
       <!-- RESULTADOS DE BÚSQUEDA RÁPIDA -->
       <div *ngIf="terminoBusqueda && productosFiltrados.length > 0" class="search-results">
         <div class="search-results-header">
-          <span>{{ productosFiltrados.length }} resultados</span>
+          <div class="header-left">
+            <input 
+              type="checkbox" 
+              class="custom-checkbox" 
+              [checked]="todosResultadosSeleccionados"
+              [indeterminate]="algunosResultadosSeleccionados"
+              (change)="toggleTodosResultados($event)"
+              title="Seleccionar todos"
+            >
+            <span class="results-count">{{ productosFiltrados.length }} resultados</span>
+            <span *ngIf="totalResultadosSeleccionados > 0" class="badge-selected">
+              <i class="ph ph-check-circle"></i>
+              {{ totalResultadosSeleccionados }} seleccionado(s)
+            </span>
+          </div>
+          <button 
+            *ngIf="totalResultadosSeleccionados > 0"
+            class="btn-add-selected"
+            (click)="agregarResultadosSeleccionados()"
+          >
+            <i class="ph ph-shopping-cart"></i>
+            Agregar ({{ totalResultadosSeleccionados }})
+          </button>
         </div>
         <div class="results-list">
-          <div *ngFor="let producto of productosFiltrados.slice(0, 6)" class="result-item"
-            (click)="onSeleccionarProducto(producto)">
-            <div class="result-info">
-              <div class="result-name">{{ producto.nombre }}</div>
-              <div class="result-code">{{ producto.codigo_producto || producto.codigo || 'N/A' }}</div>
+          <div *ngFor="let producto of productosFiltrados.slice(0, 6); trackBy: trackByProductoId" class="result-item"
+            [class.selected]="producto.seleccionado">
+            <div class="result-left">
+              <input 
+                type="checkbox" 
+                class="custom-checkbox" 
+                [(ngModel)]="producto.seleccionado"
+                (change)="onCheckboxResultadoChange(producto)"
+                (click)="$event.stopPropagation()"
+              >
+              <div class="result-info">
+                <div class="result-name">{{ producto.nombre }}</div>
+                <div class="result-code">
+                  <i class="ph ph-barcode"></i>
+                  {{ producto.codigo_producto || producto.codigo || 'N/A' }}
+                </div>
+              </div>
             </div>
-            <div class="result-actions">
-              <span class="result-price">S/ {{ (producto.precio_venta || producto.precio || 0) | number:'1.2-2'
-                }}</span>
-              <span class="result-stock" [class.low]="(producto.stock || 0) < 10">
-                <i class="ph ph-package"></i> {{ producto.stock || 0 }}
-              </span>
+            <div class="result-right">
+              <div class="result-price-stock">
+                <div class="result-price">S/ {{ (producto.precio_venta || producto.precio || 0) | number:'1.2-2' }}</div>
+                <div class="result-stock" 
+                  [class.low]="getStockDisponible(producto) < 10 && getStockDisponible(producto) > 0" 
+                  [class.out]="getStockDisponible(producto) === 0">
+                  <i class="ph ph-package"></i>
+                  <span>Stock: {{ getStockDisponible(producto) }}</span>
+                </div>
+              </div>
+              <div class="quantity-controls" *ngIf="producto.seleccionado">
+                <button 
+                  type="button" 
+                  class="btn-quantity btn-minus"
+                  (click)="decrementarResultado(producto); $event.stopPropagation()"
+                  [disabled]="producto.cantidadSeleccionada <= 1"
+                >
+                  <i class="ph ph-minus"></i>
+                </button>
+                <input 
+                  type="number" 
+                  class="quantity-input" 
+                  [(ngModel)]="producto.cantidadSeleccionada"
+                  (change)="validarCantidadResultado(producto)"
+                  (click)="$event.stopPropagation()"
+                  min="1"
+                  [max]="getStockDisponible(producto)"
+                >
+                <button 
+                  type="button" 
+                  class="btn-quantity btn-plus"
+                  (click)="incrementarResultado(producto); $event.stopPropagation()"
+                  [disabled]="producto.cantidadSeleccionada >= getStockDisponible(producto) || getStockDisponible(producto) === 0"
+                >
+                  <i class="ph ph-plus"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
         <button *ngIf="productosFiltrados.length > 6" class="btn-show-all" (click)="abrirProductoModal()">
+          <i class="ph ph-funnel"></i>
           Ver todos ({{ productosFiltrados.length }})
         </button>
       </div>
