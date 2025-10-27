@@ -58,7 +58,11 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Prerender
   },
   {
-    path: 'shop/categoria/:slug',
+    path: 'shop/categoria/:categoriaSlug',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'shop/marca/:marcaSlug',
     renderMode: RenderMode.Server
   },
   {
@@ -173,6 +177,15 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'motorizado/historial',
     renderMode: RenderMode.Server
+  },
+  {
+    path: 'politica-cookies',
+    renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'ofertas',
+    renderMode: RenderMode.Prerender
   }
+
   
 ];

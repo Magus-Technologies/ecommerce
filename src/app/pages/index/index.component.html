@@ -1,7 +1,10 @@
 <!-- src/app/pages/index/index.component.html -->
 <!-- ============================ Banner Section Start =============================== -->
 <!-- Solo mostrar la sección si hay banners o está cargando -->
-<div class="banner w-100 p-0" *ngIf="isLoadingBanners || bannersDinamicos.length > 0">
+<div
+  class="banner w-100 p-0"
+  *ngIf="isLoadingBanners || bannersDinamicos.length > 0"
+>
   <div
     class="banner-item position-relative overflow-hidden w-100"
     style="padding: 0; margin: 0"
@@ -231,15 +234,28 @@
 <!-- ============================ Feature Section End =============================== -->
 
 <!-- ✅ BANNER HORIZONTAL 1: Debajo de Categorías -->
-<section class="pt-40" *ngIf="bannersHorizontales.debajo_categorias && !isLoadingBannersHorizontales">
+<section
+  class="pt-40"
+  *ngIf="bannersHorizontales.debajo_categorias && !isLoadingBannersHorizontales"
+>
   <div class="container container-lg">
-    <a [href]="bannersHorizontales.debajo_categorias.enlace_url"
-       class="d-block position-relative overflow-hidden rounded-16 banner-horizontal-link">
-      <img [src]="bannersHorizontales.debajo_categorias.imagen_url"
-           [alt]="bannersHorizontales.debajo_categorias.titulo || 'Banner Horizontal'"
-           class="w-100 banner-horizontal-img"
-           (error)="onImageError($event)"
-           style="max-height: 200px; object-fit: cover; transition: transform 0.3s ease;">
+    <a
+      [href]="bannersHorizontales.debajo_categorias.enlace_url"
+      class="d-block position-relative overflow-hidden rounded-16 banner-horizontal-link"
+    >
+      <img
+        [src]="bannersHorizontales.debajo_categorias.imagen_url"
+        [alt]="
+          bannersHorizontales.debajo_categorias.titulo || 'Banner Horizontal'
+        "
+        class="w-100 banner-horizontal-img"
+        (error)="onImageError($event)"
+        style="
+          max-height: 200px;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        "
+      />
     </a>
   </div>
 </section>
@@ -270,11 +286,14 @@
         [attr.data-aos-duration]="banner.animacion_delay"
       >
         <div
-            class="promotional-banner-item position-relative rounded-24 overflow-hidden z-1 ps-32 pe-20 h-100 d-flex align-items-end"
-            style="min-height: 220px; padding-bottom: 16px;"
-          >
+          class="promotional-banner-item position-relative rounded-24 overflow-hidden z-1 ps-32 pe-20 h-100 d-flex align-items-end"
+          style="min-height: 220px; padding-bottom: 16px"
+        >
           <img
-            [src]="banner.imagen_url || 'assets/images/thumbs/promotional-banner-default.png'"
+            [src]="
+              banner.imagen_url ||
+              'assets/images/thumbs/promotional-banner-default.png'
+            "
             [alt]="banner.titulo"
             class="position-absolute inset-block-start-0 inset-inline-start-0 w-100 h-100 object-fit-cover z-n1"
             (error)="onImageError($event)"
@@ -283,20 +302,24 @@
             <div>
               <!-- Badges horizontales ARRIBA -->
               <div class="d-flex align-items-center gap-6 flex-wrap mb-8">
-                <span 
+                <span
                   class="badge rounded-pill px-10 py-5 fw-medium"
-                  style="font-size: 0.75rem;"
-                  [style.background-color]="banner.color_badge_nombre || '#0d6efd'"
+                  style="font-size: 0.75rem"
+                  [style.background-color]="
+                    banner.color_badge_nombre || '#0d6efd'
+                  "
                   [style.color]="'#ffffff'"
                 >
                   {{ banner.titulo }}
                 </span>
 
-                <span 
+                <span
                   *ngIf="banner.precio"
                   class="badge rounded-pill px-10 py-5 fw-bold"
-                  style="font-size: 0.75rem;"
-                  [style.background-color]="banner.color_badge_precio || '#28a745'"
+                  style="font-size: 0.75rem"
+                  [style.background-color]="
+                    banner.color_badge_precio || '#28a745'
+                  "
                   [style.color]="'#ffffff'"
                 >
                   {{ banner.precio }}
@@ -305,15 +328,18 @@
 
               <!-- Botón principal ABAJO con tamaño más reducido y CENTRADO -->
               <div class="d-flex justify-content-center w-100">
-                <a [href]="getSafeUrl(banner.enlace_url)"
+                <a
+                  [href]="getSafeUrl(banner.enlace_url)"
                   class="d-inline-flex align-items-center rounded-pill gap-4 px-10 py-5 text-decoration-none fw-medium"
-                  style="font-size: 0.8rem;"
+                  style="font-size: 0.8rem"
                   [style.background-color]="banner.color_boton || '#0d6efd'"
                   [style.color]="'#ffffff'"
-                  [style.border]="'1px solid ' + (banner.color_boton || '#0d6efd')"
+                  [style.border]="
+                    '1px solid ' + (banner.color_boton || '#0d6efd')
+                  "
                 >
                   {{ banner.texto_boton || "Compra ahora" }}
-                  <span class="icon d-flex" style="font-size: 1rem;">
+                  <span class="icon d-flex" style="font-size: 1rem">
                     <i class="ph ph-arrow-right"></i>
                   </span>
                 </a>
@@ -333,8 +359,6 @@
     </div>
   </div>
 </section>
-
-
 
 <!-- Resto del contenido permanece igual... -->
 <section class="recommended overflow-hidden pt-80">
@@ -515,22 +539,28 @@
 
         <!-- ✅ BOTÓN "VER MÁS" CON CONTADOR -->
         <div
-          *ngIf="!isLoadingProductosFiltrados && productosFiltrados.length > productosVisibles"
+          *ngIf="
+            !isLoadingProductosFiltrados &&
+            productosFiltrados.length > productosVisibles
+          "
           class="text-center mt-40"
         >
           <button
             (click)="verMasProductos()"
             class="btn btn-main rounded-pill py-14 px-40 fw-semibold d-inline-flex align-items-center gap-12"
-            style="font-size: 15px; transition: all 0.3s ease;"
+            style="font-size: 15px; transition: all 0.3s ease"
           >
             <i class="ph ph-arrow-down text-lg"></i>
             Ver más productos
-            <span class="badge bg-white text-main-600 rounded-pill px-12 py-4 ms-8">
+            <span
+              class="badge bg-white text-main-600 rounded-pill px-12 py-4 ms-8"
+            >
               {{ productosVisibles }} de {{ productosFiltrados.length }}
             </span>
           </button>
           <p class="text-gray-500 text-sm mt-12 mb-0">
-            Mostrando {{ productosVisibles }} de {{ productosFiltrados.length }} productos
+            Mostrando {{ productosVisibles }} de
+            {{ productosFiltrados.length }} productos
           </p>
         </div>
 
@@ -564,7 +594,7 @@
         <h5 class="mb-0 wow fadeInLeft">Ofertas Especiales</h5>
         <div class="flex-align gap-16 wow fadeInRight">
           <a
-            [routerLink]="['shop']"
+            [routerLink]="['/ofertas']"
             class="text-sm fw-medium text-gray-700 hover-text-main-600 hover-text-decoration-underline"
             >Ver Todas las ofertas</a
           >
@@ -575,12 +605,25 @@
     <div class="row g-20">
       <!-- Banner Imagen (Lado izquierdo) -->
       <div class="col-lg-3 col-md-4 col-12" data-aos="fade-right">
-        <div class="banner-ofertas-image rounded-16 overflow-hidden"
-             style="height: 500px; display: flex; align-items: center; justify-content: center;">
+        <div
+          class="banner-ofertas-image rounded-16 overflow-hidden"
+          style="
+            height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          "
+        >
           <img
             [src]="bannerOfertaActivo.imagen_url"
             alt="Banner Ofertas Especiales"
-            style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;">
+            style="
+              max-width: 100%;
+              max-height: 100%;
+              object-fit: contain;
+              display: block;
+            "
+          />
         </div>
       </div>
 
@@ -603,27 +646,49 @@
         </button>
 
         <ngx-slick-carousel
-          *ngIf="bannerOfertaActivo.productos && bannerOfertaActivo.productos.length > 0"
+          *ngIf="
+            bannerOfertaActivo.productos &&
+            bannerOfertaActivo.productos.length > 0
+          "
           #ofertasCarousel="slick-carousel"
           [config]="ofertasEspecialesSlideConfig"
           class="ofertas-carousel"
         >
-          <div ngxSlickItem *ngFor="let producto of bannerOfertaActivo.productos">
+          <div
+            ngxSlickItem
+            *ngFor="let producto of bannerOfertaActivo.productos"
+          >
             <div>
-              <div class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2">
-
-                <a [routerLink]="['/producto', producto.id]"
-                   class="product-card__thumb rounded-8 position-relative overflow-hidden"
-                   style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                  <img [src]="producto.imagen_principal"
-                       [alt]="producto.nombre"
-                       (error)="onImageError($event)"
-                       loading="lazy"
-                       class="transition-2"
-                       style="max-width: 100%; max-height: 100%; object-fit: contain;">
+              <div
+                class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2"
+              >
+                <a
+                  [routerLink]="['/producto', producto.id]"
+                  class="product-card__thumb rounded-8 position-relative overflow-hidden"
+                  style="
+                    height: 200px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  "
+                >
+                  <img
+                    [src]="producto.imagen_principal"
+                    [alt]="producto.nombre"
+                    (error)="onImageError($event)"
+                    loading="lazy"
+                    class="transition-2"
+                    style="
+                      max-width: 100%;
+                      max-height: 100%;
+                      object-fit: contain;
+                    "
+                  />
 
                   <!-- Badge de descuento -->
-                  <span class="product-card__badge bg-danger-600 px-8 py-4 text-sm text-white position-absolute inset-inline-start-0 inset-block-start-0">
+                  <span
+                    class="product-card__badge bg-danger-600 px-8 py-4 text-sm text-white position-absolute inset-inline-start-0 inset-block-start-0"
+                  >
                     -{{ producto.descuento_porcentaje }}%
                   </span>
                 </a>
@@ -631,7 +696,10 @@
                 <!-- Contenido -->
                 <div class="product-card__content mt-16">
                   <h6 class="title text-lg fw-semibold mt-12 mb-8">
-                    <a [routerLink]="['/producto', producto.id]" class="link text-line-2">
+                    <a
+                      [routerLink]="['/producto', producto.id]"
+                      class="link text-line-2"
+                    >
                       {{ producto.nombre }}
                     </a>
                   </h6>
@@ -642,12 +710,16 @@
                     </span>
                   </div>
 
-                  <div class="product-card__price my-20 d-flex flex-column gap-2">
-                    <span class="text-gray-400 text-md fw-semibold text-decoration-line-through">
-                      S/ {{ producto.precio | number:'1.2-2' }}
+                  <div
+                    class="product-card__price my-20 d-flex flex-column gap-2"
+                  >
+                    <span
+                      class="text-gray-400 text-md fw-semibold text-decoration-line-through"
+                    >
+                      S/ {{ producto.precio | number : "1.2-2" }}
                     </span>
-                    <span class="text-md fw-semibold" style="color: #28a745;">
-                      S/ {{ producto.precio_con_descuento | number:'1.2-2' }}
+                    <span class="text-md fw-semibold" style="color: #28a745">
+                      S/ {{ producto.precio_con_descuento | number : "1.2-2" }}
                       <span class="text-gray-500 fw-normal">/Qty</span>
                     </span>
                   </div>
@@ -657,9 +729,11 @@
                     [disabled]="producto.stock <= 0"
                     class="product-card__cart btn bg-main-50 text-main-600 hover-bg-main-600 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-24 w-100 justify-content-center"
                     [ngClass]="{
-                      'bg-main-50 text-main-600 hover-bg-main-600 hover-text-white': producto.stock > 0,
+                      'bg-main-50 text-main-600 hover-bg-main-600 hover-text-white':
+                        producto.stock > 0,
                       'bg-gray-200 text-gray-500': producto.stock <= 0
-                    }">
+                    }"
+                  >
                     <span *ngIf="producto.stock > 0">
                       Agregar al carrito <i class="ph ph-shopping-cart"></i>
                     </span>
@@ -674,8 +748,13 @@
         </ngx-slick-carousel>
 
         <!-- Empty state si no hay productos -->
-        <div *ngIf="!bannerOfertaActivo.productos || bannerOfertaActivo.productos.length === 0"
-             class="text-center py-60">
+        <div
+          *ngIf="
+            !bannerOfertaActivo.productos ||
+            bannerOfertaActivo.productos.length === 0
+          "
+          class="text-center py-60"
+        >
           <div class="bg-gray-50 rounded-12 py-40 px-30">
             <i class="ph ph-package text-4xl text-gray-400 mb-16"></i>
             <p class="text-gray-600 mb-0">No hay productos en esta oferta</p>
@@ -683,20 +762,36 @@
         </div>
       </div>
     </div>
-
   </div>
 </section>
 
 <!-- ✅ BANNER HORIZONTAL 2: Debajo de Ofertas Especiales -->
-<section class="pt-40" *ngIf="bannersHorizontales.debajo_ofertas_especiales && !isLoadingBannersHorizontales">
+<section
+  class="pt-40"
+  *ngIf="
+    bannersHorizontales.debajo_ofertas_especiales &&
+    !isLoadingBannersHorizontales
+  "
+>
   <div class="container container-lg">
-    <a [href]="bannersHorizontales.debajo_ofertas_especiales.enlace_url"
-       class="d-block position-relative overflow-hidden rounded-16 banner-horizontal-link">
-      <img [src]="bannersHorizontales.debajo_ofertas_especiales.imagen_url"
-           [alt]="bannersHorizontales.debajo_ofertas_especiales.titulo || 'Banner Horizontal'"
-           class="w-100 banner-horizontal-img"
-           (error)="onImageError($event)"
-           style="max-height: 200px; object-fit: cover; transition: transform 0.3s ease;">
+    <a
+      [href]="bannersHorizontales.debajo_ofertas_especiales.enlace_url"
+      class="d-block position-relative overflow-hidden rounded-16 banner-horizontal-link"
+    >
+      <img
+        [src]="bannersHorizontales.debajo_ofertas_especiales.imagen_url"
+        [alt]="
+          bannersHorizontales.debajo_ofertas_especiales.titulo ||
+          'Banner Horizontal'
+        "
+        class="w-100 banner-horizontal-img"
+        (error)="onImageError($event)"
+        style="
+          max-height: 200px;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        "
+      />
     </a>
   </div>
 </section>
@@ -747,27 +842,35 @@
         >
           <div
             class="flash-sales-item rounded-16 overflow-hidden z-1 position-relative flex-align flex-0 justify-content-between gap-8 ps-56-px"
-            style="background-color: #f8f9fa; min-height: 320px;"
+            style="background-color: #f8f9fa; min-height: 320px"
           >
             <img
               [src]="sale.imagen_url || 'assets/images/bg/flash-sale-bg1.png'"
               [alt]="sale.nombre"
-             class="position-absolute inset-block-start-0 inset-inline-start-0 w-100 h-100 object-fit-cover z-n1 flash-sales-item__bg"
+              class="position-absolute inset-block-start-0 inset-inline-start-0 w-100 h-100 object-fit-cover z-n1 flash-sales-item__bg"
               (error)="onImageError($event)"
             />
 
             <div class="flash-sales-item__content">
               <!-- Badge con el nombre del banner (color dinámico) -->
-              <span class="badge text-white px-16 py-8 rounded-pill mb-16 d-inline-block"
-                    [style.background-color]="sale.color_badge || '#DC2626'"
-                    style="font-size: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+              <span
+                class="badge text-white px-16 py-8 rounded-pill mb-16 d-inline-block"
+                [style.background-color]="sale.color_badge || '#DC2626'"
+                style="
+                  font-size: 18px;
+                  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                "
+              >
                 <i class="ph ph-lightning me-6"></i>
                 {{ sale.nombre }}
               </span>
             </div>
 
             <!-- Botón (reposicionado abajo a la izquierda) -->
-            <div class="position-absolute bottom-0 start-0" style="z-index: 10; margin-left: 56px; margin-bottom: 24px;">
+            <div
+              class="position-absolute bottom-0 start-0"
+              style="z-index: 10; margin-left: 56px; margin-bottom: 24px"
+            >
               <a
                 [routerLink]="[sale.enlace_url]"
                 class="btn d-inline-flex align-items-center rounded-pill gap-8"
@@ -782,47 +885,66 @@
             </div>
 
             <!-- Countdown (reposicionado a la esquina inferior derecha) -->
-            <div class="position-absolute bottom-0 end-0 m-3" style="z-index: 10;">
+            <div
+              class="position-absolute bottom-0 end-0 m-3"
+              style="z-index: 10"
+            >
               <div class="countdown" [id]="'countdown-flash-' + sale.id">
                 <ul class="countdown-list flex-align flex-wrap gap-2">
-                  <li class="countdown-list__item py-10 px-14 text-heading flex-align gap-2 fw-bold rounded-6"
-                      style="background: white;
-                             color: #3B82F6;
-                             min-width: 50px;
-                             font-size: 15px;
-                             justify-content: center;
-                             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                             border: 2px solid #3B82F6;">
+                  <li
+                    class="countdown-list__item py-10 px-14 text-heading flex-align gap-2 fw-bold rounded-6"
+                    style="
+                      background: white;
+                      color: #3b82f6;
+                      min-width: 50px;
+                      font-size: 15px;
+                      justify-content: center;
+                      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                      border: 2px solid #3b82f6;
+                    "
+                  >
                     <span class="days">0</span>d
                   </li>
-                  <li class="countdown-list__item py-10 px-14 text-heading flex-align gap-2 fw-bold rounded-6"
-                      style="background: white;
-                             color: #3B82F6;
-                             min-width: 50px;
-                             font-size: 15px;
-                             justify-content: center;
-                             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                             border: 2px solid #3B82F6;">
+                  <li
+                    class="countdown-list__item py-10 px-14 text-heading flex-align gap-2 fw-bold rounded-6"
+                    style="
+                      background: white;
+                      color: #3b82f6;
+                      min-width: 50px;
+                      font-size: 15px;
+                      justify-content: center;
+                      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                      border: 2px solid #3b82f6;
+                    "
+                  >
                     <span class="hours">0</span>h
                   </li>
-                  <li class="countdown-list__item py-10 px-14 text-heading flex-align gap-2 fw-bold rounded-6"
-                      style="background: white;
-                             color: #3B82F6;
-                             min-width: 50px;
-                             font-size: 15px;
-                             justify-content: center;
-                             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                             border: 2px solid #3B82F6;">
+                  <li
+                    class="countdown-list__item py-10 px-14 text-heading flex-align gap-2 fw-bold rounded-6"
+                    style="
+                      background: white;
+                      color: #3b82f6;
+                      min-width: 50px;
+                      font-size: 15px;
+                      justify-content: center;
+                      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                      border: 2px solid #3b82f6;
+                    "
+                  >
                     <span class="minutes">0</span>m
                   </li>
-                  <li class="countdown-list__item py-10 px-14 text-heading flex-align gap-2 fw-bold rounded-6"
-                      style="background: white;
-                             color: #3B82F6;
-                             min-width: 50px;
-                             font-size: 15px;
-                             justify-content: center;
-                             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                             border: 2px solid #3B82F6;">
+                  <li
+                    class="countdown-list__item py-10 px-14 text-heading flex-align gap-2 fw-bold rounded-6"
+                    style="
+                      background: white;
+                      color: #3b82f6;
+                      min-width: 50px;
+                      font-size: 15px;
+                      justify-content: center;
+                      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                      border: 2px solid #3b82f6;
+                    "
+                  >
                     <span class="seconds">0</span>s
                   </li>
                 </ul>
@@ -846,15 +968,30 @@
 <!-- ========================= flash sales End ================================ -->
 
 <!-- ✅ BANNER HORIZONTAL 3: Debajo de Ventas Flash -->
-<section class="pt-40" *ngIf="bannersHorizontales.debajo_ventas_flash && !isLoadingBannersHorizontales">
+<section
+  class="pt-40"
+  *ngIf="
+    bannersHorizontales.debajo_ventas_flash && !isLoadingBannersHorizontales
+  "
+>
   <div class="container container-lg">
-    <a [href]="bannersHorizontales.debajo_ventas_flash.enlace_url"
-       class="d-block position-relative overflow-hidden rounded-16 banner-horizontal-link">
-      <img [src]="bannersHorizontales.debajo_ventas_flash.imagen_url"
-           [alt]="bannersHorizontales.debajo_ventas_flash.titulo || 'Banner Horizontal'"
-           class="w-100 banner-horizontal-img"
-           (error)="onImageError($event)"
-           style="max-height: 200px; object-fit: cover; transition: transform 0.3s ease;">
+    <a
+      [href]="bannersHorizontales.debajo_ventas_flash.enlace_url"
+      class="d-block position-relative overflow-hidden rounded-16 banner-horizontal-link"
+    >
+      <img
+        [src]="bannersHorizontales.debajo_ventas_flash.imagen_url"
+        [alt]="
+          bannersHorizontales.debajo_ventas_flash.titulo || 'Banner Horizontal'
+        "
+        class="w-100 banner-horizontal-img"
+        (error)="onImageError($event)"
+        style="
+          max-height: 200px;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        "
+      />
     </a>
   </div>
 </section>
@@ -1375,13 +1512,15 @@
             </h6>
           </div>
           <div class="short-product-list arrow-style-two max-h-unset">
-            <!-- ✅ PRODUCTOS EN OFERTA DINÁMICOS -->
+            <!-- ✅ PRODUCTOS EN OFERTA DINÁMICOS (Ahora usando bannerOfertaActivo.productos) -->
             <div
-              *ngIf="productosEnOferta.length > 0"
+              *ngIf="(bannerOfertaActivo?.productos?.length || 0) > 0"
               class="d-flex flex-column gap-44"
             >
               <div
-                *ngFor="let producto of productosEnOferta.slice(0, 4)"
+                *ngFor="
+                  let producto of bannerOfertaActivo?.productos?.slice(0, 4)
+                "
                 class="flex-align gap-16"
               >
                 <div
@@ -1390,7 +1529,7 @@
                   <a [routerLink]="getProductLink(producto)" class="link">
                     <img
                       [src]="
-                        producto.imagen_url ||
+                        producto.imagen_principal ||
                         'assets/images/thumbs/short-product-img9.png'
                       "
                       [alt]="producto.nombre"
@@ -1421,12 +1560,12 @@
                   </h6>
                   <div class="product-card__price flex-align gap-8">
                     <span class="text-heading text-md fw-semibold d-block">
-                      S/ {{ producto.precio_oferta | number : "1.2-2" }}
+                      S/ {{ producto.precio_con_descuento | number : "1.2-2" }}
                     </span>
                     <span
                       class="text-gray-400 text-md fw-semibold d-block text-decoration-line-through"
                     >
-                      S/ {{ producto.precio_original | number : "1.2-2" }}
+                      S/ {{ producto.precio | number : "1.2-2" }}
                     </span>
                   </div>
                 </div>
@@ -1435,7 +1574,7 @@
 
             <!-- ✅ MENSAJE CUANDO NO HAY PRODUCTOS EN OFERTA -->
             <div
-              *ngIf="productosEnOferta.length === 0"
+              *ngIf="!bannerOfertaActivo?.productos?.length"
               class="text-center py-40"
             >
               <div class="bg-gray-50 rounded-12 py-30 px-20">
@@ -1684,7 +1823,10 @@
           [attr.data-aos]="slide.dataAos"
           [attr.data-aos-duration]="slide.dataAosDuration"
         >
-          <a [routerLink]="['/shop']" [queryParams]="{marca: slide.marcaId}" style="cursor: pointer; display: block;">
+          <a
+            [routerLink]="getMarcaLink(slide)"
+            style="cursor: pointer; display: block"
+          >
             <img
               [src]="slide.imgSrc"
               [alt]="slide.imgAlt"

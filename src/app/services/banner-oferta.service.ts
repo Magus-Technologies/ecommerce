@@ -23,6 +23,10 @@ export interface ProductoBannerOferta {
   stock: number;
   descuento_porcentaje: number;
   precio_con_descuento: number;
+  categoria_id?: number;
+  categoria_nombre?: string;
+  marca_id?: number;
+  marca_nombre?: string;
 }
 
 @Injectable({

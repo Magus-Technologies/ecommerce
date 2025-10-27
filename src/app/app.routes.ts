@@ -168,9 +168,23 @@ export const routes: Routes = [
           import('./pages/shop/shop.component').then((m) => m.ShopComponent),
         title: 'Shop',
       },
+      // ✅ NUEVO: Página de Ofertas
+      {
+        path: 'ofertas',
+        loadComponent: () =>
+          import('./pages/ofertas/ofertas.component').then((m) => m.OfertasComponent),
+        title: 'Ofertas Especiales',
+      },
       // ✅ NUEVO: Ruta SEO-friendly para categorías con slug
       {
-        path: 'shop/categoria/:slug',
+        path: 'shop/categoria/:categoriaSlug',
+        loadComponent: () =>
+          import('./pages/shop/shop.component').then((m) => m.ShopComponent),
+        title: 'Shop',
+      },
+      // ✅ NUEVO: Ruta SEO-friendly para marcas con slug
+      {
+        path: 'shop/marca/:marcaSlug',
         loadComponent: () =>
           import('./pages/shop/shop.component').then((m) => m.ShopComponent),
         title: 'Shop',
@@ -256,6 +270,14 @@ export const routes: Routes = [
             (m) => m.PrivacyPolicyComponent
           ),
         title: 'Política de Privacidad',
+      },
+      {
+        path: 'politica-cookies',
+        loadComponent: () =>
+          import('./pages/politica-cookies/politica-cookies.component').then(
+            (m) => m.PoliticaCookiesComponent
+          ),
+        title: 'Política de Cookies',
       },
       {
         path: 'claimbook',

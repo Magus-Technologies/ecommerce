@@ -1,8 +1,9 @@
 // src\app\layouts\main-layouts\footer\footer.component.ts
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { EmpresaInfoService } from '../../../services/empresa-info.service';
 
 @Component({
   selector: 'app-footer',
@@ -10,39 +11,42 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './footer.component.html',
   styleUrl: './footer.component.scss'
 })
-export class FooterComponent {
+export class FooterComponent implements OnInit {
   emailSuscripcion = '';
 
-  contactInfo = {
-    description: 'Escríbenos a: info@magustechnology.com',
-    email: 'info@magustechnology.com',
-    schedule: 'Llámanos de Lunes a Viernes de 9:00 am a 6:00 p.m'
+  // ✅ Datos dinámicos de la empresa (cargados desde la API)
+  empresaInfo: any = {
+    nombre_empresa: 'Cargando...',
+    email: '',
+    telefono: '',
+    celular: '',
+    direccion: '',
+    horario_atencion: '',
+    logo_url: '/assets/images/logo/logo3.png',
+    facebook: null,
+    instagram: null,
+    twitter: null,
+    youtube: null,
+    whatsapp: null,
+    website: null
   };
 
-  socialLinks = [
-    { icon: 'ph-fill ph-tiktok-logo', url: 'https://www.tiktok.com' },
-    { icon: 'ph-fill ph-instagram-logo', url: 'https://www.instagram.com' },
-    { icon: 'ph-fill ph-facebook-logo', url: 'https://www.facebook.com' },
-    { icon: 'ph-fill ph-youtube-logo', url: 'https://www.youtube.com' }
-  ];
+  // ✅ Redes sociales dinámicas (se actualizan con los datos de la API)
+  socialLinks: any[] = [];
 
   footerSections = [
     {
       title: 'Contáctanos',
       links: [
-        { label: 'Productos de Amazon', route: ['shop'] },
-        { label: 'Productos de China', route: ['shop'] },
-        { label: 'Productos para cocina', route: ['shop'] },
-        { label: 'Productos rankeados', route: ['shop'] }
+        { label: 'Contacto', route: ['/contact'] }
       ]
     },
     {
       title: 'Populares',
       links: [
-        { label: 'Productos de Amazon', route: ['shop'] },
-        { label: 'Productos de China', route: ['shop'] },
-        { label: 'Productos para cocina', route: ['shop'] },
-        { label: 'Productos rankeados', route: ['shop'] }
+        { label: 'Ofertas', route: ['/'] }, // TODO: Crear vista de ofertas
+        { label: 'Promociones', route: ['/'] }, // TODO: Crear vista de promociones
+        { label: 'Venta Flash', route: ['/'] } // TODO: Crear vista de venta flash
       ]
     },
     {
@@ -63,6 +67,62 @@ export class FooterComponent {
     { name: 'Yape', image: '/assets/images/payment/yape.png' },
     { name: 'Plin', image: '/assets/images/payment/plin.png' }
   ];
+
+  constructor(private empresaInfoService: EmpresaInfoService) {}
+
+  ngOnInit(): void {
+    this.cargarDatosEmpresa();
+  }
+
+  // ✅ Cargar datos de la empresa desde la API
+  cargarDatosEmpresa(): void {
+    this.empresaInfoService.obtenerEmpresaInfoPublica().subscribe({
+      next: (data) => {
+        this.empresaInfo = data;
+
+        // ✅ Construir enlaces de redes sociales dinámicamente
+        this.socialLinks = [];
+
+        if (data.facebook) {
+          this.socialLinks.push({
+            icon: 'ph-fill ph-facebook-logo',
+            url: data.facebook
+          });
+        }
+
+        if (data.instagram) {
+          this.socialLinks.push({
+            icon: 'ph-fill ph-instagram-logo',
+            url: data.instagram
+          });
+        }
+
+        if (data.twitter) {
+          this.socialLinks.push({
+            icon: 'ph-fill ph-twitter-logo',
+            url: data.twitter
+          });
+        }
+
+        if (data.youtube) {
+          this.socialLinks.push({
+            icon: 'ph-fill ph-youtube-logo',
+            url: data.youtube
+          });
+        }
+
+        if (data.whatsapp) {
+          this.socialLinks.push({
+            icon: 'ph-fill ph-whatsapp-logo',
+            url: `https://wa.me/${data.whatsapp}`
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar datos de la empresa:', error);
+      }
+    });
+  }
 
   suscribirse(): void {
     if (this.emailSuscripcion.trim()) {
