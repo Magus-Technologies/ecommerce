@@ -9,6 +9,7 @@ import { FacturacionService } from '../../../services/facturacion.service';
 import { AlmacenService } from '../../../services/almacen.service';
 import { NotificacionesService } from '../../../services/notificaciones.service';
 import { EmpresaInfoService } from '../../../services/empresa-info.service';
+import { ReniecService } from '../../../services/reniec.service';
 import { ClienteEditModalComponent } from '../../../components/cliente-edit-modal/cliente-edit-modal.component';
 import { ProductoQuickModalComponent, ProductoQuickItem } from '../../../components/producto-quick-modal/producto-quick-modal.component';
 import { PagoRapidoModalComponent, PagoResultado } from '../../../components/pago-rapido-modal/pago-rapido-modal.component';
@@ -272,6 +273,7 @@ export class PosComponent implements OnInit, OnDestroy {
     private almacenService: AlmacenService,
     private notificacionesService: NotificacionesService,
     private empresaInfoService: EmpresaInfoService,
+    private reniecService: ReniecService,
     private router: Router
   ) { }
 
@@ -578,64 +580,87 @@ export class PosComponent implements OnInit, OnDestroy {
     this.error = null;
     this.success = null;
 
-    // Usar el endpoint específico de búsqueda por documento
-    this.facturacionService.buscarClientePorDocumento(numeroDoc)
+    // PASO 1: Buscar en la base de datos (PRIORIDAD)
+    this.facturacionService.getClientes({ numero_documento: numeroDoc })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          if (response.success && response.data && response.data.length > 0) {
+          if (response.data && response.data.length > 0) {
+            // ✅ CLIENTE ENCONTRADO EN DB
             const cliente = response.data[0];
             this.loading = false;
 
-            // Debug: Ver qué datos retorna el backend
-            console.log('📋 Datos del cliente recibidos:', cliente);
-
-            // Construir nombre completo desde nombres y apellidos
-            let nombreCompleto = '';
-            const nombres = (cliente as any).nombres || '';
-            const apellidos = (cliente as any).apellidos || '';
-
-            if (nombres && apellidos) {
-              nombreCompleto = `${nombres} ${apellidos}`.trim();
-            } else if (nombres) {
-              nombreCompleto = nombres;
-            } else {
-              nombreCompleto = (cliente as any).nombre || '';
-            }
+            console.log('📋 Cliente encontrado en DB:', cliente);
 
             // Autocompletar todos los datos del cliente
             this.ventaForm.cliente = {
-              tipo_documento: this.ventaForm.cliente.tipo_documento,
-              numero_documento: (cliente as any).numero_documento || this.ventaForm.cliente.numero_documento,
-              nombre: nombreCompleto,
-              direccion: (cliente as any).direccion || '',
-              email: (cliente as any).email || '',
-              telefono: (cliente as any).telefono || ''
+              tipo_documento: cliente.tipo_documento || this.ventaForm.cliente.tipo_documento,
+              numero_documento: cliente.numero_documento || numeroDoc,
+              nombre: cliente.nombre || '',
+              direccion: cliente.direccion || '',
+              email: cliente.email || '',
+              telefono: cliente.telefono || ''
             };
 
-            console.log('✅ Datos autocompletados:', this.ventaForm.cliente);
-
             // Guardar el ID del cliente si existe
-            this.clienteExistenteId = (cliente as any).id_cliente || (cliente as any).id || null;
-            this.success = '✅ Cliente encontrado y datos cargados automáticamente';
+            this.clienteExistenteId = cliente.id || null;
+            this.success = '✅ Cliente encontrado en el sistema';
             setTimeout(() => this.success = null, 3000);
           } else {
-            // No encontrado
-            this.loading = false;
-            // Si es RUC, intentar validar con SUNAT
-            if (this.ventaForm.cliente.tipo_documento === TIPOS_DOCUMENTO.RUC) {
-              this.validarRUC();
-            }
+            // ❌ NO ENCONTRADO EN DB → BUSCAR EN RENIEC
+            this.buscarEnReniec(numeroDoc);
           }
         },
         error: (err) => {
           this.loading = false;
-          console.error('Error al buscar cliente:', err);
-          this.error = 'Error al buscar cliente';
-          // Si es RUC, intentar validar con SUNAT
-          if (this.ventaForm.cliente.tipo_documento === TIPOS_DOCUMENTO.RUC) {
-            this.validarRUC();
+          console.error('Error al buscar en DB:', err);
+          // Si hay error en DB, intentar con RENIEC
+          this.buscarEnReniec(numeroDoc);
+        }
+      });
+  }
+
+  /**
+   * Buscar en RENIEC cuando no se encuentra en DB
+   */
+  private buscarEnReniec(numeroDoc: string): void {
+    const esDni = numeroDoc.length === 8;
+    
+    if (!esDni) {
+      // Si no es DNI, mostrar mensaje
+      this.loading = false;
+      this.error = 'Cliente no encontrado. Ingrese los datos manualmente.';
+      setTimeout(() => this.error = null, 3000);
+      return;
+    }
+
+    // Buscar en RENIEC
+    this.reniecService.buscarPorDni(numeroDoc)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.loading = false;
+          
+          if (response.success && (response.nombres || response.nombre)) {
+            // ✅ ENCONTRADO EN RENIEC
+            const nombreCompleto = response.nombre || 
+              `${response.nombres} ${response.apellidoPaterno} ${response.apellidoMaterno}`;
+
+            this.ventaForm.cliente.nombre = nombreCompleto.trim();
+            this.clienteExistenteId = null; // Es un cliente nuevo
+            
+            this.success = '✅ Datos encontrados en RENIEC';
+            setTimeout(() => this.success = null, 3000);
+          } else {
+            this.error = 'No se encontraron datos. Ingrese manualmente.';
+            setTimeout(() => this.error = null, 3000);
           }
+        },
+        error: (err) => {
+          this.loading = false;
+          console.error('Error al buscar en RENIEC:', err);
+          this.error = 'No se encontraron datos. Ingrese manualmente.';
+          setTimeout(() => this.error = null, 3000);
         }
       });
   }

@@ -6,6 +6,7 @@ import { Router, RouterModule } from '@angular/router';
 import { VentasService } from '../../../services/ventas.service';
 import { AlmacenService } from '../../../services/almacen.service';
 import { FacturacionService } from '../../../services/facturacion.service';
+import { ReniecService } from '../../../services/reniec.service';
 import { Producto } from '../../../types/almacen.types';
 import Swal from 'sweetalert2';
 
@@ -46,6 +47,7 @@ export class NuevaVentaComponent implements OnInit {
     private ventasService: VentasService,
     private almacenService: AlmacenService,
     private facturacionService: FacturacionService,
+    private reniecService: ReniecService,
     private router: Router
   ) {
     this.ventaForm = this.fb.group({
@@ -71,11 +73,33 @@ export class NuevaVentaComponent implements OnInit {
 
   buscarCliente(): void {
     const numeroDocumento = this.ventaForm.get('cliente.numero_documento')?.value;
-    if (!numeroDocumento) return;
+    const tipoDocumento = this.ventaForm.get('cliente.tipo_documento')?.value;
+    
+    if (!numeroDocumento) {
+      Swal.fire({
+        title: 'Campo requerido',
+        text: 'Ingrese el número de documento',
+        icon: 'warning',
+        confirmButtonColor: '#ffc107'
+      });
+      return;
+    }
 
+    // Mostrar loading
+    Swal.fire({
+      title: 'Buscando cliente...',
+      text: 'Por favor espere',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // PASO 1: Buscar en la base de datos (PRIORIDAD)
     this.facturacionService.getClientes({ numero_documento: numeroDocumento }).subscribe({
       next: (response) => {
         if (response.data && response.data.length > 0) {
+          // ✅ CLIENTE ENCONTRADO EN DB
           const cliente = response.data[0];
           this.ventaForm.patchValue({
             cliente: {
@@ -87,13 +111,149 @@ export class NuevaVentaComponent implements OnInit {
               telefono: cliente.telefono || ''
             }
           });
-          this.successMessage = 'Cliente encontrado y cargado';
+          
+          Swal.fire({
+            title: '✅ Cliente Encontrado',
+            html: `
+              <div class="text-start">
+                <div class="alert alert-success">
+                  <strong>Cliente registrado en el sistema</strong>
+                </div>
+                <p><strong>Nombre:</strong> ${cliente.nombre}</p>
+                <p><strong>Documento:</strong> ${cliente.numero_documento}</p>
+                ${cliente.direccion ? `<p><strong>Dirección:</strong> ${cliente.direccion}</p>` : ''}
+              </div>
+            `,
+            icon: 'success',
+            confirmButtonColor: '#198754'
+          });
+        } else {
+          // ❌ NO ENCONTRADO EN DB → BUSCAR EN RENIEC/SUNAT
+          this.buscarEnReniecSunat(numeroDocumento, tipoDocumento);
         }
       },
       error: (error) => {
-        console.error('Error al buscar cliente:', error);
-        this.errorMessage = 'Cliente no encontrado. Puede continuar con los datos manuales.';
+        console.error('Error al buscar en DB:', error);
+        // Si hay error en DB, intentar con RENIEC/SUNAT
+        this.buscarEnReniecSunat(numeroDocumento, tipoDocumento);
       }
+    });
+  }
+
+  /**
+   * Buscar en RENIEC (DNI) o SUNAT (RUC) cuando no se encuentra en DB
+   */
+  private buscarEnReniecSunat(numeroDocumento: string, tipoDocumento: string): void {
+    // Determinar si es DNI (8 dígitos) o RUC (11 dígitos)
+    const esDni = numeroDocumento.length === 8;
+    const esRuc = numeroDocumento.length === 11;
+
+    if (!esDni && !esRuc) {
+      Swal.fire({
+        title: 'Documento no válido',
+        html: `
+          <div class="text-start">
+            <p>El documento debe tener:</p>
+            <ul>
+              <li><strong>8 dígitos</strong> para DNI</li>
+              <li><strong>11 dígitos</strong> para RUC</li>
+            </ul>
+            <p class="text-muted">Puede continuar ingresando los datos manualmente.</p>
+          </div>
+        `,
+        icon: 'warning',
+        confirmButtonColor: '#ffc107'
+      });
+      return;
+    }
+
+    if (esDni) {
+      // Buscar en RENIEC
+      this.reniecService.buscarPorDni(numeroDocumento).subscribe({
+        next: (response) => {
+          if (response.success && (response.nombres || response.nombre)) {
+            // Construir nombre completo
+            const nombreCompleto = response.nombre || 
+              `${response.nombres} ${response.apellidoPaterno} ${response.apellidoMaterno}`;
+
+            this.ventaForm.patchValue({
+              cliente: {
+                tipo_documento: '1', // DNI
+                numero_documento: numeroDocumento,
+                nombre: nombreCompleto.trim()
+              }
+            });
+
+            Swal.fire({
+              title: '✅ Datos Encontrados en RENIEC',
+              html: `
+                <div class="text-start">
+                  <div class="alert alert-info">
+                    <strong>Cliente nuevo - Datos de RENIEC</strong>
+                  </div>
+                  <p><strong>DNI:</strong> ${numeroDocumento}</p>
+                  <p><strong>Nombre:</strong> ${nombreCompleto}</p>
+                  <p class="text-muted small">Complete los datos adicionales si lo desea.</p>
+                </div>
+              `,
+              icon: 'success',
+              confirmButtonColor: '#198754'
+            });
+          } else {
+            this.mostrarClienteNoEncontrado();
+          }
+        },
+        error: (error) => {
+          console.error('Error al buscar en RENIEC:', error);
+          this.mostrarClienteNoEncontrado();
+        }
+      });
+    } else if (esRuc) {
+      // Para RUC, mostrar mensaje que puede ingresar manualmente
+      // (La API de SUNAT requiere implementación adicional en el backend)
+      Swal.fire({
+        title: 'Cliente no encontrado',
+        html: `
+          <div class="text-start">
+            <div class="alert alert-warning">
+              <strong>RUC no registrado en el sistema</strong>
+            </div>
+            <p>El RUC <strong>${numeroDocumento}</strong> no está en la base de datos.</p>
+            <p class="text-muted">Puede continuar ingresando los datos manualmente:</p>
+            <ul class="text-muted">
+              <li>Razón Social</li>
+              <li>Dirección</li>
+              <li>Email y Teléfono (opcional)</li>
+            </ul>
+          </div>
+        `,
+        icon: 'info',
+        confirmButtonColor: '#0d6efd'
+      });
+    }
+  }
+
+  /**
+   * Mostrar mensaje cuando no se encuentra el cliente en ningún lado
+   */
+  private mostrarClienteNoEncontrado(): void {
+    Swal.fire({
+      title: 'Cliente no encontrado',
+      html: `
+        <div class="text-start">
+          <div class="alert alert-warning">
+            <strong>No se encontraron datos</strong>
+          </div>
+          <p>El documento no está registrado en:</p>
+          <ul>
+            <li>Base de datos del sistema</li>
+            <li>RENIEC</li>
+          </ul>
+          <p class="text-muted">Puede continuar ingresando los datos manualmente.</p>
+        </div>
+      `,
+      icon: 'warning',
+      confirmButtonColor: '#ffc107'
     });
   }
 

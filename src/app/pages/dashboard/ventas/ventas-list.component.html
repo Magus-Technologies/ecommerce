@@ -133,52 +133,17 @@
             <!-- Comprobante -->
             <td class="px-24 py-16">
               <div *ngIf="venta.comprobante_info">
-                <div class="d-flex align-items-center gap-8 mb-4">
-                  <span class="badge px-8 py-4 rounded text-xs"
-                        [ngClass]="obtenerColorTipoComprobante(venta.comprobante_info.tipo_comprobante)">
-                    {{ obtenerTipoComprobanteCorto(venta.comprobante_info.tipo_comprobante) }}
-                  </span>
-                  <!-- Indicador PDF SUNAT -->
-                  <span *ngIf="venta.comprobante_info.estado === 'ACEPTADO' && venta.comprobante_info.tiene_pdf" 
-                        class="badge bg-success-50 text-success-600 px-6 py-2 rounded text-xs"
-                        title="PDF con parámetros SUNAT disponible">
-                    🎯 PDF
-                  </span>
-                  <span *ngIf="venta.comprobante_info.estado === 'ACEPTADO' && !venta.comprobante_info.tiene_pdf" 
-                        class="badge bg-warning-50 text-warning-600 px-6 py-2 rounded text-xs"
-                        title="PDF pendiente de generar">
-                    📄 Sin PDF
-                  </span>
-                </div>
-                <span class="text-heading fw-medium d-block mb-4">
-                  {{ venta.comprobante_info.numero_completo }}
+                <span class="badge px-8 py-4 rounded text-xs d-inline-block mb-8"
+                      [ngClass]="obtenerColorTipoComprobante(venta.comprobante_info.tipo_comprobante)">
+                  {{ obtenerTipoComprobanteCorto(venta.comprobante_info.tipo_comprobante) }}
                 </span>
-                <div class="d-flex align-items-center gap-8">
-                  <span class="badge px-8 py-4 rounded-pill text-xs"
-                        [ngClass]="getEstadoSunatClase(venta.comprobante_info.estado)">
-                    {{ venta.comprobante_info.estado }}
-                  </span>
-                  <!-- Indicadores de archivos disponibles -->
-                  <div class="d-flex gap-4" *ngIf="venta.comprobante_info.estado === 'ACEPTADO'">
-                    <span *ngIf="venta.comprobante_info.tiene_xml" 
-                          class="text-success text-xs cursor-pointer" 
-                          title="XML disponible - Click para más info"
-                          (click)="mostrarInfoPdf(venta)">📜</span>
-                    <span *ngIf="venta.comprobante_info.tiene_pdf" 
-                          class="text-success text-xs cursor-pointer" 
-                          title="PDF SUNAT disponible - Click para más info"
-                          (click)="mostrarInfoPdf(venta)">📄</span>
-                    <span *ngIf="venta.comprobante_info.tiene_cdr" 
-                          class="text-success text-xs cursor-pointer" 
-                          title="CDR disponible - Click para más info"
-                          (click)="mostrarInfoPdf(venta)">📋</span>
-                    <!-- Indicador cuando faltan archivos -->
-                    <span *ngIf="!venta.comprobante_info.tiene_pdf" 
-                          class="text-warning text-xs cursor-pointer" 
-                          title="PDF pendiente - Click para más info"
-                          (click)="mostrarInfoPdf(venta)">⚠️</span>
-                  </div>
+                <div class="text-heading fw-medium mb-8">
+                  {{ venta.comprobante_info.numero_completo }}
                 </div>
+                <span class="badge px-8 py-4 rounded-pill text-xs d-inline-block"
+                      [ngClass]="getEstadoSunatClase(venta.comprobante_info.estado)">
+                  {{ venta.comprobante_info.estado }}
+                </span>
               </div>
               <span *ngIf="!venta.comprobante_info" class="text-gray-400 text-sm">Sin comprobante</span>
             </td>
@@ -217,13 +182,13 @@
                     <span>Enviar a SUNAT</span>
                   </button>
 
-                  <!-- Ver Firma (siempre que tenga comprobante) -->
+                  <!-- Ver XML y Firma Digital (siempre que tenga comprobante) -->
                   <button 
                     *ngIf="venta.comprobante_info && (venta.comprobante_info.tiene_xml || venta.comprobante_info.estado === 'ACEPTADO' || venta.comprobante_info.estado === 'PENDIENTE')"
                     class="dropdown-item-custom text-primary"
                     (click)="verFirma(venta); cerrarMenu()">
                     <i class="ph ph-file-code me-2"></i>
-                    <span>Ver Firma Digital</span>
+                    <span>Ver XML y Firma Digital</span>
                   </button>
 
                   <!-- Generar PDF SUNAT (disponible cuando está aceptado y no tiene PDF) -->

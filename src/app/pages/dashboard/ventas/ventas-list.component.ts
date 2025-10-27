@@ -173,7 +173,7 @@ export class VentasListComponent implements OnInit {
       }).then((result) => {
         // Marcar como visto independientemente de la respuesta
         localStorage.setItem('pdf_sunat_mejoras_visto', 'true');
-        
+
         if (result.isDismissed || result.dismiss === Swal.DismissReason.cancel) {
           // Usuario eligió "No mostrar más"
           localStorage.setItem('pdf_sunat_mejoras_no_mostrar', 'true');
@@ -396,7 +396,7 @@ export class VentasListComponent implements OnInit {
 
   verFirma(venta: Venta): void {
     Swal.fire({
-      title: 'Cargando firma digital...',
+      title: 'Cargando XML firmado...',
       text: 'Por favor espere',
       allowOutsideClick: false,
       didOpen: () => {
@@ -410,32 +410,73 @@ export class VentasListComponent implements OnInit {
         reader.onload = (e) => {
           const xmlContent = e.target?.result as string;
 
+          // Extraer hash del XML si existe
+          const hashMatch = xmlContent.match(/<ds:DigestValue>(.*?)<\/ds:DigestValue>/);
+          const hashXml = hashMatch ? hashMatch[1] : 'No disponible';
+
           Swal.fire({
-            title: `Firma Digital - ${venta.comprobante_info?.numero_completo}`,
+            title: `🔐 XML Firmado Digitalmente`,
             html: `
               <div class="text-start">
-                <div class="alert alert-info mb-3">
-                  <i class="ph ph-info me-2"></i>
-                  <strong>XML Firmado Digitalmente</strong><br>
-                  Este documento está firmado con certificado digital válido ante SUNAT
+                <!-- Información Principal -->
+                <div class="alert alert-success mb-3" style="border-left: 4px solid #198754;">
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="ph ph-seal-check" style="font-size: 24px; color: #198754; margin-right: 10px;"></i>
+                    <div>
+                      <strong style="font-size: 16px;">Documento Firmado Digitalmente</strong><br>
+                      <small class="text-muted">Certificado digital válido ante SUNAT</small>
+                    </div>
+                  </div>
                 </div>
+
+                <!-- Detalles del Comprobante -->
+                <div class="card mb-3" style="border: 1px solid #dee2e6;">
+                  <div class="card-body p-3">
+                    <div class="row">
+                      <div class="col-6">
+                        <small class="text-muted d-block">Comprobante</small>
+                        <strong style="font-size: 15px;">${venta.comprobante_info?.numero_completo}</strong>
+                      </div>
+                      <div class="col-6">
+                        <small class="text-muted d-block">Estado SUNAT</small>
+                        <span class="badge ${this.getEstadoSunatClase(venta.comprobante_info?.estado || 'PENDIENTE')}" style="font-size: 12px;">
+                          ${venta.comprobante_info?.estado}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="row mt-2">
+                      <div class="col-12">
+                        <small class="text-muted d-block">Tipo de Documento</small>
+                        <strong>${this.ventasService.formatearTipoDocumento(venta.comprobante_info?.tipo_comprobante || '')}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Hash de Firma Digital -->
+                <div class="alert alert-light mb-3" style="border: 1px solid #dee2e6; background-color: #f8f9fa;">
+                  <small class="text-muted d-block mb-1"><strong>🔐 Hash de Firma Digital (SHA-256)</strong></small>
+                  <code style="font-size: 11px; word-break: break-all; background-color: white; padding: 8px; display: block; border-radius: 4px; border: 1px solid #dee2e6;">${hashXml}</code>
+                </div>
+
+                <!-- Contenido XML -->
                 <div class="mb-3">
-                  <strong>Comprobante:</strong> ${venta.comprobante_info?.numero_completo}<br>
-                  <strong>Estado SUNAT:</strong> 
-                  <span class="badge ${this.getEstadoSunatClase(venta.comprobante_info?.estado || 'PENDIENTE')}">
-                    ${venta.comprobante_info?.estado}
-                  </span><br>
-                  <strong>Tipo:</strong> ${this.ventasService.formatearTipoDocumento(venta.comprobante_info?.tipo_comprobante || '')}
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>📄 Contenido XML</strong>
+                    <small class="text-muted">${(xmlContent.length / 1024).toFixed(1)} KB</small>
+                  </div>
+                  <div style="background-color: #1e1e1e; padding: 12px; border-radius: 6px; max-height: 300px; overflow-y: auto; font-family: 'Courier New', monospace; border: 1px solid #333;">
+                    <pre style="margin: 0; font-size: 10px; white-space: pre-wrap; word-wrap: break-word; color: #d4d4d4; line-height: 1.4;">${this.escapeHtml(xmlContent)}</pre>
+                  </div>
                 </div>
-                <div class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;">
-                  <pre class="mb-0" style="font-size: 11px; white-space: pre-wrap; word-wrap: break-word;">${this.escapeHtml(xmlContent)}</pre>
-                </div>
-                <div class="mt-3 d-flex gap-2">
-                  <button class="btn btn-sm btn-primary" onclick="navigator.clipboard.writeText(\`${xmlContent.replace(/`/g, '\\`')}\`)">
-                    <i class="ph ph-copy me-2"></i>Copiar XML
+
+                <!-- Botones de Acción -->
+                <div class="d-flex gap-2 justify-content-end">
+                  <button class="btn btn-outline-primary btn-sm" id="copiarXmlBtn" style="min-width: 120px;">
+                    <i class="ph ph-copy me-1"></i>Copiar XML
                   </button>
-                  <button class="btn btn-sm btn-success" id="descargarXmlBtn">
-                    <i class="ph ph-download me-2"></i>Descargar XML
+                  <button class="btn btn-success btn-sm" id="descargarXmlBtn" style="min-width: 120px;">
+                    <i class="ph ph-download me-1"></i>Descargar XML
                   </button>
                 </div>
               </div>
@@ -443,11 +484,36 @@ export class VentasListComponent implements OnInit {
             width: '900px',
             showCloseButton: true,
             showConfirmButton: false,
+            customClass: {
+              popup: 'swal-xml-modal'
+            },
             didOpen: () => {
+              // Botón copiar
+              const btnCopiar = document.getElementById('copiarXmlBtn');
+              if (btnCopiar) {
+                btnCopiar.addEventListener('click', () => {
+                  navigator.clipboard.writeText(xmlContent).then(() => {
+                    btnCopiar.innerHTML = '<i class="ph ph-check me-1"></i>¡Copiado!';
+                    btnCopiar.classList.remove('btn-outline-primary');
+                    btnCopiar.classList.add('btn-success');
+                    setTimeout(() => {
+                      btnCopiar.innerHTML = '<i class="ph ph-copy me-1"></i>Copiar XML';
+                      btnCopiar.classList.remove('btn-success');
+                      btnCopiar.classList.add('btn-outline-primary');
+                    }, 2000);
+                  });
+                });
+              }
+
+              // Botón descargar
               const btnDescargar = document.getElementById('descargarXmlBtn');
               if (btnDescargar) {
                 btnDescargar.addEventListener('click', () => {
                   this.ventasService.descargarArchivo(blob, `${venta.comprobante_info?.numero_completo}.xml`);
+                  btnDescargar.innerHTML = '<i class="ph ph-check me-1"></i>¡Descargado!';
+                  setTimeout(() => {
+                    btnDescargar.innerHTML = '<i class="ph ph-download me-1"></i>Descargar XML';
+                  }, 2000);
                 });
               }
             }
@@ -459,7 +525,7 @@ export class VentasListComponent implements OnInit {
         console.error('Error al cargar XML:', error);
         Swal.fire({
           title: 'Error',
-          text: error.error?.message || 'No se pudo cargar la firma digital',
+          text: error.error?.message || 'No se pudo cargar el XML firmado',
           icon: 'error'
         });
       }
@@ -972,7 +1038,7 @@ export class VentasListComponent implements OnInit {
         this.ventasService.generarPdf(venta.id).subscribe({
           next: (response) => {
             console.log('Respuesta generarPdf:', response);
-            
+
             // Extraer información de la respuesta mejorada
             const data = response.data || response;
             const templateUsado = data.template_usado || 'primary';
@@ -981,8 +1047,8 @@ export class VentasListComponent implements OnInit {
 
             // Contar elementos incluidos
             const totalElementos = Object.values(elementosIncluidos).filter(Boolean).length;
-            const iconoTemplate = templateUsado === 'primary' ? '🎯' : 
-                                 templateUsado === 'fallback' ? '⚡' : '🔧';
+            const iconoTemplate = templateUsado === 'primary' ? '🎯' :
+              templateUsado === 'fallback' ? '⚡' : '🔧';
 
             Swal.fire({
               title: `${iconoTemplate} PDF Generado Exitosamente`,
@@ -1033,7 +1099,7 @@ export class VentasListComponent implements OnInit {
               confirmButtonText: '🎉 ¡Perfecto!',
               width: '700px'
             });
-            
+
             // Recargar la lista para actualizar el estado tiene_pdf
             this.cargarVentas();
           },
@@ -1140,18 +1206,18 @@ export class VentasListComponent implements OnInit {
     this.ventasService.descargarPdf(ventaId).subscribe({
       next: (blob) => {
         Swal.close();
-        
+
         // Generar nombre de archivo más descriptivo
         const tipoComprobante = venta?.comprobante_info?.tipo_comprobante || '01';
-        const prefijo = tipoComprobante === '01' ? 'FACTURA' : 
-                       tipoComprobante === '03' ? 'BOLETA' : 
-                       tipoComprobante === '07' ? 'NOTA_CREDITO' : 
-                       tipoComprobante === '08' ? 'NOTA_DEBITO' : 'COMPROBANTE';
-        
+        const prefijo = tipoComprobante === '01' ? 'FACTURA' :
+          tipoComprobante === '03' ? 'BOLETA' :
+            tipoComprobante === '07' ? 'NOTA_CREDITO' :
+              tipoComprobante === '08' ? 'NOTA_DEBITO' : 'COMPROBANTE';
+
         const nombreArchivo = `${prefijo}_${numeroComprobante.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-        
+
         this.ventasService.descargarArchivo(blob, nombreArchivo);
-        
+
         // Mostrar confirmación con información del PDF
         Swal.fire({
           title: '✅ PDF Descargado',
@@ -1491,19 +1557,19 @@ export class VentasListComponent implements OnInit {
 
   obtenerColorTipoComprobante(tipo: string): string {
     const colores: Record<string, string> = {
-      '01': 'bg-blue-50 text-blue-600',      // Factura - Azul
-      '03': 'bg-green-50 text-green-600',    // Boleta - Verde
-      '07': 'bg-orange-50 text-orange-600',  // N. Crédito - Naranja
-      '08': 'bg-red-50 text-red-600',        // N. Débito - Rojo
-      '09': 'bg-gray-50 text-gray-600',      // N. Venta - Gris
-      'FT': 'bg-blue-50 text-blue-600',
-      'BT': 'bg-green-50 text-green-600',
-      'NC': 'bg-orange-50 text-orange-600',
-      'ND': 'bg-red-50 text-red-600',
-      'NV': 'bg-gray-50 text-gray-600'
+      '01': 'bg-primary text-white',         // Factura - Azul oscuro
+      '03': 'bg-success text-white',         // Boleta - Verde oscuro
+      '07': 'bg-warning text-dark',          // N. Crédito - Amarillo
+      '08': 'bg-danger text-white',          // N. Débito - Rojo oscuro
+      '09': 'bg-secondary text-white',       // N. Venta - Gris oscuro
+      'FT': 'bg-primary text-white',
+      'BT': 'bg-success text-white',
+      'NC': 'bg-warning text-dark',
+      'ND': 'bg-danger text-white',
+      'NV': 'bg-secondary text-white'
     };
 
-    return colores[tipo] || 'bg-purple-50 text-purple-600';
+    return colores[tipo] || 'bg-info text-white';
   }
 
   /**
