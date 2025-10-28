@@ -13,3 +13,51 @@
 @import 'assets/sass/shared/common-components';
 @import 'assets/sass/main.scss';
 @import 'assets/css/main.css';
+
+
+// Sobrescribir botón primary de Bootstrap para usar color principal
+.btn-primary {
+  background-color: var(--main-600) !important;
+  border-color: var(--main-600) !important;
+  
+  &:hover {
+    background-color: var(--main-700) !important;
+    border-color: var(--main-700) !important;
+  }
+  
+  &:focus,
+  &:active {
+    background-color: var(--main-700) !important;
+    border-color: var(--main-700) !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+  }
+  
+  &:disabled {
+    background-color: var(--main-600) !important;
+    border-color: var(--main-600) !important;
+    opacity: 0.65;
+  }
+}
+
+// Checkboxes con color principal
+input[type="checkbox"] {
+  accent-color: var(--main-600);
+  cursor: pointer;
+  
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.form-check-input {
+  &:checked {
+    background-color: var(--main-600) !important;
+    border-color: var(--main-600) !important;
+  }
+  
+  &:focus {
+    border-color: var(--main-600) !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+  }
+}
