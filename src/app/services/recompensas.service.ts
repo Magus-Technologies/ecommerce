@@ -3,11 +3,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { 
-  Recompensa, 
+import {
+  Recompensa,
   RecompensaLista,
-  RecompensaDetalle, 
-  DashboardStats, 
+  RecompensaDetalle,
+  DashboardStats,
   RecompensaReciente,
   ApiResponse,
   PaginatedResponse,
@@ -23,7 +23,7 @@ import {
 export class RecompensasService {
   private apiUrl = `${environment.apiUrl}/admin/recompensas`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // Obtener lista de recompensas
   obtenerLista(filtros?: FiltrosRecompensas): Observable<PaginatedResponse<RecompensaLista>> {
@@ -119,14 +119,17 @@ export class RecompensasService {
   }
 
   // ===== MÉTODOS PARA GESTIÓN DE PRODUCTOS Y CATEGORÍAS =====
-  
+
   // Obtener productos/categorías asignados a una recompensa
   obtenerProductosAsignados(recompensaId: number): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/productos`);
   }
 
   // Asignar producto o categoría a una recompensa
-  asignarProducto(recompensaId: number, data: { tipo: 'producto' | 'categoria', producto_id?: number, categoria_id?: number }): Observable<ApiResponse<any>> {
+  // Estructura según backend: 
+  // Para producto: { tipo: 'producto', producto_id: number }
+  // Para categoría: { tipo: 'categoria', categoria_id: number }
+  asignarProducto(recompensaId: number, data: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/productos`, data);
   }
 
@@ -175,14 +178,15 @@ export class RecompensasService {
   }
 
   // ===== MÉTODOS PARA GESTIÓN DE SEGMENTOS Y CLIENTES =====
-  
+
   // Obtener segmentos asignados a una recompensa
   obtenerSegmentosAsignados(recompensaId: number): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/segmentos`);
   }
 
   // Asignar segmento o cliente específico
-  asignarSegmento(recompensaId: number, data: { segmento?: string, cliente_id?: number }): Observable<ApiResponse<any>> {
+  // Estructura según documentación: { segmento: 'vip'|'especifico'|'todos', cliente_id?: number | null }
+  asignarSegmento(recompensaId: number, data: { segmento: string, cliente_id?: number | null }): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/segmentos`, data);
   }
 
@@ -209,7 +213,7 @@ export class RecompensasService {
   }
 
   // ===== MÉTODOS PARA CONFIGURACIÓN DE PUNTOS =====
-  
+
   // Obtener configuración de puntos
   obtenerConfiguracionPuntos(recompensaId: number): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/puntos`);
@@ -241,7 +245,7 @@ export class RecompensasService {
   }
 
   // ===== MÉTODOS PARA CONFIGURACIÓN DE DESCUENTOS =====
-  
+
   // Obtener configuración de descuentos
   obtenerConfiguracionDescuentos(recompensaId: number): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/descuentos`);
@@ -283,7 +287,7 @@ export class RecompensasService {
   }
 
   // ===== MÉTODOS PARA CONFIGURACIÓN DE ENVÍOS =====
-  
+
   // Obtener configuración de envíos
   obtenerConfiguracionEnvios(recompensaId: number): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/envios`);
@@ -332,7 +336,7 @@ export class RecompensasService {
   }
 
   // ===== MÉTODOS PARA CONFIGURACIÓN DE REGALOS =====
-  
+
   // Obtener configuración de regalos
   obtenerConfiguracionRegalos(recompensaId: number): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/${recompensaId}/regalos`);
@@ -381,7 +385,7 @@ export class RecompensasService {
   }
 
   // ===== MÉTODOS PARA PRODUCTOS Y CATEGORÍAS =====
-  
+
   // Obtener productos disponibles para recompensas
   obtenerProductosDisponibles(filtros?: any): Observable<ApiResponse<any>> {
     let params = new HttpParams();
@@ -437,7 +441,7 @@ export class RecompensasService {
   }
 
   // ===== MÉTODOS PARA CLIENTES ESPECÍFICOS =====
-  
+
   // Obtener clientes disponibles para recompensas
   obtenerClientesDisponibles(filtros?: any): Observable<ApiResponse<any>> {
     let params = new HttpParams();
@@ -470,7 +474,7 @@ export class RecompensasService {
   // Obtener analytics de recompensas
   obtenerAnalytics(filtros?: any): Observable<ApiResponse<any>> {
     let params = new HttpParams();
-    
+
     if (filtros) {
       Object.keys(filtros).forEach(key => {
         const value = filtros[key];
@@ -479,35 +483,35 @@ export class RecompensasService {
         }
       });
     }
-    
+
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/analytics/dashboard`, { params });
   }
 
   // Obtener tendencias de analytics
   obtenerTendencias(periodo: string, fechaInicio?: string, fechaFin?: string): Observable<ApiResponse<any>> {
     let params = new HttpParams().set('periodo', periodo);
-    
+
     if (fechaInicio) {
       params = params.set('fecha_inicio', fechaInicio);
     }
     if (fechaFin) {
       params = params.set('fecha_fin', fechaFin);
     }
-    
+
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/analytics/tendencias`, { params });
   }
 
   // Obtener métricas de rendimiento
   obtenerRendimiento(recompensaId?: number, periodo?: number): Observable<ApiResponse<any>> {
     let params = new HttpParams();
-    
+
     if (recompensaId) {
       params = params.set('recompensa_id', recompensaId.toString());
     }
     if (periodo) {
       params = params.set('periodo', periodo.toString());
     }
-    
+
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/analytics/rendimiento`, { params });
   }
 
@@ -518,7 +522,7 @@ export class RecompensasService {
       .set('periodo_actual_fin', periodoActualFin)
       .set('periodo_anterior_inicio', periodoAnteriorInicio)
       .set('periodo_anterior_fin', periodoAnteriorFin);
-    
+
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/analytics/comparativa`, { params });
   }
 

@@ -20,11 +20,21 @@
             "outputPath": "dist/marketpro",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": ["zone.js"],
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "tsconfig.app.json",
-            "allowedCommonJsDependencies": ["aos", "jquery", "slick-carousel", "quill"],
+            "allowedCommonJsDependencies": [
+              "aos",
+              "jquery",
+              "slick-carousel",
+              "quill"
+            ],
             "inlineStyleLanguage": "scss",
-            "assets": ["src/favicon.ico", "src/assets"],
+            "assets": [
+              "src/favicon.ico",
+              "src/assets"
+            ],
             "styles": [
               "src/styles.scss",
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
@@ -60,7 +70,9 @@
               "entry": "src/server.ts"
             },
             "stylePreprocessorOptions": {
-              "includePaths": ["src/assets/sass"]
+              "includePaths": [
+                "src/assets/sass"
+              ]
             }
           },
           "configurations": {
@@ -68,12 +80,12 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "3MB",
-                  "maximumError": "3.1MB"
+                  "maximumWarning": "2MB",
+                  "maximumError": "3MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "10kB",
+                  "maximumWarning": "8kB",
                   "maximumError": "12kB"
                 }
               ],
@@ -105,7 +117,10 @@
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "polyfills": ["zone.js", "zone.js/testing"],
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -114,7 +129,9 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.scss"],
+            "styles": [
+              "src/styles.scss"
+            ],
             "scripts": []
           }
         }

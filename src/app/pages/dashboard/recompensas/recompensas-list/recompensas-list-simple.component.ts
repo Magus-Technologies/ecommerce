@@ -1,6 +1,9 @@
 import { Component, OnInit, ViewChild, TemplateRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { StatusBadgeComponent } from '../../../../components/shared/status-badge/status-badge.component';
+import { SearchInputComponent } from '../../../../components/shared/search-input/search-input.component';
+import { RecompensasCrearModalComponent } from '../recompensas-crear-modal/recompensas-crear-modal.component';
 import { Router, ActivatedRoute } from '@angular/router';
 import { RecompensasService } from '../../../../services/recompensas.service';
 import { ProductosService } from '../../../../services/productos.service';
@@ -19,7 +22,10 @@ import {
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    StatusBadgeComponent,
+    SearchInputComponent,
+    RecompensasCrearModalComponent
   ],
   templateUrl: './recompensas-list-simple.component.html',
   styleUrls: ['./recompensas-list-simple.component.scss']
@@ -64,6 +70,15 @@ export class RecompensasListSimpleComponent implements OnInit {
     page: 1,
     per_page: 10
   };
+
+  // Handle two-way binding for search input
+  get searchValue(): string {
+    return this.filtros.buscar || '';
+  }
+
+  set searchValue(value: string) {
+    this.filtros.buscar = value;
+  }
 
 
   
@@ -510,6 +525,13 @@ export class RecompensasListSimpleComponent implements OnInit {
     this.modoSoloLectura = false;
     this.recompensaEditando = null;
     this.resetearFormulario();
+  }
+
+  // Método para manejar cuando se crea una recompensa exitosamente
+  onRecompensaCreada(event: any): void {
+    console.log('Recompensa creada, recargando lista...', event);
+    this.cargarRecompensas(); // Recargar la lista
+    this.showSuccess('Recompensa creada exitosamente');
   }
 
   resetearFormulario(): void {
@@ -1066,14 +1088,19 @@ export class RecompensasListSimpleComponent implements OnInit {
   editarRecompensa(recompensa: RecompensaLista): void {
     this.recompensaEditando = recompensa;
     this.modoEdicion = true;
+    this.modoSoloLectura = false;
     this.mostrarModalCarrusel = true;
     this.carruselActivo = 0;
-    this.cargarDetalleParaEdicion(recompensa.id);
+    // El modal cargará los datos internamente
   }
 
   verDetalle(recompensa: RecompensaLista): void {
     this.recompensaSeleccionada = recompensa;
+    this.recompensaEditando = recompensa; // Pasar la recompensa al modal
     this.modoSoloLectura = true;
+    this.modoEdicion = false;
+    this.mostrarModalCarrusel = true;
+    this.carruselActivo = 0;
     this.modoEdicion = false;
     this.mostrarModalCarrusel = true;
     this.carruselActivo = 0;
@@ -1912,6 +1939,11 @@ export class RecompensasListSimpleComponent implements OnInit {
     return Math;
   }
 
+  // Get number of active rewards
+  getRecompensasActivas(): number {
+    return this.recompensas.filter(r => r.estado === 'activa').length;
+  }
+
 
   /**
    * Muestra un mensaje de éxito
@@ -2313,10 +2345,10 @@ export class RecompensasListSimpleComponent implements OnInit {
     // Asignar productos específicos (uno por uno según la estructura del backend)
     if (this.nuevaRecompensa.productosSeleccionados.length > 0) {
       this.nuevaRecompensa.productosSeleccionados.forEach((producto: any) => {
-        const productoData = {
-          tipo: 'producto' as 'producto' | 'categoria',
-          producto_id: producto.id,
-          categoria_id: undefined
+        const productoData: any = {
+          tipo: 'producto',
+          producto_id: producto.id
+          // NO incluir categoria_id
         };
 
         console.log('📦 Asignando producto:', productoData);
@@ -2339,10 +2371,10 @@ export class RecompensasListSimpleComponent implements OnInit {
     // Asignar categorías (una por una según la estructura del backend)
     if (this.nuevaRecompensa.categoriasSeleccionadas.length > 0) {
       this.nuevaRecompensa.categoriasSeleccionadas.forEach((categoria: any) => {
-        const categoriaData = {
-          tipo: 'categoria' as 'producto' | 'categoria',
-          producto_id: undefined,
+        const categoriaData: any = {
+          tipo: 'categoria',
           categoria_id: categoria.id
+          // NO incluir producto_id
         };
 
         console.log('Asignando categoría:', categoriaData);

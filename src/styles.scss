@@ -1,12 +1,15 @@
 /* You can add global styles to this file, and also import other style files */
 @import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&family=Marcellus&display=swap');
 
-@import 'assets/css/bootstrap.min.css';
+// Estos CSS ya están cargados en angular.json desde node_modules, no es necesario importarlos aquí
+// @import 'assets/css/bootstrap.min.css'; // Ya en angular.json
+// @import 'assets/css/aos.css'; // Ya en angular.json
+// @import 'assets/css/animate.css'; // Ya en angular.json
+
+// Estos sí se importan porque no están duplicados
 @import 'assets/css/slick.css';
 @import 'assets/css/select2.min.css';
 @import 'assets/css/jquery-ui.css';
-@import 'assets/css/aos.css';
-@import 'assets/css/animate.css';
 @import 'assets/sass/shared/common-components';
 @import 'assets/sass/main.scss';
 @import 'assets/css/main.css';
