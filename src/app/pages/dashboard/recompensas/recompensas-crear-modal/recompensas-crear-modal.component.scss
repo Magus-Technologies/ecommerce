@@ -285,3 +285,27 @@
     grid-template-columns: 1fr;
   }
 }
+
+//
+ Estilos para modo solo lectura
+.disabled {
+  cursor: not-allowed !important;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background-color: #f8f9fa !important;
+  cursor: not-allowed !important;
+}
+
+.search-result-item.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  
+  &:hover {
+    background-color: transparent !important;
+  }
+}

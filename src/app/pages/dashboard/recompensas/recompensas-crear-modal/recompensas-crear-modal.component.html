@@ -164,6 +164,7 @@
                     formControlName="nombre"
                     placeholder="Ej: Bono de Bienvenida"
                     [class.is-invalid]="formulario.get('nombre')?.invalid && formulario.get('nombre')?.touched"
+                    [disabled]="modoSoloLectura"
                   >
                   <div class="invalid-feedback" *ngIf="formulario.get('nombre')?.hasError('required')">
                     El nombre es requerido
@@ -359,7 +360,8 @@
                                class="form-check-input"
                                [id]="'seg-' + segmento.id"
                                [checked]="isSegmentoSeleccionado(segmento)"
-                               (change)="toggleSegmento(segmento)">
+                               (change)="toggleSegmento(segmento)"
+                               [disabled]="modoSoloLectura">
                         <label [for]="'seg-' + segmento.id" class="list-item-label">
                           <strong>{{ segmento.nombre }}</strong>
                           <small class="d-block text-muted">{{ segmento.descripcion }}</small>
@@ -381,7 +383,7 @@
                       <div *ngIf="segmentosSeleccionados.length > 0" class="selected-list">
                         <div *ngFor="let seg of segmentosSeleccionados" class="selected-item">
                           <span>{{ seg.nombre }}</span>
-                          <i class="ph ph-x" (click)="removeSegmento(seg)"></i>
+                          <i class="ph ph-x" (click)="!modoSoloLectura && removeSegmento(seg)" [class.disabled]="modoSoloLectura"></i>
                         </div>
                       </div>
                     </div>
@@ -393,7 +395,8 @@
                              placeholder="Buscar cliente específico..."
                              [(ngModel)]="busquedaCliente"
                              [ngModelOptions]="{standalone: true}"
-                             (input)="buscarClientesEspecificos()">
+                             (input)="buscarClientesEspecificos()"
+                             [disabled]="modoSoloLectura">
                       
                       <!-- Resultados de búsqueda -->
                       <div *ngIf="cargandoClientes" class="text-center py-2">
@@ -403,7 +406,8 @@
                       <div *ngIf="!cargandoClientes && clientesFiltrados.length > 0" class="search-results mt-2">
                         <div *ngFor="let cliente of clientesFiltrados" 
                              class="search-result-item"
-                             (click)="agregarClienteEspecifico(cliente)">
+                             (click)="!modoSoloLectura && agregarClienteEspecifico(cliente)"
+                             [class.disabled]="modoSoloLectura">
                           <strong>{{ cliente.nombre || 'Sin nombre' }}</strong>
                           <small class="d-block text-muted">{{ cliente.email || cliente.telefono || 'Sin contacto' }}</small>
                         </div>
@@ -457,7 +461,8 @@
                            placeholder="Buscar productos..."
                            [(ngModel)]="busquedaProducto"
                            [ngModelOptions]="{standalone: true}"
-                           (input)="buscarProductosAPI()">
+                           (input)="buscarProductosAPI()"
+                           [disabled]="modoSoloLectura">
                     
                     <div class="panel-content">
                       <div *ngIf="cargandoProductos" class="text-center py-3">
@@ -474,7 +479,8 @@
                                class="form-check-input"
                                [id]="'prod-' + producto.id"
                                [checked]="isProductoSeleccionado(producto)"
-                               (change)="toggleProducto(producto)">
+                               (change)="toggleProducto(producto)"
+                               [disabled]="modoSoloLectura">
                         <label [for]="'prod-' + producto.id" class="list-item-label">
                           <strong>{{ producto.nombre }}</strong>
                           <small class="d-block text-muted">{{ producto.codigo || 'Sin código' }}</small>
@@ -493,7 +499,8 @@
                            placeholder="Buscar categorías..."
                            [(ngModel)]="busquedaCategoria"
                            [ngModelOptions]="{standalone: true}"
-                           (input)="buscarCategoriasAPI()">
+                           (input)="buscarCategoriasAPI()"
+                           [disabled]="modoSoloLectura">
                     
                     <div class="panel-content">
                       <div *ngIf="cargandoCategorias" class="text-center py-3">
@@ -510,7 +517,8 @@
                                class="form-check-input"
                                [id]="'cat-' + categoria.id"
                                [checked]="isCategoriaSeleccionada(categoria)"
-                               (change)="toggleCategoria(categoria)">
+                               (change)="toggleCategoria(categoria)"
+                               [disabled]="modoSoloLectura">
                         <label [for]="'cat-' + categoria.id" class="list-item-label">
                           <strong>{{ categoria.nombre }}</strong>
                         </label>
@@ -529,7 +537,7 @@
                   <div class="selected-items">
                     <span *ngFor="let prod of productosSeleccionados" class="badge bg-info me-2 mb-2">
                       {{ prod.nombre }}
-                      <i class="ph ph-x ms-1" (click)="removeProducto(prod)"></i>
+                      <i class="ph ph-x ms-1" (click)="!modoSoloLectura && removeProducto(prod)" [class.disabled]="modoSoloLectura"></i>
                     </span>
                   </div>
                 </div>
@@ -539,7 +547,7 @@
                   <div class="selected-items">
                     <span *ngFor="let cat of categoriasSeleccionadas" class="badge bg-success me-2 mb-2">
                       {{ cat.nombre }}
-                      <i class="ph ph-x ms-1" (click)="removeCategoria(cat)"></i>
+                      <i class="ph ph-x ms-1" (click)="!modoSoloLectura && removeCategoria(cat)" [class.disabled]="modoSoloLectura"></i>
                     </span>
                   </div>
                 </div>
@@ -589,26 +597,39 @@
     
     <!-- Footer personalizado -->
     <div class="modal-footer border-top bg-light d-flex justify-content-between align-items-center p-3 mt-4">
-      <button type="button" 
-              class="btn btn-outline-secondary" 
-              (click)="pasoActual === 0 ? cerrarModal() : anteriorPaso()"
-              [disabled]="loading">
-        <i class="ph ph-arrow-left me-1" *ngIf="pasoActual > 0"></i>
-        <i class="ph ph-x me-1" *ngIf="pasoActual === 0"></i>
-        {{ pasoActual === 0 ? 'Cancelar' : 'Anterior' }}
-      </button>
-      
-      <div class="text-muted small fw-medium">
-        Paso {{ pasoActual + 1 }} de {{ pasos.length }}
+      <!-- Modo Solo Lectura: Solo botón Cerrar -->
+      <div *ngIf="modoSoloLectura" class="w-100 d-flex justify-content-between align-items-center">
+        <div class="text-muted small fw-medium">
+          Paso {{ pasoActual + 1 }} de {{ pasos.length }}
+        </div>
+        <button type="button" class="btn btn-secondary" (click)="cerrarModal()">
+          <i class="ph ph-x me-1"></i>
+          Cerrar
+        </button>
       </div>
       
-      <button type="button" 
-              [class]="pasoActual === 4 ? 'btn btn-success' : 'btn btn-primary'"
-              (click)="pasoActual === 4 ? crearRecompensa() : siguientePaso()"
-              [disabled]="loading || (!modoSoloLectura && (!validacionesPaso[pasoActual] || !validacionesPaso[pasoActual]()))">
-        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-        <i *ngIf="!loading && pasoActual < 4" class="ph ph-arrow-right me-1"></i>
-        <i *ngIf="!loading && pasoActual === 4" class="ph ph-check me-1"></i>
+      <!-- Modo Edición/Creación: Botones de navegación -->
+      <ng-container *ngIf="!modoSoloLectura">
+        <button type="button" 
+                class="btn btn-outline-secondary" 
+                (click)="pasoActual === 0 ? cerrarModal() : anteriorPaso()"
+                [disabled]="loading">
+          <i class="ph ph-arrow-left me-1" *ngIf="pasoActual > 0"></i>
+          <i class="ph ph-x me-1" *ngIf="pasoActual === 0"></i>
+          {{ pasoActual === 0 ? 'Cancelar' : 'Anterior' }}
+        </button>
+        
+        <div class="text-muted small fw-medium">
+          Paso {{ pasoActual + 1 }} de {{ pasos.length }}
+        </div>
+        
+        <button type="button" 
+                [class]="pasoActual === 4 ? 'btn btn-success' : 'btn btn-primary'"
+                (click)="pasoActual === 4 ? crearRecompensa() : siguientePaso()"
+                [disabled]="loading || (!validacionesPaso[pasoActual] || !validacionesPaso[pasoActual]())">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!loading && pasoActual < 4" class="ph ph-arrow-right me-1"></i>
+          <i *ngIf="!loading && pasoActual === 4" class="ph ph-check me-1"></i>
         {{ loading ? 'Procesando...' : (modoSoloLectura ? 'Siguiente' : (pasoActual === 4 ? 'Crear Recompensa' : 'Siguiente')) }}
       </button>
     </div>

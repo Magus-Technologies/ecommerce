@@ -140,6 +140,11 @@ export class RecompensasCrearModalComponent implements OnInit {
     if (this.recompensaId) {
       this.cargarDatosRecompensa(this.recompensaId);
     }
+    
+    // Si está en modo solo lectura, deshabilitar todo el formulario
+    if (this.modoSoloLectura) {
+      this.formulario.disable();
+    }
   }
 
   cargarDatosRecompensa(id: number): void {
@@ -762,6 +767,8 @@ export class RecompensasCrearModalComponent implements OnInit {
 
   // Métodos de segmentación
   toggleSegmento(segmento: any): void {
+    if (this.modoSoloLectura) return; // No permitir cambios en modo solo lectura
+    
     const index = this.segmentosSeleccionados.findIndex(s => s.id === segmento.id);
     if (index > -1) {
       this.segmentosSeleccionados.splice(index, 1);
@@ -775,6 +782,8 @@ export class RecompensasCrearModalComponent implements OnInit {
   }
 
   removeSegmento(segmento: any): void {
+    if (this.modoSoloLectura) return; // No permitir cambios en modo solo lectura
+    
     const index = this.segmentosSeleccionados.findIndex(s => s.id === segmento.id);
     if (index > -1) {
       this.segmentosSeleccionados.splice(index, 1);
@@ -782,6 +791,8 @@ export class RecompensasCrearModalComponent implements OnInit {
   }
 
   buscarClientesEspecificos(): void {
+    if (this.modoSoloLectura) return; // No permitir búsquedas en modo solo lectura
+    
     // Limpiar timer anterior
     if (this.searchClientesTimer) {
       clearTimeout(this.searchClientesTimer);
@@ -833,6 +844,8 @@ export class RecompensasCrearModalComponent implements OnInit {
   }
 
   agregarClienteEspecifico(cliente: any): void {
+    if (this.modoSoloLectura) return; // No permitir cambios en modo solo lectura
+    
     if (!this.clientesSeleccionados.some(c => c.id === cliente.id)) {
       this.clientesSeleccionados.push(cliente);
       this.busquedaCliente = '';
@@ -841,6 +854,8 @@ export class RecompensasCrearModalComponent implements OnInit {
   }
 
   removeCliente(cliente: any): void {
+    if (this.modoSoloLectura) return; // No permitir cambios en modo solo lectura
+    
     const index = this.clientesSeleccionados.findIndex(c => c.id === cliente.id);
     if (index > -1) {
       this.clientesSeleccionados.splice(index, 1);
@@ -849,6 +864,8 @@ export class RecompensasCrearModalComponent implements OnInit {
 
   // Métodos de productos
   onAplicarATipoChange(): void {
+    if (this.modoSoloLectura) return; // No permitir cambios en modo solo lectura
+    
     const tipo = this.formulario.get('aplicar_a')?.value;
     if (tipo === 'todos') {
       this.productosSeleccionados = [];
@@ -857,6 +874,8 @@ export class RecompensasCrearModalComponent implements OnInit {
   }
 
   buscarProductosAPI(): void {
+    if (this.modoSoloLectura) return; // No permitir búsquedas en modo solo lectura
+    
     // Limpiar timer anterior
     if (this.searchProductosTimer) {
       clearTimeout(this.searchProductosTimer);
@@ -894,6 +913,8 @@ export class RecompensasCrearModalComponent implements OnInit {
   }
 
   toggleProducto(producto: any): void {
+    if (this.modoSoloLectura) return; // No permitir cambios en modo solo lectura
+    
     const index = this.productosSeleccionados.findIndex(p => p.id === producto.id);
     if (index > -1) {
       this.productosSeleccionados.splice(index, 1);
@@ -907,6 +928,8 @@ export class RecompensasCrearModalComponent implements OnInit {
   }
 
   removeProducto(producto: any): void {
+    if (this.modoSoloLectura) return; // No permitir cambios en modo solo lectura
+    
     const index = this.productosSeleccionados.findIndex(p => p.id === producto.id);
     if (index > -1) {
       this.productosSeleccionados.splice(index, 1);
@@ -915,6 +938,8 @@ export class RecompensasCrearModalComponent implements OnInit {
 
   // Métodos de categorías
   buscarCategoriasAPI(): void {
+    if (this.modoSoloLectura) return; // No permitir búsquedas en modo solo lectura
+    
     // Limpiar timer anterior
     if (this.searchCategoriasTimer) {
       clearTimeout(this.searchCategoriasTimer);
@@ -951,6 +976,8 @@ export class RecompensasCrearModalComponent implements OnInit {
   }
 
   toggleCategoria(categoria: any): void {
+    if (this.modoSoloLectura) return; // No permitir cambios en modo solo lectura
+    
     const index = this.categoriasSeleccionadas.findIndex(c => c.id === categoria.id);
     if (index > -1) {
       this.categoriasSeleccionadas.splice(index, 1);
@@ -964,6 +991,8 @@ export class RecompensasCrearModalComponent implements OnInit {
   }
 
   removeCategoria(categoria: any): void {
+    if (this.modoSoloLectura) return; // No permitir cambios en modo solo lectura
+    
     const index = this.categoriasSeleccionadas.findIndex(c => c.id === categoria.id);
     if (index > -1) {
       this.categoriasSeleccionadas.splice(index, 1);
