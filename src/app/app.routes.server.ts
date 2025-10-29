@@ -185,6 +185,10 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'ofertas',
     renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'my-account/favoritos',
+    renderMode: RenderMode.Prerender
   }
 
   
