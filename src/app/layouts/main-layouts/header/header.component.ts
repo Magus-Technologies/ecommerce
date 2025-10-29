@@ -10,6 +10,7 @@ import { CategoriasPublicasService, CategoriaPublica } from '../../../services/c
 import { ProductosService, ProductoSugerencia } from '../../../services/productos.service';
 import { CartService } from '../../../services/cart.service';
 import { EmpresaInfoService } from '../../../services/empresa-info.service';
+import { WishlistService, WishlistItem } from '../../../services/wishlist.service';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, filter } from 'rxjs';
 import { IndexTwoService } from '../../../services/index-two.service';
 @Component({
@@ -43,6 +44,11 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   showSuggestions: boolean = false;
   isLoadingSuggestions: boolean = false;
   selectedSuggestionIndex: number = -1;
+
+  // ✅ NUEVAS PROPIEDADES PARA DROPDOWN DE FAVORITOS
+  showFavoritosDropdown: boolean = false;
+  wishlistItems: WishlistItem[] = [];
+  wishlistCount: number = 0;
 
 
 
@@ -140,6 +146,7 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     private productosService: ProductosService,
     private cartService: CartService,
     private empresaInfoService: EmpresaInfoService,
+    private wishlistService: WishlistService,
     private route: ActivatedRoute,
     private indexTwoService: IndexTwoService
   ) {
@@ -172,6 +179,14 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe(summary => {
         this.cartItemCount = summary.cantidad_items;
+      });
+
+    // ✅ NUEVO: Suscribirse a los cambios de favoritos
+    this.wishlistService.wishlistItems$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(items => {
+        this.wishlistItems = items.slice(0, 5); // Solo mostrar los primeros 5 en el dropdown
+        this.wishlistCount = items.length;
       });
 
     // ✅ NUEVO: Configurar búsqueda con autocompletado
@@ -312,7 +327,7 @@ private cargarInformacionEmpresa(): void {
   @HostListener('document:click', ['$event'])
   onOutsideClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    
+
     // Ocultar dropdown de categorías
     if (!target.closest('.category-dropdown-wrapper')) {
       this.categoryDropdownVisible = false;
@@ -321,6 +336,11 @@ private cargarInformacionEmpresa(): void {
     // Ocultar sugerencias de búsqueda
     if (!target.closest('.search-form__wrapper')) {
       this.hideSuggestions();
+    }
+
+    // ✅ NUEVO: Ocultar dropdown de favoritos
+    if (!target.closest('.favoritos-dropdown-wrapper')) {
+      this.showFavoritosDropdown = false;
     }
   }
   
@@ -507,5 +527,36 @@ private cargarInformacionEmpresa(): void {
   mostrarBotonArmaTuPC(): boolean {
     const url = this.router.url;
     return url === '/' || url === '/index-two';
+  }
+
+  // ✅ NUEVOS MÉTODOS PARA DROPDOWN DE FAVORITOS
+  toggleFavoritosDropdown(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.showFavoritosDropdown = !this.showFavoritosDropdown;
+  }
+
+  verTodosFavoritos(): void {
+    this.showFavoritosDropdown = false;
+    this.router.navigate(['/my-account/favoritos']);
+  }
+
+  formatPrice(price: number | string | null | undefined): string {
+    const numPrice = typeof price === 'number' ? price : parseFloat(String(price || 0));
+    if (isNaN(numPrice)) {
+      return '0.00';
+    }
+    return numPrice.toFixed(2);
+  }
+
+  removeFromWishlistHeader(productoId: number): void {
+    this.wishlistService.removeByProductId(productoId);
+  }
+
+  goToProductDetail(productoId: number): void {
+    this.showFavoritosDropdown = false;
+    this.router.navigate(['/product-details', productoId]);
   }
 }

@@ -211,7 +211,7 @@
                 [routerLink]="['/wishlist']"
                 class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
               >
-                Lista de deseos
+                Favoritos
               </a>
             </li>
 
@@ -483,23 +483,118 @@
           <!-- Usuario Profile Component - Sin texto adicional -->
           <app-user-profile></app-user-profile>
 
-          <a
-            [routerLink]="['wishlist']"
-            class="flex-align gap-4 item-hover-white"
-          >
-            <span
-              class="text-xl d-flex position-relative me-6 mt-6 item-hover__text text-white"
+          <!-- ✅ NUEVO: Dropdown de Favoritos estilo Mercado Libre -->
+          <div class="favoritos-dropdown-wrapper position-relative">
+            <button
+              type="button"
+              (click)="toggleFavoritosDropdown($event)"
+              class="flex-align gap-4 item-hover-white bg-transparent border-0 p-0"
+              style="cursor: pointer;"
             >
-              <i class="ph ph-heart"></i>
               <span
-                class="w-16 h-16 flex-center rounded-circle bg-danger-10 text-white text-xs position-absolute top-n6 end-n4"
-                >0</span
+                class="text-xl d-flex position-relative me-6 mt-6 item-hover__text text-white"
               >
-            </span>
-            <span class="text-md item-hover__text d-none d-lg-flex text-white"
-              >Lista de deseos</span
+                <i class="ph ph-heart"></i>
+                <span
+                  *ngIf="wishlistCount > 0"
+                  class="w-16 h-16 flex-center rounded-circle bg-danger-10 text-white text-xs position-absolute top-n6 end-n4"
+                  >{{ wishlistCount }}</span
+                >
+              </span>
+              <span class="text-md item-hover__text d-none d-lg-flex text-white"
+                >Favoritos</span
+              >
+            </button>
+
+            <!-- Dropdown de Favoritos -->
+            <div
+              *ngIf="showFavoritosDropdown"
+              class="favoritos-dropdown position-absolute bg-white border border-gray-100 rounded-16 shadow-lg"
+              style="top: 100%; right: 0; margin-top: 12px; width: 400px; max-height: 500px; overflow-y: auto; z-index: 9999;"
+              (click)="$event.stopPropagation()"
             >
-          </a>
+              <!-- Header del dropdown -->
+              <div class="p-16 border-bottom border-gray-100">
+                <h6 class="mb-0 fw-semibold text-heading">
+                  Favoritos
+                  <span class="text-gray-500 fw-normal">({{ wishlistCount }})</span>
+                </h6>
+              </div>
+
+              <!-- Lista de productos favoritos -->
+              <div *ngIf="wishlistItems.length > 0" class="p-12">
+                <div
+                  *ngFor="let item of wishlistItems"
+                  class="favorito-item d-flex gap-12 p-12 rounded-8 hover-bg-gray-50 transition-2"
+                  style="cursor: pointer;"
+                  (click)="goToProductDetail(item.producto_id)"
+                >
+                  <!-- Imagen del producto -->
+                  <div class="flex-shrink-0">
+                    <img
+                      [src]="item.imagen_url"
+                      [alt]="item.nombre"
+                      class="rounded-8"
+                      style="width: 72px; height: 72px; object-fit: cover;"
+                      (error)="onImageError($event)"
+                    />
+                  </div>
+
+                  <!-- Info del producto -->
+                  <div class="flex-grow-1 min-w-0">
+                    <p class="text-sm text-heading mb-4 text-truncate" style="max-width: 220px;">
+                      {{ item.nombre }}
+                    </p>
+                    <p class="text-lg fw-bold text-main-600 mb-4">
+                      S/ {{ formatPrice(item.precio) }}
+                    </p>
+                    <p class="text-xs text-gray-500 mb-0" *ngIf="item.stock_disponible > 0">
+                      Stock: {{ item.stock_disponible }}
+                    </p>
+                    <p class="text-xs text-danger-600 mb-0" *ngIf="item.stock_disponible <= 0">
+                      Sin stock
+                    </p>
+                  </div>
+
+                  <!-- Botón eliminar -->
+                  <button
+                    type="button"
+                    (click)="removeFromWishlistHeader(item.producto_id); $event.stopPropagation()"
+                    class="flex-shrink-0 w-32 h-32 bg-transparent border-0 text-gray-400 hover-text-danger-600 transition-2"
+                    title="Eliminar"
+                  >
+                    <i class="ph ph-trash text-lg"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Estado vacío -->
+              <div
+                *ngIf="wishlistItems.length === 0"
+                class="text-center py-40 px-20"
+              >
+                <i class="ph ph-heart text-gray-300" style="font-size: 3rem;"></i>
+                <p class="text-gray-500 mt-12 mb-0">
+                  No tienes favoritos aún
+                </p>
+              </div>
+
+              <!-- Footer con botón "Ver todos" -->
+              <div
+                *ngIf="wishlistCount > 0"
+                class="p-16 border-top border-gray-100"
+              >
+                <button
+                  type="button"
+                  (click)="verTodosFavoritos()"
+                  class="btn bg-main-50 hover-bg-main-100 text-main-600 w-100 py-12 rounded-8 fw-medium"
+                >
+                  Ver todos los favoritos y listas
+                  <i class="ph ph-arrow-right ms-8"></i>
+                </button>
+              </div>
+            </div>
+          </div>
 
           <a [routerLink]="['cart']" class="flex-align gap-4 item-hover-white">
             <span

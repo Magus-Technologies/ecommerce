@@ -24,6 +24,8 @@ export class AuthService {
 
   private readonly tokenKey = 'auth_token';
   private readonly userKey = 'current_user';
+  private readonly loginTimeKey = 'login_time';
+  private readonly tokenExpirationHours = 12; // Duración del token en horas
 
   constructor(
     private http: HttpClient,
@@ -90,6 +92,9 @@ export class AuthService {
     localStorage.setItem(this.tokenKey, response.token);
     localStorage.setItem('user_type', response.tipo_usuario); // Almacenar tipo de usuario
 
+    // 🕐 Guardar hora de login para control de expiración
+    localStorage.setItem(this.loginTimeKey, new Date().getTime().toString());
+
     const user: User = {
       id: response.user.id,
       name: response.user.name || response.user.nombre_completo,
@@ -150,6 +155,7 @@ export class AuthService {
       localStorage.removeItem(this.tokenKey);
       localStorage.removeItem(this.userKey);
       localStorage.removeItem('user_type');
+      localStorage.removeItem(this.loginTimeKey); // 🕐 Limpiar hora de login
     }
     this.currentUserSubject.next(null);
 
@@ -187,8 +193,34 @@ export class AuthService {
     return localStorage.getItem(this.tokenKey);
   }
 
+  /**
+   * 🕐 Verificar si el token ha expirado (12 horas)
+   */
+  private isTokenExpired(): boolean {
+    if (!this.isBrowser) return false;
+
+    const loginTime = localStorage.getItem(this.loginTimeKey);
+    if (!loginTime) return true; // Si no hay hora de login, considerar expirado
+
+    const loginTimestamp = parseInt(loginTime, 10);
+    const currentTimestamp = new Date().getTime();
+    const hoursElapsed = (currentTimestamp - loginTimestamp) / (1000 * 60 * 60);
+
+    return hoursElapsed >= this.tokenExpirationHours;
+  }
+
   isLoggedIn(): boolean {
-    return !!this.getToken() && !!this.currentUserSubject.value;
+    const hasToken = !!this.getToken();
+    const hasUser = !!this.currentUserSubject.value;
+
+    // 🕐 Verificar si el token ha expirado
+    if (hasToken && hasUser && this.isTokenExpired()) {
+      console.log('⏰ Token expirado. Cerrando sesión automáticamente...');
+      this.clearSession();
+      return false;
+    }
+
+    return hasToken && hasUser;
   }
 
   getCurrentUser(): User | null {
@@ -304,10 +336,13 @@ export class AuthService {
       console.log('💾 Guardando token...');
       localStorage.setItem(this.tokenKey, token);
       console.log('✅ Token guardado');
-      
+
+      // 🕐 Guardar hora de login para control de expiración
+      localStorage.setItem(this.loginTimeKey, new Date().getTime().toString());
+
       const googleUserData = JSON.parse(decodeURIComponent(userData));
       console.log('👤 Datos parseados:', googleUserData);
-      
+
       // Crear objeto de usuario
       const user: User = {
         id: googleUserData.id,
@@ -317,9 +352,9 @@ export class AuthService {
         roles: googleUserData.roles || [],
         permissions: googleUserData.permissions || []
       };
-      
+
       console.log('👤 Usuario creado:', user);
-      
+
       // Guardar usuario
       localStorage.setItem(this.userKey, JSON.stringify(user));
       console.log('💾 Usuario guardado en localStorage');

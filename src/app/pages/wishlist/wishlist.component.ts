@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { BreadcrumbComponent } from '../../component/breadcrumb/breadcrumb.component';
+// import { BreadcrumbComponent } from '../../component/breadcrumb/breadcrumb.component';
 import { ShippingComponent } from '../../component/shipping/shipping.component';
 import { WishlistService, WishlistItem } from '../../services/wishlist.service';
 import { CartService } from '../../services/cart.service';
@@ -12,7 +12,7 @@ import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-wishlist',
-  imports: [CommonModule, RouterLink, BreadcrumbComponent, ShippingComponent],
+  imports: [CommonModule, RouterLink, ShippingComponent],
   templateUrl: './wishlist.component.html',
   styleUrl: './wishlist.component.scss'
 })

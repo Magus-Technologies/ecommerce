@@ -121,6 +121,14 @@ export const routes: Routes = [
             title: 'Mis Compras'
           },
           {
+            path: 'favoritos',
+            loadComponent: () =>
+              import('./pages/wishlist/wishlist.component').then(
+                (m) => m.WishlistComponent
+              ),
+            title: 'Mis Favoritos'
+          },
+          {
             path: 'reclamos',
             loadComponent: () =>
               import('./pages/my-account/reclamos/reclamos.component').then(
