@@ -759,11 +759,72 @@ export class VentasListComponent implements OnInit {
   }
 
   enviarEmail(venta: Venta): void {
-    // Obtener datos del cliente
-    const emailCliente = venta.cliente_info?.email || venta.cliente?.email || '';
-    const telefonoCliente = venta.cliente_info?.telefono || venta.cliente?.telefono || '';
-    const nombreCliente = venta.cliente_info?.nombre_completo || venta.cliente?.razon_social || '';
-    const numeroComprobante = venta.comprobante_info?.numero_completo || venta.codigo_venta;
+    console.log('🚀 MÉTODO enviarEmail EJECUTADO');
+    console.log('📋 Venta recibida:', venta);
+    console.log('🆔 ID de venta:', venta.id);
+
+    // Mostrar loading mientras obtenemos los datos completos
+    Swal.fire({
+      title: 'Cargando datos del cliente...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Obtener detalle completo de la venta para tener email y teléfono
+    this.ventasService.obtenerVenta(venta.id).subscribe({
+      next: (ventaDetallada) => {
+        Swal.close();
+
+        console.log('🔍 RESPUESTA COMPLETA DEL BACKEND:', ventaDetallada);
+        console.log('📦 cliente_contacto:', ventaDetallada.cliente_contacto);
+        console.log('👤 cliente:', ventaDetallada.cliente);
+
+        // Obtener datos del cliente_contacto (nuevo campo del backend)
+        const emailCliente = ventaDetallada.cliente_contacto?.email || ventaDetallada.cliente?.email || '';
+        const telefonoCliente = ventaDetallada.cliente_contacto?.telefono || ventaDetallada.cliente?.telefono || '';
+        const nombreCliente = ventaDetallada.cliente_contacto?.nombre_completo || ventaDetallada.cliente?.razon_social || '';
+        const numeroComprobante = venta.comprobante_info?.numero_completo || venta.codigo_venta;
+
+        console.log('✅ DATOS FINALES:');
+        console.log('   📧 Email:', emailCliente);
+        console.log('   📱 Teléfono:', telefonoCliente);
+        console.log('   👤 Nombre:', nombreCliente);
+
+        this.mostrarModalEnvio(venta, emailCliente, telefonoCliente, nombreCliente, numeroComprobante);
+      },
+      error: (error) => {
+        Swal.close();
+        console.error('Error al obtener detalle de venta:', error);
+
+        // Si falla, usar datos básicos
+        const emailCliente = venta.cliente_info?.email || venta.cliente?.email || '';
+        const telefonoCliente = venta.cliente_info?.telefono || venta.cliente?.telefono || '';
+        const nombreCliente = venta.cliente_info?.nombre_completo || venta.cliente?.razon_social || '';
+        const numeroComprobante = venta.comprobante_info?.numero_completo || venta.codigo_venta;
+
+        this.mostrarModalEnvio(venta, emailCliente, telefonoCliente, nombreCliente, numeroComprobante);
+      }
+    });
+  }
+
+  private mostrarModalEnvio(venta: Venta, emailCliente: string, telefonoCliente: string, nombreCliente: string, numeroComprobante: string): void {
+    // Intentar obtener datos del localStorage si están vacíos
+    if (!emailCliente || !telefonoCliente) {
+      const clienteGuardado = localStorage.getItem(`cliente_venta_${venta.id}`);
+      if (clienteGuardado) {
+        try {
+          const datos = JSON.parse(clienteGuardado);
+          emailCliente = emailCliente || datos.email || '';
+          telefonoCliente = telefonoCliente || datos.telefono || '';
+          nombreCliente = nombreCliente || datos.nombre || '';
+          console.log('📦 Datos recuperados de localStorage:', datos);
+        } catch (e) {
+          console.error('Error al parsear datos de localStorage:', e);
+        }
+      }
+    }
 
     Swal.fire({
       title: 'Enviar Comprobante Electrónico',
@@ -781,8 +842,9 @@ export class VentasListComponent implements OnInit {
             </label>
             <input type="email" id="email" class="swal2-input" 
                    placeholder="Email del cliente" 
-                   value="${emailCliente}"
+                   value="${emailCliente || ''}"
                    style="margin-top: 5px;">
+            ${!emailCliente ? '<small style="color: #dc3545;">⚠️ Email no disponible - Ingrese manualmente</small>' : ''}
           </div>
           
           <div style="margin-bottom: 15px;">
@@ -792,8 +854,9 @@ export class VentasListComponent implements OnInit {
             </label>
             <input type="text" id="telefono" class="swal2-input" 
                    placeholder="Teléfono con código país (+51987654321)" 
-                   value="${telefonoCliente}"
+                   value="${telefonoCliente || ''}"
                    style="margin-top: 5px;">
+            ${!telefonoCliente ? '<small style="color: #dc3545;">⚠️ Teléfono no disponible - Ingrese manualmente</small>' : ''}
           </div>
           
           <div style="margin-bottom: 10px;">
@@ -905,6 +968,8 @@ export class VentasListComponent implements OnInit {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   }
+
+
 
   generarPdf(venta: Venta): void {
     Swal.fire({
@@ -1630,46 +1695,151 @@ export class VentasListComponent implements OnInit {
    * Abre modal para enviar comprobante por Email o WhatsApp
    */
   abrirModalEnvio(venta: Venta): void {
-    const emailCliente = venta.cliente_info?.email || '';
-    const telefonoCliente = venta.cliente_info?.telefono || '';
+    console.log('🚀 abrirModalEnvio EJECUTADO - Venta ID:', venta.id);
 
+    // Mostrar loading
+    Swal.fire({
+      title: 'Cargando datos...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    // Obtener detalle completo para tener email y teléfono
+    this.ventasService.obtenerVenta(venta.id).subscribe({
+      next: (ventaDetallada) => {
+        console.log('📦 RESPUESTA DEL BACKEND:', ventaDetallada);
+        console.log('📧 cliente_contacto:', ventaDetallada.cliente_contacto);
+
+        Swal.close();
+
+        // Obtener datos del cliente_contacto
+        const emailCliente = ventaDetallada.cliente_contacto?.email || ventaDetallada.cliente?.email || '';
+        const telefonoCliente = ventaDetallada.cliente_contacto?.telefono || ventaDetallada.cliente?.telefono || '';
+        const nombreCliente = ventaDetallada.cliente_contacto?.nombre_completo || ventaDetallada.cliente?.razon_social || venta.cliente_info?.nombre_completo || '';
+
+        console.log('✅ DATOS EXTRAÍDOS:');
+        console.log('   Email:', emailCliente);
+        console.log('   Teléfono:', telefonoCliente);
+        console.log('   Nombre:', nombreCliente);
+
+        Swal.fire({
+          title: 'Enviar Comprobante',
+          html: `
+            <div class="text-start">
+              <div class="alert alert-info mb-3">
+                <strong>Comprobante:</strong> ${venta.comprobante_info?.numero_completo}<br>
+                <strong>Cliente:</strong> ${nombreCliente}
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Email</label>
+                <input 
+                  type="email" 
+                  id="emailInput" 
+                  class="form-control" 
+                  value="${emailCliente}"
+                  placeholder="correo@ejemplo.com">
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Teléfono (WhatsApp)</label>
+                <input 
+                  type="tel" 
+                  id="telefonoInput" 
+                  class="form-control" 
+                  value="${telefonoCliente}"
+                  placeholder="+51987654321">
+                <small class="text-muted">Incluir código de país (+51)</small>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Mensaje personalizado (opcional)</label>
+                <textarea 
+                  id="mensajeInput" 
+                  class="form-control" 
+                  rows="3"
+                  placeholder="Mensaje adicional para el cliente..."></textarea>
+              </div>
+            </div>
+          `,
+          width: '600px',
+          showCancelButton: true,
+          showDenyButton: true,
+          confirmButtonText: '<i class="ph ph-envelope me-2"></i>Enviar por Email',
+          denyButtonText: '<i class="ph ph-whatsapp-logo me-2"></i>Enviar por WhatsApp',
+          cancelButtonText: 'Cancelar',
+          confirmButtonColor: '#0d6efd',
+          denyButtonColor: '#25d366',
+          cancelButtonColor: '#6c757d',
+          preConfirm: () => {
+            const email = (document.getElementById('emailInput') as HTMLInputElement).value;
+            const telefono = (document.getElementById('telefonoInput') as HTMLInputElement).value;
+            const mensaje = (document.getElementById('mensajeInput') as HTMLTextAreaElement).value;
+
+            if (!email) {
+              Swal.showValidationMessage('Por favor ingrese un email');
+              return false;
+            }
+
+            return { email, telefono, mensaje, tipo: 'email' };
+          },
+          preDeny: () => {
+            const email = (document.getElementById('emailInput') as HTMLInputElement).value;
+            const telefono = (document.getElementById('telefonoInput') as HTMLInputElement).value;
+            const mensaje = (document.getElementById('mensajeInput') as HTMLTextAreaElement).value;
+
+            if (!telefono) {
+              Swal.showValidationMessage('Por favor ingrese un teléfono');
+              return false;
+            }
+
+            return { email, telefono, mensaje, tipo: 'whatsapp' };
+          }
+        }).then((result) => {
+          if (result.isConfirmed && result.value) {
+            this.enviarPorEmail(venta.id, result.value.email, result.value.mensaje);
+          } else if (result.isDenied && result.value) {
+            this.enviarPorWhatsApp(venta.id, result.value.telefono, result.value.mensaje);
+          }
+        });
+      },
+      error: (error) => {
+        Swal.close();
+        console.error('Error al obtener detalle:', error);
+
+        // Si falla, usar datos básicos
+        const emailCliente = venta.cliente_info?.email || '';
+        const telefonoCliente = venta.cliente_info?.telefono || '';
+
+        // Mostrar modal con datos básicos
+        this.mostrarModalEnvioBasico(venta, emailCliente, telefonoCliente);
+      }
+    });
+  }
+
+  private mostrarModalEnvioBasico(venta: Venta, emailCliente: string, telefonoCliente: string): void {
     Swal.fire({
       title: 'Enviar Comprobante',
       html: `
         <div class="text-start">
+          <div class="alert alert-warning mb-3">
+            <small>⚠️ No se pudieron cargar los datos del cliente. Ingrese manualmente.</small>
+          </div>
           <div class="alert alert-info mb-3">
             <strong>Comprobante:</strong> ${venta.comprobante_info?.numero_completo}<br>
             <strong>Cliente:</strong> ${venta.cliente_info?.nombre_completo}
           </div>
-
           <div class="mb-3">
             <label class="form-label fw-semibold">Email</label>
-            <input 
-              type="email" 
-              id="emailInput" 
-              class="form-control" 
-              value="${emailCliente}"
-              placeholder="correo@ejemplo.com">
+            <input type="email" id="emailInput" class="form-control" value="${emailCliente}" placeholder="correo@ejemplo.com">
           </div>
-
           <div class="mb-3">
             <label class="form-label fw-semibold">Teléfono (WhatsApp)</label>
-            <input 
-              type="tel" 
-              id="telefonoInput" 
-              class="form-control" 
-              value="${telefonoCliente}"
-              placeholder="+51987654321">
-            <small class="text-muted">Incluir código de país (+51)</small>
+            <input type="tel" id="telefonoInput" class="form-control" value="${telefonoCliente}" placeholder="+51987654321">
           </div>
-
           <div class="mb-3">
             <label class="form-label fw-semibold">Mensaje personalizado (opcional)</label>
-            <textarea 
-              id="mensajeInput" 
-              class="form-control" 
-              rows="3"
-              placeholder="Mensaje adicional para el cliente..."></textarea>
+            <textarea id="mensajeInput" class="form-control" rows="3"></textarea>
           </div>
         </div>
       `,
@@ -1679,39 +1849,26 @@ export class VentasListComponent implements OnInit {
       confirmButtonText: '<i class="ph ph-envelope me-2"></i>Enviar por Email',
       denyButtonText: '<i class="ph ph-whatsapp-logo me-2"></i>Enviar por WhatsApp',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#0d6efd',
-      denyButtonColor: '#25d366',
-      cancelButtonColor: '#6c757d',
       preConfirm: () => {
         const email = (document.getElementById('emailInput') as HTMLInputElement).value;
-        const telefono = (document.getElementById('telefonoInput') as HTMLInputElement).value;
-        const mensaje = (document.getElementById('mensajeInput') as HTMLTextAreaElement).value;
-
         if (!email) {
           Swal.showValidationMessage('Por favor ingrese un email');
           return false;
         }
-
-        return { email, telefono, mensaje, tipo: 'email' };
+        return { email, mensaje: (document.getElementById('mensajeInput') as HTMLTextAreaElement).value };
       },
       preDeny: () => {
-        const email = (document.getElementById('emailInput') as HTMLInputElement).value;
         const telefono = (document.getElementById('telefonoInput') as HTMLInputElement).value;
-        const mensaje = (document.getElementById('mensajeInput') as HTMLTextAreaElement).value;
-
         if (!telefono) {
           Swal.showValidationMessage('Por favor ingrese un teléfono');
           return false;
         }
-
-        return { email, telefono, mensaje, tipo: 'whatsapp' };
+        return { telefono, mensaje: (document.getElementById('mensajeInput') as HTMLTextAreaElement).value };
       }
     }).then((result) => {
       if (result.isConfirmed && result.value) {
-        // Enviar por Email
         this.enviarPorEmail(venta.id, result.value.email, result.value.mensaje);
       } else if (result.isDenied && result.value) {
-        // Enviar por WhatsApp
         this.enviarPorWhatsApp(venta.id, result.value.telefono, result.value.mensaje);
       }
     });

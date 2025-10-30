@@ -1091,6 +1091,17 @@ export class PosComponent implements OnInit, OnDestroy {
             this.success = '✅ Venta registrada exitosamente';
             this.mostrarModalExito = true;
             
+            // Guardar datos del cliente en localStorage para uso posterior
+            const clienteData = {
+              ventaId: response.data.id,
+              email: this.ventaForm.cliente.email || '',
+              telefono: this.ventaForm.cliente.telefono || '',
+              nombre: this.ventaForm.cliente.nombre || '',
+              timestamp: new Date().getTime()
+            };
+            localStorage.setItem(`cliente_venta_${response.data.id}`, JSON.stringify(clienteData));
+            console.log('💾 Datos del cliente guardados:', clienteData);
+            
             // Limpiar pagos registrados
             this.pagosMixtosRegistrados = [];
             

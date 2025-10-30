@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 // ============================================
@@ -97,6 +98,16 @@ export interface VentaComprobante {
 }
 
 /**
+ * Información de contacto del cliente
+ */
+export interface ClienteContacto {
+  email: string;
+  telefono: string;
+  nombre_completo: string;
+  numero_documento: string;
+}
+
+/**
  * Detalle completo de venta (GET /api/ventas/{id})
  */
 export interface VentaDetallada {
@@ -112,6 +123,7 @@ export interface VentaDetallada {
   pagos?: PagoVenta[]; // Desglose de pagos (si aplica)
   observaciones?: string;
   cliente: VentaCliente;
+  cliente_contacto?: ClienteContacto; // Información de contacto consolidada
   detalles: VentaDetalle[];
   comprobante?: VentaComprobante;
 }
@@ -364,7 +376,10 @@ export class VentasService {
    * Obtiene detalle completo de una venta
    */
   obtenerVenta(id: number): Observable<VentaDetallada> {
-    return this.http.get<VentaDetallada>(`${this.apiUrl}/${id}`);
+    return this.http.get<{success: boolean, data: VentaDetallada}>(`${this.apiUrl}/${id}`)
+      .pipe(
+        map(response => response.data)
+      );
   }
 
   // ============================================
