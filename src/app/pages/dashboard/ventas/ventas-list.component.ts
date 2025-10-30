@@ -1625,4 +1625,175 @@ export class VentasListComponent implements OnInit {
       width: '600px'
     });
   }
+
+  /**
+   * Abre modal para enviar comprobante por Email o WhatsApp
+   */
+  abrirModalEnvio(venta: Venta): void {
+    const emailCliente = venta.cliente_info?.email || '';
+    const telefonoCliente = venta.cliente_info?.telefono || '';
+
+    Swal.fire({
+      title: 'Enviar Comprobante',
+      html: `
+        <div class="text-start">
+          <div class="alert alert-info mb-3">
+            <strong>Comprobante:</strong> ${venta.comprobante_info?.numero_completo}<br>
+            <strong>Cliente:</strong> ${venta.cliente_info?.nombre_completo}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Email</label>
+            <input 
+              type="email" 
+              id="emailInput" 
+              class="form-control" 
+              value="${emailCliente}"
+              placeholder="correo@ejemplo.com">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Teléfono (WhatsApp)</label>
+            <input 
+              type="tel" 
+              id="telefonoInput" 
+              class="form-control" 
+              value="${telefonoCliente}"
+              placeholder="+51987654321">
+            <small class="text-muted">Incluir código de país (+51)</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Mensaje personalizado (opcional)</label>
+            <textarea 
+              id="mensajeInput" 
+              class="form-control" 
+              rows="3"
+              placeholder="Mensaje adicional para el cliente..."></textarea>
+          </div>
+        </div>
+      `,
+      width: '600px',
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: '<i class="ph ph-envelope me-2"></i>Enviar por Email',
+      denyButtonText: '<i class="ph ph-whatsapp-logo me-2"></i>Enviar por WhatsApp',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#0d6efd',
+      denyButtonColor: '#25d366',
+      cancelButtonColor: '#6c757d',
+      preConfirm: () => {
+        const email = (document.getElementById('emailInput') as HTMLInputElement).value;
+        const telefono = (document.getElementById('telefonoInput') as HTMLInputElement).value;
+        const mensaje = (document.getElementById('mensajeInput') as HTMLTextAreaElement).value;
+
+        if (!email) {
+          Swal.showValidationMessage('Por favor ingrese un email');
+          return false;
+        }
+
+        return { email, telefono, mensaje, tipo: 'email' };
+      },
+      preDeny: () => {
+        const email = (document.getElementById('emailInput') as HTMLInputElement).value;
+        const telefono = (document.getElementById('telefonoInput') as HTMLInputElement).value;
+        const mensaje = (document.getElementById('mensajeInput') as HTMLTextAreaElement).value;
+
+        if (!telefono) {
+          Swal.showValidationMessage('Por favor ingrese un teléfono');
+          return false;
+        }
+
+        return { email, telefono, mensaje, tipo: 'whatsapp' };
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        // Enviar por Email
+        this.enviarPorEmail(venta.id, result.value.email, result.value.mensaje);
+      } else if (result.isDenied && result.value) {
+        // Enviar por WhatsApp
+        this.enviarPorWhatsApp(venta.id, result.value.telefono, result.value.mensaje);
+      }
+    });
+  }
+
+  /**
+   * Envía el comprobante por Email
+   */
+  private enviarPorEmail(ventaId: number, email: string, mensaje?: string): void {
+    Swal.fire({
+      title: 'Enviando...',
+      text: 'Por favor espere',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    this.ventasService.enviarEmail(ventaId, email, mensaje).subscribe({
+      next: (response) => {
+        Swal.fire({
+          title: '¡Enviado!',
+          html: `
+            <div class="text-center">
+              <i class="ph ph-check-circle text-success mb-3" style="font-size: 4rem;"></i>
+              <p>El comprobante ha sido enviado exitosamente por email a:</p>
+              <p class="fw-bold">${email}</p>
+            </div>
+          `,
+          icon: 'success',
+          confirmButtonColor: '#198754'
+        });
+      },
+      error: (error) => {
+        console.error('Error al enviar email:', error);
+        Swal.fire({
+          title: 'Error al enviar',
+          text: error.error?.message || 'No se pudo enviar el comprobante por email',
+          icon: 'error',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
+  }
+
+  /**
+   * Envía el comprobante por WhatsApp
+   */
+  private enviarPorWhatsApp(ventaId: number, telefono: string, mensaje?: string): void {
+    Swal.fire({
+      title: 'Enviando...',
+      text: 'Por favor espere',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    this.ventasService.enviarWhatsApp(ventaId, telefono, mensaje).subscribe({
+      next: (response) => {
+        Swal.fire({
+          title: '¡Enviado!',
+          html: `
+            <div class="text-center">
+              <i class="ph ph-check-circle text-success mb-3" style="font-size: 4rem;"></i>
+              <p>El comprobante ha sido enviado exitosamente por WhatsApp a:</p>
+              <p class="fw-bold">${telefono}</p>
+            </div>
+          `,
+          icon: 'success',
+          confirmButtonColor: '#198754'
+        });
+      },
+      error: (error) => {
+        console.error('Error al enviar WhatsApp:', error);
+        Swal.fire({
+          title: 'Error al enviar',
+          text: error.error?.message || 'No se pudo enviar el comprobante por WhatsApp',
+          icon: 'error',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
+  }
 }

@@ -14,6 +14,10 @@
 @import 'assets/sass/main.scss';
 @import 'assets/css/main.css';
 
+// Estilos globales de recompensas (movidos desde componentes para evitar límite de líneas)
+@import 'assets/sass/components/recompensas';
+@import 'assets/sass/components/recompensas-popups';
+
 
 // Sobrescribir botón primary de Bootstrap para usar color principal
 .btn-primary {

@@ -10,11 +10,13 @@ import { AlmacenService } from '../../../services/almacen.service';
 import { NotificacionesService } from '../../../services/notificaciones.service';
 import { EmpresaInfoService } from '../../../services/empresa-info.service';
 import { ReniecService } from '../../../services/reniec.service';
+import { VentasService } from '../../../services/ventas.service';
 import { ClienteEditModalComponent } from '../../../components/cliente-edit-modal/cliente-edit-modal.component';
 import { ProductoQuickModalComponent, ProductoQuickItem } from '../../../components/producto-quick-modal/producto-quick-modal.component';
 import { PagoRapidoModalComponent, PagoResultado } from '../../../components/pago-rapido-modal/pago-rapido-modal.component';
 import { ConfirmacionSunatModalComponent } from '../../../components/confirmacion-sunat-modal/confirmacion-sunat-modal.component';
 import { SerieSelectorModalComponent } from '../../../components/serie-selector-modal/serie-selector-modal.component';
+import { EnviarComprobanteModalComponent, EnviarComprobanteData } from '../../../components/enviar-comprobante-modal/enviar-comprobante-modal.component';
 import {
   VentaFormData,
   VentaItemFormData,
@@ -31,7 +33,7 @@ import {
 @Component({
   selector: 'app-pos',
   standalone: true,
-  imports: [CommonModule, FormsModule, ClienteEditModalComponent, ProductoQuickModalComponent, PagoRapidoModalComponent, ConfirmacionSunatModalComponent, SerieSelectorModalComponent],
+  imports: [CommonModule, FormsModule, ClienteEditModalComponent, ProductoQuickModalComponent, PagoRapidoModalComponent, ConfirmacionSunatModalComponent, SerieSelectorModalComponent, EnviarComprobanteModalComponent],
   templateUrl: './pos.component.html',
   styleUrls: ['./pos.component.scss'],
   animations: [
@@ -105,7 +107,8 @@ export class PosComponent implements OnInit, OnDestroy {
   // Pago
   pagaCon = 0;
 
-
+  // Pagos múltiples registrados
+  pagosMixtosRegistrados: Array<{metodo_pago: string, monto: number, referencia?: string | null}> = [];
 
   // Tasa de cambio (fija para PEN)
   tasaCambio = 1.00;
@@ -152,6 +155,8 @@ export class PosComponent implements OnInit, OnDestroy {
   mostrarModalExito = false;
   // Modal Configuración
   mostrarConfiguracionModal = false;
+  // Modal Enviar Comprobante
+  mostrarEnviarComprobanteModal = false;
   // Estado de envío de notificación
   enviandoNotificacion = false;
   notificacionEnviada = false;
@@ -288,6 +293,7 @@ export class PosComponent implements OnInit, OnDestroy {
     private notificacionesService: NotificacionesService,
     private empresaInfoService: EmpresaInfoService,
     private reniecService: ReniecService,
+    private ventasService: VentasService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) { }
@@ -584,6 +590,7 @@ export class PosComponent implements OnInit, OnDestroy {
 
   /**
    * Buscar cliente en la base de datos local por número de documento
+   * Implementa el flujo: Sistema → RENIEC/SUNAT
    */
   buscarClientePorDocumento(): void {
     const numeroDoc = this.ventaForm.cliente.numero_documento;
@@ -595,76 +602,94 @@ export class PosComponent implements OnInit, OnDestroy {
     this.error = null;
     this.success = null;
 
-    // PASO 1: Buscar en la base de datos (PRIORIDAD)
-    this.facturacionService.getClientes({ numero_documento: numeroDoc })
+    console.log('🔍 Buscando cliente en sistema:', numeroDoc);
+
+    // PASO 1: Buscar en la base de datos del sistema (PRIORIDAD)
+    this.ventasService.buscarClientePorDocumento(numeroDoc)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          if (response.data && response.data.length > 0) {
-            // ✅ CLIENTE ENCONTRADO EN DB
+          if (response.success && response.data && response.data.length > 0) {
+            // ✅ CLIENTE ENCONTRADO EN SISTEMA
             const cliente = response.data[0];
             this.loading = false;
 
-            console.log('📋 Cliente encontrado en DB:', cliente);
+            console.log('✅ Cliente encontrado en sistema:', cliente);
 
             // Autocompletar todos los datos del cliente
             this.ventaForm.cliente = {
               tipo_documento: cliente.tipo_documento || this.ventaForm.cliente.tipo_documento,
               numero_documento: cliente.numero_documento || numeroDoc,
-              nombre: cliente.nombre || '',
+              nombre: cliente.nombre_completo || cliente.nombres + ' ' + cliente.apellidos || '',
               direccion: cliente.direccion || '',
               email: cliente.email || '',
               telefono: cliente.telefono || ''
             };
 
             // Guardar el ID del cliente si existe
-            this.clienteExistenteId = cliente.id || null;
+            this.clienteExistenteId = cliente.id_cliente || cliente.id || null;
             this.success = '✅ Cliente encontrado en el sistema';
             setTimeout(() => this.success = null, 3000);
           } else {
-            // ❌ NO ENCONTRADO EN DB → BUSCAR EN RENIEC
-            this.buscarEnReniec(numeroDoc);
+            // ❌ NO ENCONTRADO EN SISTEMA → BUSCAR EN RENIEC/SUNAT
+            console.log('ℹ️ Cliente no encontrado en sistema, buscando en RENIEC/SUNAT...');
+            this.buscarEnReniecSunat(numeroDoc);
           }
         },
         error: (err) => {
-          this.loading = false;
-          console.error('Error al buscar en DB:', err);
-          // Si hay error en DB, intentar con RENIEC
-          this.buscarEnReniec(numeroDoc);
+          console.log('ℹ️ Error al buscar en sistema, intentando RENIEC/SUNAT:', err);
+          // Si hay error en sistema, intentar con RENIEC/SUNAT
+          this.buscarEnReniecSunat(numeroDoc);
         }
       });
   }
 
   /**
-   * Buscar en RENIEC cuando no se encuentra en DB
+   * Buscar en RENIEC/SUNAT cuando no se encuentra en el sistema
+   * Soporta DNI (8 dígitos) y RUC (11 dígitos)
    */
-  private buscarEnReniec(numeroDoc: string): void {
+  private buscarEnReniecSunat(numeroDoc: string): void {
     const esDni = numeroDoc.length === 8;
+    const esRuc = numeroDoc.length === 11;
     
-    if (!esDni) {
-      // Si no es DNI, mostrar mensaje
+    if (!esDni && !esRuc) {
+      // Si no es DNI ni RUC, mostrar mensaje
       this.loading = false;
       this.error = 'Cliente no encontrado. Ingrese los datos manualmente.';
       setTimeout(() => this.error = null, 3000);
       return;
     }
 
-    // Buscar en RENIEC
-    this.reniecService.buscarPorDni(numeroDoc)
+    console.log(`🔍 Buscando en ${esDni ? 'RENIEC' : 'SUNAT'}:`, numeroDoc);
+
+    // Buscar en RENIEC/SUNAT usando el nuevo endpoint unificado
+    this.ventasService.buscarEnReniecSunat(numeroDoc)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           this.loading = false;
           
-          if (response.success && (response.nombres || response.nombre)) {
-            // ✅ ENCONTRADO EN RENIEC
+          if (esDni && response.dni) {
+            // ✅ ENCONTRADO EN RENIEC (DNI)
             const nombreCompleto = response.nombre || 
               `${response.nombres} ${response.apellidoPaterno} ${response.apellidoMaterno}`;
 
             this.ventaForm.cliente.nombre = nombreCompleto.trim();
+            this.ventaForm.cliente.tipo_documento = TIPOS_DOCUMENTO.DNI;
             this.clienteExistenteId = null; // Es un cliente nuevo
             
             this.success = '✅ Datos encontrados en RENIEC';
+            console.log('✅ Datos RENIEC:', response);
+            setTimeout(() => this.success = null, 3000);
+          } else if (esRuc && response.ruc) {
+            // ✅ ENCONTRADO EN SUNAT (RUC)
+            this.ventaForm.cliente.nombre = response.razonSocial || response.nombre || '';
+            this.ventaForm.cliente.direccion = response.direccion || '';
+            this.ventaForm.cliente.tipo_documento = TIPOS_DOCUMENTO.RUC;
+            this.clienteExistenteId = null; // Es un cliente nuevo
+            
+            this.success = '✅ Datos encontrados en SUNAT';
+            console.log('✅ Datos SUNAT:', response);
             setTimeout(() => this.success = null, 3000);
           } else {
             this.error = 'No se encontraron datos. Ingrese manualmente.';
@@ -673,8 +698,14 @@ export class PosComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.loading = false;
-          console.error('Error al buscar en RENIEC:', err);
-          this.error = 'No se encontraron datos. Ingrese manualmente.';
+          console.error('Error al buscar en RENIEC/SUNAT:', err);
+          
+          // Mensaje más específico según el error
+          if (err.status === 404) {
+            this.error = 'No se encontraron datos. Ingrese manualmente.';
+          } else {
+            this.error = 'Error al consultar RENIEC/SUNAT. Ingrese manualmente.';
+          }
           setTimeout(() => this.error = null, 3000);
         }
       });
@@ -1006,84 +1037,84 @@ export class PosComponent implements OnInit, OnDestroy {
     this.error = null;
     this.success = null;
 
-    // Primero buscar o crear cliente
-    this.facturacionService.getClienteByDocumento(
-      this.ventaForm.cliente.tipo_documento,
-      this.ventaForm.cliente.numero_documento
-    )
-      .pipe(
-        takeUntil(this.destroy$),
-        // Si no existe, crear cliente
-        catchError(() => {
-          const nuevoCliente: any = {
-            tipo_documento: this.ventaForm.cliente.tipo_documento as any,
-            numero_documento: this.ventaForm.cliente.numero_documento,
-            nombres: this.ventaForm.cliente.nombre.split(" ")[0] || this.ventaForm.cliente.nombre, apellidos: this.ventaForm.cliente.nombre.split(" ").slice(1).join(" ") || "",
-            direccion: this.ventaForm.cliente.direccion,
-            email: this.ventaForm.cliente.email,
-            telefono: this.ventaForm.cliente.telefono
-          };
-          return this.facturacionService.createCliente(nuevoCliente);
-        })
-      )
+    // Preparar datos para envío según estructura de API
+    const datosVenta: any = {
+      tipo_documento: this.tipoDocumentoSeleccionado,
+      fecha_venta: new Date().toISOString().split('T')[0],
+      hora_venta: new Date().toTimeString().split(' ')[0],
+      descuento_global: this.ventaForm.descuento_global,
+      observaciones: this.ventaForm.observaciones,
+      moneda: this.ventaForm.moneda,
+      productos: this.ventaForm.items.map(item => ({
+        producto_id: item.producto_id,
+        codigo_producto: item.codigo_producto,
+        descripcion: item.descripcion,
+        unidad_medida: item.unidad_medida,
+        cantidad: item.cantidad,
+        precio_unitario: item.precio_unitario,
+        descuento: item.descuento || 0,
+        tipo_afectacion_igv: item.tipo_afectacion_igv
+      }))
+    };
+
+    // Enviar datos del cliente (el backend lo creará si no existe)
+    if (this.ventaForm.cliente && this.ventaForm.cliente.numero_documento) {
+      datosVenta.cliente_datos = {
+        tipo_documento: this.ventaForm.cliente.tipo_documento || '1',
+        numero_documento: this.ventaForm.cliente.numero_documento,
+        razon_social: this.ventaForm.cliente.nombre || '',
+        direccion: this.ventaForm.cliente.direccion || '',
+        email: this.ventaForm.cliente.email || '',
+        telefono: this.ventaForm.cliente.telefono || ''
+      };
+    }
+
+    // Enviar pagos múltiples si existen
+    if (this.pagosMixtosRegistrados && this.pagosMixtosRegistrados.length > 0) {
+      datosVenta.pagos = this.pagosMixtosRegistrados;
+      console.log('📤 Enviando venta con pagos múltiples:');
+      console.log('   - Pagos:', JSON.stringify(this.pagosMixtosRegistrados, null, 2));
+      console.log('   - Datos completos:', JSON.stringify(datosVenta, null, 2));
+    } else {
+      datosVenta.metodo_pago = this.ventaForm.metodo_pago;
+      console.log('📤 Enviando venta con método de pago simple:', datosVenta);
+    }
+
+    // Crear la venta
+    this.facturacionService.createVenta(datosVenta)
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (clienteResponse: any) => {
-          // Obtener el cliente de la respuesta
-          const cliente = clienteResponse.data || clienteResponse;
-
-          // Preparar datos para envío según estructura de API
-          const datosVenta: any = {
-            cliente_id: cliente.id,
-            tipo_documento: this.tipoDocumentoSeleccionado,
-            fecha_venta: new Date().toISOString().split('T')[0],
-            hora_venta: new Date().toTimeString().split(' ')[0],
-            metodo_pago: this.ventaForm.metodo_pago,
-            descuento_global: this.ventaForm.descuento_global,
-            observaciones: this.ventaForm.observaciones,
-            moneda: this.ventaForm.moneda,
-            productos: this.ventaForm.items.map(item => ({
-              producto_id: item.producto_id,
-              codigo_producto: item.codigo_producto,
-              descripcion: item.descripcion,
-              unidad_medida: item.unidad_medida,
-              cantidad: item.cantidad,
-              precio_unitario: item.precio_unitario,
-              descuento: item.descuento || 0,
-              tipo_afectacion_igv: item.tipo_afectacion_igv
-            }))
-          };
-
-          console.log('📤 Enviando venta con cliente_id:', datosVenta);
-
-          // Ahora sí crear la venta
-          this.facturacionService.createVenta(datosVenta)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-              next: (response) => {
-                this.loading = false;
-                if (response.success && response.data) {
-                  this.ventaGuardada = response.data;
-                  this.success = 'Venta guardada exitosamente';
-                  // No limpiar formulario automáticamente, permitir facturar
-                } else {
-                  this.error = response.message || 'Error al guardar la venta';
-                }
-              },
-              error: (error) => {
-                this.loading = false;
-                this.error = error.error?.message || 'Error al guardar la venta';
-                console.error('Error detallado:', error);
-              }
-            });
+        next: (response) => {
+          this.loading = false;
+          if (response.success && response.data) {
+            this.ventaGuardada = response.data;
+            this.success = '✅ Venta registrada exitosamente';
+            this.mostrarModalExito = true;
+            
+            // Limpiar pagos registrados
+            this.pagosMixtosRegistrados = [];
+            
+            // Redirigir a lista de ventas después de 2 segundos
+            setTimeout(() => {
+              this.router.navigate(['/dashboard/ventas']);
+            }, 2000);
+          } else {
+            this.error = response.message || 'Error al guardar la venta';
+          }
         },
         error: (error) => {
           this.loading = false;
-          this.error = 'Error al procesar cliente: ' + (error?.error?.message || 'Error desconocido');
-          console.error('Error al procesar cliente:', error);
+          this.error = error.error?.message || 'Error al guardar la venta';
+          console.error('Error detallado:', error);
         }
       });
   }
 
+  /**
+   * PASO 1: Generar comprobante local (XML firmado)
+   * NO envía a SUNAT, NO envía email
+   * Estado: PENDIENTE
+   */
   facturarVenta(): void {
     if (!this.ventaGuardada) {
       this.error = 'Primero debe guardar la venta';
@@ -1098,34 +1129,80 @@ export class PosComponent implements OnInit, OnDestroy {
     this.facturando.set(true);
     this.error = null;
 
-    // Preparar datos de facturación según nueva API
+    // Preparar datos de facturación (cliente_datos es opcional si ya hay cliente_id)
     const datosFacturacion = {
       cliente_datos: {
         tipo_documento: this.ventaForm.cliente.tipo_documento || '6',
         numero_documento: this.ventaForm.cliente.numero_documento || '',
         razon_social: this.ventaForm.cliente.nombre || 'CLIENTE GENERAL',
         direccion: this.ventaForm.cliente.direccion || 'LIMA - PERÚ',
-        email: this.ventaForm.cliente.email
+        email: this.ventaForm.cliente.email,
+        telefono: this.ventaForm.cliente.telefono
       }
     };
 
-    this.facturacionService.facturarVenta(this.ventaGuardada.id!, datosFacturacion)
+    // PASO 1: Generar comprobante local
+    this.ventasService.facturarVenta(this.ventaGuardada.id!, datosFacturacion)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.facturando.set(false);
-          if (response.success && response.data) {
-            this.comprobanteGenerado.set(response.data);
-            this.mostrarPanelComprobante.set(true);
-            this.success = `Comprobante ${response.data.numero_completo} generado exitosamente`;
-            this.error = null;
+          if (response.success && response.comprobante) {
+            console.log('✅ Comprobante generado localmente:', response.comprobante);
+            
+            // Guardar comprobante generado
+            this.comprobanteGenerado.set(response.comprobante as any);
+            
+            // PASO 2: Enviar automáticamente a SUNAT
+            this.enviarComprobanteASunat(this.ventaGuardada!.id!);
           } else {
-            this.error = response.message || 'Error al emitir el comprobante';
+            this.facturando.set(false);
+            this.error = response.message || 'Error al generar el comprobante';
           }
         },
         error: (error) => {
           this.facturando.set(false);
-          this.error = error.error?.message || 'Error al emitir el comprobante';
+          this.error = error.error?.message || 'Error al generar el comprobante';
+          console.error('Error al facturar:', error);
+        }
+      });
+  }
+
+  /**
+   * PASO 2: Enviar comprobante a SUNAT (genera PDF y CDR)
+   * NO envía email automáticamente
+   * Estado: ACEPTADO/RECHAZADO
+   */
+  enviarComprobanteASunat(ventaId: number): void {
+    console.log('📤 Enviando comprobante a SUNAT...');
+
+    this.ventasService.enviarComprobanteASunat(ventaId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.facturando.set(false);
+          
+          if (response.success && response.data) {
+            console.log('✅ Comprobante enviado a SUNAT:', response.data);
+            
+            // Actualizar comprobante con datos de SUNAT
+            this.comprobanteGenerado.set(response.data.comprobante as any);
+            this.mostrarPanelComprobante.set(true);
+            
+            // Actualizar estado de venta
+            if (this.ventaGuardada) {
+              this.ventaGuardada.estado = 'FACTURADO';
+            }
+            
+            this.success = `✅ Comprobante ${response.data.numero_completo} ${response.data.estado} por SUNAT`;
+            this.error = null;
+          } else {
+            this.error = response.message || 'Error al enviar a SUNAT';
+          }
+        },
+        error: (error) => {
+          this.facturando.set(false);
+          this.error = error.error?.message || 'Error al enviar a SUNAT';
+          console.error('Error al enviar a SUNAT:', error);
         }
       });
   }
@@ -1186,35 +1263,89 @@ export class PosComponent implements OnInit, OnDestroy {
       });
   }
 
-  enviarPorEmail(): void {
+  /**
+   * PASO 3 (MANUAL): Abrir modal para enviar comprobante
+   * Solo se ejecuta cuando el usuario lo solicita explícitamente
+   */
+  abrirModalEnviarComprobante(): void {
     const comprobante = this.comprobanteGenerado();
-    if (!comprobante || this.enviandoEmail()) return;
-
-    const email = this.ventaForm.cliente.email;
-    if (!email) {
-      this.error = 'El cliente no tiene email registrado';
+    if (!comprobante) {
+      this.error = 'No hay comprobante generado';
       return;
     }
 
+    // Validar que el comprobante esté aceptado
+    if (comprobante.estado_sunat !== 'ACEPTADO') {
+      this.error = 'El comprobante debe estar aceptado por SUNAT antes de enviarlo';
+      return;
+    }
+
+    this.mostrarEnviarComprobanteModal = true;
+  }
+
+  cerrarModalEnviarComprobante(): void {
+    this.mostrarEnviarComprobanteModal = false;
+  }
+
+  /**
+   * Procesar envío de comprobante (email o WhatsApp)
+   */
+  onEnviarComprobante(data: EnviarComprobanteData): void {
+    if (data.tipo === 'email') {
+      this.enviarPorEmail(data.destinatario, data.mensaje);
+    } else {
+      this.enviarPorWhatsApp(data.destinatario, data.mensaje);
+    }
+  }
+
+  /**
+   * Enviar comprobante por email
+   */
+  private enviarPorEmail(email: string, mensaje: string): void {
     this.enviandoEmail.set(true);
 
-    this.facturacionService.enviarEmail(comprobante.venta_id!, email)
+    this.ventasService.enviarEmail(this.ventaGuardada!.id!, email, mensaje)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           this.enviandoEmail.set(false);
-          this.success = `Comprobante enviado a ${email}`;
+          if (response.success) {
+            this.success = `✅ Comprobante enviado a ${response.data.email}`;
+            console.log('✅ Email enviado:', response.data);
+            this.cerrarModalEnviarComprobante();
+          }
         },
         error: (error) => {
           this.enviandoEmail.set(false);
           console.error('Error al enviar email:', error);
-          this.error = 'Error al enviar comprobante por email';
+          this.error = error.error?.message || 'Error al enviar comprobante por email';
         }
       });
   }
 
-  enviarEmail(): void {
-    this.enviarPorEmail();
+  /**
+   * Enviar comprobante por WhatsApp
+   */
+  private enviarPorWhatsApp(telefono: string, mensaje: string): void {
+    this.loading = true;
+
+    this.ventasService.enviarWhatsapp(this.ventaGuardada!.id!, telefono, mensaje)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.loading = false;
+          if (response.success) {
+            this.success = `✅ Comprobante enviado por WhatsApp a ${response.data.telefono}`;
+            console.log('✅ WhatsApp enviado:', response.data);
+            this.cerrarModalEnviarComprobante();
+          }
+        },
+        error: (error) => {
+          this.loading = false;
+          console.error('Error al enviar WhatsApp:', error);
+          this.error = error.error?.message || 'Error al enviar comprobante por WhatsApp';
+        }
+      });
   }
 
   consultarEstadoSunat(): void {
@@ -1532,8 +1663,30 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
   onPagoProcesado(resultado: PagoResultado): void {
-    // Usar el nuevo flujo de confirmación y procesamiento
-    this.confirmarYProcesarVenta(resultado);
+    console.log('💰 Pago procesado:', resultado);
+    
+    // Guardar los pagos múltiples si existen
+    if (resultado.pagosMixtos && resultado.pagosMixtos.length > 0) {
+      this.pagosMixtosRegistrados = resultado.pagosMixtos.map(p => ({
+        metodo_pago: p.metodo.toLowerCase(), // Convertir a minúsculas para el backend
+        monto: p.monto,
+        referencia: p.referencia || null
+      }));
+      console.log('✅ Pagos múltiples guardados:', this.pagosMixtosRegistrados);
+    } else {
+      // Si es un solo pago, guardarlo también
+      this.pagosMixtosRegistrados = [{
+        metodo_pago: resultado.metodo.toLowerCase(), // Convertir a minúsculas
+        monto: resultado.montoEntregado || this.calcularTotal(),
+        referencia: resultado.referencia || null
+      }];
+    }
+    
+    // Cerrar modal y guardar venta directamente
+    this.cerrarPagoModal();
+    
+    // Guardar la venta (sin emitir a SUNAT)
+    this.guardarVenta();
   }
 
   // Wrapper para manejar eventos del modal de pago
@@ -2578,7 +2731,11 @@ export class PosComponent implements OnInit, OnDestroy {
     `;
   }
 
-  enviarPorWhatsApp(): void {
+  /**
+   * Método legacy: Abre WhatsApp Web con mensaje de texto
+   * Para envío con PDF usar enviarPorWhatsApp()
+   */
+  abrirWhatsAppWeb(): void {
     if (!this.ventaGuardada) return;
 
     const venta = this.ventaGuardada;

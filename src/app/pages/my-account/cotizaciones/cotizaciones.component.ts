@@ -220,7 +220,8 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
     });
   }
 
-  formatearFecha(fecha: string): string {
+  formatearFecha(fecha: string | undefined): string {
+    if (!fecha) return '-';
     return this.cotizacionesService.formatearFecha(fecha);
   }
 

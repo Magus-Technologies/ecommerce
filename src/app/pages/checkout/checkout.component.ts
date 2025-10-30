@@ -11,6 +11,7 @@ import { CotizacionesService, CrearCotizacionRequest } from '../../services/coti
 import { ComprasService, CrearCompraRequest } from '../../services/compras.service';
 import { DireccionesService, Direccion } from '../../services/direcciones.service';
 import { ReniecService } from '../../services/reniec.service';
+import { ClienteService } from '../../services/cliente.service';
 import { FormaEnvioService, FormaEnvio } from '../../services/forma-envio.service';
 import { TipoPagoService, TipoPago } from '../../services/tipo-pago.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -71,6 +72,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     private comprasService: ComprasService,
     private direccionesService: DireccionesService,
     private reniecService: ReniecService,
+    private clienteService: ClienteService,
     private formaEnvioService: FormaEnvioService,
     private tipoPagoService: TipoPagoService,
     private router: Router
@@ -203,7 +205,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       });
   }
 
- // Buscar datos por documento
+// Buscar datos por documento - Primero en sistema, luego en RENIEC
 buscarDocumento(): void {
   const numeroDocumento = this.checkoutForm.get('numeroDocumento')?.value;
   
@@ -230,7 +232,48 @@ buscarDocumento(): void {
 
   this.buscandoDocumento = true;
 
-  // Usar el servicio real de RENIEC
+  // PASO 1: Buscar primero en el sistema de clientes
+  this.clienteService.buscarPorDocumento(numeroDocumento).subscribe({
+    next: (response) => {
+      console.log('Respuesta del sistema:', response);
+
+      // Si se encontró en el sistema
+      if (response.success && response.data && response.data.length > 0) {
+        this.buscandoDocumento = false;
+        const cliente = response.data[0];
+        const nombreCompleto = `${cliente.nombres} ${cliente.apellidos}`.trim();
+
+        // Autocompletar formulario con datos del sistema
+        this.checkoutForm.patchValue({
+          cliente: nombreCompleto,
+          email: cliente.email || '',
+          celular: cliente.telefono || '',
+          direccion: cliente.direccion || ''
+        });
+
+        Swal.fire({
+          title: 'Cliente encontrado',
+          text: `Se encontró: ${nombreCompleto}`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        // PASO 2: Si no se encontró en el sistema, buscar en RENIEC
+        console.log('No encontrado en sistema, buscando en RENIEC...');
+        this.buscarEnReniec(numeroDocumento);
+      }
+    },
+    error: (error) => {
+      console.error('Error buscando en sistema, intentando RENIEC:', error);
+      // Si hay error en el sistema, intentar con RENIEC
+      this.buscarEnReniec(numeroDocumento);
+    }
+  });
+}
+
+// Método auxiliar para buscar en RENIEC
+private buscarEnReniec(numeroDocumento: string): void {
   this.reniecService.buscarPorDni(numeroDocumento).subscribe({
     next: (response) => {
       this.buscandoDocumento = false;
@@ -258,7 +301,7 @@ buscarDocumento(): void {
           });
 
           Swal.fire({
-            title: 'Datos encontrados',
+            title: 'Datos encontrados en RENIEC',
             text: `Se encontró: ${nombreCompleto}`,
             icon: 'success',
             timer: 2000,
@@ -273,11 +316,11 @@ buscarDocumento(): void {
     },
     error: (error) => {
       this.buscandoDocumento = false;
-      console.error('Error consultando documento:', error);
+      console.error('Error consultando RENIEC:', error);
       
       Swal.fire({
         title: 'Error al consultar',
-        text: 'No se pudo verificar el documento. Intente nuevamente.',
+        text: 'No se pudo verificar el documento en ninguna fuente. Intente nuevamente.',
         icon: 'error',
         confirmButtonColor: '#dc3545'
       });

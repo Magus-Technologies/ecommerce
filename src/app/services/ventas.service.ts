@@ -46,7 +46,8 @@ export interface Venta {
   descuento_total: string;
   total: string;
   estado: 'PENDIENTE' | 'FACTURADO' | 'ANULADO';
-  metodo_pago: string;
+  metodo_pago: string; // "MIXTO" si hay múltiples pagos
+  pagos?: PagoVenta[]; // Desglose de pagos (si aplica)
   cliente_info: VentaClienteInfo;
   comprobante_info?: VentaComprobanteInfo;
 
@@ -107,7 +108,8 @@ export interface VentaDetallada {
   descuento_total: string;
   total: string;
   estado: 'PENDIENTE' | 'FACTURADO' | 'ANULADO';
-  metodo_pago: string;
+  metodo_pago: string; // "MIXTO" si hay múltiples pagos
+  pagos?: PagoVenta[]; // Desglose de pagos (si aplica)
   observaciones?: string;
   cliente: VentaCliente;
   detalles: VentaDetalle[];
@@ -115,7 +117,18 @@ export interface VentaDetallada {
 }
 
 /**
+ * Pago individual para pagos mixtos
+ * Según tabla pagos_venta: solo tiene metodo, monto y referencia
+ */
+export interface PagoVenta {
+  metodo_pago: string;  // EFECTIVO, YAPE, PLIN, TARJETA, TRANSFERENCIA, CREDITO
+  monto: number;        // Monto de este pago
+  referencia?: string;  // Número de operación, referencia, etc. (opcional)
+}
+
+/**
  * Request para crear venta (POST /api/ventas)
+ * Soporta pago simple o pagos mixtos
  */
 export interface CrearVentaRequest {
   cliente_id?: number | null;
@@ -126,7 +139,13 @@ export interface CrearVentaRequest {
     descuento_unitario?: number;
   }[];
   descuento_total?: number;
-  metodo_pago: string; // EFECTIVO, TARJETA, etc.
+  
+  // Opción 1: Pago simple (retrocompatible)
+  metodo_pago?: string; // EFECTIVO, TARJETA, etc.
+  
+  // Opción 2: Pagos mixtos (nuevo)
+  pagos?: PagoVenta[];
+  
   observaciones?: string | null;
   requiere_factura?: boolean;
   cliente_datos?: {
@@ -150,6 +169,8 @@ export interface CrearVentaResponse {
     codigo_venta: string;
     total: number;
     estado: 'PENDIENTE' | 'FACTURADO' | 'ANULADO';
+    metodo_pago?: string; // "MIXTO" si hay múltiples pagos
+    pagos?: PagoVenta[]; // Desglose de pagos
     comprobante_id?: number;
     comprobante?: {
       id: number;
@@ -174,14 +195,59 @@ export interface FacturarVentaRequest {
 }
 
 /**
- * Response de facturar venta
+ * Response de facturar venta (Genera comprobante local, NO envía a SUNAT)
  */
 export interface FacturarVentaResponse {
+  success: true;
   message: string;
   comprobante: {
     id: number;
     numero_completo: string;
-    estado_sunat: 'PENDIENTE' | 'ACEPTADO' | 'RECHAZADO';
+    serie: string;
+    correlativo: string;
+    tipo_comprobante: string; // "01" o "03"
+    estado: 'PENDIENTE'; // Siempre PENDIENTE al generar
+    fecha_emision: string;
+    cliente_razon_social: string;
+    cliente_numero_documento: string;
+    importe_total: number;
+    moneda: string;
+    tiene_xml: boolean;
+    tiene_pdf: boolean;
+    tiene_cdr: boolean;
+    mensaje_sunat: string | null;
+  };
+}
+
+/**
+ * Response de enviar a SUNAT (POST /api/ventas/{id}/enviar-sunat)
+ */
+export interface EnviarSunatResponse {
+  success: boolean;
+  message: string;
+  data: {
+    estado: 'ACEPTADO' | 'RECHAZADO' | 'ERROR';
+    mensaje_sunat: string;
+    numero_completo: string;
+    tiene_pdf: boolean;
+    tiene_cdr: boolean;
+    comprobante: {
+      id: number;
+      numero_completo: string;
+      estado: 'ACEPTADO' | 'RECHAZADO' | 'ERROR';
+      mensaje_sunat: string;
+      tiene_xml: boolean;
+      tiene_pdf: boolean;
+      tiene_cdr: boolean;
+      fecha_envio_sunat: string;
+      fecha_respuesta_sunat: string;
+      hash: string;
+    };
+    venta: {
+      id: number;
+      estado: 'FACTURADO';
+      comprobante_id: number;
+    };
   };
 }
 
@@ -197,14 +263,31 @@ export interface AnularVentaResponse {
 }
 
 /**
- * Response de enviar email
+ * Response de enviar email (POST /api/ventas/{id}/email)
  */
 export interface EnviarEmailResponse {
   success: boolean;
   message: string;
   data: {
     email: string;
-    venta: string;
+    comprobante: string;
+    pdf_url: string;
+    xml_url: string;
+    fecha_envio: string;
+  };
+}
+
+/**
+ * Response de enviar WhatsApp (POST /api/ventas/{id}/whatsapp)
+ */
+export interface EnviarWhatsAppResponse {
+  success: boolean;
+  message: string;
+  data: {
+    telefono: string;
+    comprobante: string;
+    whatsapp_url: string;
+    fecha_envio: string;
   };
 }
 
@@ -289,9 +372,45 @@ export class VentasService {
   // ============================================
   /**
    * Crea venta y genera comprobante electrónico automáticamente
+   * Soporta pago simple o pagos mixtos
+   * 
+   * @example Pago simple
+   * crearVenta({ metodo_pago: 'efectivo', productos: [...] })
+   * 
+   * @example Pagos mixtos
+   * crearVenta({ 
+   *   pagos: [
+   *     { metodo_pago: 'efectivo', monto: 50 },
+   *     { metodo_pago: 'yape', monto: 50 }
+   *   ],
+   *   productos: [...]
+   * })
    */
   crearVenta(venta: CrearVentaRequest): Observable<CrearVentaResponse> {
     return this.http.post<CrearVentaResponse>(this.apiUrl, venta);
+  }
+
+  /**
+   * Valida que la suma de pagos sea igual al total
+   * Útil para validar antes de enviar al backend
+   */
+  validarPagosMixtos(pagos: PagoVenta[], totalVenta: number): { valido: boolean; mensaje?: string } {
+    if (!pagos || pagos.length === 0) {
+      return { valido: false, mensaje: 'Debe agregar al menos un método de pago' };
+    }
+
+    const sumaPagos = pagos.reduce((sum, pago) => sum + pago.monto, 0);
+    const diferencia = Math.abs(sumaPagos - totalVenta);
+
+    // Tolerancia de 0.01 para errores de redondeo
+    if (diferencia > 0.01) {
+      return { 
+        valido: false, 
+        mensaje: `La suma de pagos (${sumaPagos.toFixed(2)}) no coincide con el total (${totalVenta.toFixed(2)})` 
+      };
+    }
+
+    return { valido: true };
   }
 
   // ============================================
@@ -334,13 +453,28 @@ export class VentasService {
   }
 
   // ============================================
-  // 7. POST /api/ventas/{id}/facturar - Facturar
+  // 7. POST /api/ventas/{id}/facturar - Facturar (Solo genera comprobante local)
   // ============================================
   /**
-   * Genera comprobante para venta existente
+   * Genera comprobante electrónico local (XML firmado)
+   * NO envía a SUNAT automáticamente
+   * NO envía email automáticamente
+   * Estado resultante: PENDIENTE
    */
   facturarVenta(id: number, datos?: FacturarVentaRequest): Observable<FacturarVentaResponse> {
     return this.http.post<FacturarVentaResponse>(`${this.apiUrl}/${id}/facturar`, datos || {});
+  }
+
+  // ============================================
+  // 7b. POST /api/ventas/{id}/enviar-sunat - Enviar a SUNAT
+  // ============================================
+  /**
+   * Envía comprobante a SUNAT (genera PDF y CDR)
+   * Cambia estado a ACEPTADO/RECHAZADO
+   * NO envía email automáticamente
+   */
+  enviarComprobanteASunat(id: number): Observable<EnviarSunatResponse> {
+    return this.http.post<EnviarSunatResponse>(`${this.apiUrl}/${id}/enviar-sunat`, {});
   }
 
   // ============================================
@@ -354,10 +488,12 @@ export class VentasService {
   }
 
   // ============================================
-  // 9. POST /api/ventas/{id}/email - Enviar email
+  // 9. POST /api/ventas/{id}/email - Enviar email (MANUAL)
   // ============================================
   /**
-   * Envía comprobante por email
+   * Envía comprobante por email (ACCIÓN MANUAL)
+   * Requiere que el comprobante esté ACEPTADO por SUNAT
+   * Requiere que tenga PDF generado
    */
   enviarEmail(id: number, email: string, mensaje?: string): Observable<EnviarEmailResponse> {
     return this.http.post<EnviarEmailResponse>(`${this.apiUrl}/${id}/email`, {
@@ -367,16 +503,29 @@ export class VentasService {
   }
 
   // ============================================
-  // 9b. POST /api/ventas/{id}/enviar-whatsapp - Enviar WhatsApp
+  // 9b. POST /api/ventas/{id}/whatsapp - Enviar WhatsApp (MANUAL)
   // ============================================
   /**
-   * Envía comprobante por WhatsApp
+   * Envía comprobante por WhatsApp (ACCIÓN MANUAL)
+   * Requiere que el comprobante esté ACEPTADO por SUNAT
+   * Requiere que tenga PDF generado
    */
-  enviarWhatsapp(id: number, telefono: string, mensaje?: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/${id}/enviar-whatsapp`, {
+  enviarWhatsapp(id: number, telefono: string, mensaje?: string): Observable<EnviarWhatsAppResponse> {
+    return this.http.post<EnviarWhatsAppResponse>(`${this.apiUrl}/${id}/whatsapp`, {
       telefono,
       mensaje
     });
+  }
+
+  // ============================================
+  // OBTENER DATOS PARA EMAIL (OPCIONAL)
+  // ============================================
+  /**
+   * Obtiene datos para pre-llenar el formulario de envío de email
+   * GET /api/ventas/{id}/email-datos
+   */
+  obtenerDatosEmail(id: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/${id}/email-datos`);
   }
 
   // ============================================
@@ -481,6 +630,40 @@ export class VentasService {
   }
 
   /**
+   * Formatea el método de pago para mostrar
+   */
+  formatearMetodoPago(metodo: string): string {
+    const metodos: Record<string, string> = {
+      'efectivo': 'Efectivo',
+      'tarjeta_credito': 'Tarjeta de Crédito',
+      'tarjeta_debito': 'Tarjeta de Débito',
+      'transferencia': 'Transferencia',
+      'yape': 'Yape',
+      'plin': 'Plin',
+      'credito': 'Crédito',
+      'MIXTO': 'Pago Mixto'
+    };
+    return metodos[metodo] || metodo;
+  }
+
+  /**
+   * Obtiene el icono para el método de pago
+   */
+  obtenerIconoMetodoPago(metodo: string): string {
+    const iconos: Record<string, string> = {
+      'efectivo': 'ph-money',
+      'tarjeta_credito': 'ph-credit-card',
+      'tarjeta_debito': 'ph-credit-card',
+      'transferencia': 'ph-bank',
+      'yape': 'ph-device-mobile',
+      'plin': 'ph-device-mobile',
+      'credito': 'ph-file-text',
+      'MIXTO': 'ph-stack'
+    };
+    return iconos[metodo] || 'ph-money';
+  }
+
+  /**
    * Determina el color para el badge de estado SUNAT
    */
   obtenerColorEstadoSunat(estado: 'PENDIENTE' | 'ACEPTADO' | 'RECHAZADO'): string {
@@ -513,6 +696,17 @@ export class VentasService {
     };
 
     return tiposCodigo[tipo] || tiposAbrev[tipo] || tipo;
+  }
+
+  /**
+   * Enviar comprobante por WhatsApp
+   * POST /api/ventas/{id}/whatsapp
+   */
+  enviarWhatsApp(ventaId: number, telefono: string, mensaje?: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${ventaId}/whatsapp`, {
+      telefono,
+      mensaje
+    });
   }
 
   /**
@@ -561,5 +755,27 @@ export class VentasService {
     }
 
     return this.http.get<EstadisticasVentas>(`${this.apiUrl}/estadisticas`, { params });
+  }
+
+  // ============================================
+  // BÚSQUEDA DE CLIENTES
+  // ============================================
+
+  /**
+   * Buscar cliente en el sistema por número de documento
+   * GET /api/clientes/buscar-por-documento?numero_documento={documento}
+   */
+  buscarClientePorDocumento(numeroDocumento: string): Observable<any> {
+    const params = new HttpParams().set('numero_documento', numeroDocumento);
+    return this.http.get(`${environment.apiUrl}/clientes/buscar-por-documento`, { params });
+  }
+
+  /**
+   * Buscar información de DNI o RUC en RENIEC/SUNAT
+   * GET /api/reniec/buscar/{documento}
+   * No requiere autenticación
+   */
+  buscarEnReniecSunat(documento: string): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/reniec/buscar/${documento}`);
   }
 }
