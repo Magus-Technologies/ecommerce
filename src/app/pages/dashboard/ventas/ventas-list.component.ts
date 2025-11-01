@@ -1170,11 +1170,61 @@ export class VentasListComponent implements OnInit {
   }
 
   editarVenta(venta: Venta): void {
-    // TODO: Navegar a edición o abrir modal
+    // Verificar si la venta puede editarse
+    if (!this.ventasService.puedeEditarVenta(venta)) {
+      Swal.fire({
+        title: 'Venta no editable',
+        html: `
+          <div class="text-start">
+            <p class="mb-3">Esta venta no puede ser editada.</p>
+            <div class="alert alert-warning">
+              <strong>Razón:</strong><br>
+              ${venta.estado !== 'PENDIENTE' ? 
+                `• La venta está en estado <strong>${venta.estado}</strong>` : ''}
+              ${venta.comprobante_info ? 
+                `• Ya tiene un comprobante generado (<strong>${venta.comprobante_info.numero_completo}</strong>)` : ''}
+            </div>
+            <p class="text-muted small">
+              Solo se pueden editar ventas en estado <strong>PENDIENTE</strong> 
+              que no tengan comprobante generado.
+            </p>
+          </div>
+        `,
+        icon: 'warning',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    // Confirmar edición
     Swal.fire({
-      title: 'Función no disponible',
-      text: 'La edición de ventas estará disponible próximamente',
-      icon: 'info'
+      title: '✏️ Editar Venta',
+      html: `
+        <div class="text-start">
+          <p class="mb-3">¿Desea editar la venta <strong>${venta.codigo_venta}</strong>?</p>
+          <div class="alert alert-info">
+            <strong>Cliente:</strong> ${venta.cliente_info?.nombre_completo}<br>
+            <strong>Total actual:</strong> S/ ${venta.total}<br>
+            <strong>Estado:</strong> ${venta.estado}
+          </div>
+          <p class="text-muted small">
+            Podrá modificar productos, cantidades, precios y método de pago.
+            El stock se ajustará automáticamente.
+          </p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#0d6efd',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: '<i class="ph ph-pencil-simple me-1"></i> Editar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Redirigir al POS con el ID de la venta para editar
+        // El componente POS detectará el parámetro y cargará la venta
+        window.location.href = `/dashboard/ventas/editar/${venta.id}`;
+      }
     });
   }
 
@@ -1915,42 +1965,209 @@ export class VentasListComponent implements OnInit {
   }
 
   /**
-   * Envía el comprobante por WhatsApp
+   * Envía el comprobante por WhatsApp usando el nuevo flujo
+   * PASO 1: Obtener datos prellenados
+   * PASO 2: Enviar por WhatsApp
+   * PASO 3: Abrir WhatsApp con URL generada
    */
   private enviarPorWhatsApp(ventaId: number, telefono: string, mensaje?: string): void {
     Swal.fire({
-      title: 'Enviando...',
-      text: 'Por favor espere',
+      title: '📱 Preparando WhatsApp...',
+      text: 'Validando comprobante',
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
       }
     });
 
-    this.ventasService.enviarWhatsApp(ventaId, telefono, mensaje).subscribe({
-      next: (response) => {
+    // PASO 1: Obtener datos prellenados y validar
+    this.ventasService.obtenerDatosWhatsApp(ventaId).subscribe({
+      next: (datosResponse) => {
+        console.log('📦 Datos WhatsApp obtenidos:', datosResponse);
+
+        const datos = datosResponse.data || datosResponse;
+
+        // Verificar si puede enviar
+        if (datos.puede_enviar === false) {
+          Swal.fire({
+            title: '⚠️ No se puede enviar',
+            html: `
+              <div class="text-start">
+                <div class="alert alert-warning">
+                  <strong>Razón:</strong><br>
+                  ${datos.razon_no_enviar || 'El comprobante no está listo para enviar'}
+                </div>
+                <p class="text-muted small">
+                  ${datos.razon_no_enviar?.includes('PDF') ? 
+                    'Debe generar el PDF primero desde el menú de acciones.' : 
+                    'Debe enviar el comprobante a SUNAT primero.'}
+                </p>
+              </div>
+            `,
+            icon: 'warning',
+            confirmButtonText: 'Entendido'
+          });
+          return;
+        }
+
+        // PASO 2: Enviar por WhatsApp
         Swal.fire({
-          title: '¡Enviado!',
-          html: `
-            <div class="text-center">
-              <i class="ph ph-check-circle text-success mb-3" style="font-size: 4rem;"></i>
-              <p>El comprobante ha sido enviado exitosamente por WhatsApp a:</p>
-              <p class="fw-bold">${telefono}</p>
-            </div>
-          `,
-          icon: 'success',
-          confirmButtonColor: '#198754'
+          title: '📤 Enviando por WhatsApp...',
+          text: 'Generando enlace',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        this.ventasService.enviarWhatsApp(ventaId, telefono, mensaje).subscribe({
+          next: (response) => {
+            console.log('✅ Respuesta envío WhatsApp:', response);
+
+            const data = response.data || response;
+
+            // PASO 3: Abrir WhatsApp con la URL generada
+            if (data.whatsapp_url) {
+              Swal.fire({
+                title: '✅ ¡Listo para enviar!',
+                html: `
+                  <div class="text-start">
+                    <div class="alert alert-success mb-3">
+                      <i class="ph ph-check-circle me-2"></i>
+                      <strong>WhatsApp se abrirá automáticamente</strong>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <strong>📱 Teléfono:</strong> ${data.telefono}<br>
+                      <strong>📄 Comprobante:</strong> ${data.comprobante}<br>
+                      <strong>📅 Fecha:</strong> ${data.fecha_envio || 'Ahora'}
+                    </div>
+
+                    <div class="alert alert-info">
+                      <small>
+                        <strong>💡 Nota:</strong> El mensaje incluye un enlace público para descargar el PDF del comprobante.
+                      </small>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                      <button class="btn btn-success" id="abrirWhatsAppBtn">
+                        <i class="ph ph-whatsapp-logo me-2"></i>
+                        Abrir WhatsApp
+                      </button>
+                      <button class="btn btn-outline-secondary btn-sm" id="copiarUrlBtn">
+                        <i class="ph ph-copy me-2"></i>
+                        Copiar enlace del PDF
+                      </button>
+                    </div>
+                  </div>
+                `,
+                icon: 'success',
+                showConfirmButton: false,
+                showCloseButton: true,
+                width: '600px',
+                didOpen: () => {
+                  // Botón para abrir WhatsApp
+                  const btnAbrir = document.getElementById('abrirWhatsAppBtn');
+                  if (btnAbrir) {
+                    btnAbrir.addEventListener('click', () => {
+                      window.open(data.whatsapp_url, '_blank');
+                      Swal.close();
+                    });
+                  }
+
+                  // Botón para copiar URL del PDF
+                  const btnCopiar = document.getElementById('copiarUrlBtn');
+                  if (btnCopiar && data.pdf_url) {
+                    btnCopiar.addEventListener('click', () => {
+                      navigator.clipboard.writeText(data.pdf_url).then(() => {
+                        btnCopiar.innerHTML = '<i class="ph ph-check me-2"></i>¡Copiado!';
+                        btnCopiar.classList.remove('btn-outline-secondary');
+                        btnCopiar.classList.add('btn-success');
+                        setTimeout(() => {
+                          btnCopiar.innerHTML = '<i class="ph ph-copy me-2"></i>Copiar enlace del PDF';
+                          btnCopiar.classList.remove('btn-success');
+                          btnCopiar.classList.add('btn-outline-secondary');
+                        }, 2000);
+                      });
+                    });
+                  }
+
+                  // Abrir WhatsApp automáticamente después de 1 segundo
+                  setTimeout(() => {
+                    window.open(data.whatsapp_url, '_blank');
+                  }, 1000);
+                }
+              });
+            } else {
+              // Fallback si no hay whatsapp_url
+              Swal.fire({
+                title: '✅ Enviado',
+                html: `
+                  <div class="text-center">
+                    <i class="ph ph-check-circle text-success mb-3" style="font-size: 4rem;"></i>
+                    <p>El comprobante ha sido procesado para WhatsApp</p>
+                    <p class="fw-bold">${telefono}</p>
+                  </div>
+                `,
+                icon: 'success',
+                confirmButtonColor: '#198754'
+              });
+            }
+          },
+          error: (error) => {
+            console.error('❌ Error al enviar WhatsApp:', error);
+
+            let mensajeError = error.error?.message || 'No se pudo enviar el comprobante por WhatsApp';
+            let solucion = '';
+
+            // Mensajes específicos según el error
+            if (error.status === 404) {
+              mensajeError = 'Esta venta no tiene un comprobante electrónico';
+              solucion = 'Debe generar el comprobante primero desde el menú de acciones.';
+            } else if (error.status === 400) {
+              if (error.error?.message?.includes('PDF')) {
+                mensajeError = 'El comprobante no tiene PDF generado';
+                solucion = 'Debe generar el PDF primero desde el menú de acciones.';
+              } else if (error.error?.message?.includes('SUNAT')) {
+                mensajeError = 'El comprobante debe estar aceptado por SUNAT';
+                solucion = 'Debe enviar el comprobante a SUNAT primero.';
+              }
+            }
+
+            Swal.fire({
+              title: '❌ Error al enviar',
+              html: `
+                <div class="text-start">
+                  <p class="mb-3">${mensajeError}</p>
+                  ${solucion ? `
+                    <div class="alert alert-info">
+                      <strong>💡 Solución:</strong><br>
+                      ${solucion}
+                    </div>
+                  ` : ''}
+                  ${error.error?.data?.estado_actual ? `
+                    <div class="alert alert-warning">
+                      <strong>Estado actual:</strong> ${error.error.data.estado_actual}
+                    </div>
+                  ` : ''}
+                </div>
+              `,
+              icon: 'error',
+              confirmButtonColor: '#dc3545'
+            });
+          }
         });
       },
       error: (error) => {
-        console.error('Error al enviar WhatsApp:', error);
+        console.error('❌ Error al obtener datos WhatsApp:', error);
         Swal.fire({
-          title: 'Error al enviar',
-          text: error.error?.message || 'No se pudo enviar el comprobante por WhatsApp',
+          title: 'Error',
+          text: error.error?.message || 'No se pudieron obtener los datos para WhatsApp',
           icon: 'error',
           confirmButtonColor: '#dc3545'
         });
       }
     });
   }
+
 }

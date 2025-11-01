@@ -59,14 +59,6 @@
               {{ totalResultadosSeleccionados }} seleccionado(s)
             </span>
           </div>
-          <button 
-            *ngIf="totalResultadosSeleccionados > 0"
-            class="btn-add-selected"
-            (click)="agregarResultadosSeleccionados()"
-          >
-            <i class="ph ph-shopping-cart"></i>
-            Agregar ({{ totalResultadosSeleccionados }})
-          </button>
         </div>
         <div class="results-list">
           <div *ngFor="let producto of productosFiltrados.slice(0, 6); trackBy: trackByProductoId" class="result-item"
@@ -308,7 +300,7 @@
 
       <!-- CHECKBOXES DE PROGRESO -->
       <div class="progress-checkboxes">
-        <div class="checkbox-row">
+        <div class="checkbox-column">
           <div class="checkbox-item" [class.checked]="clienteCompletado">
             <div class="checkbox-box">
               <i class="ph ph-check" *ngIf="clienteCompletado"></i>
@@ -324,7 +316,7 @@
           </div>
         </div>
 
-        <div class="checkbox-row">
+        <div class="checkbox-column">
           <div class="checkbox-item" [class.checked]="pagoCompletado">
             <div class="checkbox-box">
               <i class="ph ph-check" *ngIf="pagoCompletado"></i>

@@ -405,6 +405,34 @@ export class VentasService {
     return this.http.post<CrearVentaResponse>(this.apiUrl, venta);
   }
 
+  // ============================================
+  // 3b. PUT /api/ventas/{id} - Actualizar venta
+  // ============================================
+  /**
+   * Actualiza una venta existente (solo si está en estado PENDIENTE y sin comprobante)
+   * Restaura el stock anterior y descuenta el nuevo stock
+   * 
+   * @param id ID de la venta a actualizar
+   * @param venta Datos actualizados de la venta
+   * @returns Observable con la respuesta de actualización
+   */
+  actualizarVenta(id: number, venta: CrearVentaRequest): Observable<CrearVentaResponse> {
+    return this.http.put<CrearVentaResponse>(`${this.apiUrl}/${id}`, venta);
+  }
+
+  /**
+   * Verifica si una venta puede ser editada
+   * Una venta es editable si:
+   * - Estado es PENDIENTE
+   * - No tiene comprobante generado
+   * 
+   * @param venta Venta a verificar
+   * @returns true si la venta puede editarse, false en caso contrario
+   */
+  puedeEditarVenta(venta: Venta): boolean {
+    return venta.estado === 'PENDIENTE' && !venta.comprobante_info;
+  }
+
   /**
    * Valida que la suma de pagos sea igual al total
    * Útil para validar antes de enviar al backend
@@ -442,13 +470,18 @@ export class VentasService {
   }
 
   // ============================================
-  // 5. GET /api/ventas/{id}/pdf - Descargar PDF
+  // 5. GET /api/ventas/{id}/pdf - Descargar PDF COMPLETO SUNAT
   // ============================================
   /**
-   * Descarga PDF del comprobante
+   * Descarga PDF COMPLETO del comprobante con todos los datos SUNAT
+   * Incluye: QR, Hash, Datos empresa, Información legal, etc.
+   * IMPORTANTE: Usa el mismo PDF que se envía por WhatsApp y Email
    * @returns Archivo PDF (application/pdf)
    */
   descargarPdf(id: number): Observable<Blob> {
+    // ✅ CAMBIO: Ahora usa el endpoint del PDF completo SUNAT
+    // El backend debe devolver el PDF con todos los parámetros (QR, Hash, Info legal, etc.)
+    // Este es el MISMO PDF que se usa en WhatsApp y Email
     return this.http.get(`${this.apiUrl}/${id}/pdf`, {
       responseType: 'blob'
     });
@@ -714,14 +747,35 @@ export class VentasService {
   }
 
   /**
+   * Obtener datos prellenados para WhatsApp
+   * GET /api/ventas/{id}/whatsapp-datos
+   */
+  obtenerDatosWhatsApp(ventaId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/${ventaId}/whatsapp-datos`);
+  }
+
+  /**
    * Enviar comprobante por WhatsApp
    * POST /api/ventas/{id}/whatsapp
+   * 
+   * @param ventaId ID de la venta
+   * @param telefono Teléfono del cliente (puede incluir +51 o solo 9 dígitos)
+   * @param mensaje Mensaje personalizado (opcional, se genera automáticamente si no se envía)
+   * @returns Observable con la URL de WhatsApp y datos del envío
    */
   enviarWhatsApp(ventaId: number, telefono: string, mensaje?: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/${ventaId}/whatsapp`, {
       telefono,
       mensaje
     });
+  }
+
+  /**
+   * Generar URL pública del comprobante
+   * GET /api/ventas/{id}/url-publica
+   */
+  generarUrlPublica(ventaId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/${ventaId}/url-publica`);
   }
 
   /**

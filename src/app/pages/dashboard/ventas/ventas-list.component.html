@@ -164,6 +164,15 @@
                   class="dropdown-menu-custom"
                   (click)="$event.stopPropagation()">
                   
+                  <!-- Editar Venta (solo si está PENDIENTE y sin comprobante) -->
+                  <button 
+                    *ngIf="venta.estado === 'PENDIENTE' && !venta.comprobante_info"
+                    class="dropdown-item-custom text-primary"
+                    (click)="editarVenta(venta); cerrarMenu()">
+                    <i class="ph ph-pencil-simple me-2"></i>
+                    <span>Editar Venta</span>
+                  </button>
+
                   <!-- Generar Comprobante (solo si NO tiene comprobante) -->
                   <button 
                     *ngIf="venta.estado === 'PENDIENTE' && !venta.comprobante_info"

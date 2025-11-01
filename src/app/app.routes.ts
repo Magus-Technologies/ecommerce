@@ -581,6 +581,14 @@ export const routes: Routes = [
               ),
             title: 'Nueva Venta - POS'
           },
+          { 
+            path: 'editar/:id', 
+            loadComponent: () =>
+              import('./pages/dashboard/pos/pos.component').then(
+                (m) => m.PosComponent
+              ),
+            title: 'Editar Venta - POS'
+          },
           { path: 'estadisticas', component: EstadisticasVentasComponent },
         ],
       },
