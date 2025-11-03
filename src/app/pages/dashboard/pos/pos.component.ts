@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, signal, computed, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil, catchError } from 'rxjs';
 import { trigger, transition, style, animate } from '@angular/animations';
 
@@ -10,11 +10,13 @@ import { AlmacenService } from '../../../services/almacen.service';
 import { NotificacionesService } from '../../../services/notificaciones.service';
 import { EmpresaInfoService } from '../../../services/empresa-info.service';
 import { ReniecService } from '../../../services/reniec.service';
+import { VentasService } from '../../../services/ventas.service';
 import { ClienteEditModalComponent } from '../../../components/cliente-edit-modal/cliente-edit-modal.component';
 import { ProductoQuickModalComponent, ProductoQuickItem } from '../../../components/producto-quick-modal/producto-quick-modal.component';
 import { PagoRapidoModalComponent, PagoResultado } from '../../../components/pago-rapido-modal/pago-rapido-modal.component';
 import { ConfirmacionSunatModalComponent } from '../../../components/confirmacion-sunat-modal/confirmacion-sunat-modal.component';
 import { SerieSelectorModalComponent } from '../../../components/serie-selector-modal/serie-selector-modal.component';
+import { EnviarComprobanteModalComponent, EnviarComprobanteData } from '../../../components/enviar-comprobante-modal/enviar-comprobante-modal.component';
 import {
   VentaFormData,
   VentaItemFormData,
@@ -31,7 +33,7 @@ import {
 @Component({
   selector: 'app-pos',
   standalone: true,
-  imports: [CommonModule, FormsModule, ClienteEditModalComponent, ProductoQuickModalComponent, PagoRapidoModalComponent, ConfirmacionSunatModalComponent, SerieSelectorModalComponent],
+  imports: [CommonModule, FormsModule, ClienteEditModalComponent, ProductoQuickModalComponent, PagoRapidoModalComponent, ConfirmacionSunatModalComponent, SerieSelectorModalComponent, EnviarComprobanteModalComponent],
   templateUrl: './pos.component.html',
   styleUrls: ['./pos.component.scss'],
   animations: [
@@ -48,6 +50,11 @@ import {
 })
 export class PosComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+
+  // Modo edición
+  modoEdicion = false;
+  ventaIdEditar: number | null = null;
+  ventaOriginal: any = null;
 
   // Datos del formulario
   ventaForm: VentaFormData = {
@@ -105,7 +112,8 @@ export class PosComponent implements OnInit, OnDestroy {
   // Pago
   pagaCon = 0;
 
-
+  // Pagos múltiples registrados
+  pagosMixtosRegistrados: Array<{metodo_pago: string, monto: number, referencia?: string | null}> = [];
 
   // Tasa de cambio (fija para PEN)
   tasaCambio = 1.00;
@@ -152,6 +160,8 @@ export class PosComponent implements OnInit, OnDestroy {
   mostrarModalExito = false;
   // Modal Configuración
   mostrarConfiguracionModal = false;
+  // Modal Enviar Comprobante
+  mostrarEnviarComprobanteModal = false;
   // Estado de envío de notificación
   enviandoNotificacion = false;
   notificacionEnviada = false;
@@ -288,26 +298,197 @@ export class PosComponent implements OnInit, OnDestroy {
     private notificacionesService: NotificacionesService,
     private empresaInfoService: EmpresaInfoService,
     private reniecService: ReniecService,
+    private ventasService: VentasService,
     private router: Router,
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
-    this.cargarDatosIniciales();
-    this.cargarSeriesDisponibles();
-    this.cargarProductos(); // Cargar productos desde la API
-    this.cargarEmpresaInfo(); // Cargar información de la empresa
-    this.probarAPIs(); // Probar conectividad de APIs
+    // Detectar si estamos en modo edición
+    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['id']) {
+        this.modoEdicion = true;
+        this.ventaIdEditar = +params['id'];
+        console.log('🔧 MODO EDICIÓN ACTIVADO - Venta ID:', this.ventaIdEditar);
+        this.cargarVentaParaEditar(this.ventaIdEditar);
+      } else {
+        // Modo creación normal
+        this.cargarDatosIniciales();
+        this.cargarSeriesDisponibles();
+        this.cargarProductos();
+        this.cargarEmpresaInfo();
+        this.probarAPIs();
 
-    // FLUJO OBLIGATORIO: Mostrar modal de tipo de comprobante al iniciar
-    setTimeout(() => {
-      this.iniciarFlujoVenta();
-    }, 500);
+        // FLUJO OBLIGATORIO: Mostrar modal de tipo de comprobante al iniciar
+        setTimeout(() => {
+          this.iniciarFlujoVenta();
+        }, 500);
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // ============================================
+  // MODO EDICIÓN - CARGAR VENTA EXISTENTE
+  // ============================================
+
+  /**
+   * Carga una venta existente para editar
+   * Prellenado COMPLETO de todos los datos
+   */
+  cargarVentaParaEditar(ventaId: number): void {
+    console.log('📥 Cargando venta para editar - ID:', ventaId);
+    this.loading = true;
+
+    this.ventasService.obtenerVenta(ventaId).subscribe({
+      next: (venta) => {
+        console.log('✅ Venta cargada:', venta);
+        this.ventaOriginal = venta;
+
+        // Verificar que la venta pueda editarse
+        if (venta.estado !== 'PENDIENTE') {
+          this.error = `❌ Esta venta no puede editarse. Estado: ${venta.estado}`;
+          this.loading = false;
+          setTimeout(() => {
+            this.router.navigate(['/dashboard/ventas']);
+          }, 3000);
+          return;
+        }
+
+        if (venta.comprobante) {
+          this.error = '❌ Esta venta ya tiene un comprobante generado y no puede editarse';
+          this.loading = false;
+          setTimeout(() => {
+            this.router.navigate(['/dashboard/ventas']);
+          }, 3000);
+          return;
+        }
+
+        // 1. PRELLENAR DATOS DEL CLIENTE
+        const numeroDoc = venta.cliente?.numero_documento || '';
+        let tipoDoc: string = TIPOS_DOCUMENTO.SIN_DOC;
+        if (numeroDoc.length === 11) tipoDoc = '6'; // RUC
+        else if (numeroDoc.length === 8) tipoDoc = '1'; // DNI
+
+        this.ventaForm.cliente = {
+          tipo_documento: tipoDoc as any,
+          numero_documento: numeroDoc,
+          nombre: venta.cliente?.razon_social || '',
+          direccion: venta.cliente?.direccion || '',
+          email: venta.cliente?.email || '',
+          telefono: venta.cliente?.telefono || ''
+        };
+
+        this.clienteExistenteId = venta.cliente?.id || null;
+
+        // 2. PRELLENAR PRODUCTOS
+        this.ventaForm.items = [];
+        if (venta.detalles && venta.detalles.length > 0) {
+          venta.detalles.forEach((detalle: any) => {
+            // ✅ CONVERTIR A NÚMEROS para evitar strings
+            const precioUnitario = parseFloat(detalle.precio_unitario);
+            const cantidad = parseFloat(detalle.cantidad); // ✅ Convertir string "1.0000" a número
+            const descuentoUnitario = parseFloat(detalle.descuento_unitario || 0);
+            const descuentoTotal = descuentoUnitario * cantidad;
+
+            // Calcular valores
+            const totalConIgv = cantidad * precioUnitario;
+            const totalConDescuento = totalConIgv - descuentoTotal;
+            const baseImponible = totalConDescuento / 1.18;
+            const igvItem = baseImponible * 0.18;
+
+            const item: VentaItemFormData = {
+              producto_id: detalle.producto_id,
+              codigo_producto: detalle.codigo_producto || '',
+              descripcion: detalle.nombre_producto,
+              cantidad: cantidad, // ✅ Ahora es número
+              precio_unitario: precioUnitario,
+              descuento: descuentoTotal,
+              tipo_afectacion_igv: TIPOS_AFECTACION_IGV.GRAVADO,
+              unidad_medida: 'NIU',
+              subtotal: baseImponible,
+              igv: igvItem,
+              total: totalConDescuento
+            };
+
+            this.ventaForm.items.push(item);
+            console.log('✅ Producto cargado:', {
+              descripcion: item.descripcion,
+              cantidad: item.cantidad,
+              precio: item.precio_unitario,
+              descuento: item.descuento,
+              total: item.total
+            });
+          });
+        }
+
+        // 3. PRELLENAR MÉTODO DE PAGO
+        console.log('💰 Método de pago original:', venta.metodo_pago);
+        console.log('💰 Pagos mixtos (venta.pagos):', venta.pagos);
+        console.log('💰 Métodos de pago (venta.metodos_pago):', (venta as any).metodos_pago);
+
+        // ✅ El backend puede enviar los pagos en "pagos" o "metodos_pago"
+        const pagosMixtos = venta.pagos || (venta as any).metodos_pago || [];
+
+        if (venta.metodo_pago === 'MIXTO' && pagosMixtos.length > 0) {
+          // Pagos mixtos
+          this.pagosMixtosRegistrados = pagosMixtos.map((pago: any) => ({
+            metodo_pago: pago.metodo_pago,
+            monto: parseFloat(pago.monto),
+            referencia: pago.referencia || null
+          }));
+          this.ventaForm.metodo_pago = 'MIXTO';
+          console.log('✅ Pagos mixtos cargados:', this.pagosMixtosRegistrados);
+        } else {
+          // Pago simple - normalizar el método de pago
+          const metodoPago = (venta.metodo_pago || 'EFECTIVO').toUpperCase();
+          this.ventaForm.metodo_pago = metodoPago;
+          this.pagosMixtosRegistrados = [];
+          console.log('✅ Método de pago simple cargado:', this.ventaForm.metodo_pago);
+        }
+
+        // 4. PRELLENAR DESCUENTO GLOBAL
+        this.ventaForm.descuento_global = parseFloat(venta.descuento_total || '0');
+
+        // 5. PRELLENAR OBSERVACIONES
+        this.ventaForm.observaciones = venta.observaciones || '';
+
+        // 6. CONFIGURAR TIPO DE COMPROBANTE (aunque no se generará hasta guardar)
+        this.tipoDocumentoSeleccionado = 'NOTA_DE_VENTA';
+        this.comprobanteConfigurado = true;
+
+        // 7. CARGAR DATOS NECESARIOS
+        this.cargarDatosIniciales();
+        this.cargarSeriesDisponibles();
+        this.cargarProductos();
+        this.cargarEmpresaInfo();
+
+        this.loading = false;
+        this.success = `✅ Venta ${venta.codigo_venta} cargada para edición`;
+
+        console.log('✅ Formulario prellenado:', {
+          cliente: this.ventaForm.cliente,
+          items: this.ventaForm.items,
+          metodo_pago: this.ventaForm.metodo_pago,
+          pagos_mixtos: this.pagosMixtosRegistrados,
+          descuento_global: this.ventaForm.descuento_global,
+          observaciones: this.ventaForm.observaciones
+        });
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar venta:', error);
+        this.error = error.error?.message || 'No se pudo cargar la venta';
+        this.loading = false;
+        setTimeout(() => {
+          this.router.navigate(['/dashboard/ventas']);
+        }, 3000);
+      }
+    });
   }
 
   // ============================================
@@ -420,14 +601,6 @@ export class PosComponent implements OnInit, OnDestroy {
     this.mostrarModalTipoComprobante = false;
     this.mostrarModalDatosCliente = false;
     this.comprobanteConfigurado = false;
-
-    // Preguntar si desea salir del POS
-    if (confirm('¿Desea salir del Punto de Venta?')) {
-      this.router.navigate(['/dashboard/ventas']);
-    } else {
-      // Reiniciar flujo
-      setTimeout(() => this.iniciarFlujoVenta(), 300);
-    }
   }
 
   // ============================================
@@ -584,6 +757,7 @@ export class PosComponent implements OnInit, OnDestroy {
 
   /**
    * Buscar cliente en la base de datos local por número de documento
+   * Implementa el flujo: Sistema → RENIEC/SUNAT
    */
   buscarClientePorDocumento(): void {
     const numeroDoc = this.ventaForm.cliente.numero_documento;
@@ -595,76 +769,94 @@ export class PosComponent implements OnInit, OnDestroy {
     this.error = null;
     this.success = null;
 
-    // PASO 1: Buscar en la base de datos (PRIORIDAD)
-    this.facturacionService.getClientes({ numero_documento: numeroDoc })
+    console.log('🔍 Buscando cliente en sistema:', numeroDoc);
+
+    // PASO 1: Buscar en la base de datos del sistema (PRIORIDAD)
+    this.ventasService.buscarClientePorDocumento(numeroDoc)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          if (response.data && response.data.length > 0) {
-            // ✅ CLIENTE ENCONTRADO EN DB
+          if (response.success && response.data && response.data.length > 0) {
+            // ✅ CLIENTE ENCONTRADO EN SISTEMA
             const cliente = response.data[0];
             this.loading = false;
 
-            console.log('📋 Cliente encontrado en DB:', cliente);
+            console.log('✅ Cliente encontrado en sistema:', cliente);
 
             // Autocompletar todos los datos del cliente
             this.ventaForm.cliente = {
               tipo_documento: cliente.tipo_documento || this.ventaForm.cliente.tipo_documento,
               numero_documento: cliente.numero_documento || numeroDoc,
-              nombre: cliente.nombre || '',
+              nombre: cliente.nombre_completo || cliente.nombres + ' ' + cliente.apellidos || '',
               direccion: cliente.direccion || '',
               email: cliente.email || '',
               telefono: cliente.telefono || ''
             };
 
             // Guardar el ID del cliente si existe
-            this.clienteExistenteId = cliente.id || null;
+            this.clienteExistenteId = cliente.id_cliente || cliente.id || null;
             this.success = '✅ Cliente encontrado en el sistema';
             setTimeout(() => this.success = null, 3000);
           } else {
-            // ❌ NO ENCONTRADO EN DB → BUSCAR EN RENIEC
-            this.buscarEnReniec(numeroDoc);
+            // ❌ NO ENCONTRADO EN SISTEMA → BUSCAR EN RENIEC/SUNAT
+            console.log('ℹ️ Cliente no encontrado en sistema, buscando en RENIEC/SUNAT...');
+            this.buscarEnReniecSunat(numeroDoc);
           }
         },
         error: (err) => {
-          this.loading = false;
-          console.error('Error al buscar en DB:', err);
-          // Si hay error en DB, intentar con RENIEC
-          this.buscarEnReniec(numeroDoc);
+          console.log('ℹ️ Error al buscar en sistema, intentando RENIEC/SUNAT:', err);
+          // Si hay error en sistema, intentar con RENIEC/SUNAT
+          this.buscarEnReniecSunat(numeroDoc);
         }
       });
   }
 
   /**
-   * Buscar en RENIEC cuando no se encuentra en DB
+   * Buscar en RENIEC/SUNAT cuando no se encuentra en el sistema
+   * Soporta DNI (8 dígitos) y RUC (11 dígitos)
    */
-  private buscarEnReniec(numeroDoc: string): void {
+  private buscarEnReniecSunat(numeroDoc: string): void {
     const esDni = numeroDoc.length === 8;
+    const esRuc = numeroDoc.length === 11;
     
-    if (!esDni) {
-      // Si no es DNI, mostrar mensaje
+    if (!esDni && !esRuc) {
+      // Si no es DNI ni RUC, mostrar mensaje
       this.loading = false;
       this.error = 'Cliente no encontrado. Ingrese los datos manualmente.';
       setTimeout(() => this.error = null, 3000);
       return;
     }
 
-    // Buscar en RENIEC
-    this.reniecService.buscarPorDni(numeroDoc)
+    console.log(`🔍 Buscando en ${esDni ? 'RENIEC' : 'SUNAT'}:`, numeroDoc);
+
+    // Buscar en RENIEC/SUNAT usando el nuevo endpoint unificado
+    this.ventasService.buscarEnReniecSunat(numeroDoc)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           this.loading = false;
           
-          if (response.success && (response.nombres || response.nombre)) {
-            // ✅ ENCONTRADO EN RENIEC
+          if (esDni && response.dni) {
+            // ✅ ENCONTRADO EN RENIEC (DNI)
             const nombreCompleto = response.nombre || 
               `${response.nombres} ${response.apellidoPaterno} ${response.apellidoMaterno}`;
 
             this.ventaForm.cliente.nombre = nombreCompleto.trim();
+            this.ventaForm.cliente.tipo_documento = TIPOS_DOCUMENTO.DNI;
             this.clienteExistenteId = null; // Es un cliente nuevo
             
             this.success = '✅ Datos encontrados en RENIEC';
+            console.log('✅ Datos RENIEC:', response);
+            setTimeout(() => this.success = null, 3000);
+          } else if (esRuc && response.ruc) {
+            // ✅ ENCONTRADO EN SUNAT (RUC)
+            this.ventaForm.cliente.nombre = response.razonSocial || response.nombre || '';
+            this.ventaForm.cliente.direccion = response.direccion || '';
+            this.ventaForm.cliente.tipo_documento = TIPOS_DOCUMENTO.RUC;
+            this.clienteExistenteId = null; // Es un cliente nuevo
+            
+            this.success = '✅ Datos encontrados en SUNAT';
+            console.log('✅ Datos SUNAT:', response);
             setTimeout(() => this.success = null, 3000);
           } else {
             this.error = 'No se encontraron datos. Ingrese manualmente.';
@@ -673,8 +865,14 @@ export class PosComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.loading = false;
-          console.error('Error al buscar en RENIEC:', err);
-          this.error = 'No se encontraron datos. Ingrese manualmente.';
+          console.error('Error al buscar en RENIEC/SUNAT:', err);
+          
+          // Mensaje más específico según el error
+          if (err.status === 404) {
+            this.error = 'No se encontraron datos. Ingrese manualmente.';
+          } else {
+            this.error = 'Error al consultar RENIEC/SUNAT. Ingrese manualmente.';
+          }
           setTimeout(() => this.error = null, 3000);
         }
       });
@@ -1006,84 +1204,214 @@ export class PosComponent implements OnInit, OnDestroy {
     this.error = null;
     this.success = null;
 
-    // Primero buscar o crear cliente
-    this.facturacionService.getClienteByDocumento(
-      this.ventaForm.cliente.tipo_documento,
-      this.ventaForm.cliente.numero_documento
-    )
-      .pipe(
-        takeUntil(this.destroy$),
-        // Si no existe, crear cliente
-        catchError(() => {
-          const nuevoCliente: any = {
-            tipo_documento: this.ventaForm.cliente.tipo_documento as any,
-            numero_documento: this.ventaForm.cliente.numero_documento,
-            nombres: this.ventaForm.cliente.nombre.split(" ")[0] || this.ventaForm.cliente.nombre, apellidos: this.ventaForm.cliente.nombre.split(" ").slice(1).join(" ") || "",
-            direccion: this.ventaForm.cliente.direccion,
-            email: this.ventaForm.cliente.email,
-            telefono: this.ventaForm.cliente.telefono
-          };
-          return this.facturacionService.createCliente(nuevoCliente);
-        })
-      )
-      .subscribe({
-        next: (clienteResponse: any) => {
-          // Obtener el cliente de la respuesta
-          const cliente = clienteResponse.data || clienteResponse;
+    // ✅ Preparar datos según especificación del backend
+    const datosVenta: any = {
+      productos: this.ventaForm.items.map(item => ({
+        producto_id: Number(item.producto_id), // ✅ Número
+        cantidad: Number(item.cantidad), // ✅ Número
+        precio_unitario: Number(item.precio_unitario), // ✅ Número
+        descuento_unitario: item.descuento ? Number((item.descuento / item.cantidad).toFixed(2)) : 0 // ✅ Número o 0
+      })),
+      descuento_total: Number(this.ventaForm.descuento_global || 0), // ✅ Número
+      observaciones: this.ventaForm.observaciones || '' // ✅ String vacío si no hay
+    };
 
-          // Preparar datos para envío según estructura de API
-          const datosVenta: any = {
-            cliente_id: cliente.id,
-            tipo_documento: this.tipoDocumentoSeleccionado,
-            fecha_venta: new Date().toISOString().split('T')[0],
-            hora_venta: new Date().toTimeString().split(' ')[0],
-            metodo_pago: this.ventaForm.metodo_pago,
-            descuento_global: this.ventaForm.descuento_global,
-            observaciones: this.ventaForm.observaciones,
-            moneda: this.ventaForm.moneda,
-            productos: this.ventaForm.items.map(item => ({
-              producto_id: item.producto_id,
-              codigo_producto: item.codigo_producto,
-              descripcion: item.descripcion,
-              unidad_medida: item.unidad_medida,
-              cantidad: item.cantidad,
-              precio_unitario: item.precio_unitario,
-              descuento: item.descuento || 0,
-              tipo_afectacion_igv: item.tipo_afectacion_igv
-            }))
-          };
+    // ✅ SIEMPRE enviar cliente_datos para permitir actualización
+    // El backend buscará por documento y actualizará la información
+    if (this.ventaForm.cliente && this.ventaForm.cliente.numero_documento) {
+      datosVenta.cliente_datos = {
+        tipo_documento: this.ventaForm.cliente.tipo_documento || '1',
+        numero_documento: this.ventaForm.cliente.numero_documento,
+        razon_social: this.ventaForm.cliente.nombre || '',
+        nombre_comercial: this.ventaForm.cliente.nombre || '', // ✅ Agregar nombre comercial
+        direccion: this.ventaForm.cliente.direccion || '',
+        email: this.ventaForm.cliente.email || '',
+        telefono: this.ventaForm.cliente.telefono || ''
+      };
+      console.log('✅ Enviando cliente_datos para actualizar información del cliente');
+    }
 
-          console.log('📤 Enviando venta con cliente_id:', datosVenta);
+    // ✅ PAGOS: Estructura exacta según backend
+    if (this.pagosMixtosRegistrados && this.pagosMixtosRegistrados.length > 0) {
+      // Pagos mixtos - asegurar estructura correcta
+      datosVenta.pagos = this.pagosMixtosRegistrados.map(pago => ({
+        metodo_pago: pago.metodo_pago, // ✅ String
+        monto: Number(pago.monto), // ✅ Número
+        referencia: pago.referencia || null // ✅ null si no hay
+      }));
+      console.log('📤 Enviando venta con pagos múltiples:', datosVenta.pagos);
+    } else {
+      // Pago simple
+      datosVenta.metodo_pago = this.ventaForm.metodo_pago || 'EFECTIVO';
+      console.log('📤 Enviando venta con método de pago simple:', datosVenta.metodo_pago);
+    }
 
-          // Ahora sí crear la venta
-          this.facturacionService.createVenta(datosVenta)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-              next: (response) => {
-                this.loading = false;
-                if (response.success && response.data) {
-                  this.ventaGuardada = response.data;
-                  this.success = 'Venta guardada exitosamente';
-                  // No limpiar formulario automáticamente, permitir facturar
-                } else {
-                  this.error = response.message || 'Error al guardar la venta';
-                }
-              },
-              error: (error) => {
-                this.loading = false;
-                this.error = error.error?.message || 'Error al guardar la venta';
-                console.error('Error detallado:', error);
-              }
-            });
-        },
-        error: (error) => {
-          this.loading = false;
-          this.error = 'Error al procesar cliente: ' + (error?.error?.message || 'Error desconocido');
-          console.error('Error al procesar cliente:', error);
-        }
-      });
+    // ✅ LOG COMPLETO ANTES DE ENVIAR
+    console.log('');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('📤 DATOS COMPLETOS A ENVIAR AL BACKEND');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log(JSON.stringify(datosVenta, null, 2));
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('');
+
+    // MODO EDICIÓN: Usar PUT en lugar de POST
+    if (this.modoEdicion && this.ventaIdEditar) {
+      console.log('🔧 ACTUALIZANDO VENTA - ID:', this.ventaIdEditar);
+      console.log('📤 Datos a enviar:', JSON.stringify(datosVenta, null, 2));
+      console.log('📦 Estructura detallada:');
+      console.log('   - Productos:', datosVenta.productos?.length || 0);
+      console.log('   - Cliente ID:', datosVenta.cliente_id);
+      console.log('   - Método pago:', datosVenta.metodo_pago);
+      console.log('   - Pagos mixtos:', datosVenta.pagos?.length || 0);
+      
+      if (datosVenta.productos) {
+        datosVenta.productos.forEach((p: any, i: number) => {
+          console.log(`   Producto ${i + 1}:`, {
+            id: p.producto_id,
+            cantidad: p.cantidad,
+            precio: p.precio_unitario,
+            descuento: p.descuento_unitario
+          });
+        });
+      }
+      
+      if (datosVenta.pagos) {
+        datosVenta.pagos.forEach((p: any, i: number) => {
+          console.log(`   Pago ${i + 1}:`, {
+            metodo: p.metodo_pago,
+            monto: p.monto,
+            referencia: p.referencia
+          });
+        });
+      }
+
+      this.ventasService.actualizarVenta(this.ventaIdEditar, datosVenta)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            this.loading = false;
+            if (response.success && response.data) {
+              this.ventaGuardada = response.data as any;
+              this.success = '✅ Venta actualizada exitosamente';
+              this.mostrarModalExito = true;
+
+              // Limpiar pagos registrados
+              this.pagosMixtosRegistrados = [];
+
+              // Redirigir a lista de ventas después de 2 segundos
+              setTimeout(() => {
+                this.router.navigate(['/dashboard/ventas']);
+              }, 2000);
+            } else {
+              this.error = response.message || 'Error al actualizar la venta';
+            }
+          },
+          error: (error) => {
+            this.loading = false;
+            
+            console.log('');
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('❌ ERROR AL ACTUALIZAR VENTA - REPORTE COMPLETO');
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('');
+            console.log('📍 INFORMACIÓN DEL REQUEST:');
+            console.log('   URL:', error.url);
+            console.log('   Método: PUT');
+            console.log('   Venta ID:', this.ventaIdEditar);
+            console.log('');
+            console.log('📤 DATOS ENVIADOS:');
+            console.log(JSON.stringify(datosVenta, null, 2));
+            console.log('');
+            console.log('📥 RESPUESTA DEL SERVIDOR:');
+            console.log('   Status:', error.status);
+            console.log('   Status Text:', error.statusText);
+            console.log('   Mensaje:', error.error?.message);
+            console.log('');
+            console.log('📋 ERRORES DE VALIDACIÓN:');
+            if (error.error?.errors) {
+              console.log(JSON.stringify(error.error.errors, null, 2));
+              
+              console.log('');
+              console.log('📝 ERRORES FORMATEADOS:');
+              Object.entries(error.error.errors).forEach(([campo, mensajes]: [string, any]) => {
+                const msgs = Array.isArray(mensajes) ? mensajes : [mensajes];
+                console.log(`   ❌ ${campo}:`);
+                msgs.forEach((msg: string) => console.log(`      - ${msg}`));
+              });
+            } else {
+              console.log('   (No hay errores de validación específicos)');
+            }
+            console.log('');
+            console.log('🔍 ERROR COMPLETO (para debugging):');
+            console.log(error);
+            console.log('');
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('');
+            
+            // Mostrar errores de validación detallados
+            if (error.error?.errors) {
+              const errores = Object.entries(error.error.errors)
+                .map(([campo, mensajes]: [string, any]) => `• ${campo}: ${Array.isArray(mensajes) ? mensajes.join(', ') : mensajes}`)
+                .join('\n');
+              
+              this.error = `❌ Errores de validación:\n${errores}`;
+            } else {
+              this.error = error.error?.message || 'Error al actualizar la venta';
+            }
+          }
+        });
+    } else {
+      // MODO CREACIÓN: Usar POST normal
+      console.log('📝 CREANDO NUEVA VENTA');
+      console.log('📤 Datos a enviar:', datosVenta);
+
+      this.facturacionService.createVenta(datosVenta)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            this.loading = false;
+            if (response.success && response.data) {
+              this.ventaGuardada = response.data as any;
+              this.success = '✅ Venta registrada exitosamente';
+              this.mostrarModalExito = true;
+
+              // Guardar datos del cliente en localStorage para uso posterior
+              const clienteData = {
+                ventaId: response.data.id,
+                email: this.ventaForm.cliente.email || '',
+                telefono: this.ventaForm.cliente.telefono || '',
+                nombre: this.ventaForm.cliente.nombre || '',
+                timestamp: new Date().getTime()
+              };
+              localStorage.setItem(`cliente_venta_${response.data.id}`, JSON.stringify(clienteData));
+              console.log('💾 Datos del cliente guardados:', clienteData);
+
+              // Limpiar pagos registrados
+              this.pagosMixtosRegistrados = [];
+
+              // Redirigir a lista de ventas después de 2 segundos
+              setTimeout(() => {
+                this.router.navigate(['/dashboard/ventas']);
+              }, 2000);
+            } else {
+              this.error = response.message || 'Error al guardar la venta';
+            }
+          },
+          error: (error) => {
+            this.loading = false;
+            this.error = error.error?.message || 'Error al guardar la venta';
+            console.error('Error detallado:', error);
+          }
+        });
+    }
   }
 
+  /**
+   * PASO 1: Generar comprobante local (XML firmado)
+   * NO envía a SUNAT, NO envía email
+   * Estado: PENDIENTE
+   */
   facturarVenta(): void {
     if (!this.ventaGuardada) {
       this.error = 'Primero debe guardar la venta';
@@ -1098,34 +1426,80 @@ export class PosComponent implements OnInit, OnDestroy {
     this.facturando.set(true);
     this.error = null;
 
-    // Preparar datos de facturación según nueva API
+    // Preparar datos de facturación (cliente_datos es opcional si ya hay cliente_id)
     const datosFacturacion = {
       cliente_datos: {
         tipo_documento: this.ventaForm.cliente.tipo_documento || '6',
         numero_documento: this.ventaForm.cliente.numero_documento || '',
         razon_social: this.ventaForm.cliente.nombre || 'CLIENTE GENERAL',
         direccion: this.ventaForm.cliente.direccion || 'LIMA - PERÚ',
-        email: this.ventaForm.cliente.email
+        email: this.ventaForm.cliente.email,
+        telefono: this.ventaForm.cliente.telefono
       }
     };
 
-    this.facturacionService.facturarVenta(this.ventaGuardada.id!, datosFacturacion)
+    // PASO 1: Generar comprobante local
+    this.ventasService.facturarVenta(this.ventaGuardada.id!, datosFacturacion)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.facturando.set(false);
-          if (response.success && response.data) {
-            this.comprobanteGenerado.set(response.data);
-            this.mostrarPanelComprobante.set(true);
-            this.success = `Comprobante ${response.data.numero_completo} generado exitosamente`;
-            this.error = null;
+          if (response.success && response.comprobante) {
+            console.log('✅ Comprobante generado localmente:', response.comprobante);
+            
+            // Guardar comprobante generado
+            this.comprobanteGenerado.set(response.comprobante as any);
+            
+            // PASO 2: Enviar automáticamente a SUNAT
+            this.enviarComprobanteASunat(this.ventaGuardada!.id!);
           } else {
-            this.error = response.message || 'Error al emitir el comprobante';
+            this.facturando.set(false);
+            this.error = response.message || 'Error al generar el comprobante';
           }
         },
         error: (error) => {
           this.facturando.set(false);
-          this.error = error.error?.message || 'Error al emitir el comprobante';
+          this.error = error.error?.message || 'Error al generar el comprobante';
+          console.error('Error al facturar:', error);
+        }
+      });
+  }
+
+  /**
+   * PASO 2: Enviar comprobante a SUNAT (genera PDF y CDR)
+   * NO envía email automáticamente
+   * Estado: ACEPTADO/RECHAZADO
+   */
+  enviarComprobanteASunat(ventaId: number): void {
+    console.log('📤 Enviando comprobante a SUNAT...');
+
+    this.ventasService.enviarComprobanteASunat(ventaId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.facturando.set(false);
+          
+          if (response.success && response.data) {
+            console.log('✅ Comprobante enviado a SUNAT:', response.data);
+            
+            // Actualizar comprobante con datos de SUNAT
+            this.comprobanteGenerado.set(response.data.comprobante as any);
+            this.mostrarPanelComprobante.set(true);
+            
+            // Actualizar estado de venta
+            if (this.ventaGuardada) {
+              this.ventaGuardada.estado = 'FACTURADO';
+            }
+            
+            this.success = `✅ Comprobante ${response.data.numero_completo} ${response.data.estado} por SUNAT`;
+            this.error = null;
+          } else {
+            this.error = response.message || 'Error al enviar a SUNAT';
+          }
+        },
+        error: (error) => {
+          this.facturando.set(false);
+          this.error = error.error?.message || 'Error al enviar a SUNAT';
+          console.error('Error al enviar a SUNAT:', error);
         }
       });
   }
@@ -1186,35 +1560,89 @@ export class PosComponent implements OnInit, OnDestroy {
       });
   }
 
-  enviarPorEmail(): void {
+  /**
+   * PASO 3 (MANUAL): Abrir modal para enviar comprobante
+   * Solo se ejecuta cuando el usuario lo solicita explícitamente
+   */
+  abrirModalEnviarComprobante(): void {
     const comprobante = this.comprobanteGenerado();
-    if (!comprobante || this.enviandoEmail()) return;
-
-    const email = this.ventaForm.cliente.email;
-    if (!email) {
-      this.error = 'El cliente no tiene email registrado';
+    if (!comprobante) {
+      this.error = 'No hay comprobante generado';
       return;
     }
 
+    // Validar que el comprobante esté aceptado
+    if (comprobante.estado_sunat !== 'ACEPTADO') {
+      this.error = 'El comprobante debe estar aceptado por SUNAT antes de enviarlo';
+      return;
+    }
+
+    this.mostrarEnviarComprobanteModal = true;
+  }
+
+  cerrarModalEnviarComprobante(): void {
+    this.mostrarEnviarComprobanteModal = false;
+  }
+
+  /**
+   * Procesar envío de comprobante (email o WhatsApp)
+   */
+  onEnviarComprobante(data: EnviarComprobanteData): void {
+    if (data.tipo === 'email') {
+      this.enviarPorEmail(data.destinatario, data.mensaje);
+    } else {
+      this.enviarPorWhatsApp(data.destinatario, data.mensaje);
+    }
+  }
+
+  /**
+   * Enviar comprobante por email
+   */
+  private enviarPorEmail(email: string, mensaje: string): void {
     this.enviandoEmail.set(true);
 
-    this.facturacionService.enviarEmail(comprobante.venta_id!, email)
+    this.ventasService.enviarEmail(this.ventaGuardada!.id!, email, mensaje)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           this.enviandoEmail.set(false);
-          this.success = `Comprobante enviado a ${email}`;
+          if (response.success) {
+            this.success = `✅ Comprobante enviado a ${response.data.email}`;
+            console.log('✅ Email enviado:', response.data);
+            this.cerrarModalEnviarComprobante();
+          }
         },
         error: (error) => {
           this.enviandoEmail.set(false);
           console.error('Error al enviar email:', error);
-          this.error = 'Error al enviar comprobante por email';
+          this.error = error.error?.message || 'Error al enviar comprobante por email';
         }
       });
   }
 
-  enviarEmail(): void {
-    this.enviarPorEmail();
+  /**
+   * Enviar comprobante por WhatsApp
+   */
+  private enviarPorWhatsApp(telefono: string, mensaje: string): void {
+    this.loading = true;
+
+    this.ventasService.enviarWhatsapp(this.ventaGuardada!.id!, telefono, mensaje)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.loading = false;
+          if (response.success) {
+            this.success = `✅ Comprobante enviado por WhatsApp a ${response.data.telefono}`;
+            console.log('✅ WhatsApp enviado:', response.data);
+            this.cerrarModalEnviarComprobante();
+          }
+        },
+        error: (error) => {
+          this.loading = false;
+          console.error('Error al enviar WhatsApp:', error);
+          this.error = error.error?.message || 'Error al enviar comprobante por WhatsApp';
+        }
+      });
   }
 
   consultarEstadoSunat(): void {
@@ -1532,8 +1960,30 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
   onPagoProcesado(resultado: PagoResultado): void {
-    // Usar el nuevo flujo de confirmación y procesamiento
-    this.confirmarYProcesarVenta(resultado);
+    console.log('💰 Pago procesado:', resultado);
+    
+    // Guardar los pagos múltiples si existen
+    if (resultado.pagosMixtos && resultado.pagosMixtos.length > 0) {
+      this.pagosMixtosRegistrados = resultado.pagosMixtos.map(p => ({
+        metodo_pago: p.metodo.toLowerCase(), // Convertir a minúsculas para el backend
+        monto: p.monto,
+        referencia: p.referencia || null
+      }));
+      console.log('✅ Pagos múltiples guardados:', this.pagosMixtosRegistrados);
+    } else {
+      // Si es un solo pago, guardarlo también
+      this.pagosMixtosRegistrados = [{
+        metodo_pago: resultado.metodo.toLowerCase(), // Convertir a minúsculas
+        monto: resultado.montoEntregado || this.calcularTotal(),
+        referencia: resultado.referencia || null
+      }];
+    }
+    
+    // Cerrar modal y guardar venta directamente
+    this.cerrarPagoModal();
+    
+    // Guardar la venta (sin emitir a SUNAT)
+    this.guardarVenta();
   }
 
   // Wrapper para manejar eventos del modal de pago
@@ -1627,16 +2077,13 @@ export class PosComponent implements OnInit, OnDestroy {
 
     // Preparar datos para envío según documentación API
     const datosVenta: any = {
-      user_cliente_id: null, // NULL = Venta POS (NO envía automáticamente a SUNAT)
       productos: this.ventaForm.items.map(item => ({
         producto_id: item.producto_id,
         cantidad: item.cantidad,
         precio_unitario: item.precio_unitario,
-        descuento_unitario: item.descuento || 0
+        descuento_unitario: (item.descuento || 0) / item.cantidad
       })),
       descuento_total: this.ventaForm.descuento_global || 0,
-      requiere_factura: this.tipoDocumentoSeleccionado !== 'NOTA_DE_VENTA',
-      metodo_pago: this.ventaForm.metodo_pago || 'efectivo',
       observaciones: this.ventaForm.observaciones || ''
     };
 
@@ -1655,37 +2102,105 @@ export class PosComponent implements OnInit, OnDestroy {
         telefono: this.ventaForm.cliente.telefono || ''
       };
       console.log('📤 Enviando venta con cliente_datos:', datosVenta.cliente_datos);
-    } else {
-      // Si no hay cliente, el backend usará CLIENTE GENERAL
-      console.log('📤 Enviando venta sin cliente (backend usará CLIENTE GENERAL)');
     }
 
-    // Crear la venta
-    this.facturacionService.createVenta(datosVenta)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: any) => {
-          this.loading = false;
-          // Manejar diferentes formatos de respuesta del backend
-          if (response.success && response.data) {
-            this.ventaGuardada = response.data;
-            this.success = 'Venta registrada exitosamente';
-            this.mostrarModalExito = true;
-          } else if (response.venta) {
-            // Formato alternativo: {message: string, venta: Venta}
-            this.ventaGuardada = response.venta;
-            this.success = response.message || 'Venta registrada exitosamente';
-            this.mostrarModalExito = true;
-          } else {
-            this.error = 'No se pudo guardar la venta';
+    // Agregar método de pago
+    if (this.pagosMixtosRegistrados && this.pagosMixtosRegistrados.length > 0) {
+      datosVenta.pagos = this.pagosMixtosRegistrados;
+    } else {
+      datosVenta.metodo_pago = this.ventaForm.metodo_pago || 'EFECTIVO';
+    }
+
+    // MODO EDICIÓN: Usar PUT
+    if (this.modoEdicion && this.ventaIdEditar) {
+      console.log('🔧 ACTUALIZANDO VENTA (emitirFlujoEncadenado) - ID:', this.ventaIdEditar);
+      console.log('📦 Productos originales:', this.ventaOriginal?.detalles?.length || 0);
+      console.log('📦 Productos nuevos:', datosVenta.productos.length);
+      
+      this.ventasService.actualizarVenta(this.ventaIdEditar, datosVenta)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response: any) => {
+            this.loading = false;
+            if (response.success && response.data) {
+              this.ventaGuardada = response.data as any;
+              this.success = 'Venta actualizada exitosamente';
+              this.mostrarModalExito = true;
+            } else {
+              this.error = 'No se pudo actualizar la venta';
+            }
+          },
+          error: (error) => {
+            this.loading = false;
+            console.error('Error detallado:', error);
+            
+            // Manejo específico de errores de stock
+            if (error.error?.error_type === 'stock_insuficiente') {
+              this.error = `❌ ${error.error.error}`;
+              
+              // Mostrar alerta más detallada con explicación del bug
+              const mensaje = `⚠️ ERROR DE VALIDACIÓN DE STOCK\n\n${error.error.error}\n\n` +
+                `🐛 NOTA: Este es un bug conocido del backend.\n` +
+                `El backend está validando el stock ANTES de restaurar el stock de la venta original.\n\n` +
+                `SOLUCIÓN TEMPORAL:\n` +
+                `1. Cancela esta edición\n` +
+                `2. Ve al módulo de Almacén\n` +
+                `3. Ajusta manualmente el stock del producto\n` +
+                `4. Vuelve a editar la venta\n\n` +
+                `O contacta al administrador para que corrija el backend.`;
+              
+              alert(mensaje);
+              
+              // Log detallado para debugging
+              console.error('🐛 BUG DE BACKEND - Validación de stock incorrecta:');
+              console.error('   El backend debería:');
+              console.error('   1. Restaurar stock de venta original');
+              console.error('   2. Validar y descontar nuevo stock');
+              console.error('   Pero está haciendo:');
+              console.error('   1. Validar nuevo stock (❌ falla aquí)');
+              console.error('   2. Restaurar stock original (nunca llega)');
+            } else {
+              this.error = error?.error?.message || 'Error al actualizar venta';
+            }
           }
-        },
-        error: (error) => {
-          this.loading = false;
-          this.error = error?.error?.message || 'Error al guardar venta';
-          console.error('Error detallado:', error);
-        }
-      });
+        });
+    } else {
+      // MODO CREACIÓN: Usar POST
+      console.log('📝 CREANDO NUEVA VENTA (emitirFlujoEncadenado)');
+      
+      this.facturacionService.createVenta(datosVenta)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response: any) => {
+            this.loading = false;
+            if (response.success && response.data) {
+              this.ventaGuardada = response.data;
+              this.success = 'Venta registrada exitosamente';
+              this.mostrarModalExito = true;
+            } else if (response.venta) {
+              this.ventaGuardada = response.venta;
+              this.success = response.message || 'Venta registrada exitosamente';
+              this.mostrarModalExito = true;
+            } else {
+              this.error = 'No se pudo guardar la venta';
+            }
+          },
+          error: (error) => {
+            this.loading = false;
+            console.error('Error detallado:', error);
+            
+            // Manejo específico de errores de stock
+            if (error.error?.error_type === 'stock_insuficiente') {
+              this.error = `❌ ${error.error.error}`;
+              
+              // Mostrar alerta más detallada
+              alert(`⚠️ STOCK INSUFICIENTE\n\n${error.error.error}\n\nPor favor, ajusta la cantidad o elimina el producto del carrito.`);
+            } else {
+              this.error = error?.error?.message || 'Error al guardar venta';
+            }
+          }
+        });
+    }
   }
 
   // Método eliminado - usar confirmarYProcesarVenta() en su lugar
@@ -1903,8 +2418,70 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
   onCheckboxResultadoChange(producto: any): void {
-    if (producto.seleccionado && !producto.cantidadSeleccionada) {
-      producto.cantidadSeleccionada = 1;
+    if (producto.seleccionado) {
+      // Inicializar cantidad si no existe
+      if (!producto.cantidadSeleccionada) {
+        producto.cantidadSeleccionada = 1;
+      }
+      
+      // Agregar automáticamente al carrito
+      this.agregarProductoAlCarrito(producto);
+    } else {
+      // Si se desmarca, remover del carrito
+      this.removerProductoDelCarrito(producto);
+    }
+  }
+
+  /**
+   * Agregar un producto individual al carrito
+   */
+  private agregarProductoAlCarrito(producto: any): void {
+    const stockDisponible = this.getStockDisponible(producto);
+    const cantidadAgregar = producto.cantidadSeleccionada || 1;
+    
+    if (cantidadAgregar > stockDisponible) {
+      this.error = `El producto "${producto.nombre}" no tiene suficiente stock. Disponible: ${stockDisponible}`;
+      producto.seleccionado = false;
+      return;
+    }
+
+    // Verificar si el producto ya está en el carrito
+    const itemExistente = this.ventaForm.items.find(item => item.producto_id === producto.id);
+
+    if (itemExistente) {
+      // Si ya existe, actualizar la cantidad
+      itemExistente.cantidad = cantidadAgregar;
+      this.calcularItem(itemExistente);
+      this.ventaForm.items = [...this.ventaForm.items];
+    } else {
+      // Si no existe, crear nuevo item
+      const nuevoItem: VentaItemFormData = {
+        producto_id: producto.id,
+        codigo_producto: producto.codigo_producto || producto.codigo || `PROD-${producto.id}`,
+        descripcion: producto.nombre,
+        unidad_medida: producto.unidad_medida || 'NIU',
+        cantidad: cantidadAgregar,
+        precio_unitario: producto.precio_venta || producto.precio || 0,
+        tipo_afectacion_igv: TIPOS_AFECTACION_IGV.GRAVADO
+      };
+
+      this.calcularItem(nuevoItem);
+      this.ventaForm.items.push(nuevoItem);
+    }
+
+    this.success = `✓ ${producto.nombre} agregado al carrito`;
+    setTimeout(() => this.success = null, 2000);
+  }
+
+  /**
+   * Remover un producto del carrito
+   */
+  private removerProductoDelCarrito(producto: any): void {
+    const index = this.ventaForm.items.findIndex(item => item.producto_id === producto.id);
+    if (index !== -1) {
+      this.ventaForm.items.splice(index, 1);
+      this.success = `✓ ${producto.nombre} removido del carrito`;
+      setTimeout(() => this.success = null, 2000);
     }
   }
 
@@ -2578,7 +3155,11 @@ export class PosComponent implements OnInit, OnDestroy {
     `;
   }
 
-  enviarPorWhatsApp(): void {
+  /**
+   * Método legacy: Abre WhatsApp Web con mensaje de texto
+   * Para envío con PDF usar enviarPorWhatsApp()
+   */
+  abrirWhatsAppWeb(): void {
     if (!this.ventaGuardada) return;
 
     const venta = this.ventaGuardada;

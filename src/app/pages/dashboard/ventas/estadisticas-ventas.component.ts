@@ -227,7 +227,7 @@ export class EstadisticasVentasComponent implements OnInit {
   ) {
     const hoy = new Date();
     const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-    
+
     this.filtrosForm = this.fb.group({
       fecha_inicio: [inicioMes.toISOString().split('T')[0]],
       fecha_fin: [hoy.toISOString().split('T')[0]]

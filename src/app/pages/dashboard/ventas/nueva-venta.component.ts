@@ -6,6 +6,7 @@ import { Router, RouterModule } from '@angular/router';
 import { VentasService } from '../../../services/ventas.service';
 import { AlmacenService } from '../../../services/almacen.service';
 import { FacturacionService } from '../../../services/facturacion.service';
+import { ClienteService } from '../../../services/cliente.service';
 import { ReniecService } from '../../../services/reniec.service';
 import { Producto } from '../../../types/almacen.types';
 import Swal from 'sweetalert2';
@@ -47,6 +48,7 @@ export class NuevaVentaComponent implements OnInit {
     private ventasService: VentasService,
     private almacenService: AlmacenService,
     private facturacionService: FacturacionService,
+    private clienteService: ClienteService,
     private reniecService: ReniecService,
     private router: Router
   ) {
@@ -96,46 +98,79 @@ export class NuevaVentaComponent implements OnInit {
     });
 
     // PASO 1: Buscar en la base de datos (PRIORIDAD)
-    this.facturacionService.getClientes({ numero_documento: numeroDocumento }).subscribe({
+    this.clienteService.buscarPorDocumento(numeroDocumento).subscribe({
       next: (response) => {
-        if (response.data && response.data.length > 0) {
-          // ✅ CLIENTE ENCONTRADO EN DB
+        console.log('🔍 Respuesta del sistema:', response);
+        console.log('✅ Success:', response.success);
+        console.log('📦 Data recibida:', response.data);
+
+        // El backend ahora devuelve: { success: true, data: [cliente] } o { success: false, data: [] }
+        if (response.success && response.data && response.data.length > 0) {
+          // ✅ CLIENTE ENCONTRADO EN SISTEMA
           const cliente = response.data[0];
+          console.log('👤 Cliente encontrado en sistema:', cliente);
+
+          // Usar nombre_completo si existe, sino construir desde nombres + apellidos
+          const nombreCompleto = cliente.nombre_completo ||
+                                 `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim();
+          console.log('📝 Nombre completo:', nombreCompleto);
+
           this.ventaForm.patchValue({
             cliente: {
-              tipo_documento: cliente.tipo_documento,
+              tipo_documento: tipoDocumento,
               numero_documento: cliente.numero_documento,
-              nombre: cliente.nombre,
+              nombre: nombreCompleto || 'Cliente',
               direccion: cliente.direccion || '',
               email: cliente.email || '',
               telefono: cliente.telefono || ''
             }
           });
-          
+
           Swal.fire({
-            title: '✅ Cliente Encontrado',
+            title: '✅ Cliente Encontrado en Sistema',
             html: `
               <div class="text-start">
                 <div class="alert alert-success">
                   <strong>Cliente registrado en el sistema</strong>
                 </div>
-                <p><strong>Nombre:</strong> ${cliente.nombre}</p>
+                <p><strong>ID:</strong> ${cliente.id_cliente}</p>
+                <p><strong>Nombre:</strong> ${nombreCompleto}</p>
                 <p><strong>Documento:</strong> ${cliente.numero_documento}</p>
                 ${cliente.direccion ? `<p><strong>Dirección:</strong> ${cliente.direccion}</p>` : ''}
+                ${cliente.email ? `<p><strong>Email:</strong> ${cliente.email}</p>` : ''}
+                ${cliente.telefono ? `<p><strong>Teléfono:</strong> ${cliente.telefono}</p>` : ''}
               </div>
             `,
             icon: 'success',
             confirmButtonColor: '#198754'
           });
         } else {
-          // ❌ NO ENCONTRADO EN DB → BUSCAR EN RENIEC/SUNAT
-          this.buscarEnReniecSunat(numeroDocumento, tipoDocumento);
+          // ❌ NO ENCONTRADO EN SISTEMA
+          console.log('❌ Cliente no encontrado en sistema (success=false)');
+          console.log('📝 Mensaje del backend:', response.message);
+
+          Swal.fire({
+            title: 'Cliente no encontrado',
+            text: 'El documento no está registrado en el sistema. Puede ingresar los datos manualmente.',
+            icon: 'warning',
+            confirmButtonColor: '#ffc107'
+          });
+
+          // this.buscarEnReniecSunat(numeroDocumento, tipoDocumento); // DESACTIVADO
         }
       },
       error: (error) => {
-        console.error('Error al buscar en DB:', error);
-        // Si hay error en DB, intentar con RENIEC/SUNAT
-        this.buscarEnReniecSunat(numeroDocumento, tipoDocumento);
+        console.error('❌ Error al buscar en sistema:', error);
+        console.error('📄 Detalle del error:', error.error);
+
+        Swal.fire({
+          title: 'Error',
+          text: 'Error al buscar en el sistema.',
+          icon: 'error',
+          confirmButtonColor: '#dc3545'
+        });
+
+        // this.buscarEnReniecSunat(numeroDocumento, tipoDocumento); // DESACTIVADO
       }
     });
   }
@@ -171,10 +206,15 @@ export class NuevaVentaComponent implements OnInit {
       // Buscar en RENIEC
       this.reniecService.buscarPorDni(numeroDocumento).subscribe({
         next: (response) => {
-          if (response.success && (response.nombres || response.nombre)) {
+          console.log('🔍 Respuesta de RENIEC:', response);
+
+          // RENIEC no devuelve "success", solo verifica si tiene datos
+          if (response.nombres || response.nombre) {
             // Construir nombre completo
-            const nombreCompleto = response.nombre || 
+            const nombreCompleto = response.nombre ||
               `${response.nombres} ${response.apellidoPaterno} ${response.apellidoMaterno}`;
+
+            console.log('✅ Nombre encontrado en RENIEC:', nombreCompleto);
 
             this.ventaForm.patchValue({
               cliente: {
@@ -200,35 +240,97 @@ export class NuevaVentaComponent implements OnInit {
               confirmButtonColor: '#198754'
             });
           } else {
+            console.log('❌ No se encontraron datos en RENIEC');
             this.mostrarClienteNoEncontrado();
           }
         },
         error: (error) => {
-          console.error('Error al buscar en RENIEC:', error);
+          console.error('❌ Error al buscar en RENIEC:', error);
           this.mostrarClienteNoEncontrado();
         }
       });
     } else if (esRuc) {
-      // Para RUC, mostrar mensaje que puede ingresar manualmente
-      // (La API de SUNAT requiere implementación adicional en el backend)
-      Swal.fire({
-        title: 'Cliente no encontrado',
-        html: `
-          <div class="text-start">
-            <div class="alert alert-warning">
-              <strong>RUC no registrado en el sistema</strong>
-            </div>
-            <p>El RUC <strong>${numeroDocumento}</strong> no está en la base de datos.</p>
-            <p class="text-muted">Puede continuar ingresando los datos manualmente:</p>
-            <ul class="text-muted">
-              <li>Razón Social</li>
-              <li>Dirección</li>
-              <li>Email y Teléfono (opcional)</li>
-            </ul>
-          </div>
-        `,
-        icon: 'info',
-        confirmButtonColor: '#0d6efd'
+      // Buscar en SUNAT (RUC)
+      this.reniecService.buscarPorDni(numeroDocumento).subscribe({
+        next: (response) => {
+          console.log('🔍 Respuesta de SUNAT:', response);
+
+          // SUNAT devuelve razonSocial y dirección
+          if (response.razonSocial || response.nombre) {
+            const razonSocial = response.razonSocial || response.nombre || '';
+            const direccion = response.direccion || '';
+
+            console.log('✅ RUC encontrado en SUNAT:', razonSocial);
+            console.log('📍 Dirección:', direccion);
+
+            this.ventaForm.patchValue({
+              cliente: {
+                tipo_documento: '6', // RUC
+                numero_documento: numeroDocumento,
+                nombre: razonSocial.trim(),
+                direccion: direccion.trim()
+              }
+            });
+
+            Swal.fire({
+              title: '✅ Datos Encontrados en SUNAT',
+              html: `
+                <div class="text-start">
+                  <div class="alert alert-info">
+                    <strong>Empresa nueva - Datos de SUNAT</strong>
+                  </div>
+                  <p><strong>RUC:</strong> ${numeroDocumento}</p>
+                  <p><strong>Razón Social:</strong> ${razonSocial}</p>
+                  ${response.estado ? `<p><strong>Estado:</strong> ${response.estado}</p>` : ''}
+                  ${response.condicion ? `<p><strong>Condición:</strong> ${response.condicion}</p>` : ''}
+                  ${direccion ? `<p><strong>Dirección:</strong> ${direccion}</p>` : ''}
+                  ${response.departamento ? `<p><strong>Ubicación:</strong> ${response.distrito}, ${response.provincia}, ${response.departamento}</p>` : ''}
+                  <p class="text-muted small">Complete los datos adicionales si lo desea.</p>
+                </div>
+              `,
+              icon: 'success',
+              confirmButtonColor: '#198754'
+            });
+          } else {
+            console.log('❌ No se encontraron datos en SUNAT');
+            Swal.fire({
+              title: 'RUC no encontrado',
+              html: `
+                <div class="text-start">
+                  <div class="alert alert-warning">
+                    <strong>RUC no registrado</strong>
+                  </div>
+                  <p>El RUC <strong>${numeroDocumento}</strong> no se encontró en SUNAT.</p>
+                  <p class="text-muted">Puede continuar ingresando los datos manualmente:</p>
+                  <ul class="text-muted">
+                    <li>Razón Social</li>
+                    <li>Dirección</li>
+                    <li>Email y Teléfono (opcional)</li>
+                  </ul>
+                </div>
+              `,
+              icon: 'warning',
+              confirmButtonColor: '#ffc107'
+            });
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error al buscar en SUNAT:', error);
+          Swal.fire({
+            title: 'Error al buscar RUC',
+            html: `
+              <div class="text-start">
+                <div class="alert alert-danger">
+                  <strong>No se pudo consultar SUNAT</strong>
+                </div>
+                <p>Hubo un error al buscar el RUC <strong>${numeroDocumento}</strong>.</p>
+                <p class="text-muted">Puede continuar ingresando los datos manualmente.</p>
+              </div>
+            `,
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+          });
+        }
       });
     }
   }

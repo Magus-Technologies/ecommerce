@@ -59,14 +59,6 @@
               {{ totalResultadosSeleccionados }} seleccionado(s)
             </span>
           </div>
-          <button 
-            *ngIf="totalResultadosSeleccionados > 0"
-            class="btn-add-selected"
-            (click)="agregarResultadosSeleccionados()"
-          >
-            <i class="ph ph-shopping-cart"></i>
-            Agregar ({{ totalResultadosSeleccionados }})
-          </button>
         </div>
         <div class="results-list">
           <div *ngFor="let producto of productosFiltrados.slice(0, 6); trackBy: trackByProductoId" class="result-item"
@@ -308,7 +300,7 @@
 
       <!-- CHECKBOXES DE PROGRESO -->
       <div class="progress-checkboxes">
-        <div class="checkbox-row">
+        <div class="checkbox-column">
           <div class="checkbox-item" [class.checked]="clienteCompletado">
             <div class="checkbox-box">
               <i class="ph ph-check" *ngIf="clienteCompletado"></i>
@@ -324,7 +316,7 @@
           </div>
         </div>
 
-        <div class="checkbox-row">
+        <div class="checkbox-column">
           <div class="checkbox-item" [class.checked]="pagoCompletado">
             <div class="checkbox-box">
               <i class="ph ph-check" *ngIf="pagoCompletado"></i>
@@ -451,10 +443,9 @@
         <i class="ph ph-file-code"></i>
         XML
       </button>
-      <button class="btn-comprobante" (click)="enviarPorEmail()" [disabled]="enviandoEmail()"
-        *ngIf="ventaForm.cliente.email">
-        <i class="ph ph-envelope"></i>
-        Email
+      <button class="btn-comprobante btn-primary" (click)="abrirModalEnviarComprobante()">
+        <i class="ph ph-paper-plane-tilt"></i>
+        Enviar
       </button>
       <button class="btn-comprobante" (click)="consultarEstadoSunat()" [disabled]="consultandoSunat()">
         <i class="ph ph-magnifying-glass"></i>
@@ -480,6 +471,16 @@
 
 <app-serie-selector-modal *ngIf="mostrarSerieModal" [series]="seriesDisponibles()"
   (seleccionarSerie)="onSeleccionSerieEvent($event)" (cerrar)="cerrarSerieModal()"></app-serie-selector-modal>
+
+<!-- Modal Enviar Comprobante -->
+<app-enviar-comprobante-modal 
+  *ngIf="mostrarEnviarComprobanteModal"
+  [comprobante]="comprobanteGenerado()"
+  [emailDefault]="ventaForm.cliente.email || ''"
+  [telefonoDefault]="ventaForm.cliente.telefono || ''"
+  (enviar)="onEnviarComprobante($event)"
+  (cerrar)="cerrarModalEnviarComprobante()">
+</app-enviar-comprobante-modal>
 
 <!-- Modal de Éxito -->
 <div *ngIf="mostrarModalExito" class="modal-overlay" (click)="cerrarModalExito()">
@@ -706,7 +707,6 @@
         </label>
         <div style="display: flex; gap: 8px;">
           <input type="text" class="form-control" [(ngModel)]="ventaForm.cliente.numero_documento"
-            (ngModelChange)="ventaForm.cliente.numero_documento.length >= 8 && buscarClientePorDocumento()"
             [placeholder]="ventaForm.cliente.tipo_documento === TIPOS_DOCUMENTO.RUC ? '20123456789' : '12345678'"
             [maxlength]="ventaForm.cliente.tipo_documento === TIPOS_DOCUMENTO.RUC ? 11 : 8"
             style="flex: 1; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
@@ -714,14 +714,21 @@
             *ngIf="ventaForm.cliente.numero_documento.length >= 8"
             class="btn btn-sm btn-primary" (click)="buscarClientePorDocumento()"
             [disabled]="loading"
-            style="padding: 10px 16px; border-radius: 6px; border: none; background: var(--main-600); color: white; cursor: pointer;">
+            style="padding: 10px 16px; border-radius: 6px; border: none; background: var(--main-600); color: white; cursor: pointer; display: flex; align-items: center; gap: 6px; min-width: 100px; justify-content: center;">
             <i class="ph ph-magnifying-glass" *ngIf="!loading"></i>
-            <span *ngIf="loading" class="spinner-border spinner-border-sm"></span>
-            {{ loading ? '' : 'Buscar' }}
+            <i class="ph ph-spinner ph-spin" *ngIf="loading"></i>
+            <span>{{ loading ? 'Buscando...' : 'Buscar' }}</span>
           </button>
         </div>
-        <small *ngIf="success" style="color: #198754; display: block; margin-top: 4px;">
+        <small *ngIf="success" style="color: #198754; display: block; margin-top: 6px; font-size: 13px;">
           <i class="ph ph-check-circle"></i> {{ success }}
+        </small>
+        <small *ngIf="error && !loading" style="color: #dc3545; display: block; margin-top: 6px; font-size: 13px;">
+          <i class="ph ph-warning-circle"></i> {{ error }}
+        </small>
+        <small *ngIf="!loading && !success && !error && ventaForm.cliente.numero_documento.length >= 8" 
+          style="color: #6c757d; display: block; margin-top: 6px; font-size: 12px;">
+          <i class="ph ph-info"></i> Presione "Buscar" para consultar en Sistema → RENIEC/SUNAT
         </small>
       </div>
 

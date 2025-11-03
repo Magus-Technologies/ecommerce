@@ -53,4 +53,27 @@ export class ClienteService {
   getEstadisticas(): Observable<{status: string, data: EstadisticasGenerales}> {
     return this.http.get<{status: string, data: EstadisticasGenerales}>(`${this.apiUrl}/estadisticas`);
   }
+
+  // Buscar cliente por número de documento (DNI o RUC)
+  // Usa el endpoint GET /api/clientes/buscar-por-documento?numero_documento={doc}
+  // Devuelve: { success: true, data: [cliente] } o { success: false, data: [] }
+  buscarPorDocumento(numeroDocumento: string): Observable<{
+    success: boolean;
+    data: Array<{
+      id_cliente: number;
+      nombres: string;
+      apellidos: string;
+      nombre_completo: string;
+      email: string;
+      telefono: string;
+      numero_documento: string;
+      direccion: string | null;
+      estado: boolean;
+    }>;
+    message?: string;
+  }> {
+    return this.http.get<any>(`${this.apiUrl}/buscar-por-documento`, {
+      params: { numero_documento: numeroDocumento }
+    });
+  }
 }

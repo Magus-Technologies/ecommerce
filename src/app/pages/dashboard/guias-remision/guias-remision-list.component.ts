@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { GuiasRemisionService, GuiaRemision, EstadisticasGuias } from '../../../services/guias-remision.service';
 import { GuiaRemisionModalComponent } from '../../../components/guia-remision-modal/guia-remision-modal.component';
 import Swal from 'sweetalert2';
@@ -11,279 +10,289 @@ import Swal from 'sweetalert2';
   standalone: true,
   imports: [CommonModule, FormsModule, GuiaRemisionModalComponent],
   template: `
-    <div class="d-flex justify-content-between align-items-center mb-24">
-      <div>
-        <h5 class="text-heading fw-semibold mb-8">Guías de Remisión</h5>
-        <p class="text-gray-500 mb-0">Administra las guías de remisión electrónicas</p>
-      </div>
-      <button 
-        class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
-        (click)="nuevaGuia()">
-        <i class="ph ph-plus me-8"></i>
-        Nueva Guía de Remisión
-      </button>
-    </div>
-
-    <!-- Estadísticas -->
-    <div class="row g-4 mb-24">
-      <div class="col-md-2">
-        <div class="card border-0 shadow-sm rounded-12">
-          <div class="card-body p-16">
-            <div class="d-flex align-items-center gap-12">
-              <div class="w-40 h-40 rounded-8 flex-center bg-info-50 text-info-600">
-                <i class="ph ph-file-text text-xl"></i>
-              </div>
-              <div>
-                <p class="text-gray-500 text-xs mb-2">Total</p>
-                <h6 class="text-heading fw-semibold mb-0">{{ estadisticas.total_guias }}</h6>
-              </div>
-            </div>
-          </div>
+    <div class="gre-container">
+      <!-- Header -->
+      <div class="gre-header">
+        <div class="gre-title">
+          <h5>Guías de Remisión</h5>
+          <p>Administra las guías de remisión electrónicas</p>
         </div>
-      </div>
-      <div class="col-md-2">
-        <div class="card border-0 shadow-sm rounded-12">
-          <div class="card-body p-16">
-            <div class="d-flex align-items-center gap-12">
-              <div class="w-40 h-40 rounded-8 flex-center bg-warning-50 text-warning-600">
-                <i class="ph ph-clock text-xl"></i>
-              </div>
-              <div>
-                <p class="text-gray-500 text-xs mb-2">Pendientes</p>
-                <h6 class="text-heading fw-semibold mb-0">{{ estadisticas.guias_pendientes }}</h6>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-2">
-        <div class="card border-0 shadow-sm rounded-12">
-          <div class="card-body p-16">
-            <div class="d-flex align-items-center gap-12">
-              <div class="w-40 h-40 rounded-8 flex-center bg-primary-50 text-primary-600">
-                <i class="ph ph-paper-plane text-xl"></i>
-              </div>
-              <div>
-                <p class="text-gray-500 text-xs mb-2">Enviadas</p>
-                <h6 class="text-heading fw-semibold mb-0">{{ estadisticas.guias_enviadas }}</h6>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-2">
-        <div class="card border-0 shadow-sm rounded-12">
-          <div class="card-body p-16">
-            <div class="d-flex align-items-center gap-12">
-              <div class="w-40 h-40 rounded-8 flex-center bg-success-50 text-success-600">
-                <i class="ph ph-check-circle text-xl"></i>
-              </div>
-              <div>
-                <p class="text-gray-500 text-xs mb-2">Aceptadas</p>
-                <h6 class="text-heading fw-semibold mb-0">{{ estadisticas.guias_aceptadas }}</h6>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-2">
-        <div class="card border-0 shadow-sm rounded-12">
-          <div class="card-body p-16">
-            <div class="d-flex align-items-center gap-12">
-              <div class="w-40 h-40 rounded-8 flex-center bg-danger-50 text-danger-600">
-                <i class="ph ph-x-circle text-xl"></i>
-              </div>
-              <div>
-                <p class="text-gray-500 text-xs mb-2">Rechazadas</p>
-                <h6 class="text-heading fw-semibold mb-0">{{ estadisticas.guias_rechazadas }}</h6>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-2">
-        <div class="card border-0 shadow-sm rounded-12">
-          <div class="card-body p-16">
-            <div class="d-flex align-items-center gap-12">
-              <div class="w-40 h-40 rounded-8 flex-center bg-purple-50 text-purple-600">
-                <i class="ph ph-package text-xl"></i>
-              </div>
-              <div>
-                <p class="text-gray-500 text-xs mb-2">Peso (kg)</p>
-                <h6 class="text-heading fw-semibold mb-0">{{ estadisticas.peso_total_transportado | number:'1.2-2' }}</h6>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Filtros -->
-    <div class="card border-0 shadow-sm rounded-12 mb-24">
-      <div class="card-body p-24">
-        <div class="row">
-          <div class="col-md-3 mb-16">
-            <label class="form-label text-heading fw-medium mb-8">Estado</label>
-            <select class="form-select px-16 py-12 border rounded-8" [(ngModel)]="filtroEstado" (change)="aplicarFiltros()">
-              <option value="">Todos los estados</option>
-              <option value="PENDIENTE">Pendiente</option>
-              <option value="ENVIADO">Enviado</option>
-              <option value="ACEPTADO">Aceptado</option>
-              <option value="RECHAZADO">Rechazado</option>
-            </select>
-          </div>
-          <div class="col-md-3 mb-16">
-            <label class="form-label text-heading fw-medium mb-8">Fecha Inicio</label>
-            <input 
-              type="date" 
-              class="form-control px-16 py-12 border rounded-8"
-              [(ngModel)]="filtroFechaInicio" 
-              (change)="aplicarFiltros()">
-          </div>
-          <div class="col-md-3 mb-16">
-            <label class="form-label text-heading fw-medium mb-8">Fecha Fin</label>
-            <input 
-              type="date" 
-              class="form-control px-16 py-12 border rounded-8"
-              [(ngModel)]="filtroFechaFin" 
-              (change)="aplicarFiltros()">
-          </div>
-          <div class="col-md-3 mb-16">
-            <label class="form-label text-heading fw-medium mb-8">Acciones</label>
-            <div class="d-grid">
-              <button 
-                class="btn bg-gray-100 hover-bg-gray-200 text-gray-600 px-16 py-8 rounded-8"
-                (click)="limpiarFiltros()">
-                <i class="ph ph-broom me-8"></i>
-                Limpiar Filtros
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tabla de guías -->
-    <div class="card border-0 shadow-sm rounded-12">
-      <div class="card-body p-0">
-        
-        <!-- Loading state -->
-        <div *ngIf="loading" class="text-center py-40">
-          <div class="spinner-border text-main-600" role="status">
-            <span class="visually-hidden">Cargando...</span>
-          </div>
-          <p class="text-gray-500 mt-12 mb-0">Cargando guías de remisión...</p>
-        </div>
-
-        <!-- Error State -->
-        <div *ngIf="error" class="alert alert-danger mx-24 mt-24" role="alert">
-          <i class="ph ph-exclamation-triangle me-8"></i>
-          {{ error }}
-          <button 
-            type="button" 
-            class="btn btn-sm btn-outline-danger ms-16"
-            (click)="cargarGuias()">
-            <i class="ph ph-arrow-clockwise me-4"></i>
-            Reintentar
+        <div class="gre-actions">
+          <button class="gre-btn-primary" (click)="nuevaGuia()">
+            <i class="ph ph-plus"></i>
+            Nueva Guía de Remisión
           </button>
         </div>
+      </div>
 
-        <!-- Tabla -->
-        <div *ngIf="!loading && !error" class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-24 py-16 text-heading fw-semibold border-0">Número</th>
-                <th class="px-24 py-16 text-heading fw-semibold border-0">Fecha</th>
-                <th class="px-24 py-16 text-heading fw-semibold border-0">Cliente</th>
-                <th class="px-24 py-16 text-heading fw-semibold border-0">Destinatario</th>
-                <th class="px-24 py-16 text-heading fw-semibold border-0">Peso (kg)</th>
-                <th class="px-24 py-16 text-heading fw-semibold border-0">Estado</th>
-                <th class="px-24 py-16 text-heading fw-semibold border-0 text-center">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let guia of guias" class="border-bottom border-gray-100">
-                <!-- Número -->
-                <td class="px-24 py-16">
-                  <span class="text-heading fw-semibold">{{ guia.numero_completo }}</span>
-                </td>
-
-                <!-- Fecha -->
-                <td class="px-24 py-16">
-                  <span class="text-heading">{{ guia.fecha_emision | date:'dd/MM/yyyy' }}</span>
-                </td>
-
-                <!-- Cliente -->
-                <td class="px-24 py-16">
-                  <span class="text-heading">{{ guia.cliente?.razon_social || 'N/A' }}</span>
-                </td>
-
-                <!-- Destinatario -->
-                <td class="px-24 py-16">
-                  <span class="text-heading">{{ guia.destinatario_razon_social }}</span>
-                </td>
-
-                <!-- Peso -->
-                <td class="px-24 py-16">
-                  <span class="text-heading">{{ guia.peso_total | number:'1.2-2' }}</span>
-                </td>
-
-                <!-- Estado -->
-                <td class="px-24 py-16">
-                  <span class="badge px-12 py-6 rounded-pill fw-medium"
-                        [ngClass]="getEstadoClass(guia.estado)">
-                    {{ guia.estado_nombre || guia.estado }}
-                  </span>
-                </td>
-
-                <!-- Acciones -->
-                <td class="px-24 py-16 text-center">
-                  <div class="d-flex justify-content-center gap-8">
-                    <!-- Ver Detalle -->
-                    <button 
-                      class="btn bg-info-50 hover-bg-info-100 text-info-600 w-32 h-32 rounded-6 flex-center transition-2"
-                      title="Ver Detalle"
-                      (click)="verDetalle(guia)">
-                      <i class="ph ph-eye text-sm"></i>
-                    </button>
-
-                    <!-- Enviar a SUNAT -->
-                    <button 
-                      *ngIf="guia.estado === 'PENDIENTE'"
-                      class="btn bg-primary-50 hover-bg-primary-100 text-primary-600 w-32 h-32 rounded-6 flex-center transition-2"
-                      title="Enviar a SUNAT"
-                      (click)="enviarSunat(guia)" 
-                      [disabled]="enviando">
-                      <i class="ph ph-paper-plane text-sm"></i>
-                    </button>
-
-                    <!-- Descargar XML -->
-                    <button 
-                      *ngIf="guia.estado === 'ACEPTADO'"
-                      class="btn bg-success-50 hover-bg-success-100 text-success-600 w-32 h-32 rounded-6 flex-center transition-2"
-                      title="Descargar XML"
-                      (click)="descargarXML(guia)" 
-                      [disabled]="descargando">
-                      <i class="ph ph-file-code text-sm"></i>
-                    </button>
+      <!-- Estadísticas -->
+      <div class="gre-stats">
+        <div class="row g-4">
+          <div class="col-md-2">
+            <div class="stat-card stat-total">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-12">
+                  <div class="stat-icon">
+                    <i class="ph ph-file-text"></i>
                   </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  <div>
+                    <p class="stat-label">Total</p>
+                    <h6 class="stat-value">{{ estadisticas.total_guias }}</h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="stat-card stat-pending">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-12">
+                  <div class="stat-icon">
+                    <i class="ph ph-clock"></i>
+                  </div>
+                  <div>
+                    <p class="stat-label">Pendientes</p>
+                    <h6 class="stat-value">{{ estadisticas.guias_pendientes }}</h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="stat-card stat-sent">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-12">
+                  <div class="stat-icon">
+                    <i class="ph ph-paper-plane"></i>
+                  </div>
+                  <div>
+                    <p class="stat-label">Enviadas</p>
+                    <h6 class="stat-value">{{ estadisticas.guias_enviadas }}</h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="stat-card stat-accepted">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-12">
+                  <div class="stat-icon">
+                    <i class="ph ph-check-circle"></i>
+                  </div>
+                  <div>
+                    <p class="stat-label">Aceptadas</p>
+                    <h6 class="stat-value">{{ estadisticas.guias_aceptadas }}</h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="stat-card stat-rejected">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-12">
+                  <div class="stat-icon">
+                    <i class="ph ph-x-circle"></i>
+                  </div>
+                  <div>
+                    <p class="stat-label">Rechazadas</p>
+                    <h6 class="stat-value">{{ estadisticas.guias_rechazadas }}</h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="stat-card stat-weight">
+              <div class="card-body">
+                <div class="d-flex align-items-center gap-12">
+                  <div class="stat-icon">
+                    <i class="ph ph-package"></i>
+                  </div>
+                  <div>
+                    <p class="stat-label">Peso (kg)</p>
+                    <h6 class="stat-value">{{ estadisticas.peso_total_transportado | number:'1.2-2' }}</h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          <!-- Empty state -->
-          <div *ngIf="guias.length === 0" class="text-center py-40">
-            <i class="ph ph-file-text text-gray-300 text-6xl mb-16"></i>
-            <h6 class="text-heading fw-semibold mb-8">No hay guías de remisión</h6>
-            <p class="text-gray-500 mb-16">No se encontraron guías con los filtros aplicados.</p>
-            <button 
-              class="btn bg-main-600 hover-bg-main-700 text-white px-16 py-8 rounded-8"
-              (click)="nuevaGuia()">
-              <i class="ph ph-plus me-8"></i>
-              Crear Primera Guía
+      <!-- Filtros -->
+      <div class="gre-filters">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3 mb-16">
+              <label class="form-label">Tipo de Guía</label>
+              <select class="form-select" [(ngModel)]="filtroTipoGuia" (change)="aplicarFiltros()">
+                <option value="">Todos los tipos</option>
+                <option value="REMITENTE">GRE Remitente</option>
+                <option value="INTERNO">Traslado Interno</option>
+              </select>
+            </div>
+            <div class="col-md-3 mb-16">
+              <label class="form-label">Estado</label>
+              <select class="form-select" [(ngModel)]="filtroEstado" (change)="aplicarFiltros()">
+                <option value="">Todos los estados</option>
+                <option value="PENDIENTE">Pendiente</option>
+                <option value="ENVIADO">Enviado</option>
+                <option value="ACEPTADO">Aceptado</option>
+                <option value="RECHAZADO">Rechazado</option>
+              </select>
+            </div>
+            <div class="col-md-2 mb-16">
+              <label class="form-label">Fecha Inicio</label>
+              <input
+                type="date"
+                class="form-control"
+                [(ngModel)]="filtroFechaInicio"
+                (change)="aplicarFiltros()">
+            </div>
+            <div class="col-md-2 mb-16">
+              <label class="form-label">Fecha Fin</label>
+              <input
+                type="date"
+                class="form-control"
+                [(ngModel)]="filtroFechaFin"
+                (change)="aplicarFiltros()">
+            </div>
+            <div class="col-md-2 mb-16">
+              <label class="form-label">Acciones</label>
+              <div class="d-grid">
+                <button
+                  class="gre-btn-secondary"
+                  (click)="limpiarFiltros()">
+                  <i class="ph ph-broom"></i>
+                  Limpiar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="gre-table-card">
+        <div class="card-body">
+
+          <!-- Loading state -->
+          <div *ngIf="loading" class="gre-loading">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p>Cargando guías de remisión...</p>
+          </div>
+
+          <!-- Error State -->
+          <div *ngIf="error" class="gre-alert alert-danger">
+            <i class="ph ph-exclamation-triangle"></i>
+            {{ error }}
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-danger ms-auto"
+              (click)="cargarGuias()">
+              <i class="ph ph-arrow-clockwise"></i>
+              Reintentar
             </button>
+          </div>
+
+          <!-- Tabla -->
+          <div *ngIf="!loading && !error" class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Número</th>
+                  <th>Tipo</th>
+                  <th>Fecha</th>
+                  <th>Cliente</th>
+                  <th>Destinatario</th>
+                  <th>Peso (kg)</th>
+                  <th>Estado</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let guia of guias">
+                  <!-- Número -->
+                  <td class="td-number">{{ guia.numero_completo }}</td>
+
+                  <!-- Tipo -->
+                  <td>
+                    <span class="gre-tipo-badge" [ngClass]="getTipoGuiaClass(guia.tipo_guia)">
+                      {{ getTipoGuiaNombre(guia.tipo_guia) }}
+                    </span>
+                  </td>
+
+                  <!-- Fecha -->
+                  <td>{{ guia.fecha_emision | date:'dd/MM/yyyy' }}</td>
+
+                  <!-- Cliente -->
+                  <td>{{ guia.cliente?.razon_social || 'N/A' }}</td>
+
+                  <!-- Destinatario -->
+                  <td>{{ guia.destinatario_razon_social }}</td>
+
+                  <!-- Peso -->
+                  <td>{{ guia.peso_total | number:'1.2-2' }}</td>
+
+                  <!-- Estado -->
+                  <td>
+                    <span class="gre-badge" [ngClass]="getEstadoClass(guia.estado)">
+                      {{ guia.estado_nombre || guia.estado }}
+                    </span>
+                  </td>
+
+                  <!-- Acciones -->
+                  <td>
+                    <div class="gre-actions-group">
+                      <!-- Ver Detalle -->
+                      <button
+                        class="gre-btn-action btn-view"
+                        title="Ver Detalle"
+                        (click)="verDetalle(guia)">
+                        <i class="ph ph-eye"></i>
+                      </button>
+
+                      <!-- Enviar a SUNAT -->
+                      <button
+                        *ngIf="guia.requiere_sunat && guia.estado === 'PENDIENTE'"
+                        class="gre-btn-action btn-send"
+                        title="Enviar a SUNAT"
+                        (click)="enviarSunat(guia)"
+                        [disabled]="enviando">
+                        <i class="ph ph-paper-plane"></i>
+                      </button>
+
+                      <!-- Descargar XML -->
+                      <button
+                        *ngIf="guia.estado === 'ACEPTADO'"
+                        class="gre-btn-action btn-download"
+                        title="Descargar XML"
+                        (click)="descargarXML(guia)"
+                        [disabled]="descargando">
+                        <i class="ph ph-file-code"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Empty state -->
+            <div *ngIf="guias.length === 0" class="gre-empty">
+              <i class="ph ph-file-text"></i>
+              <h6>No hay guías de remisión</h6>
+              <p>No se encontraron guías con los filtros aplicados.</p>
+              <button
+                class="gre-btn-primary"
+                (click)="nuevaGuia()">
+                <i class="ph ph-plus"></i>
+                Crear Primera Guía
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -296,12 +305,7 @@ import Swal from 'sweetalert2';
       (onClose)="cerrarModal()"
       (onSuccess)="onGuiaCreada($event)">
     </app-guia-remision-modal>
-  `,
-  styles: [`
-    .table td { vertical-align: middle; }
-    .flex-center { display: flex; align-items: center; justify-content: center; }
-    .transition-2 { transition: all 0.2s ease; }
-  `]
+  `
 })
 export class GuiasRemisionListComponent implements OnInit {
   guias: GuiaRemision[] = [];
@@ -311,12 +315,13 @@ export class GuiasRemisionListComponent implements OnInit {
   descargando = false;
   mostrarModal = false;
   guiaSeleccionada?: number;
-  
+
   // Filtros
+  filtroTipoGuia: 'REMITENTE' | 'INTERNO' | '' = '';
   filtroEstado = '';
   filtroFechaInicio = '';
   filtroFechaFin = '';
-  
+
   // Estadísticas
   estadisticas: EstadisticasGuias = {
     total_guias: 0,
@@ -328,8 +333,7 @@ export class GuiasRemisionListComponent implements OnInit {
   };
 
   constructor(
-    private guiasService: GuiasRemisionService,
-    private router: Router
+    private guiasService: GuiasRemisionService
   ) {}
 
   ngOnInit(): void {
@@ -340,12 +344,16 @@ export class GuiasRemisionListComponent implements OnInit {
   cargarGuias(): void {
     this.loading = true;
     this.error = '';
-    
-    const filtros = {
+
+    const filtros: any = {
       estado: this.filtroEstado,
       fecha_inicio: this.filtroFechaInicio,
       fecha_fin: this.filtroFechaFin
     };
+
+    if (this.filtroTipoGuia) {
+      filtros.tipo_guia = this.filtroTipoGuia;
+    }
 
     this.guiasService.getGuias(filtros).subscribe({
       next: (response) => {
@@ -382,6 +390,7 @@ export class GuiasRemisionListComponent implements OnInit {
   }
 
   limpiarFiltros(): void {
+    this.filtroTipoGuia = '';
     this.filtroEstado = '';
     this.filtroFechaInicio = '';
     this.filtroFechaFin = '';
@@ -389,18 +398,40 @@ export class GuiasRemisionListComponent implements OnInit {
     this.cargarEstadisticas();
   }
 
+  getTipoGuiaClass(tipo: string): string {
+    switch (tipo?.toUpperCase()) {
+      case 'REMITENTE':
+        return 'badge-remitente';
+      case 'INTERNO':
+        return 'badge-interno';
+      default:
+        return 'badge-interno';
+    }
+  }
+
+  getTipoGuiaNombre(tipo: string): string {
+    switch (tipo?.toUpperCase()) {
+      case 'REMITENTE':
+        return 'GRE Remitente';
+      case 'INTERNO':
+        return 'Traslado Interno';
+      default:
+        return tipo;
+    }
+  }
+
   getEstadoClass(estado: string): string {
     switch (estado?.toUpperCase()) {
       case 'ACEPTADO':
-        return 'bg-success-50 text-success-600';
+        return 'badge-aceptado';
       case 'ENVIADO':
-        return 'bg-primary-50 text-primary-600';
+        return 'badge-enviado';
       case 'RECHAZADO':
-        return 'bg-danger-50 text-danger-600';
+        return 'badge-rechazado';
       case 'PENDIENTE':
-        return 'bg-warning-50 text-warning-600';
+        return 'badge-pendiente';
       default:
-        return 'bg-gray-50 text-gray-600';
+        return 'badge-pendiente';
     }
   }
 
@@ -414,7 +445,7 @@ export class GuiasRemisionListComponent implements OnInit {
     this.guiaSeleccionada = undefined;
   }
 
-  onGuiaCreada(guia: any): void {
+  onGuiaCreada(_guia: any): void {
     this.cargarGuias();
     this.cargarEstadisticas();
     Swal.fire('Éxito', 'Guía de remisión creada exitosamente', 'success');
@@ -442,7 +473,7 @@ export class GuiasRemisionListComponent implements OnInit {
           width: '600px'
         });
       },
-      error: (err) => {
+      error: (_err) => {
         Swal.fire('Error', 'No se pudo cargar el detalle de la guía', 'error');
       }
     });
@@ -491,7 +522,7 @@ export class GuiasRemisionListComponent implements OnInit {
         window.URL.revokeObjectURL(url);
         this.descargando = false;
       },
-      error: (err) => {
+      error: (_err) => {
         this.descargando = false;
         Swal.fire('Error', 'No se pudo descargar el XML', 'error');
       }

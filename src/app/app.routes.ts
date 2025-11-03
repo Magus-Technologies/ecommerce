@@ -574,7 +574,27 @@ export const routes: Routes = [
           ),
         title: 'Guías de Remisión',
         canActivate: [permissionGuard],
-        data: { permission: 'facturacion.ver' },
+        data: { permission: 'facturacion.guias_remision.ver' },
+      },
+      {
+        path: 'guias-remision/remitente',
+        loadComponent: () =>
+          import('./pages/dashboard/guias-remision/remitente/guias-remitente-list.component').then(
+            (m) => m.GuiasRemitenteListComponent
+          ),
+        title: 'GRE Remitente',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.guias_remision.ver' },
+      },
+      {
+        path: 'guias-remision/traslado-interno',
+        loadComponent: () =>
+          import('./pages/dashboard/guias-remision/traslado-interno/traslado-interno-list.component').then(
+            (m) => m.TrasladoInternoListComponent
+          ),
+        title: 'Traslado Interno',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.guias_remision.ver' },
       },
       {
         path: 'ventas',
@@ -588,6 +608,14 @@ export const routes: Routes = [
                 (m) => m.PosComponent
               ),
             title: 'Nueva Venta - POS'
+          },
+          { 
+            path: 'editar/:id', 
+            loadComponent: () =>
+              import('./pages/dashboard/pos/pos.component').then(
+                (m) => m.PosComponent
+              ),
+            title: 'Editar Venta - POS'
           },
           { path: 'estadisticas', component: EstadisticasVentasComponent },
         ],

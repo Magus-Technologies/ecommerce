@@ -164,6 +164,15 @@
                   class="dropdown-menu-custom"
                   (click)="$event.stopPropagation()">
                   
+                  <!-- Editar Venta (solo si está PENDIENTE y sin comprobante) -->
+                  <button 
+                    *ngIf="venta.estado === 'PENDIENTE' && !venta.comprobante_info"
+                    class="dropdown-item-custom text-primary"
+                    (click)="editarVenta(venta); cerrarMenu()">
+                    <i class="ph ph-pencil-simple me-2"></i>
+                    <span>Editar Venta</span>
+                  </button>
+
                   <!-- Generar Comprobante (solo si NO tiene comprobante) -->
                   <button 
                     *ngIf="venta.estado === 'PENDIENTE' && !venta.comprobante_info"
@@ -235,13 +244,13 @@
                     <span>Ver Detalle</span>
                   </button>
 
-                  <!-- Enviar Email (disponible cuando está aceptado) -->
+                  <!-- Enviar por (Email/WhatsApp) - disponible cuando está aceptado -->
                   <button 
                     *ngIf="venta.comprobante_info?.estado === 'ACEPTADO'"
                     class="dropdown-item-custom text-blue"
-                    (click)="enviarEmail(venta); cerrarMenu()">
-                    <i class="ph ph-envelope me-2"></i>
-                    <span>Enviar por Email</span>
+                    (click)="abrirModalEnvio(venta); cerrarMenu()">
+                    <i class="ph ph-paper-plane me-2"></i>
+                    <span>Enviar por</span>
                   </button>
 
                   <!-- Consultar SUNAT (siempre que tenga comprobante) -->

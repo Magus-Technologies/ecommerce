@@ -3,9 +3,19 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface TipoGuia {
+  codigo: 'REMITENTE' | 'INTERNO';
+  nombre: string;
+  tipo_comprobante: '09';
+  requiere_sunat: boolean;
+  descripcion: string;
+}
+
 export interface GuiaRemision {
   id?: number;
-  tipo_comprobante: string;
+  tipo_guia: 'REMITENTE' | 'INTERNO';
+  tipo_comprobante: '09';
+  requiere_sunat: boolean;
   serie: string;
   correlativo: number;
   numero_completo?: string;
@@ -24,9 +34,9 @@ export interface GuiaRemision {
   numero_bultos?: number;
   modo_transporte?: string;
   numero_placa?: string;
-  numero_licencia?: string;
   conductor_dni?: string;
   conductor_nombres?: string;
+
   punto_partida_ubigeo: string;
   punto_partida_direccion: string;
   punto_llegada_ubigeo: string;
@@ -58,34 +68,65 @@ export interface GuiaRemisionDetalle {
   observaciones?: string;
 }
 
-export interface GuiaRemisionFormData {
+export interface GuiaDetallePayload {
+  codigo_producto: string;
+  descripcion: string;
+  unidad_medida: string;
+  cantidad: number;
+  peso_unitario: number;
+}
+
+export interface GuiaRemitentePayload {
   cliente_id: number;
-  destinatario_tipo_documento: string;
-  destinatario_numero_documento: string;
-  destinatario_razon_social: string;
-  destinatario_direccion: string;
-  destinatario_ubigeo: string;
+  usar_cliente_como_destinatario?: boolean;
+  destinatario_tipo_documento?: string;
+  destinatario_numero_documento?: string;
+  destinatario_razon_social?: string;
+  destinatario_direccion?: string;
+  destinatario_ubigeo?: string;
   motivo_traslado: string;
   modalidad_traslado: string;
   fecha_inicio_traslado: string;
-  peso_total?: number;
-  numero_bultos?: number;
-  modo_transporte?: string;
-  numero_placa?: string;
-  numero_licencia?: string;
-  conductor_dni?: string;
-  conductor_nombres?: string;
   punto_partida_ubigeo: string;
   punto_partida_direccion: string;
   punto_llegada_ubigeo: string;
   punto_llegada_direccion: string;
-  observaciones?: string;
-  productos: {
+  modo_transporte?: string;
+  numero_placa?: string;
+  conductor_dni?: string;
+  conductor_nombres?: string;
+  productos: Array<{
     producto_id: number;
     cantidad: number;
     peso_unitario: number;
     observaciones?: string;
-  }[];
+  }>;
+  numero_bultos?: number;
+  observaciones?: string;
+}
+
+// ❌ ELIMINADO: GuiaTransportistaPayload - El backend ya no soporta este tipo
+
+export interface GuiaInternoPayload {
+    motivo_traslado: string;
+    fecha_inicio_traslado: string;
+    punto_partida_ubigeo: string;
+    punto_partida_direccion: string;
+    punto_llegada_ubigeo: string;
+    punto_llegada_direccion: string;
+    productos: Array<{
+      producto_id: number;
+      cantidad: number;
+      peso_unitario: number;
+      observaciones?: string;
+    }>;
+    numero_bultos?: number;
+    observaciones?: string;
+    destinatario_tipo_documento?: string;
+    destinatario_numero_documento?: string;
+    destinatario_razon_social?: string;
+    destinatario_direccion?: string;
+    destinatario_ubigeo?: string;
 }
 
 export interface EstadisticasGuias {
@@ -95,6 +136,10 @@ export interface EstadisticasGuias {
   guias_aceptadas: number;
   guias_rechazadas: number;
   peso_total_transportado: number;
+  por_tipo?: {
+    remitente: number;
+    interno: number;
+  };
 }
 
 @Injectable({
@@ -106,9 +151,17 @@ export class GuiasRemisionService {
   constructor(private http: HttpClient) {}
 
   /**
+   * Obtener tipos de guía disponibles
+   */
+  getTiposGuia(): Observable<{ success: boolean; data: TipoGuia[] }> {
+    return this.http.get<{ success: boolean; data: TipoGuia[] }>(`${this.apiUrl}/tipos`);
+  }
+
+  /**
    * Listar guías de remisión con filtros
    */
   getGuias(filtros?: {
+    tipo_guia?: 'REMITENTE' | 'INTERNO';
     estado?: string;
     fecha_inicio?: string;
     fecha_fin?: string;
@@ -139,10 +192,19 @@ export class GuiasRemisionService {
   }
 
   /**
-   * Crear nueva guía de remisión
+   * Crear GRE Remitente
    */
-  crearGuia(datos: GuiaRemisionFormData): Observable<{ success: boolean; message: string; data: GuiaRemision }> {
-    return this.http.post<{ success: boolean; message: string; data: GuiaRemision }>(this.apiUrl, datos);
+  crearGuiaRemitente(datos: GuiaRemitentePayload): Observable<{ success: boolean; message: string; data: GuiaRemision }> {
+    return this.http.post<{ success: boolean; message: string; data: GuiaRemision }>(`${this.apiUrl}/remitente`, datos);
+  }
+
+  // ❌ ELIMINADO: crearGuiaTransportista - El backend ya no soporta este endpoint
+
+  /**
+   * Crear Traslado Interno
+   */
+  crearTrasladoInterno(datos: GuiaInternoPayload): Observable<{ success: boolean; message: string; data: GuiaRemision }> {
+    return this.http.post<{ success: boolean; message: string; data: GuiaRemision }>(`${this.apiUrl}/interno`, datos);
   }
 
   /**

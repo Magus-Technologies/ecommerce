@@ -36,7 +36,7 @@
     border-radius: 30px;
     padding: 14px;
     min-width: 56px;
-    
+
     .whatsapp-icon {
       font-size: 24px;
     }
@@ -220,15 +220,24 @@
 
 // Animaciones
 @keyframes bounce {
-  0%, 20%, 53%, 80%, 100% {
+
+  0%,
+  20%,
+  53%,
+  80%,
+  100% {
     transform: translate3d(0, 0, 0);
   }
-  40%, 43% {
+
+  40%,
+  43% {
     transform: translate3d(0, -8px, 0);
   }
+
   70% {
     transform: translate3d(0, -4px, 0);
   }
+
   90% {
     transform: translate3d(0, -2px, 0);
   }
@@ -244,11 +253,11 @@
     width: 240px;
     right: -30px;
   }
-  
+
   .asesor-item {
     padding: 10px 12px;
   }
-  
+
   .asesor-avatar {
     width: 36px;
     height: 36px;

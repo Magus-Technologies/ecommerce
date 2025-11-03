@@ -5,16 +5,30 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface ReniecResponse {
-  success: boolean;
+  success?: boolean;
+
+  // Campos para DNI
   dni?: string;
   nombres?: string;
   apellidoPaterno?: string;
   apellidoMaterno?: string;
-  codVerifica?: number; // コード
-  codVerificaLetra?: string; // コード
-  message?: string;
+  codVerifica?: number;
+  codVerificaLetra?: string;
+
+  // Campos para RUC
+  ruc?: string;
+  razonSocial?: string;
+  estado?: string;
+  condicion?: string;
+  direccion?: string;
+  ubigeo?: string;
+  departamento?: string;
+  provincia?: string;
+  distrito?: string;
+
+  // Campos comunes
   nombre?: string;  // Campo combinado que devuelve el backend
-  razonSocial?: string; 
+  message?: string;
 }
 
 
