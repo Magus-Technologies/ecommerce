@@ -1082,16 +1082,14 @@
 </section>
 
 <!-- ✅ SECCIÓN DE CUPONES DINÁMICOS -->
-<div class="pt-80">
+<!-- <div class="pt-80">
   <div class="container container-lg">
-    <!-- Loading cupones -->
     <div *ngIf="isLoadingCupones" class="text-center py-20">
       <div class="spinner-border text-main-600" role="status">
         <span class="visually-hidden">Cargando cupones...</span>
       </div>
     </div>
 
-    <!-- Cupones dinámicos -->
     <div
       *ngIf="!isLoadingCupones && cuponesActivos && cuponesActivos.length > 0"
       class="row gy-4"
@@ -1141,7 +1139,6 @@
       </div>
     </div>
 
-    <!-- Mensaje cuando no hay cupones -->
     <div
       *ngIf="
         !isLoadingCupones && (!cuponesActivos || cuponesActivos.length === 0)
@@ -1157,7 +1154,7 @@
       </div>
     </div>
   </div>
-</div>
+</div> -->
 <!-- SUPER CUPON DE DESCUENTO Discount End -->
 
 <!-- ========================== START productos, destacados,ofertas, mas vendidos ============================== -->

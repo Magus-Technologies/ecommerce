@@ -1,185 +1,158 @@
 <!-- src\app\pages\index-two\index-two.component.html -->
 <!-- ============================ Banner Section start =============================== -->
-<div class="banner-two">
+<app-breadcrumb title="Computadoras" subtitle="Pc"></app-breadcrumb>
+
+<!-- =============================== Shop Section Start ======================================== -->
+<section class="shop py-80">
   <div class="container container-lg">
-    <div class="banner-two-wrapper d-flex align-items-start">
-      <div class="w-310 d-lg-block d-none flex-shrink-0">
-        <div
-          class="responsive-dropdown style-two common-dropdown nav-submenu p-0 submenus-submenu-wrapper shadow-none border border-neutral-50 position-relative border-top-0 rounded-0"
-        >
+    <div class="row">
+      <!-- Sidebar Start -->
+      <div class="col-lg-3">
+        <div class="shop-sidebar">
           <button
             type="button"
-            class="close-responsive-dropdown rounded-circle text-xl position-absolute inset-inline-end-0 inset-block-start-0 mt-4 me-8 d-lg-none d-flex"
+            class="shop-sidebar__close d-lg-none d-flex w-32 h-32 flex-center border border-gray-100 rounded-circle hover-bg-main-600 position-absolute inset-inline-end-0 me-10 mt-8 hover-text-white hover-border-main-600"
           >
             <i class="ph ph-x"></i>
           </button>
 
-          <div class="logo px-16 d-lg-none d-block">
-            <a [routerLink]="['index']" class="link">
-              <img src="assets/images/logo/logo.png" alt="Logo" />
-            </a>
+          <!-- Categoría de producto - COPIADO DE SHOP CON ESPACIADO CORRECTO -->
+          <div
+            class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32"
+          >
+            <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">
+              Categoría de producto
+            </h6>
+            <ul class="max-h-540 overflow-y-auto scroll-sm">
+              <!-- Opción para todas las categorías -->
+              <li class="mb-24">
+                <a
+                  (click)="limpiarFiltros()"
+                  class="text-gray-900 hover-text-main-600 cursor-pointer"
+                  [class.fw-bold]="!categoriaSeleccionada"
+                >
+                  Todas las categorías ({{ totalProductos }})
+                </a>
+              </li>
+
+              <!-- VOLVER A USAR CATEGORIES (SECCIÓN 1) EN LUGAR DE CATEGORIAS (TODAS) -->
+              <li
+                class="mb-24"
+                *ngFor="let categoria of categories; let last = last"
+                [ngClass]="{ 'mb-0': last }"
+              >
+                <a
+                  (click)="seleccionarCategoria(categoria.id)"
+                  class="text-gray-900 hover-text-main-600 cursor-pointer"
+                  [class.fw-bold]="categoriaSeleccionada === categoria.id"
+                >
+                  {{ categoria.nombre }} ({{ categoria.productos_count }})
+                </a>
+              </li>
+            </ul>
           </div>
 
+          <!-- Filtros usando componente reutilizable -->
+          <app-product-filter 
+            [categories]="categories" 
+            [marcas]="marcas" 
+            (filtersApplied)="onFiltersApplied($event)">
+          </app-product-filter>
 
-
-       <!-- ✅ TÍTULO: Cambia según el modo -->
-<div class="px-16 py-12 border-bottom border-neutral-50">
-  <div class="d-flex justify-content-between align-items-center">
- <h6 class="mb-0 text-gray-800 fw-semibold">
-  Categorías
-</h6>
-  </div>
-</div>
-          <ul class="responsive-dropdown__list scroll-sm p-0 overflow-y-auto">
-            <!-- ✅ NUEVO: Mensaje de carga para categorías -->
-            <li *ngIf="categoriesLoading" class="px-16 py-8">
-              <span class="text-gray-500 text-sm">Cargando categorías...</span>
-            </li>
-            <!-- ✅ NUEVO: Mensaje si no hay categorías y no está cargando -->
-            <li
-              *ngIf="!categoriesLoading && categories.length === 0"
-              class="px-16 py-8"
-            >
-              <span class="text-gray-400 text-sm"
-                >No hay categorías disponibles.</span
-              >
-            </li>
-
-            <li
-              *ngFor="let category of categories"
-              class="has-submenus-submenu border-bottom border-neutral-50"
-            >
-            <a
-  href="javascript:void(0)"
-  (mouseenter)="cargarMarcasPorCategoria(category.id)"
-  (click)="seleccionarCategoria(category.id)"
-  class="text-gray-500 text-15 py-14 px-16 flex-align gap-8 rounded-0 fw-semibold text-sm"
->
-  <span>{{ category.name }}</span>
-  <span class="icon text-md d-flex ms-auto">
-    <i class="ph ph-caret-right"></i>
-  </span>
-</a>
-
-          <div class="submenus-submenu py-16">
-                <div
-                  class="d-flex align-items-center justify-content-between px-16"
-                >
-                  <h6 class="text-lg submenus-submenu__title mb-0">
-                    {{ category.name }}
-                  </h6>
-                  <!-- ✅ MODIFICADO: Botón "Ver Productos" al lado y sin fondo azul -->
-                  <a
-                    (click)="seleccionarCategoria(category.id)"
-                    class="text-sm fw-semibold text-gray-700 hover-text-main-600 hover-text-decoration-underline cursor-pointer"
-                    style="cursor: pointer"
-                  >
-                    Ver Productos
-                  </a>
+          <!-- Filtrar por marca - CON ESPACIADO CORRECTO COMO SHOP -->
+          <div
+            class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32"
+          >
+            <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">
+              Filtrar por marca
+            </h6>
+            <ul class="max-h-540 overflow-y-auto scroll-sm">
+              <li *ngFor="let marca of marcas" class="mb-24">
+                <div class="form-check common-check common-radio">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="marca"
+                    [id]="'marca-' + marca.id"
+                    [checked]="marcaSeleccionada === marca.id"
+                    (change)="seleccionarMarca(marca.id)"
+                  />
+                  <label class="form-check-label" [for]="'marca-' + marca.id">{{
+                    marca.nombre
+                  }}</label>
                 </div>
+              </li>
+            </ul>
+          </div>
 
-                <!-- ✅ ACTUALIZADO: Lista de marcas con loading -->
-                <ul
-                  class="submenus-submenu__list max-h-300 overflow-y-auto scroll-sm"
-                >
-                  <!-- Loading state -->
-                  <li *ngIf="category.marcasLoading" class="px-16 py-8">
-                    <span class="text-gray-500 text-sm"
-                      >Cargando marcas...</span
-                    >
-                  </li>
-
-                  <!-- Marcas cargadas -->
-                  <li *ngFor="let marca of category.marcas">
-                    <a
-                      (click)="seleccionarMarca(category.id, marca.id)"
-                      class="d-flex align-items-center gap-8 px-16 py-8 text-gray-600 hover-text-main-600 transition-1"
-                    >
-                      <i class="ph ph-tag text-sm"></i>
-                      {{ marca.nombre }}
-                    </a>
-                  </li>
-
-                  <!-- Mensaje cuando no hay marcas -->
-                  <li
-                    *ngIf="
-                      !category.marcasLoading && category.marcas.length === 0
-                    "
-                    class="px-16 py-8"
-                  >
-                    <span class="text-gray-400 text-sm"
-                      >No hay marcas disponibles</span
-                    >
-                  </li>
-                </ul>
-              </div>
-            </li>
-          </ul>
-
-          <!-- --- Filtros ---------------- -->
-          <app-product-filter [categories]="categories" [marcas]="marcas" (filtersApplied)="onFiltersApplied($event)"></app-product-filter>
+          <!-- Banner dinámico del sidebar - CON ESPACIADO CORRECTO -->
+          <div
+            *ngIf="bannerSidebar"
+            class="shop-sidebar__box rounded-8 overflow-hidden"
+          >
+            <a [href]="bannerSidebar.enlace_url" class="d-block">
+              <img
+                [src]="bannerSidebar.imagen_url"
+                [alt]="bannerSidebar.titulo"
+                class="w-100"
+                style="object-fit: cover"
+              />
+            </a>
+          </div>
         </div>
       </div>
-      <!-- ✅ NUEVO: Contenedor principal para los productos -->
-    <!-- ✅ CONTENEDOR PRINCIPAL: Cambia según el modo -->
-<div class="flex-grow-1 ms-20">
-  
-  <div>
-    <!-- Top Start -->
-    <div class="flex-between gap-16 flex-wrap mb-40">
-      <span class="text-gray-900">
-        Mostrando {{ productos.length }} de {{ totalProductos }} resultados
-      </span>
-    </div>
+      <!-- Sidebar End -->
 
-    <!-- Contenedor de productos -->
-    <div
-      class="list-grid-wrapper"
-      [ngClass]="{
-        'list-view': listview === 'list',
-        'grid-view': listview === 'grid'
-      }"
-    >
-      <!-- Loading -->
-      <div *ngIf="productosLoading" class="text-center py-5 w-100">
-        <div class="spinner-border" role="status">
-          <span class="visually-hidden">Cargando...</span>
+      <!-- Content Start -->
+      <div class="col-lg-9">
+        <!-- Top Start -->
+        <div class="flex-between gap-16 flex-wrap mb-40">
+          <span class="text-gray-900">
+            Mostrando {{ productos.length }} de {{ totalProductos }} resultados
+          </span>
         </div>
-      </div>
+        <!-- Top End -->
 
-      <!-- Mensaje si no hay productos -->
-      <div
-        *ngIf="!productosLoading && productos.length === 0"
-        class="text-center py-5 w-100"
-      >
-        <h5>No se encontraron productos</h5>
-        <p class="text-muted">Intenta con otra categoría o marca</p>
-      </div>
+        <!-- Loading -->
+        <div *ngIf="productosLoading" class="text-center py-5 w-100">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+        </div>
 
-      <!-- Contenedor de productos SOLO cuando hay productos -->
-      <div
-        *ngIf="!productosLoading && productos.length > 0"
-        class="row g-4"
-      >
+        <!-- Mensaje si no hay productos -->
         <div
-          *ngFor="let producto of productos"
-          class="col-xl-3 col-lg-4 col-md-6"
+          *ngIf="!productosLoading && productos.length === 0"
+          class="text-center py-5 w-100"
+        >
+          <h5>No se encontraron productos</h5>
+          <p class="text-muted">Intenta con otra categoría o marca</p>
+        </div>
+
+        <!-- Contenedor de productos con layout dinámico -->
+        <div
+          *ngIf="!productosLoading && productos.length > 0"
+          class="list-grid-wrapper"
+          [ngClass]="{
+            'list-view': listview === 'list',
+            'grid-view': listview === 'grid'
+          }"
         >
           <div
-            class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2"
+            *ngFor="let producto of productos"
+            class="product-card p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2"
+            [class.h-100]="listview === 'grid'"
           >
             <a
               [routerLink]="['/product-details', producto.id]"
-              class="product-card__thumb d-block rounded-8 position-relative overflow-hidden"
-              style="height: 200px"
+              class="product-card__thumb flex-center rounded-8 position-relative"
             >
               <img
                 [src]="producto.imagen_principal"
                 [alt]="producto.nombre"
                 (error)="onImageError($event)"
                 loading="lazy"
-                class="w-100 h-100 transition-2"
-                style="object-fit: contain; object-position: center"
+                class="product-image"
               />
 
               <span
@@ -200,11 +173,37 @@
                 </a>
               </h6>
 
+              <div class="flex-align mb-20 mt-16 gap-6">
+                <span class="text-xs fw-medium text-gray-500">{{
+                  producto.rating
+                }}</span>
+                <span class="text-xs fw-medium text-warning-600 d-flex">
+                  <i class="ph-fill ph-star"></i>
+                </span>
+                <span class="text-xs fw-medium text-gray-500"
+                  >({{ producto.total_reviews }})</span
+                >
+              </div>
+
               <div class="mt-8">
+                <div
+                  class="progress w-100 bg-color-three rounded-pill h-4"
+                  role="progressbar"
+                  [attr.aria-valuenow]="
+                    (producto.sold_count / producto.total_stock) * 100
+                  "
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  <div
+                    class="progress-bar bg-main-two-600 rounded-pill"
+                    [style.width.%]="
+                      (producto.sold_count / producto.total_stock) * 100
+                    "
+                  ></div>
+                </div>
                 <span class="text-gray-900 text-xs fw-medium mt-8">
-                  Vendidos: {{ producto.sold_count }}/{{
-                    producto.total_stock
-                  }}
+                  Sold: {{ producto.sold_count }}/{{ producto.total_stock }}
                 </span>
               </div>
 
@@ -227,7 +226,8 @@
                 [disabled]="producto.stock <= 0"
                 class="product-card__cart btn bg-main-50 text-main-600 hover-bg-main-600 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-24 w-100 justify-content-center"
                 [ngClass]="{
-                  'bg-main-50 text-main-600 hover-bg-main-600 hover-text-white': producto.stock > 0,
+                  'bg-main-50 text-main-600 hover-bg-main-600 hover-text-white':
+                    producto.stock > 0,
                   'bg-gray-200 text-gray-500': producto.stock <= 0
                 }"
               >
@@ -243,11 +243,11 @@
         </div>
 
         <!-- Paginación -->
-        <ul class="pagination flex-center flex-wrap gap-16 mt-40">
+        <ul class="pagination flex-center flex-wrap gap-16">
           <li class="page-item">
             <a
               class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
-              href="javascript:void(0)"
+              href="#"
               (click)="onPageChange(currentPage - 1)"
               [class.disabled]="currentPage === 1"
             >
@@ -255,6 +255,7 @@
             </a>
           </li>
 
+          <!-- Loop through the pages dynamically -->
           <li
             *ngFor="let page of getPages()"
             class="page-item"
@@ -262,7 +263,7 @@
           >
             <a
               class="page-link h-64 w-64 flex-center text-md rounded-8 fw-medium text-neutral-600 border border-gray-100"
-              href="javascript:void(0)"
+              href="#"
               (click)="onPageChange(page)"
             >
               {{ page < 10 ? "0" + page : page }}
@@ -272,7 +273,7 @@
           <li class="page-item">
             <a
               class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
-              href="javascript:void(0)"
+              href="#"
               (click)="onPageChange(currentPage + 1)"
               [class.disabled]="currentPage === totalPages"
             >
@@ -281,11 +282,9 @@
           </li>
         </ul>
       </div>
+      <!-- Content End -->
     </div>
+    <!-- Content End -->
   </div>
-
-</div>
-    </div>
-    <!-- ============================ Banner Section End =============================== -->
-  </div>
-</div>
+</section>
+<!-- =============================== Shop Section End ======================================== -->
