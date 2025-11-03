@@ -712,7 +712,7 @@
             style="flex: 1; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
           <button
             *ngIf="ventaForm.cliente.numero_documento.length >= 8"
-            class="btn btn-sm btn-primary" (click)="buscarClientePorDocumento()"
+            class="btn btn-sm btn-primary" (click)="buscarCliente()"
             [disabled]="loading"
             style="padding: 10px 16px; border-radius: 6px; border: none; background: var(--main-600); color: white; cursor: pointer; display: flex; align-items: center; gap: 6px; min-width: 100px; justify-content: center;">
             <i class="ph ph-magnifying-glass" *ngIf="!loading"></i>

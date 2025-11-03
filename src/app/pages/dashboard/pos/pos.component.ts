@@ -11,6 +11,7 @@ import { NotificacionesService } from '../../../services/notificaciones.service'
 import { EmpresaInfoService } from '../../../services/empresa-info.service';
 import { ReniecService } from '../../../services/reniec.service';
 import { VentasService } from '../../../services/ventas.service';
+import { ClienteService } from '../../../services/cliente.service';
 import { ClienteEditModalComponent } from '../../../components/cliente-edit-modal/cliente-edit-modal.component';
 import { ProductoQuickModalComponent, ProductoQuickItem } from '../../../components/producto-quick-modal/producto-quick-modal.component';
 import { PagoRapidoModalComponent, PagoResultado } from '../../../components/pago-rapido-modal/pago-rapido-modal.component';
@@ -299,6 +300,7 @@ export class PosComponent implements OnInit, OnDestroy {
     private empresaInfoService: EmpresaInfoService,
     private reniecService: ReniecService,
     private ventasService: VentasService,
+    private clienteService: ClienteService,
     private router: Router,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
@@ -603,6 +605,107 @@ export class PosComponent implements OnInit, OnDestroy {
     this.comprobanteConfigurado = false;
   }
 
+  /**
+   * Buscar cliente por número de documento
+   * 1. Busca en la base de datos
+   * 2. Si no encuentra, busca en RENIEC/SUNAT
+   */
+  buscarCliente(): void {
+    const numeroDocumento = this.ventaForm.cliente.numero_documento;
+    
+    if (!numeroDocumento || numeroDocumento.trim() === '') {
+      return;
+    }
+
+    console.log('🔍 Buscando cliente con documento:', numeroDocumento);
+
+    // PASO 1: Buscar en la base de datos
+    this.clienteService.buscarPorDocumento(numeroDocumento)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          console.log('📦 Respuesta búsqueda cliente:', response);
+
+          if (response.success && response.data && response.data.length > 0) {
+            // ✅ CLIENTE ENCONTRADO EN SISTEMA
+            const cliente = response.data[0];
+            console.log('✅ Cliente encontrado en sistema:', cliente);
+
+            // Autocompletar datos del formulario
+            this.ventaForm.cliente = {
+              tipo_documento: this.ventaForm.cliente.tipo_documento, // Mantener el tipo seleccionado
+              numero_documento: cliente.numero_documento,
+              nombre: cliente.nombre_completo || `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim(),
+              direccion: cliente.direccion || '',
+              email: cliente.email || '',
+              telefono: cliente.telefono || ''
+            };
+
+            this.success = `✅ Cliente encontrado: ${this.ventaForm.cliente.nombre}`;
+            console.log('📝 Datos autocompletados:', this.ventaForm.cliente);
+          } else {
+            // ❌ NO ENCONTRADO EN SISTEMA - Buscar en RENIEC/SUNAT
+            console.log('❌ Cliente no encontrado en sistema');
+            this.buscarEnReniecSunat(numeroDocumento);
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error al buscar cliente:', error);
+          // Si hay error, intentar buscar en RENIEC/SUNAT
+          this.buscarEnReniecSunat(numeroDocumento);
+        }
+      });
+  }
+
+  /**
+   * Buscar en RENIEC (DNI) o SUNAT (RUC)
+   */
+  private buscarEnReniecSunat(numeroDocumento: string): void {
+    const esDni = numeroDocumento.length === 8;
+    const esRuc = numeroDocumento.length === 11;
+
+    if (!esDni && !esRuc) {
+      console.log('⚠️ Documento no válido para búsqueda externa');
+      return;
+    }
+
+    console.log(`🔍 Buscando en ${esDni ? 'RENIEC' : 'SUNAT'}...`);
+
+    this.reniecService.buscarPorDni(numeroDocumento)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          console.log('📦 Respuesta RENIEC/SUNAT:', response);
+
+          if (esDni && (response.nombres || response.nombre)) {
+            // ✅ DNI encontrado en RENIEC
+            const nombreCompleto = response.nombre ||
+              `${response.nombres} ${response.apellidoPaterno} ${response.apellidoMaterno}`;
+
+            this.ventaForm.cliente.nombre = nombreCompleto.trim();
+            this.success = `✅ Datos encontrados en RENIEC: ${nombreCompleto}`;
+            console.log('✅ DNI encontrado en RENIEC');
+          } else if (esRuc && (response.razonSocial || response.nombre)) {
+            // ✅ RUC encontrado en SUNAT
+            const razonSocial = response.razonSocial || response.nombre || '';
+            const direccion = response.direccion || '';
+
+            this.ventaForm.cliente.nombre = razonSocial.trim();
+            this.ventaForm.cliente.direccion = direccion.trim();
+            this.success = `✅ Datos encontrados en SUNAT: ${razonSocial}`;
+            console.log('✅ RUC encontrado en SUNAT');
+          } else {
+            console.log('❌ No se encontraron datos en RENIEC/SUNAT');
+            this.error = '⚠️ No se encontraron datos. Ingrese manualmente.';
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error al buscar en RENIEC/SUNAT:', error);
+          this.error = '⚠️ Error al consultar. Ingrese los datos manualmente.';
+        }
+      });
+  }
+
   // ============================================
   // CARGA DE DATOS
   // ============================================
@@ -811,72 +914,7 @@ export class PosComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Buscar en RENIEC/SUNAT cuando no se encuentra en el sistema
-   * Soporta DNI (8 dígitos) y RUC (11 dígitos)
-   */
-  private buscarEnReniecSunat(numeroDoc: string): void {
-    const esDni = numeroDoc.length === 8;
-    const esRuc = numeroDoc.length === 11;
-    
-    if (!esDni && !esRuc) {
-      // Si no es DNI ni RUC, mostrar mensaje
-      this.loading = false;
-      this.error = 'Cliente no encontrado. Ingrese los datos manualmente.';
-      setTimeout(() => this.error = null, 3000);
-      return;
-    }
 
-    console.log(`🔍 Buscando en ${esDni ? 'RENIEC' : 'SUNAT'}:`, numeroDoc);
-
-    // Buscar en RENIEC/SUNAT usando el nuevo endpoint unificado
-    this.ventasService.buscarEnReniecSunat(numeroDoc)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          this.loading = false;
-          
-          if (esDni && response.dni) {
-            // ✅ ENCONTRADO EN RENIEC (DNI)
-            const nombreCompleto = response.nombre || 
-              `${response.nombres} ${response.apellidoPaterno} ${response.apellidoMaterno}`;
-
-            this.ventaForm.cliente.nombre = nombreCompleto.trim();
-            this.ventaForm.cliente.tipo_documento = TIPOS_DOCUMENTO.DNI;
-            this.clienteExistenteId = null; // Es un cliente nuevo
-            
-            this.success = '✅ Datos encontrados en RENIEC';
-            console.log('✅ Datos RENIEC:', response);
-            setTimeout(() => this.success = null, 3000);
-          } else if (esRuc && response.ruc) {
-            // ✅ ENCONTRADO EN SUNAT (RUC)
-            this.ventaForm.cliente.nombre = response.razonSocial || response.nombre || '';
-            this.ventaForm.cliente.direccion = response.direccion || '';
-            this.ventaForm.cliente.tipo_documento = TIPOS_DOCUMENTO.RUC;
-            this.clienteExistenteId = null; // Es un cliente nuevo
-            
-            this.success = '✅ Datos encontrados en SUNAT';
-            console.log('✅ Datos SUNAT:', response);
-            setTimeout(() => this.success = null, 3000);
-          } else {
-            this.error = 'No se encontraron datos. Ingrese manualmente.';
-            setTimeout(() => this.error = null, 3000);
-          }
-        },
-        error: (err) => {
-          this.loading = false;
-          console.error('Error al buscar en RENIEC/SUNAT:', err);
-          
-          // Mensaje más específico según el error
-          if (err.status === 404) {
-            this.error = 'No se encontraron datos. Ingrese manualmente.';
-          } else {
-            this.error = 'Error al consultar RENIEC/SUNAT. Ingrese manualmente.';
-          }
-          setTimeout(() => this.error = null, 3000);
-        }
-      });
-  }
 
   validarRUC(): void {
     if (!this.ventaForm.cliente.numero_documento) {
@@ -1020,52 +1058,7 @@ export class PosComponent implements OnInit, OnDestroy {
   // GESTIÓN DE CLIENTES
   // ============================================
 
-  /**
-   * Buscar cliente en base de datos para autocompletar
-   * Si no existe, el backend lo creará automáticamente al procesar la venta
-   */
-  buscarCliente(): void {
-    const numeroDoc = this.ventaForm.cliente.numero_documento;
-    const tipoDoc = this.ventaForm.cliente.tipo_documento;
 
-    if (!numeroDoc || numeroDoc.trim() === '') {
-      console.log('⚠️ Número de documento vacío');
-      return;
-    }
-
-    console.log(`🔍 Buscando cliente: ${tipoDoc} - ${numeroDoc}`);
-
-    this.facturacionService.getClientes({
-      documento: numeroDoc
-    })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          if (response.data && response.data.length > 0) {
-            const cliente = response.data[0];
-
-            // Autocompletar campos con datos del cliente encontrado
-            this.ventaForm.cliente = {
-              tipo_documento: cliente.tipo_documento || tipoDoc,
-              numero_documento: cliente.numero_documento,
-              nombre: (cliente as any).razon_social || cliente.nombre || '',
-              direccion: cliente.direccion || '',
-              email: cliente.email || '',
-              telefono: cliente.telefono || ''
-            };
-
-            this.success = '✅ Cliente encontrado y cargado';
-            console.log('✅ Cliente encontrado:', cliente);
-          } else {
-            console.log('ℹ️ Cliente no encontrado - Se creará automáticamente');
-            this.success = 'ℹ️ Cliente nuevo - Complete los datos';
-          }
-        },
-        error: (error) => {
-          console.log('ℹ️ Cliente no encontrado - Se creará automáticamente');
-        }
-      });
-  }
 
   // ============================================
   // OPERACIONES DE VENTA
