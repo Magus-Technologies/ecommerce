@@ -24,7 +24,9 @@
 // captcha
 @import "captcha";
 
-@import "dashboard";  // ← AGREGAR ESTA LÍNEA
+@import "dashboard";
+
+@import "pos";
 
 @import "listusers";
 
@@ -34,3 +36,6 @@
 
 // data-table moderna
 @import "data-table";
+
+// guias de remision
+@import "guias-remision";
