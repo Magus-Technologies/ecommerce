@@ -792,13 +792,13 @@
                             Agregar <i class="ph ph-shopping-cart"></i>
                         </button>
 
-                        <a [routerLink]="['/product-details', product.id]" class="product-card__thumb flex-center overflow-hidden">
+                        <a href="javascript:void(0)" (click)="navegarAProducto(product, $event)" class="product-card__thumb flex-center overflow-hidden" style="cursor: pointer">
                             <img [src]="product.imagen_url || product.imagen" [alt]="product.nombre" (error)="onImageError($event)">
                         </a>
 
                         <div class="product-card__content mt-12">
                             <div class="product-card__price mb-8 d-flex align-items-center gap-8">
-                                <span class="text-heading text-md fw-semibold">S/ {{ product.precio_venta | number:'1.2-2' }} 
+                                <span class="text-heading text-md fw-semibold">S/ {{ product.precio_venta | number:'1.2-2' }}
                                   <span class="text-gray-500 fw-normal">/Qty</span>
                                 </span>
                                 <span *ngIf="product.precio_oferta" class="text-gray-400 text-md fw-semibold text-decoration-line-through">
@@ -814,7 +814,7 @@
                             </div>
 
                             <h6 class="title text-lg fw-semibold mt-12 mb-20">
-                                <a [routerLink]="['/product-details', product.id]" class="link text-line-2">{{ product.nombre }}</a>
+                                <a href="javascript:void(0)" (click)="navegarAProducto(product, $event)" class="link text-line-2" style="cursor: pointer">{{ product.nombre }}</a>
                             </h6>
 
                             <div class="mt-12">
