@@ -5,6 +5,7 @@ import { RouterLink, ActivatedRoute, Router } from "@angular/router"
 import { FormsModule } from "@angular/forms"
 import { BreadcrumbComponent } from "../../component/breadcrumb/breadcrumb.component"
 import { ShippingComponent } from "../../component/shipping/shipping.component"
+import { ProductFilterComponent } from "../../component/product-filter/product-filter.component"
 import { ProductosService, ProductoPublico, type CategoriaParaSidebar } from "../../services/productos.service"
 import { CartService } from "../../services/cart.service"
 import { CartNotificationService } from '../../services/cart-notification.service';
@@ -16,7 +17,7 @@ import Swal from 'sweetalert2'
 
 @Component({
   selector: "app-shop",
-  imports: [CommonModule, RouterLink, BreadcrumbComponent, ShippingComponent, FormsModule],
+  imports: [CommonModule, RouterLink, BreadcrumbComponent, ShippingComponent, FormsModule, ProductFilterComponent],
   templateUrl: "./shop.component.html",
   styleUrl: "./shop.component.scss",
 })
@@ -33,10 +34,13 @@ export class ShopComponent implements OnInit {
   searchTerm: string = '';
 
   // ✅ FILTRO POR PRECIO
-  minPrice: number = 0;
-  maxPrice: number = 10000;
-  currentMinPrice: number = 0;
-  currentMaxPrice: number = 10000;
+  minPrice?: number;
+  maxPrice?: number;
+  currentMinPrice?: number;
+  currentMaxPrice?: number;
+  
+  // ✅ ORDENAMIENTO
+  sortBy: string = 'price_asc';
 
   // pagination
   currentPage = 1
@@ -195,8 +199,9 @@ export class ShopComponent implements OnInit {
       marca: this.marcaSeleccionada,
       page: this.currentPage,
       search: this.searchTerm,
-      minPrice: this.currentMinPrice > 0 ? this.currentMinPrice : undefined,
-      maxPrice: this.currentMaxPrice < 10000 ? this.currentMaxPrice : undefined,
+      minPrice: this.currentMinPrice,
+      maxPrice: this.currentMaxPrice,
+      sortBy: this.sortBy,
     };
      Object.keys(filtros).forEach(key => {
           if (filtros[key] === undefined || filtros[key] === null || filtros[key] === '') {
@@ -304,10 +309,26 @@ export class ShopComponent implements OnInit {
 
   // ✅ NUEVO: Limpiar filtro de precio
   limpiarFiltroPrecio(): void {
-    this.minPrice = 0;
-    this.maxPrice = 10000;
-    this.currentMinPrice = 0;
-    this.currentMaxPrice = 10000;
+    this.minPrice = undefined;
+    this.maxPrice = undefined;
+    this.currentMinPrice = undefined;
+    this.currentMaxPrice = undefined;
+    this.cargarProductos();
+  }
+
+  // ✅ NUEVO: Aplicar ordenamiento
+  aplicarOrdenamiento(): void {
+    this.currentPage = 1;
+    this.cargarProductos();
+  }
+
+  // ✅ NUEVO: Manejar filtros del componente product-filter
+  onFiltersApplied(filters: any): void {
+    this.currentMinPrice = filters.minPrice;
+    this.currentMaxPrice = filters.maxPrice;
+    this.marcaSeleccionada = filters.brand;
+    this.sortBy = filters.sortBy;
+    this.currentPage = 1;
     this.cargarProductos();
   }
 
