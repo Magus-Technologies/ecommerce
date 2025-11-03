@@ -433,4 +433,15 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
   tieneOferta(): boolean { return !!this.producto?.precio_oferta && this.producto.precio_oferta < this.producto.precio_venta; }
   getDescripcion(): string { return this.producto?.descripcion || this.detalles?.descripcion_detallada || "Descripción no disponible"; }
   getGarantia(): string { return this.detalles?.garantia || "La Ley de Protección al Consumidor no prevé la devolución de este producto de calidad adecuada."; }
+
+  // ✅ NUEVO: Método para navegar a producto con recarga completa (estilo Amazon)
+  navegarAProducto(producto: any, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+    // Generar slug si no existe
+    const slug = producto.slug || producto.nombre?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]/g, '');
+    const url = `/product/${producto.id}/${slug}`;
+    window.location.href = url;
+  }
 }

@@ -948,9 +948,6 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   cargarBannerOfertaActivo(): void {
     this.bannerOfertaService.getBannerActivo().subscribe({
       next: (banner) => {
-        if (this.debugMode) {
-          console.log('✅ Banner Oferta activo cargado:', banner);
-        }
         this.bannerOfertaActivo = banner;
         this.cdr.detectChanges();
       },
@@ -1045,7 +1042,6 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isLoadingCupones = true;
     this.ofertasService.obtenerCuponesActivos().subscribe({
       next: (cupones) => {
-        console.log('✅ Cupones activos cargados desde backend:', cupones);
         this.cuponesActivos = cupones;
         this.isLoadingCupones = false;
         this.cdr.detectChanges();
@@ -1347,6 +1343,16 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
           position: 'top-end',
         });
       });
+  }
+
+  verTodosCupones(): void {
+    // Por ahora mostrar un mensaje, luego crearemos la página de cupones
+    Swal.fire({
+      title: 'Próximamente',
+      text: 'La página de cupones estará disponible pronto',
+      icon: 'info',
+      confirmButtonColor: 'hsl(var(--main))',
+    });
   }
 
   onImageError(event: any): void {
@@ -1651,5 +1657,15 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       slide.marcaSlug || SlugHelper.generateSlug(slide.marcaNombre || 'marca');
     // Formato: /shop/marca/:slug (ej: /shop/marca/antryx)
     return ['/shop/marca', slug];
+  }
+
+  // ✅ NUEVO: Método para navegar a producto con recarga completa (estilo Amazon)
+  navegarAProducto(producto: any, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+    const slug = producto.slug || SlugHelper.generateSlug(producto.nombre);
+    const url = `/product/${producto.id}/${slug}`;
+    window.location.href = url;
   }
 }

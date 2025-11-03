@@ -91,7 +91,7 @@
         height: 100px;
         object-fit: contain;
       }
-      
+
       .loader-text {
         font-size: 14px;
         margin-top: 15px;
@@ -104,7 +104,7 @@
         height: 80px;
         object-fit: contain;
       }
-      
+
       .loader-text {
         font-size: 12px;
         margin-top: 10px;
@@ -117,25 +117,47 @@
 
   <!-- Loader de carga inicial -->
   <div id="initial-loader">
-    <video class="loader-gif" autoplay muted loop playsinline>
+    <!-- Video solo para primera carga verdadera -->
+    <video id="loader-video" class="loader-gif" autoplay muted loop playsinline style="display: none;">
       <source src="assets/images/logo/Logo_loader.mp4" type="video/mp4">
       <!-- Fallback para navegadores que no soporten el video -->
       Tu navegador no soporta video HTML5.
     </video>
-    <div class="loader-text">Cargando Marketpro...</div>
+
+    <div class="loader-text" id="loader-text" style="display: none;">Cargando Marketpro...</div>
   </div>
 
   <app-root></app-root>
 
   <!-- Script para remover el loader cuando Angular termine de cargar -->
   <script>
-    let startTime = Date.now(); // Tiempo de inicio del loader
     let angularReady = false;
     let minimumTimeReached = false;
 
+    // Detectar si es la primera carga de la sesión
+    const isFirstLoad = !sessionStorage.getItem('hasLoadedBefore');
+    const minimumTime = isFirstLoad ? 3000 : 100; // 3s primera vez, 0.1s después (muy rápido)
+
+    // Mostrar el loader solo si es primera carga
+    const loaderVideo = document.getElementById('loader-video');
+    const loaderText = document.getElementById('loader-text');
+    const loader = document.getElementById('initial-loader');
+
+    if (isFirstLoad) {
+      // Primera carga: mostrar video completo
+      loaderVideo.style.display = 'block';
+      loaderText.style.display = 'block';
+      loaderText.textContent = 'Cargando Marketpro...';
+      // Marcar que ya se cargó una vez en esta sesión
+      sessionStorage.setItem('hasLoadedBefore', 'true');
+    } else {
+      // Navegación posterior: loader invisible (solo para esperar a Angular)
+      loader.style.background = 'transparent';
+      loader.style.pointerEvents = 'none';
+    }
+
     // Función para remover el loader
     function removeInitialLoader() {
-      const loader = document.getElementById('initial-loader');
       if (loader) {
         loader.classList.add('fade-out');
         setTimeout(() => {
@@ -151,11 +173,11 @@
       }
     }
 
-    // Timer para el tiempo mínimo de 3 segundos
+    // Timer para el tiempo mínimo (3s o 0.1s según sea primera carga)
     setTimeout(() => {
       minimumTimeReached = true;
       checkRemoveLoader();
-    }, 3000);
+    }, minimumTime);
 
     // Escuchar cuando Angular termine de cargar
     document.addEventListener('DOMContentLoaded', function() {
@@ -175,7 +197,7 @@
         minimumTimeReached = true;
         removeInitialLoader();
         clearInterval(checkAngularReady);
-      }, 15000); // Aumentado a 15 segundos por el mínimo de 3
+      }, 15000);
     });
   </script>
 </body>
