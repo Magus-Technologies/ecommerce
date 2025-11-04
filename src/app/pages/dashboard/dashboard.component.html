@@ -94,26 +94,41 @@
     <!-- Producto más vendido -->
     <div class="col-lg-8">
       <div class="top-product-card">
-        <div class="growth-badge">
-          <i class="fas fa-arrow-up me-1"></i>
-          +{{ topProduct.growth }}%
+        <!-- ✅ LOADING STATE -->
+        <div *ngIf="isLoadingTopProduct" class="d-flex align-items-center justify-content-center" style="min-height: 200px;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando producto del mes...</span>
+          </div>
         </div>
-        <div class="top-product-content">
-          <img [src]="topProduct.image" [alt]="topProduct.name" class="top-product-image">
+
+        <!-- ✅ DATOS DINÁMICOS -->
+        <div *ngIf="!isLoadingTopProduct && topProduct" class="top-product-content">
+          <div class="growth-badge" [ngClass]="topProduct.crecimiento_porcentaje >= 0 ? 'bg-success' : 'bg-danger'">
+            <i class="fas" [ngClass]="topProduct.crecimiento_porcentaje >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'" class="me-1"></i>
+            {{ topProduct.crecimiento_porcentaje >= 0 ? '+' : '' }}{{ topProduct.crecimiento_porcentaje.toFixed(1) }}%
+          </div>
+          <img [src]="topProduct.imagen_principal" [alt]="topProduct.nombre" class="top-product-image" (error)="onImageError($event)">
           <div class="top-product-info">
-            <h3>🏆 Producto del Mes</h3>
-            <h4>{{ topProduct.name }}</h4>
+            <h3>🏆 Producto del Mes - {{ topProduct.periodo.nombre_mes }} {{ topProduct.periodo.anio }}</h3>
+            <h4>{{ topProduct.nombre }}</h4>
             <div class="product-stats">
               <div class="stat-item">
-                <span class="stat-number">{{ topProduct.sales }}</span>
+                <span class="stat-number">{{ topProduct.ventas_cantidad }}</span>
                 <span class="stat-label">Ventas</span>
               </div>
               <div class="stat-item">
-                <span class="stat-number">{{ formatCurrency(topProduct.revenue) }}</span>
+                <span class="stat-number">{{ formatCurrency(topProduct.ventas_total) }}</span>
                 <span class="stat-label">Ingresos</span>
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- ✅ ESTADO VACÍO -->
+        <div *ngIf="!isLoadingTopProduct && !topProduct" class="d-flex align-items-center justify-content-center flex-column" style="min-height: 200px;">
+          <i class="fas fa-box-open text-muted mb-3" style="font-size: 3rem;"></i>
+          <h5 class="text-muted">No hay datos de ventas</h5>
+          <p class="text-muted text-center">No se encontraron productos vendidos este mes</p>
         </div>
       </div>
     </div>
@@ -177,10 +192,24 @@
             <span class="total-value">100%</span>
           </div>
         </div>
-        <div class="chart-legend">
+        <!-- ✅ LOADING STATE PARA CATEGORÍAS -->
+        <div *ngIf="isLoadingCategoryData" class="d-flex align-items-center justify-content-center" style="min-height: 150px;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando categorías...</span>
+          </div>
+        </div>
+
+        <!-- ✅ DATOS DINÁMICOS DE CATEGORÍAS -->
+        <div *ngIf="!isLoadingCategoryData" class="chart-legend">
           <div class="legend-item" *ngFor="let category of categoryData">
             <div class="legend-color" [style.background-color]="category.color"></div>
-            <span class="legend-text">{{ category.name }} ({{ category.value }}%)</span>
+            <span class="legend-text">{{ category.nombre }} ({{ category.porcentaje }}%)</span>
+          </div>
+          
+          <!-- ✅ ESTADO VACÍO -->
+          <div *ngIf="categoryData.length === 0" class="text-center py-4">
+            <i class="fas fa-chart-pie text-muted mb-2" style="font-size: 2rem;"></i>
+            <p class="text-muted mb-0">No hay datos de categorías</p>
           </div>
         </div>
       </div>
