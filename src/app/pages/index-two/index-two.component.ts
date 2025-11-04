@@ -172,7 +172,7 @@ export class IndexTwoComponent implements OnInit {
       categoria: this.categoriaSeleccionada,
       seccion: 1,
       ...this.filters,
-      marca: this.marcaSeleccionada,
+      brand: this.marcaSeleccionada,  // ✅ CORREGIDO: Cambiar 'marca' por 'brand'
       page: this.currentPage,
       minPrice: this.currentMinPrice,
       maxPrice: this.currentMaxPrice,
@@ -303,7 +303,16 @@ export class IndexTwoComponent implements OnInit {
     this.marcaSeleccionada = filters.brand;
     this.sortBy = filters.sortBy;
     this.currentPage = 1; // Resetear página al filtrar
-    this.cargarProductos();
+    
+    // ✅ ACTUALIZAR URL con los nuevos filtros
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { 
+        marca: this.marcaSeleccionada, 
+        page: 1 
+      },
+      queryParamsHandling: 'merge',
+    });
   }
 
   // ✅ NUEVO: Cargar categorías para sidebar

@@ -13,6 +13,7 @@ import {
 import { ProductosService, EstadisticasProductos, ProductoStockCritico } from '../../services/productos.service';
 import { EstadisticasGenerales } from '../../models/cliente.model';
 import { ClienteService } from '../../services/cliente.service';
+import { DashboardService, ProductoDelMes, CategoriaVendida, PedidosPorDia, VentasMensuales } from '../../services/dashboard.service';
 
 
 interface DashboardStats {
@@ -152,22 +153,13 @@ export class DashboardComponent implements OnInit {
   ];
 
   
-// Producto más vendido del mes
-topProduct = {
-  name: 'iPhone 15 Pro Max',
-  image: '/api/placeholder/120/120',
-  sales: 156,
-  revenue: 202644,
-  growth: 23.5
-};
+// ✅ NUEVO: Producto más vendido del mes (dinámico)
+topProduct: ProductoDelMes | null = null;
+isLoadingTopProduct = false;
 
-// Datos para gráfico de categorías (torta)
-categoryData = [
-  { name: 'Electrónicos', value: 45, color: '#007bff' },
-  { name: 'Moda', value: 30, color: '#28a745' },
-  { name: 'Hogar', value: 15, color: '#ffc107' },
-  { name: 'Otros', value: 10, color: '#dc3545' }
-];
+// ✅ NUEVO: Datos para gráfico de categorías (dinámico)
+categoryData: CategoriaVendida[] = [];
+isLoadingCategoryData = false;
 
 // Contador animado de ganancias
 monthlyEarnings = 0;
@@ -207,6 +199,7 @@ calendarEvents = [
   constructor(
     private productosService: ProductosService,
     private clienteService: ClienteService,
+    private dashboardService: DashboardService,
     private route: ActivatedRoute,
     private router: Router
   ) { }
@@ -229,10 +222,16 @@ calendarEvents = [
     });
 
     
-    setTimeout(() => this.animateEarnings(), 500);
-    this.cargarEstadisticasProductos();
+    // ✅ CARGAR TODAS LAS ESTADÍSTICAS DE FORMA UNIFICADA
+    this.cargarEstadisticasDashboard();
     this.cargarProductosStockCritico();
-    this.cargarEstadisticasClientes();
+    
+    // ✅ CARGAR DATOS DINÁMICOS ADICIONALES
+    this.cargarProductoDelMes();
+    this.cargarCategoriasVendidas();
+    
+    // Iniciar animación de ganancias después de cargar datos
+    setTimeout(() => this.animateEarnings(), 500);
   }
 
   getStatusClass(status: string): string {
@@ -245,12 +244,7 @@ calendarEvents = [
     return statusClasses[status] || 'bg-secondary';
   }
 
-  formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(amount);
-  }
+
 
   formatDate(date: Date): string {
     return new Intl.DateTimeFormat('es-ES', {
@@ -314,7 +308,32 @@ private cargarEstadisticasProductos(): void {
   }
 
   
-  // ← AGREGA ESTA NUEVA FUNCIÓN AQUÍ:
+  // ✅ NUEVO: Cargar estadísticas unificadas del dashboard
+  private cargarEstadisticasDashboard(): void {
+    this.dashboardService.obtenerEstadisticasDashboard().subscribe({
+      next: (estadisticas) => {
+        this.stats.totalOrders = estadisticas.total_pedidos;
+        this.stats.totalCustomers = estadisticas.total_clientes;
+        this.stats.totalRevenue = estadisticas.total_ingresos;
+        this.stats.totalProducts = estadisticas.total_productos;
+        this.targetEarnings = estadisticas.ganancias_mes_actual;
+        
+        // Si viene el producto del mes en las estadísticas generales, usarlo
+        if (estadisticas.producto_del_mes) {
+          this.topProduct = estadisticas.producto_del_mes;
+          this.isLoadingTopProduct = false;
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar estadísticas del dashboard:', error);
+        // Mantener valores por defecto en caso de error
+        this.cargarEstadisticasProductos();
+        this.cargarEstadisticasClientes();
+      }
+    });
+  }
+
+  // ✅ MANTENER COMO FALLBACK
   private cargarEstadisticasClientes(): void {
     this.clienteService.getEstadisticas().subscribe({
       next: (response) => {
@@ -322,10 +341,74 @@ private cargarEstadisticasProductos(): void {
       },
       error: (error) => {
         console.error('Error al cargar estadísticas de clientes:', error);
-        // Mantener el valor por defecto en caso de error
         this.stats.totalCustomers = 890;
       }
     });
+  }
+
+  // ✅ NUEVO: Cargar producto del mes dinámicamente
+  private cargarProductoDelMes(): void {
+    this.isLoadingTopProduct = true;
+    
+    this.dashboardService.obtenerProductoDelMes().subscribe({
+      next: (producto) => {
+        this.topProduct = producto;
+        this.isLoadingTopProduct = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar producto del mes:', error);
+        this.isLoadingTopProduct = false;
+        
+        // ✅ Fallback: mantener datos estáticos si no hay endpoint
+        this.topProduct = {
+          id: 0,
+          nombre: 'iPhone 15 Pro Max',
+          imagen_principal: '/api/placeholder/120/120',
+          ventas_cantidad: 156,
+          ventas_total: 202644,
+          crecimiento_porcentaje: 23.5,
+          periodo: {
+            mes: new Date().getMonth() + 1,
+            anio: new Date().getFullYear(),
+            nombre_mes: this.dashboardService.obtenerNombreMes(new Date().getMonth() + 1)
+          }
+        };
+      }
+    });
+  }
+
+  // ✅ NUEVO: Cargar categorías más vendidas dinámicamente
+  private cargarCategoriasVendidas(): void {
+    this.isLoadingCategoryData = true;
+    
+    this.dashboardService.obtenerCategoriasVendidas(4).subscribe({
+      next: (categorias) => {
+        this.categoryData = categorias;
+        this.isLoadingCategoryData = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías vendidas:', error);
+        this.isLoadingCategoryData = false;
+        
+        // ✅ Fallback: mantener datos estáticos si no hay endpoint
+        this.categoryData = [
+          { id: 1, nombre: 'Electrónicos', porcentaje: 45, color: '#007bff', ventas_total: 45000 },
+          { id: 2, nombre: 'Moda', porcentaje: 30, color: '#28a745', ventas_total: 30000 },
+          { id: 3, nombre: 'Hogar', porcentaje: 15, color: '#ffc107', ventas_total: 15000 },
+          { id: 4, nombre: 'Otros', porcentaje: 10, color: '#dc3545', ventas_total: 10000 }
+        ];
+      }
+    });
+  }
+
+  // ✅ MÉTODO AUXILIAR PARA FORMATEAR MONEDA (ACTUALIZADO)
+  formatCurrency(amount: number): string {
+    return this.dashboardService.formatearMoneda(amount);
+  }
+
+  // ✅ NUEVO: Manejar errores de imagen
+  onImageError(event: any): void {
+    event.target.src = '/placeholder.svg?height=120&width=120&text=Imagen+no+disponible';
   }
 
 }
