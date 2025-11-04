@@ -208,7 +208,7 @@
               [routerLinkActiveOptions]="{ exact: true }"
             >
               <a
-                [routerLink]="['/wishlist']"
+                [routerLink]="['/my-account/favoritos']"
                 class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
               >
                 Favoritos
@@ -496,9 +496,9 @@
               >
                 <i class="ph ph-heart"></i>
                 <span
-                  *ngIf="wishlistCount > 0"
+                  *ngIf="favoritosCount > 0"
                   class="w-16 h-16 flex-center rounded-circle bg-danger-10 text-white text-xs position-absolute top-n6 end-n4"
-                  >{{ wishlistCount }}</span
+                  >{{ favoritosCount }}</span
                 >
               </span>
               <span class="text-md item-hover__text d-none d-lg-flex text-white"
@@ -517,60 +517,101 @@
               <div class="p-16 border-bottom border-gray-100">
                 <h6 class="mb-0 fw-semibold text-heading">
                   Favoritos
-                  <span class="text-gray-500 fw-normal">({{ wishlistCount }})</span>
+                  <span class="text-gray-500 fw-normal">({{ favoritosCount }})</span>
                 </h6>
               </div>
 
+              <!-- Loading state -->
+              <div *ngIf="isLoadingFavoritos" class="text-center py-40 px-20">
+                <div class="spinner-border text-main-600" role="status">
+                  <span class="visually-hidden">Cargando favoritos...</span>
+                </div>
+              </div>
+
               <!-- Lista de productos favoritos -->
-              <div *ngIf="wishlistItems.length > 0" class="p-12">
+              <div *ngIf="!isLoadingFavoritos && favoritosItems.length > 0" class="p-12">
                 <div
-                  *ngFor="let item of wishlistItems"
-                  class="favorito-item d-flex gap-12 p-12 rounded-8 hover-bg-gray-50 transition-2"
-                  style="cursor: pointer;"
-                  (click)="goToProductDetail(item.producto_id)"
+                  *ngFor="let item of favoritosItems"
+                  class="favorito-item border border-gray-100 rounded-8 p-12 mb-12 hover-shadow-sm transition-2"
                 >
-                  <!-- Imagen del producto -->
-                  <div class="flex-shrink-0">
-                    <img
-                      [src]="item.imagen_url"
-                      [alt]="item.nombre"
-                      class="rounded-8"
-                      style="width: 72px; height: 72px; object-fit: cover;"
-                      (error)="onImageError($event)"
-                    />
-                  </div>
+                  <div class="d-flex gap-12">
+                    <!-- Imagen del producto -->
+                    <div 
+                      class="flex-shrink-0" 
+                      style="cursor: pointer;"
+                      (click)="goToProductDetail(item.producto_id)"
+                    >
+                      <img
+                        [src]="item.imagen_url"
+                        [alt]="item.nombre"
+                        class="rounded-8"
+                        style="width: 72px; height: 72px; object-fit: cover;"
+                        (error)="onImageError($event)"
+                      />
+                    </div>
 
-                  <!-- Info del producto -->
-                  <div class="flex-grow-1 min-w-0">
-                    <p class="text-sm text-heading mb-4 text-truncate" style="max-width: 220px;">
-                      {{ item.nombre }}
-                    </p>
-                    <p class="text-lg fw-bold text-main-600 mb-4">
-                      S/ {{ formatPrice(item.precio) }}
-                    </p>
-                    <p class="text-xs text-gray-500 mb-0" *ngIf="item.stock_disponible > 0">
-                      Stock: {{ item.stock_disponible }}
-                    </p>
-                    <p class="text-xs text-danger-600 mb-0" *ngIf="item.stock_disponible <= 0">
-                      Sin stock
-                    </p>
-                  </div>
+                    <!-- Info del producto -->
+                    <div class="flex-grow-1 min-w-0">
+                      <p 
+                        class="text-sm text-heading mb-4 text-truncate hover-text-main-600 transition-2" 
+                        style="max-width: 220px; cursor: pointer;"
+                        (click)="goToProductDetail(item.producto_id)"
+                      >
+                        {{ item.nombre }}
+                      </p>
+                      <p class="text-lg fw-bold text-main-600 mb-8">
+                        S/ {{ formatPrice(item.precio) }}
+                      </p>
+                      
+                      <!-- Stock info -->
+                      <div class="d-flex align-items-center gap-8 mb-8">
+                        <span 
+                          class="text-xs px-8 py-2 rounded-4"
+                          [ngClass]="{
+                            'bg-success-50 text-success-600': item.stock_disponible > 10,
+                            'bg-warning-50 text-warning-600': item.stock_disponible > 0 && item.stock_disponible <= 10,
+                            'bg-danger-50 text-danger-600': item.stock_disponible <= 0
+                          }"
+                        >
+                          <i class="ph ph-package me-4"></i>
+                          <span *ngIf="item.stock_disponible > 0">Stock: {{ item.stock_disponible }}</span>
+                          <span *ngIf="item.stock_disponible <= 0">Sin stock</span>
+                        </span>
+                      </div>
 
-                  <!-- Botón eliminar -->
-                  <button
-                    type="button"
-                    (click)="removeFromWishlistHeader(item.producto_id); $event.stopPropagation()"
-                    class="flex-shrink-0 w-32 h-32 bg-transparent border-0 text-gray-400 hover-text-danger-600 transition-2"
-                    title="Eliminar"
-                  >
-                    <i class="ph ph-trash text-lg"></i>
-                  </button>
+                      <!-- Botones de acción -->
+                      <div class="d-flex gap-8">
+                        <!-- Botón añadir al carrito -->
+                        <button
+                          type="button"
+                          (click)="addToCartFromFavoritos(item, $event)"
+                          [disabled]="item.stock_disponible <= 0"
+                          class="btn btn-sm bg-main-600 hover-bg-main-700 text-white px-12 py-6 rounded-6 flex-grow-1 d-flex align-items-center justify-content-center gap-4 transition-2"
+                          [ngClass]="{'opacity-50 cursor-not-allowed': item.stock_disponible <= 0}"
+                          title="Añadir al carrito"
+                        >
+                          <i class="ph ph-shopping-cart text-sm"></i>
+                          <span class="text-xs">Añadir</span>
+                        </button>
+
+                        <!-- Botón eliminar -->
+                        <button
+                          type="button"
+                          (click)="removeFromFavoritosHeader(item.producto_id, $event)"
+                          class="btn btn-sm bg-transparent border border-gray-200 hover-bg-danger-50 hover-border-danger-600 text-gray-600 hover-text-danger-600 w-32 h-32 p-0 rounded-6 d-flex align-items-center justify-content-center transition-2"
+                          title="Eliminar de favoritos"
+                        >
+                          <i class="ph ph-trash text-sm"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <!-- Estado vacío -->
               <div
-                *ngIf="wishlistItems.length === 0"
+                *ngIf="!isLoadingFavoritos && favoritosItems.length === 0"
                 class="text-center py-40 px-20"
               >
                 <i class="ph ph-heart text-gray-300" style="font-size: 3rem;"></i>
@@ -581,7 +622,7 @@
 
               <!-- Footer con botón "Ver todos" -->
               <div
-                *ngIf="wishlistCount > 0"
+                *ngIf="!isLoadingFavoritos && favoritosCount > 0"
                 class="p-16 border-top border-gray-100"
               >
                 <button

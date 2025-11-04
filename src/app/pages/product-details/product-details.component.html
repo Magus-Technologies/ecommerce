@@ -187,7 +187,10 @@
                                       S/ {{ getPrecioOriginal() | number:'1.2-2' }}
                                     </span>
                                 </div>
-                                <a href="#" class="btn bg-danger-20 hover:bg-danger-10 rounded-pill">Ordenar por WhatsApp</a>
+                                <button (click)="ordenarPorWhatsApp()" class="btn bg-danger-20 hover:bg-danger-10 rounded-pill">
+                                    <i class="ph ph-whatsapp-logo me-2"></i>
+                                    Ordenar por WhatsApp
+                                </button>
                             </div>
                             <span class="mt-32 pt-32 text-gray-700 border-top border-gray-100 d-block"></span>
 
@@ -266,19 +269,42 @@
                                     </button>
                                 </div>
 
-                                <div class="flex-align gap-12">
-                                    <a href="#"
-                                        class="w-52 h-52 bg-main-50 text-main-600 text-xl hover-bg-main-600 hover-text-white flex-center rounded-circle">
-                                        <i class="ph ph-heart"></i>
-                                    </a>
-                                    <a href="#"
-                                        class="w-52 h-52 bg-main-50 text-main-600 text-xl hover-bg-main-600 hover-text-white flex-center rounded-circle">
+                                <div class="flex-align gap-12 position-relative">
+                                    <!-- Botón de favoritos -->
+                                    <button
+                                        (click)="toggleFavorito()"
+                                        [class.bg-danger-600]="esFavorito"
+                                        [class.text-white]="esFavorito"
+                                        [class.bg-main-50]="!esFavorito"
+                                        [class.text-main-600]="!esFavorito"
+                                        class="w-52 h-52 text-xl hover-bg-danger-600 hover-text-white flex-center rounded-circle border-0 transition-2"
+                                        [title]="esFavorito ? 'Eliminar de favoritos' : 'Agregar a favoritos'">
+                                        <i [class.ph-fill]="esFavorito" [class.ph]="!esFavorito" class="ph-heart"></i>
+                                    </button>
+                                    
+                                    <!-- Botón de comparar (deshabilitado por ahora) -->
+                                    <button
+                                        disabled
+                                        class="w-52 h-52 bg-gray-100 text-gray-400 text-xl flex-center rounded-circle border-0"
+                                        title="Comparar (próximamente)">
                                         <i class="ph ph-shuffle"></i>
-                                    </a>
-                                    <a href="#"
-                                        class="w-52 h-52 bg-main-50 text-main-600 text-xl hover-bg-main-600 hover-text-white flex-center rounded-circle">
+                                    </button>
+                                    
+                                    <!-- Botón de compartir -->
+                                    <button
+                                        (click)="compartirProducto()"
+                                        class="w-52 h-52 bg-main-50 text-main-600 text-xl hover-bg-main-600 hover-text-white flex-center rounded-circle border-0 transition-2"
+                                        title="Compartir producto">
                                         <i class="ph ph-share-network"></i>
-                                    </a>
+                                    </button>
+
+                                    <!-- Mensaje flotante de "Enlace copiado" -->
+                                    <div *ngIf="compartirMensaje" 
+                                         class="position-absolute top-100 end-0 mt-8 bg-success-600 text-white px-12 py-6 rounded-8 text-sm fw-medium shadow-lg"
+                                         style="white-space: nowrap; z-index: 1000;">
+                                        <i class="ph ph-check-circle me-4"></i>
+                                        {{ compartirMensaje }}
+                                    </div>
                                 </div>
                             </div>
 
@@ -319,14 +345,20 @@
                             <span class="text-gray-900"> a todo el país</span>
                         </div>
                         <p class="text-gray-500 text-sm mb-12">Conocé los tiempos y las formas de envío.</p>
-                        <a href="#" class="text-warning-600 text-sm fw-medium text-decoration-underline">Ver formas de entrega</a>
+                        <div class="d-flex flex-column gap-8">
+                            <a href="#" class="text-warning-600 text-sm fw-medium text-decoration-underline">Ver formas de entrega</a>
+                            <a routerLink="/pasos-envio" class="text-main-600 text-sm fw-medium text-decoration-underline d-flex align-items-center gap-4">
+                                <i class="ph ph-truck"></i>
+                                Conocé nuestros pasos de envío
+                            </a>
+                        </div>
                     </div>
 
                     <!-- Vendido por -->
                     <div class="p-24 border-bottom border-gray-100">
                         <div class="mb-8">
-                            <span class="text-gray-900">Vendido por </span>
-                            <span class="text-warning-600 fw-semibold">{{ producto.marca?.nombre || 'MAGUS' }}</span>
+                            <span class="text-gray-900">Vendido por&nbsp;</span>
+                            <span class="text-warning-600 fw-semibold">{{ nombreEmpresa }}</span>
                         </div>
                         <span class="text-gray-500 text-sm">+100 ventas</span>
                     </div>
@@ -335,9 +367,9 @@
                     <div class="p-24 border-bottom border-gray-100">
                         <div class="d-flex align-items-center justify-content-between mb-12">
                             <span class="text-gray-900 fw-semibold">Stock disponible</span>
-                            <img src="assets/images/thumbs/shalom.png" alt="Shalom" class="h-20">
+                            <img [src]="environment.apiUrl.replace('/api', '') + '/imagenes/logo - Magus.png'" [alt]="nombreEmpresa" style="height: 50px; max-width: 150px; object-fit: contain;">
                         </div>
-                        <p class="text-gray-500 text-sm">Almacenado y enviado por</p>
+                        <p class="text-gray-500 text-sm">Almacenado y enviado por {{ nombreEmpresa }}</p>
                     </div>
 
                     <!-- Cantidad -->
