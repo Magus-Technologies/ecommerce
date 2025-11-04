@@ -131,8 +131,8 @@ export const routes: Routes = [
           {
             path: 'favoritos',
             loadComponent: () =>
-              import('./pages/wishlist/wishlist.component').then(
-                (m) => m.WishlistComponent
+              import('./pages/my-account/favoritos/favoritos.component').then(
+                (m) => m.FavoritosComponent
               ),
             title: 'Mis Favoritos'
           },

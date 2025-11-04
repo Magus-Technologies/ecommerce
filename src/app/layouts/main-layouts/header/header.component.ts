@@ -10,9 +10,25 @@ import { CategoriasPublicasService, CategoriaPublica } from '../../../services/c
 import { ProductosService, ProductoSugerencia } from '../../../services/productos.service';
 import { CartService } from '../../../services/cart.service';
 import { EmpresaInfoService } from '../../../services/empresa-info.service';
-import { WishlistService, WishlistItem } from '../../../services/wishlist.service';
+import { FavoritosService } from '../../../services/favoritos.service';
+import { CartNotificationService } from '../../../services/cart-notification.service';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, filter } from 'rxjs';
 import { IndexTwoService } from '../../../services/index-two.service';
+import Swal from 'sweetalert2';
+
+// Interfaz para los items del dropdown de favoritos
+interface FavoritoItem {
+  id: number;
+  producto_id: number;
+  nombre: string;
+  imagen_url: string;
+  precio: number;
+  stock_disponible: number;
+  codigo_producto: string;
+  categoria?: string;
+  marca?: string;
+  mostrar_igv?: boolean;
+}
 @Component({
   selector: 'app-header',
   standalone: true,
@@ -47,8 +63,9 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ✅ NUEVAS PROPIEDADES PARA DROPDOWN DE FAVORITOS
   showFavoritosDropdown: boolean = false;
-  wishlistItems: WishlistItem[] = [];
-  wishlistCount: number = 0;
+  favoritosItems: FavoritoItem[] = [];
+  favoritosCount: number = 0;
+  isLoadingFavoritos: boolean = false;
 
 
 
@@ -146,7 +163,8 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     private productosService: ProductosService,
     private cartService: CartService,
     private empresaInfoService: EmpresaInfoService,
-    private wishlistService: WishlistService,
+    private favoritosService: FavoritosService,
+    private cartNotificationService: CartNotificationService,
     private route: ActivatedRoute,
     private indexTwoService: IndexTwoService
   ) {
@@ -181,13 +199,8 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
         this.cartItemCount = summary.cantidad_items;
       });
 
-    // ✅ NUEVO: Suscribirse a los cambios de favoritos
-    this.wishlistService.wishlistItems$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(items => {
-        this.wishlistItems = items.slice(0, 5); // Solo mostrar los primeros 5 en el dropdown
-        this.wishlistCount = items.length;
-      });
+    // ✅ NUEVO: Cargar favoritos inicialmente
+    this.cargarFavoritosHeader();
 
     // ✅ NUEVO: Configurar búsqueda con autocompletado
     this.setupSearchSubscription();
@@ -529,18 +542,167 @@ private cargarInformacionEmpresa(): void {
     return url === '/' || url === '/index-two';
   }
 
-  // ✅ NUEVOS MÉTODOS PARA DROPDOWN DE FAVORITOS
+  // ============================================
+  // MÉTODOS PARA DROPDOWN DE FAVORITOS
+  // ============================================
+  
   toggleFavoritosDropdown(event?: Event): void {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
     this.showFavoritosDropdown = !this.showFavoritosDropdown;
+    
+    // Cargar favoritos cuando se abre el dropdown
+    if (this.showFavoritosDropdown) {
+      this.cargarFavoritosHeader();
+    }
+  }
+
+  private cargarFavoritosHeader(): void {
+    this.isLoadingFavoritos = true;
+    this.favoritosService.obtenerFavoritos()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          console.log('Favoritos recibidos en header:', response);
+          const favoritos = response.data || [];
+          
+          // Mapear los favoritos al formato del dropdown
+          this.favoritosItems = favoritos.slice(0, 5).map((fav: any) => ({
+            id: fav.id,
+            producto_id: fav.producto_id,
+            nombre: fav.producto?.nombre || 'Producto',
+            imagen_url: fav.producto?.imagen_url || fav.producto?.imagen_principal || 'assets/images/thumbs/product-default.png',
+            precio: Number(fav.producto?.precio_venta || fav.producto?.precio || 0),
+            stock_disponible: Number(fav.producto?.stock || 0),
+            codigo_producto: fav.producto?.codigo_producto || `PROD-${fav.producto_id}`,
+            categoria: fav.producto?.categoria?.nombre || fav.producto?.categoria || '',
+            marca: fav.producto?.marca?.nombre || fav.producto?.marca || '',
+            mostrar_igv: Boolean(fav.producto?.mostrar_igv)
+          }));
+          
+          this.favoritosCount = favoritos.length;
+          this.isLoadingFavoritos = false;
+        },
+        error: (error) => {
+          console.error('Error al cargar favoritos en header:', error);
+          this.favoritosItems = [];
+          this.favoritosCount = 0;
+          this.isLoadingFavoritos = false;
+        }
+      });
   }
 
   verTodosFavoritos(): void {
     this.showFavoritosDropdown = false;
     this.router.navigate(['/my-account/favoritos']);
+  }
+
+  goToProductDetail(productoId: number): void {
+    this.showFavoritosDropdown = false;
+    this.router.navigate(['/product-details', productoId]);
+  }
+
+  removeFromFavoritosHeader(productoId: number, event: Event): void {
+    event.stopPropagation();
+    
+    Swal.fire({
+      title: '¿Eliminar de favoritos?',
+      text: 'Este producto se eliminará de tu lista de favoritos',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.favoritosService.eliminarFavorito(productoId)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              // Recargar favoritos
+              this.cargarFavoritosHeader();
+              
+              Swal.fire({
+                icon: 'success',
+                title: 'Eliminado',
+                text: 'Producto eliminado de favoritos',
+                timer: 2000,
+                showConfirmButton: false
+              });
+            },
+            error: (error) => {
+              console.error('Error al eliminar favorito:', error);
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo eliminar el favorito',
+                timer: 2000,
+                showConfirmButton: false
+              });
+            }
+          });
+      }
+    });
+  }
+
+  // ✅ NUEVO: Añadir producto al carrito desde el dropdown de favoritos
+  addToCartFromFavoritos(item: FavoritoItem, event: Event): void {
+    event.stopPropagation(); // Prevenir que se cierre el dropdown o navegue al producto
+    
+    // Verificar stock
+    if (!item.stock_disponible || item.stock_disponible <= 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin stock',
+        text: 'Este producto no tiene stock disponible',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      return;
+    }
+
+    // Crear objeto producto compatible con CartService
+    const producto = {
+      id: item.producto_id,
+      nombre: item.nombre,
+      precio_venta: item.precio,
+      precio: item.precio,
+      stock: item.stock_disponible,
+      stock_disponible: item.stock_disponible,
+      codigo_producto: item.codigo_producto || `PROD-${item.producto_id}`,
+      imagen_url: item.imagen_url,
+      imagen_principal: item.imagen_url,
+      categoria: item.categoria || '',
+      marca: item.marca || '',
+      mostrar_igv: item.mostrar_igv || false
+    };
+
+    // Añadir al carrito
+    this.cartService.addToCart(producto, 1).subscribe({
+      next: () => {
+        // Mostrar notificación de éxito
+        this.cartNotificationService.showProductAddedNotification(
+          item.nombre,
+          Number(item.precio || 0),
+          item.imagen_url || 'assets/images/thumbs/product-default.png',
+          1,
+          []
+        );
+      },
+      error: (err) => {
+        console.error('Error al añadir al carrito:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err.message || 'No se pudo agregar el producto al carrito',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    });
   }
 
   formatPrice(price: number | string | null | undefined): string {
@@ -549,14 +711,5 @@ private cargarInformacionEmpresa(): void {
       return '0.00';
     }
     return numPrice.toFixed(2);
-  }
-
-  removeFromWishlistHeader(productoId: number): void {
-    this.wishlistService.removeByProductId(productoId);
-  }
-
-  goToProductDetail(productoId: number): void {
-    this.showFavoritosDropdown = false;
-    this.router.navigate(['/product-details', productoId]);
   }
 }

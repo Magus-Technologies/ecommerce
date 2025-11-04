@@ -14,6 +14,7 @@ export interface WishlistItem {
   marca?: string;
   rating?: number;
   reviews_count?: number;
+  mostrar_igv?: boolean;
 }
 
 @Injectable({
@@ -68,7 +69,8 @@ export class WishlistService {
       categoria: producto.categoria?.nombre || producto.categoria,
       marca: producto.marca?.nombre || producto.marca,
       rating: producto.rating || 0,
-      reviews_count: producto.reviews_count || producto.total_reviews || 0
+      reviews_count: producto.reviews_count || producto.total_reviews || 0,
+      mostrar_igv: Boolean(producto.mostrar_igv)
     };
   }
 
@@ -98,7 +100,8 @@ export class WishlistService {
         categoria: normalizedProduct.categoria,
         marca: normalizedProduct.marca,
         rating: normalizedProduct.rating,
-        reviews_count: normalizedProduct.reviews_count
+        reviews_count: normalizedProduct.reviews_count,
+        mostrar_igv: normalizedProduct.mostrar_igv
       };
 
       currentItems.push(newItem);
