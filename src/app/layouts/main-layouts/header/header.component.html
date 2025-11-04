@@ -832,38 +832,12 @@
             </li>
 
             <li
-              class="on-hover-item nav-menu__item has-submenu"
-              [class.activePage]="isParentActive(['/blog', '/blog-details'])"
+              class="nav-menu__item"
+              [class.activePage]="isRouteActive('/pasos-envio')"
             >
-              <a href="javascript:void(0)" class="nav-menu__link text-gray-700">
-                Blog
+              <a routerLink="/pasos-envio" class="nav-menu__link text-gray-700">
+                Pasos de Envío
               </a>
-              <ul
-                class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
-              >
-                <li
-                  class="common-dropdown__item nav-submenu__item"
-                  [class.activePage]="isRouteActive('/blog')"
-                >
-                  <a
-                    [routerLink]="['blog']"
-                    class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-                  >
-                    Blog
-                  </a>
-                </li>
-                <li
-                  class="common-dropdown__item nav-submenu__item"
-                  [class.activePage]="isRouteActive('/blog-details')"
-                >
-                  <a
-                    [routerLink]="['blog-details']"
-                    class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-                  >
-                    Blog Detalles
-                  </a>
-                </li>
-              </ul>
             </li>
 
             <li
