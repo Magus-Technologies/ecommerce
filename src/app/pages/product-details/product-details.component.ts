@@ -11,6 +11,8 @@ import { ShippingComponent } from "../../component/shipping/shipping.component"
 import { AlmacenService } from "../../services/almacen.service"
 import { CartService } from "../../services/cart.service"
 import { CartNotificationService } from "../../services/cart-notification.service"
+import { FavoritosService } from "../../services/favoritos.service"
+import { AuthService } from "../../services/auth.service"
 import Swal from "sweetalert2"
 import { environment } from "../../../environments/environment"
 import { DomSanitizer, SafeHtml, SafeResourceUrl, Title } from "@angular/platform-browser"
@@ -57,6 +59,10 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
   caracteristicasProcesadas: any[] = []
   safeDescripcionDetallada: SafeHtml = ""
   environment = environment
+  nombreEmpresa: string = 'MAGUS' // Valor por defecto
+  logoEmpresa: string = '' // URL del logo
+  esFavorito: boolean = false
+  compartirMensaje: string = ''
 
   productThumbSlider = { slidesToShow: 1, slidesToScroll: 1, arrows: false, fade: true, asNavFor: ".product-details__images-slider" };
   productImageSlider = { slidesToShow: 4, slidesToScroll: 1, asNavFor: ".product-details__thumb-slider", dots: false, arrows: false, focusOnSelect: true, responsive: [{ breakpoint: 768, settings: { slidesToShow: 3 } }, { breakpoint: 576, settings: { slidesToShow: 2 } }] };
@@ -68,6 +74,8 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     private almacenService: AlmacenService,
     private cartService: CartService,
     private cartNotificationService: CartNotificationService,
+    private favoritosService: FavoritosService,
+    private authService: AuthService,
     private sanitizer: DomSanitizer,
     private titleService: Title
   ) {
@@ -78,15 +86,152 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     // Scroll to top when component loads
     window.scrollTo(0, 0);
 
+    // Cargar información de la empresa
+    this.cargarInfoEmpresa();
+
+    // Suscribirse a cambios en favoritos
+    this.favoritosService.favoritos$.subscribe(favoritos => {
+      console.log('🔄 Favoritos actualizados:', favoritos);
+      if (this.producto) {
+        this.esFavorito = favoritos.includes(this.producto.id);
+        console.log(`💖 Producto ${this.producto.id} es favorito:`, this.esFavorito);
+      }
+    });
+
     this.route.params.subscribe((params) => {
       const id = +params["id"]
       if (id && !isNaN(id)) {
-        this.cargarProducto(id)
+        // Cargar favoritos primero si el usuario está logueado
+        if (this.authService.isLoggedIn()) {
+          this.favoritosService.cargarFavoritos().subscribe(() => {
+            console.log('✅ Favoritos cargados, ahora cargando producto');
+            this.cargarProducto(id);
+          });
+        } else {
+          this.cargarProducto(id);
+        }
       } else {
         this.error = "ID de producto inválido"
         this.isLoading = false
       }
     })
+  }
+
+  whatsappEmpresa: string = ''
+
+  cargarInfoEmpresa(): void {
+    this.almacenService.obtenerInfoEmpresa().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.nombreEmpresa = response.data.nombre_empresa || 'MAGUS';
+          this.whatsappEmpresa = response.data.whatsapp || '';
+          // Construir URL del logo usando environment
+          if (response.data.logo) {
+            const baseUrl = environment.apiUrl.replace('/api', '');
+            this.logoEmpresa = `${baseUrl}/storage/${response.data.logo}`;
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar info de empresa:', error);
+        // Mantener el valor por defecto
+      }
+    });
+  }
+
+  ordenarPorWhatsApp(): void {
+    console.log('🔵 Iniciando ordenarPorWhatsApp');
+    console.log('WhatsApp empresa:', this.whatsappEmpresa);
+    
+    // Primero intentar obtener asesores disponibles
+    this.almacenService.obtenerAsesorDisponibles().subscribe({
+      next: (response: any) => {
+        console.log('✅ Respuesta de asesores:', response);
+        const asesores = response.asesores_disponibles || [];
+        console.log('📋 Asesores encontrados:', asesores.length);
+        
+        // Filtrar asesores que tengan teléfono
+        const asesoresConTelefono = asesores.filter((a: any) => a.telefono && a.telefono.trim() !== '');
+        console.log('📞 Asesores con teléfono:', asesoresConTelefono.length);
+        
+        if (asesoresConTelefono.length > 0) {
+          // Hay asesores disponibles con teléfono, usar el primero
+          const asesor = asesoresConTelefono[0];
+          console.log('👤 Usando asesor:', asesor);
+          this.enviarWhatsApp(asesor.telefono, asesor.name);
+        } else {
+          // No hay asesores con teléfono, usar número de empresa
+          console.log('⚠️ No hay asesores con teléfono, usando empresa');
+          if (this.whatsappEmpresa) {
+            this.enviarWhatsApp(this.whatsappEmpresa, this.nombreEmpresa);
+          } else {
+            console.log('❌ Tampoco hay WhatsApp de empresa');
+            Swal.fire({
+              icon: 'info',
+              title: 'No disponible',
+              text: 'No hay asesores disponibles en este momento. Por favor, intenta más tarde.'
+            });
+          }
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error al obtener asesores:', error);
+        // Error al obtener asesores, usar número de empresa como fallback
+        if (this.whatsappEmpresa) {
+          console.log('🔄 Fallback a empresa');
+          this.enviarWhatsApp(this.whatsappEmpresa, this.nombreEmpresa);
+        } else {
+          console.log('❌ No hay fallback disponible');
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo conectar con nuestros asesores. Por favor, intenta más tarde.'
+          });
+        }
+      }
+    });
+  }
+
+  private enviarWhatsApp(telefono: string | null, nombreAsesor: string): void {
+    console.log('📱 Enviando WhatsApp a:', telefono, 'Asesor:', nombreAsesor);
+    
+    // Validar que haya teléfono
+    if (!telefono) {
+      console.error('❌ No hay teléfono disponible');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'El asesor no tiene número de WhatsApp configurado'
+      });
+      return;
+    }
+    
+    // Asegurar que getPrecioActual retorna un número
+    const precioActual = Number(this.getPrecioActual()) || 0;
+    const total = precioActual * this.cantidad;
+    
+    const mensaje = `Hola ${nombreAsesor}! Estoy interesado en el siguiente producto:\n\n` +
+                   `*${this.producto.nombre}*\n\n` +
+                   `Precio: S/ ${precioActual.toFixed(2)}\n` +
+                   `Cantidad: ${this.cantidad}\n` +
+                   `Total: S/ ${total.toFixed(2)}\n\n` +
+                   `¿Podrías ayudarme con la compra?`;
+
+    const mensajeCodificado = encodeURIComponent(mensaje);
+    let numeroLimpio = telefono.replace(/\D/g, '');
+    
+    console.log('🔢 Número original:', telefono);
+    console.log('🔢 Número limpio:', numeroLimpio);
+    
+    // Agregar código de país si es necesario
+    if (numeroLimpio.startsWith('9') && numeroLimpio.length === 9) {
+      numeroLimpio = '51' + numeroLimpio;
+      console.log('🌍 Agregado código de país:', numeroLimpio);
+    }
+    
+    const urlWhatsApp = `https://wa.me/${numeroLimpio}?text=${mensajeCodificado}`;
+    console.log('🔗 URL WhatsApp:', urlWhatsApp);
+    window.open(urlWhatsApp, '_blank');
   }
 
   ngOnDestroy(): void {
@@ -128,6 +273,12 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     // Actualizar el título de la página con el nombre del producto
     if (this.producto?.nombre) {
       this.titleService.setTitle(this.producto.nombre + ' - MAGUS');
+    }
+
+    // Verificar si el producto está en favoritos
+    if (this.authService.isLoggedIn()) {
+      this.esFavorito = this.favoritosService.esFavorito(this.producto.id);
+      console.log(`🔍 Verificando favorito para producto ${this.producto.id}:`, this.esFavorito);
     }
   } catch (error) {
     console.error("Error en procesarDatosProducto:", error)
@@ -443,5 +594,157 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     const slug = producto.slug || producto.nombre?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]/g, '');
     const url = `/product/${producto.id}/${slug}`;
     window.location.href = url;
+  }
+
+  // ============================================
+  // FUNCIONALIDAD DE FAVORITOS
+  // ============================================
+  toggleFavorito(): void {
+    // Verificar si el usuario está logueado
+    if (!this.authService.isLoggedIn()) {
+      Swal.fire({
+        title: 'Inicia sesión',
+        text: 'Debes iniciar sesión para agregar productos a favoritos',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Iniciar sesión',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.router.navigate(['/account']);
+        }
+      });
+      return;
+    }
+
+    // Toggle favorito
+    this.favoritosService.toggleFavorito(this.producto.id).subscribe({
+      next: (response: any) => {
+        this.esFavorito = !this.esFavorito;
+        
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+          }
+        });
+
+        Toast.fire({
+          icon: 'success',
+          title: this.esFavorito ? 'Agregado a favoritos' : 'Eliminado de favoritos'
+        });
+      },
+      error: (error) => {
+        console.error('Error al actualizar favorito:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo actualizar el favorito'
+        });
+      }
+    });
+  }
+
+  // ============================================
+  // FUNCIONALIDAD DE COMPARTIR
+  // ============================================
+  async compartirProducto(): Promise<void> {
+    const url = window.location.href;
+    const titulo = this.producto.nombre;
+    const texto = `Mira este producto: ${titulo} - S/ ${this.getPrecioActual()}`;
+
+    // Detectar si es móvil
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    // En móvil, siempre intentar usar el share nativo
+    if (isMobile && navigator.share) {
+      try {
+        await navigator.share({
+          title: titulo,
+          text: texto,
+          url: url
+        });
+      } catch (error: any) {
+        // Si el usuario cancela, no hacer nada
+        if (error.name !== 'AbortError') {
+          console.error('Error al compartir:', error);
+          this.copiarEnlace(url);
+        }
+      }
+      return;
+    }
+
+    // En PC, intentar usar share nativo si está disponible
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: titulo,
+          text: texto,
+          url: url
+        });
+      } catch (error: any) {
+        // Si falla o el usuario cancela, copiar al portapapeles
+        if (error.name !== 'AbortError') {
+          this.copiarEnlace(url);
+        }
+      }
+    } else {
+      // Si no hay share nativo, copiar al portapapeles
+      this.copiarEnlace(url);
+    }
+  }
+
+  private copiarEnlace(url: string): void {
+    // Intentar copiar al portapapeles
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        this.mostrarMensajeCopiado();
+      }).catch(() => {
+        // Fallback para navegadores antiguos
+        this.copiarEnlaceFallback(url);
+      });
+    } else {
+      // Fallback para navegadores antiguos
+      this.copiarEnlaceFallback(url);
+    }
+  }
+
+  private copiarEnlaceFallback(url: string): void {
+    const textArea = document.createElement('textarea');
+    textArea.value = url;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+      this.mostrarMensajeCopiado();
+    } catch (error) {
+      console.error('Error al copiar:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo copiar el enlace'
+      });
+    } finally {
+      document.body.removeChild(textArea);
+    }
+  }
+
+  private mostrarMensajeCopiado(): void {
+    this.compartirMensaje = 'Enlace copiado';
+    
+    // Ocultar el mensaje después de 2 segundos
+    setTimeout(() => {
+      this.compartirMensaje = '';
+    }, 2000);
   }
 }

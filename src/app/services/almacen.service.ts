@@ -451,4 +451,14 @@ obtenerProductosDestacados(): Observable<Producto[]> {
   );
 }
 
+  // Obtener información de la empresa
+  obtenerInfoEmpresa(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/empresa-info`);
+  }
+
+  // Obtener asesores disponibles
+  obtenerAsesorDisponibles(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/asesores/disponibles`);
+  }
+
 }
