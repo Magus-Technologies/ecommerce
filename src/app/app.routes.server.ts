@@ -14,6 +14,10 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Prerender
   },
   {
+    path: 'pasos-envio',
+    renderMode: RenderMode.Prerender
+  },
+  {
     path: 'forgot-password',
     renderMode: RenderMode.Prerender
   },

@@ -43,6 +43,14 @@ export const routes: Routes = [
         title: 'Blog',
       },
       {
+        path: 'pasos-envio',
+        loadComponent: () =>
+          import('./pages/pasos-envio/pasos-envio.component').then(
+            (m) => m.PasosEnvioComponent
+          ),
+        title: 'Pasos de Envío',
+      },
+      {
         path: 'contact',
         component: ContactComponent,
         title: 'Contact',
@@ -789,6 +797,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/dashboard/tipos-pago/tipos-pago.component').then(
             (m) => m.TiposPagoComponent
+          ),
+        title: 'Gestión de Tipos de Pago',
+        canActivate: [permissionGuard],
+        data: { permission: 'configuracion.ver' },
+      },
+      {
+        path: 'pasos-envio',
+        loadComponent: () =>
+          import('./pages/dashboard/pasos-envio/pasos-envio-admin.component').then(
+            (m) => m.PasosEnvioAdminComponent
           ),
         title: 'Gestión de Tipos de Pago',
         canActivate: [permissionGuard],
