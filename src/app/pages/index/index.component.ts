@@ -25,7 +25,7 @@ import {
 import { AlmacenService } from '../../services/almacen.service';
 import { MarcaProducto, ProductoPublico } from '../../types/almacen.types';
 import { CartService } from '../../services/cart.service';
-import { WishlistService } from '../../services/wishlist.service';
+import { FavoritosService } from '../../services/favoritos.service';
 import { AuthService } from '../../services/auth.service';
 import { CartNotificationService } from '../../services/cart-notification.service';
 
@@ -125,7 +125,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   isLoadingProductosMasVendidos = false;
 
   // ✅ NUEVA PROPIEDAD: Cache para el estado de wishlist
-  private wishlistState = new Set<number>();
+  private favoritosState = new Set<number>();
 
   slideConfig = {
     slidesToShow: 1,
@@ -333,7 +333,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     private bannersService: BannersService,
     private almacenService: AlmacenService,
     private cartService: CartService,
-    private wishlistService: WishlistService,
+    private FavoritosService: FavoritosService,
     private authService: AuthService,
     private ofertasService: OfertasService,
     private bannerFlashSalesService: BannerFlashSalesService,
@@ -365,7 +365,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cargarOfertaSemanaActiva();
 
     // ✅ NUEVA LÍNEA: Inicializar wishlist state
-    this.inicializarWishlistState();
+    this.inicializarFavoritosState();
 
     // NUEVA LÍNEA: Actualizar cupones cada 5 minutos
     if (this.isBrowser) {
@@ -828,78 +828,92 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
   // ✅ NUEVO MÉTODO: Agregar a wishlist con verificación de autenticación
-  agregarAWishlist(product: any): void {
-    // Verificar si el usuario está logueado
-    if (!this.authService.isLoggedIn()) {
-      Swal.fire({
-        title: 'Inicia sesión requerido',
-        text: 'Debes iniciar sesión para agregar productos a tu lista de deseos',
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonColor: '#198754',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Registrarse',
-        cancelButtonText: 'Cancelar',
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Redirigir a la página de registro
-          window.location.href = '/register';
-        }
-      });
-      return;
-    }
 
-    // Usuario logueado: proceder con la wishlist
-    const isToggled = this.wishlistService.toggleWishlist(product);
-
-    // ✅ ACTUALIZAR CACHE
-    if (isToggled) {
-      this.wishlistState.add(product.id);
-      // Producto agregado
-      Swal.fire({
-        title: '¡Agregado a favoritos!',
-        text: `${
-          product.nombre || product.name || product.title
-        } ha sido agregado a tu lista de deseos`,
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false,
-        toast: true,
-        position: 'top-end',
-        background: '#f8f9fa',
-        color: '#333',
-      });
-    } else {
-      this.wishlistState.delete(product.id);
-      // Producto removido
-      Swal.fire({
-        title: 'Removido de favoritos',
-        text: `${
-          product.nombre || product.name || product.title
-        } ha sido removido de tu lista de deseos`,
-        icon: 'info',
-        timer: 2000,
-        showConfirmButton: false,
-        toast: true,
-        position: 'top-end',
-        background: '#f8f9fa',
-        color: '#333',
-      });
-    }
-  }
-
-  // ✅ NUEVO MÉTODO: Inicializar estado de wishlist
-  private inicializarWishlistState(): void {
-    const wishlistItems = this.wishlistService.getCurrentItems();
-    this.wishlistState.clear();
-    wishlistItems.forEach((item) => {
-      this.wishlistState.add(item.producto_id);
+agregarAWishlist(product: any): void {
+  // Verificar si el usuario está logueado
+  if (!this.authService.isLoggedIn()) {
+    Swal.fire({
+      title: 'Inicia sesión requerido',
+      text: 'Debes iniciar sesión para agregar productos a tu lista de deseos',
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonColor: '#198754',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Registrarse',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.href = '/register';
+      }
     });
+    return;
   }
 
-  // ✅ NUEVO MÉTODO: Verificar si un producto está en wishlist (con cache)
+  // Usuario logueado: proceder con la wishlist
+  this.FavoritosService.toggleFavorito(product.id).subscribe({
+    next: (result) => {
+      if (result.agregado) {
+        this.favoritosState.add(product.id);
+        // Producto agregado
+        Swal.fire({
+          title: '¡Agregado a favoritos!',
+          text: `${product.nombre || product.name || product.title} ha sido agregado a tu lista de deseos`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
+          background: '#f8f9fa',
+          color: '#333',
+        });
+      } else {
+        this.favoritosState.delete(product.id);
+        // Producto removido
+        Swal.fire({
+          title: 'Removido de favoritos',
+          text: `${product.nombre || product.name || product.title} ha sido removido de tu lista de deseos`,
+          icon: 'info',
+          timer: 2000,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
+          background: '#f8f9fa',
+          color: '#333',
+        });
+      }
+    },
+    error: (error) => {
+      console.error('Error al agregar/quitar favorito:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo actualizar los favoritos',
+        icon: 'error',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    }
+  });
+}
+
+// ✅ NUEVO MÉTODO CORRECTO:
+private inicializarFavoritosState(): void {
+  this.FavoritosService.obtenerFavoritos().subscribe({
+    next: (favoritos) => {
+      this.favoritosState.clear();
+      favoritos.forEach((item: any) => {
+        this.favoritosState.add(item.producto_id);
+      });
+    },
+    error: (error) => {
+      console.error('Error al cargar favoritos:', error);
+      this.favoritosState.clear();
+    }
+  });
+}
+
+  // ✅ NUEVO MÉTODO: Verificar si un producto está en favoritos (con cache)
   isInWishlist(productoId: number): boolean {
-    return this.wishlistState.has(productoId);
+    return this.favoritosState.has(productoId);
   }
 
   cargarOfertasActivas(): void {

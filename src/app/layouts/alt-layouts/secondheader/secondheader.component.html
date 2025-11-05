@@ -116,7 +116,7 @@
 
                         <li class="common-dropdown__item nav-submenu__item" [routerLinkActive]="'activePage'"
                             [routerLinkActiveOptions]="{ exact: true }">
-                            <a [routerLink]="['/wishlist']"
+                            <a [routerLink]="['/my-account/favoritos']"
                                 class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100">
                                 Lista de deseos
                             </a>
@@ -270,7 +270,7 @@
                         </ul>
                     </li>
                     <li class="on-hover-item nav-menu__item has-submenu"
-                        [class.activePage]="isParentActive(['/cart', '/wishlist', '/checkout','/become-seller','/account'])">
+                        [class.activePage]="isParentActive(['/cart', '/my-account/favoritos', '/checkout','/become-seller','/account'])">
                         <span
                             class="badge-notification bg-warning-600 text-white text-sm py-2 px-8 rounded-4">New</span>
                         <a href="javascript:void(0)" class="nav-menu__link text-heading-two">Pages</a>
@@ -282,8 +282,8 @@
                                     Carrito</a>
                             </li>
                             <li class="common-dropdown__item nav-submenu__item"
-                                [class.activePage]="isRouteActive('/wishlist')">
-                                <a [routerLink]="['wishlist']"
+                                [class.activePage]="isRouteActive('/my-account/favoritos')">
+                                <a [routerLink]="['my-account/favoritos']"
                                     class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100">
                                     Lista de deseos</a>
                             </li>
