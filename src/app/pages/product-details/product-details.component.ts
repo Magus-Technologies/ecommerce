@@ -619,11 +619,17 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Toggle favorito
-    this.favoritosService.toggleFavorito(this.producto.id).subscribe({
+    // Guardar el estado actual antes de hacer la petición
+    const estadoAnterior = this.esFavorito;
+    
+    // Determinar la acción según el estado actual
+    const accion = this.esFavorito 
+      ? this.favoritosService.eliminarFavorito(this.producto.id)
+      : this.favoritosService.agregarFavorito(this.producto.id);
+
+    accion.subscribe({
       next: (response: any) => {
-        this.esFavorito = !this.esFavorito;
-        
+        // El servicio ya actualiza el BehaviorSubject, solo mostramos el mensaje
         const Toast = Swal.mixin({
           toast: true,
           position: 'top-end',
@@ -638,7 +644,7 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
 
         Toast.fire({
           icon: 'success',
-          title: this.esFavorito ? 'Agregado a favoritos' : 'Eliminado de favoritos'
+          title: estadoAnterior ? 'Eliminado de favoritos' : 'Agregado a favoritos'
         });
       },
       error: (error) => {
