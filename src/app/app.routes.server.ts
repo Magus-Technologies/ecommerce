@@ -37,10 +37,7 @@ export const serverRoutes: ServerRoute[] = [
     path: 'cart',
     renderMode: RenderMode.Prerender
   },
-  {
-    path: 'wishlist',
-    renderMode: RenderMode.Prerender
-  },
+
   {
     path: 'checkout',
     renderMode: RenderMode.Prerender

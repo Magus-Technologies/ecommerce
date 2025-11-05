@@ -10,7 +10,6 @@ import { BlogComponent } from './pages/blog/blog.component';
 import { ContactComponent } from './pages/contact/contact.component';
 import { BlogDetailsComponent } from './pages/blog-details/blog-details.component';
 import { CartComponent } from './pages/cart/cart.component';
-import { WishlistComponent } from './pages/wishlist/wishlist.component';
 import { CheckoutComponent } from './pages/checkout/checkout.component';
 import { BecomeSellerComponent } from './pages/become-seller/become-seller.component';
 import { AccountComponent } from './pages/account/account.component';
@@ -65,11 +64,7 @@ export const routes: Routes = [
         component: CartComponent,
         title: 'Cart',
       },
-      {
-        path: 'wishlist',
-        component: WishlistComponent,
-        title: 'Wishlist',
-      },
+    
       {
         path: 'checkout',
         component: CheckoutComponent,
