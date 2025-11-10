@@ -460,9 +460,6 @@
   (clienteActualizado)="onClienteActualizado($event)" (clienteGuardado)="onClienteGuardado($event)"
   (cerrar)="cerrarClienteModal()"></app-cliente-edit-modal>
 
-<app-producto-quick-modal *ngIf="mostrarProductoModal" [productos]="productos"
-  (productoSeleccionado)="onSeleccionProductoEvent($event)" (cerrar)="cerrarProductoModal()"></app-producto-quick-modal>
-
 <app-pago-rapido-modal *ngIf="mostrarPagoModal" [totalPagar]="calcularTotal()"
   (pagoProcesado)="onPagoProcesadoEvent($event)" (cerrar)="cerrarPagoModal()"></app-pago-rapido-modal>
 
