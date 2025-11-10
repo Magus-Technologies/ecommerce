@@ -191,46 +191,46 @@ export class VentasListComponent implements OnInit {
     const tipoComprobante = this.obtenerTipoComprobante(venta.comprobante?.tipo_comprobante || venta.comprobante_info?.tipo_comprobante);
 
     let html = `
-      <div class="text-start">
+      <div class="text-start text-sm">
         <!-- Información del Comprobante -->
-        <div class="alert alert-info mb-4">
-          <h5 class="mb-3"><strong>${tipoComprobante}</strong></h5>
-          <div class="row">
+        <div class="alert alert-info mb-12 px-12 py-10">
+          <h6 class="mb-8 fw-semibold text-heading">${tipoComprobante}</h6>
+          <div class="row text-xs">
             <div class="col-md-6">
               <strong>Número:</strong> ${venta.comprobante_info?.numero_completo || venta.codigo_venta}<br>
               <strong>Fecha:</strong> ${this.formatearFecha(venta.fecha_venta)}
             </div>
             <div class="col-md-6">
-              <strong>Estado:</strong> <span class="badge ${this.getEstadoClase(venta.estado)}">${venta.estado}</span><br>
-              ${venta.comprobante_info ? `<strong>Estado SUNAT:</strong> <span class="badge ${this.getEstadoSunatClase(venta.comprobante_info.estado)}">${venta.comprobante_info.estado}</span>` : ''}
+              <strong>Estado:</strong> <span class="badge ${this.getEstadoClase(venta.estado)} text-xs px-8 py-4">${venta.estado}</span><br>
+              ${venta.comprobante_info ? `<strong>Estado SUNAT:</strong> <span class="badge ${this.getEstadoSunatClase(venta.comprobante_info.estado)} text-xs px-8 py-4">${venta.comprobante_info.estado}</span>` : ''}
             </div>
           </div>
         </div>
 
         <!-- Información del Cliente -->
-        <h6 class="mb-3"><strong>Datos del Cliente:</strong></h6>
-        <div class="row mb-4">
+        <h6 class="mb-8 fw-semibold text-heading border-bottom pb-6">Datos del Cliente</h6>
+        <div class="row mb-12 text-xs">
           <div class="col-md-8">
             <strong>Cliente:</strong> ${venta.cliente?.razon_social || venta.cliente_info?.nombre_completo}<br>
             <strong>Documento:</strong> ${venta.cliente?.numero_documento || venta.cliente_info?.numero_documento}<br>
             ${venta.cliente?.direccion ? `<strong>Dirección:</strong> ${venta.cliente.direccion}` : ''}
           </div>
-          <div class="col-md-4">
-            ${venta.cliente?.email ? `<strong>Email:</strong> ${venta.cliente.email}<br>` : ''}
+          <div class="col-md-4 text-xs">
+            ${venta.cliente?.email ? `<strong>Email:</strong> <span class="text-2xs">${venta.cliente.email}</span><br>` : ''}
             ${venta.cliente?.telefono ? `<strong>Teléfono:</strong> ${venta.cliente.telefono}` : ''}
           </div>
         </div>
 
         <!-- Detalle de Productos -->
-        <h6 class="mb-3"><strong>Detalle de la Venta:</strong></h6>
-        <table class="table table-bordered">
+        <h6 class="mb-8 fw-semibold text-heading border-bottom pb-6">Detalle de la Venta</h6>
+        <table class="table table-bordered table-sm mb-0" style="font-size: 10px;">
           <thead class="table-light">
             <tr>
-              <th style="width: 50%">Producto</th>
-              <th class="text-center" style="width: 10%">Cant.</th>
-              <th class="text-end" style="width: 15%">P. Unit.</th>
-              <th class="text-end" style="width: 15%">Subtotal</th>
-              <th class="text-end" style="width: 15%">Total</th>
+              <th class="px-4 py-4" style="width: 38%; font-size: 9px;">Producto</th>
+              <th class="text-center px-4 py-4" style="width: 8%; font-size: 9px;">Cant.</th>
+              <th class="text-end px-4 py-4" style="width: 18%; font-size: 9px;">P. Unit.</th>
+              <th class="text-end px-4 py-4" style="width: 18%; font-size: 9px;">Subtotal</th>
+              <th class="text-end px-4 py-4" style="width: 18%; font-size: 9px;">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -240,59 +240,63 @@ export class VentasListComponent implements OnInit {
       venta.detalles.forEach((detalle: any) => {
         html += `
           <tr>
-            <td>
-              <strong>${detalle.nombre_producto}</strong>
-              ${detalle.codigo_producto ? `<br><small class="text-muted">Código: ${detalle.codigo_producto}</small>` : ''}
+            <td class="px-4 py-3" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${detalle.nombre_producto}">
+              <strong style="font-size: 10px;">${detalle.nombre_producto}</strong>
+              ${detalle.codigo_producto ? `<br><small class="text-muted" style="font-size: 8px;">Cód: ${detalle.codigo_producto}</small>` : ''}
             </td>
-            <td class="text-center">${detalle.cantidad}</td>
-            <td class="text-end">S/ ${parseFloat(detalle.precio_unitario).toFixed(2)}</td>
-            <td class="text-end">S/ ${parseFloat(detalle.subtotal_linea || detalle.precio_unitario * detalle.cantidad).toFixed(2)}</td>
-            <td class="text-end">S/ ${parseFloat(detalle.total_linea).toFixed(2)}</td>
+            <td class="text-center px-4 py-3" style="font-size: 10px;">${detalle.cantidad}</td>
+            <td class="text-end px-4 py-3" style="font-size: 10px;">S/ ${parseFloat(detalle.precio_unitario).toFixed(2)}</td>
+            <td class="text-end px-4 py-3" style="font-size: 10px;">S/ ${parseFloat(detalle.subtotal_linea || detalle.precio_unitario * detalle.cantidad).toFixed(2)}</td>
+            <td class="text-end px-4 py-3" style="font-size: 10px;">S/ ${parseFloat(detalle.total_linea).toFixed(2)}</td>
           </tr>
         `;
       });
     } else {
       html += `
         <tr>
-          <td colspan="5" class="text-center text-muted">No hay detalles disponibles</td>
+          <td colspan="5" class="text-center text-muted py-16">No hay detalles disponibles</td>
         </tr>
       `;
     }
 
     html += `
-          </tbody>
-          <tfoot class="table-light">
+            </tbody>
+          </table>
+
+        <!-- Totales -->
+        <table class="table table-bordered table-sm mb-10 mt-6" style="font-size: 10px;">
+          <tbody>
             <tr>
-              <td colspan="4" class="text-end"><strong>Subtotal (Base Imponible):</strong></td>
-              <td class="text-end"><strong>S/ ${parseFloat(venta.subtotal).toFixed(2)}</strong></td>
+              <td colspan="4" class="text-end px-4 py-4"><strong>Subtotal (Base Imponible):</strong></td>
+              <td class="text-end px-4 py-4"><strong>S/ ${parseFloat(venta.subtotal).toFixed(2)}</strong></td>
             </tr>
             <tr>
-              <td colspan="4" class="text-end"><strong>IGV (18%):</strong></td>
-              <td class="text-end"><strong>S/ ${parseFloat(venta.igv).toFixed(2)}</strong></td>
+              <td colspan="4" class="text-end px-4 py-4"><strong>IGV (18%):</strong></td>
+              <td class="text-end px-4 py-4"><strong>S/ ${parseFloat(venta.igv).toFixed(2)}</strong></td>
             </tr>
             ${venta.descuento_total && parseFloat(venta.descuento_total) > 0 ? `
             <tr>
-              <td colspan="4" class="text-end"><strong>Descuento:</strong></td>
-              <td class="text-end"><strong>- S/ ${parseFloat(venta.descuento_total).toFixed(2)}</strong></td>
+              <td colspan="4" class="text-end px-4 py-4"><strong>Descuento:</strong></td>
+              <td class="text-end px-4 py-4"><strong>- S/ ${parseFloat(venta.descuento_total).toFixed(2)}</strong></td>
             </tr>
             ` : ''}
             <tr class="table-success">
-              <td colspan="4" class="text-end"><strong>TOTAL:</strong></td>
-              <td class="text-end"><strong>S/ ${parseFloat(venta.total).toFixed(2)}</strong></td>
+              <td colspan="4" class="text-end px-4 py-5" style="font-size: 11px;"><strong>TOTAL:</strong></td>
+              <td class="text-end px-4 py-5" style="font-size: 11px;"><strong>S/ ${parseFloat(venta.total).toFixed(2)}</strong></td>
             </tr>
-          </tfoot>
+          </tbody>
         </table>
 
         <!-- Información Adicional -->
-        <div class="row mt-4">
+        <div class="row mt-12 text-xs">
           <div class="col-md-6">
-            <h6 class="mb-2"><strong>Información de Pago:</strong></h6>
+            <h6 class="mb-8 fw-semibold text-xs">Información de Pago</h6>
             <strong>Método:</strong> ${venta.metodo_pago || 'No especificado'}<br>
-            ${venta.observaciones ? `<strong>Observaciones:</strong> ${venta.observaciones}` : ''}
+            ${venta.observaciones ? `<strong>Observaciones:</strong> <span class="text-2xs">${venta.observaciones}</span>` : ''}
           </div>
           <div class="col-md-6">
-            <h6 class="mb-2"><strong>Archivos Disponibles:</strong></h6>
-            <div class="d-flex flex-column gap-1">
+            <h6 class="mb-8 fw-semibold text-xs">Archivos Disponibles</h6>
+            <div class="d-flex flex-column gap-4 text-2xs">
               <span>${venta.comprobante_info?.tiene_xml ? '<span class="text-success">✅ XML Firmado</span>' : '<span class="text-muted">❌ XML no disponible</span>'}</span>
               <span>${venta.comprobante_info?.tiene_pdf ? '<span class="text-success">✅ PDF Generado</span>' : '<span class="text-muted">❌ PDF no disponible</span>'}</span>
               <span>${venta.comprobante_info?.tiene_cdr ? '<span class="text-success">✅ CDR de SUNAT</span>' : '<span class="text-muted">❌ CDR no disponible</span>'}</span>
