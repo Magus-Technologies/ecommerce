@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -95,6 +95,26 @@ export class ConfirmacionSunatModalComponent {
 
   puedeEmitir(): boolean {
     return this.acepto && this.validSerie && this.validCliente && this.validTotal;
+  }
+
+  // ============================================
+  // ATAJOS DE TECLADO
+  // ============================================
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent): void {
+    event.preventDefault();
+    this.cancelar.emit();
+  }
+
+  @HostListener('document:keydown.enter', ['$event'])
+  onEnterKey(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'INPUT' && target.getAttribute('type') === 'checkbox') return;
+    
+    event.preventDefault();
+    if (this.puedeEmitir()) {
+      this.confirmar.emit();
+    }
   }
 }
 

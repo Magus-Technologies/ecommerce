@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -442,6 +442,26 @@ export class PagoRapidoModalComponent {
       'PLIN': 'danger'
     };
     return colores[metodo] || 'secondary';
+  }
+
+  // ============================================
+  // ATAJOS DE TECLADO
+  // ============================================
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent): void {
+    event.preventDefault();
+    this.cerrarModal();
+  }
+
+  @HostListener('document:keydown.enter', ['$event'])
+  onEnterKey(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA') return;
+    
+    event.preventDefault();
+    if (this.puedeConfirmar()) {
+      this.confirmar();
+    }
   }
 }
 

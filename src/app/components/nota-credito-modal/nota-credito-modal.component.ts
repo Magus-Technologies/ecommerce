@@ -1,8 +1,9 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { NotasCreditoService } from '../../services/notas-credito.service';
 import { FacturacionService } from '../../services/facturacion.service';
-import { NotaCreditoFormData, TIPOS_AFECTACION_IGV } from '../../models/facturacion.model';
+import { TIPOS_AFECTACION_IGV, NotaCreditoCreateRequest } from '../../models/facturacion.model';
 
 interface ComprobanteReferencia {
   id: number;
@@ -220,19 +221,19 @@ export class NotaCreditoModalComponent implements OnInit {
   comprobanteReferencia: ComprobanteReferencia | null = null;
   anulacionTotal = false;
 
-  notaCredito: NotaCreditoFormData = {
-    comprobante_referencia: { tipo: '', serie: '', numero: 0 },
+  notaCredito = {
     tipo_nota_credito: '',
     motivo: '',
     descripcion: '',
-    items: [],
-    serie: '',
     observaciones: ''
   };
 
   itemsSeleccionados: any[] = [];
 
-  constructor(private facturacionService: FacturacionService) {}
+  constructor(
+    private notasCreditoService: NotasCreditoService,
+    private facturacionService: FacturacionService
+  ) {}
 
   ngOnInit(): void {}
 
@@ -245,40 +246,38 @@ export class NotaCreditoModalComponent implements OnInit {
     this.buscando = true;
     this.error = '';
 
-    // Parsear número de comprobante (ej: F001-123)
-    const partes = this.busquedaComprobante.split('-');
-    if (partes.length !== 2) {
-      this.error = 'Formato inválido. Use: SERIE-NUMERO (ej: F001-123)';
-      this.buscando = false;
-      return;
-    }
+    // Usar el nuevo endpoint de búsqueda
+    this.facturacionService.buscarComprobantePorNumero(this.busquedaComprobante).subscribe({
+      next: (response: any) => {
+        if (response.success && response.data) {
+          const comp = response.data;
+          
+          // Verificar si puede ser anulado
+          if (!comp.puede_anular) {
+            this.error = response.warning || 'Este comprobante no puede ser anulado';
+            this.buscando = false;
+            return;
+          }
 
-    // Buscar comprobante en el backend
-    this.facturacionService.getComprobantes({ 
-      serie: partes[0], 
-      numero: partes[1] 
-    }).subscribe({
-      next: (response) => {
-        if (response.data && response.data.length > 0) {
-          const comp = response.data[0];
           this.comprobanteReferencia = {
-            id: comp.id!,
+            id: comp.id,
             tipo: comp.tipo_comprobante,
             serie: comp.serie,
-            numero: comp.numero,
-            numero_completo: comp.numero_completo!,
-            cliente_nombre: comp.cliente_nombre!,
-            total: comp.total,
-            items: comp.items || []
+            numero: comp.correlativo,
+            numero_completo: comp.numero_completo,
+            cliente_nombre: comp.cliente?.nombre || 'Sin cliente',
+            total: parseFloat(comp.total),
+            items: comp.detalles || []
           };
           this.inicializarItems();
+          this.success = 'Comprobante encontrado correctamente';
         } else {
-          this.error = 'Comprobante no encontrado';
+          this.error = response.message || 'Comprobante no encontrado';
         }
         this.buscando = false;
       },
-      error: (err) => {
-        this.error = 'Error al buscar comprobante';
+      error: (err: any) => {
+        this.error = err.error?.message || 'Error al buscar comprobante';
         this.buscando = false;
       }
     });
@@ -358,33 +357,33 @@ export class NotaCreditoModalComponent implements OnInit {
     this.error = '';
     this.success = '';
 
-    // Preparar datos
-    const datos: NotaCreditoFormData = {
-      comprobante_referencia: {
-        tipo: this.comprobanteReferencia.tipo,
-        serie: this.comprobanteReferencia.serie,
-        numero: this.comprobanteReferencia.numero
-      },
-      tipo_nota_credito: this.notaCredito.tipo_nota_credito,
-      motivo: this.notaCredito.motivo,
-      descripcion: this.notaCredito.descripcion,
+    // Preparar datos según lo que el backend realmente espera
+    const datos: any = {
+      comprobante_referencia_id: this.comprobanteReferencia.id,
+      tipo_nota_credito: this.notaCredito.tipo_nota_credito, // Código del catálogo 09
+      motivo: this.notaCredito.motivo, // Descripción del motivo
+      descripcion: this.notaCredito.descripcion || '', // Descripción adicional
       items: this.itemsSeleccionados
         .filter(item => item.seleccionado)
         .map(item => ({
-          descripcion: item.descripcion,
-          unidad_medida: item.unidad_medida || 'NIU',
+          producto_id: item.producto_id,
           cantidad: item.cantidad,
           precio_unitario: item.precio_unitario,
-          tipo_afectacion_igv: item.tipo_afectacion_igv || TIPOS_AFECTACION_IGV.GRAVADO,
-          descuento: item.descuento || 0
-        })),
-      serie: '', // Se autogenera en backend
-      observaciones: this.notaCredito.observaciones
+          descuento: item.descuento || 0,
+          tipo_afectacion_igv: item.tipo_afectacion_igv || '10'
+        }))
     };
 
-    this.facturacionService.emitirNotaCredito(datos).subscribe({
+    // Agregar observaciones si existen
+    if (this.notaCredito.observaciones) {
+      datos.observaciones = this.notaCredito.observaciones;
+    }
+
+    console.log('📤 Datos enviados al backend:', datos);
+
+    this.notasCreditoService.create(datos).subscribe({
       next: (response) => {
-        this.success = 'Nota de Crédito emitida exitosamente';
+        this.success = response.message || 'Nota de Crédito emitida exitosamente';
         this.procesando = false;
         setTimeout(() => {
           this.notaCreditoEmitida.emit(response.data);
@@ -392,7 +391,24 @@ export class NotaCreditoModalComponent implements OnInit {
         }, 2000);
       },
       error: (err) => {
-        this.error = err.error?.message || 'Error al emitir Nota de Crédito';
+        console.error('❌ Error del backend:', err);
+        
+        // Extraer mensaje de error detallado
+        let errorMsg = 'Error al emitir Nota de Crédito';
+        
+        if (err.error?.message) {
+          errorMsg = err.error.message;
+        } else if (err.error?.error) {
+          errorMsg = err.error.error;
+        }
+        
+        // Si hay errores de validación, mostrarlos
+        if (err.error?.errors) {
+          const errores = Object.values(err.error.errors).flat();
+          errorMsg += '\n\nErrores de validación:\n' + errores.join('\n');
+        }
+        
+        this.error = errorMsg;
         this.procesando = false;
       }
     });
