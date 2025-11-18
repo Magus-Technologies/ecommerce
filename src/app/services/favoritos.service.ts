@@ -1,7 +1,7 @@
 // src/app/services/favoritos.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap, catchError, of } from 'rxjs';
+import { Observable, BehaviorSubject, tap, catchError, of, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface Favorito {
@@ -72,11 +72,35 @@ export class FavoritosService {
     return this.favoritosSubject.value.includes(productoId);
   }
 
-  toggleFavorito(productoId: number): Observable<any> {
-    if (this.esFavorito(productoId)) {
-      return this.eliminarFavorito(productoId);
+  toggleFavorito(productoId: number): Observable<{ agregado: boolean }> {
+    const esFavorito = this.esFavorito(productoId);
+    
+    if (esFavorito) {
+      return this.eliminarFavorito(productoId).pipe(
+        tap(() => {
+          const current = this.favoritosSubject.value;
+          this.favoritosSubject.next(current.filter(id => id !== productoId));
+        }),
+        catchError(error => {
+          console.error('Error al eliminar favorito:', error);
+          return of({ success: false, agregado: true });
+        }),
+        map(() => ({ agregado: false }))
+      );
     } else {
-      return this.agregarFavorito(productoId);
+      return this.agregarFavorito(productoId).pipe(
+        tap(() => {
+          const current = this.favoritosSubject.value;
+          if (!current.includes(productoId)) {
+            this.favoritosSubject.next([...current, productoId]);
+          }
+        }),
+        catchError(error => {
+          console.error('Error al agregar favorito:', error);
+          return of({ success: false, agregado: false });
+        }),
+        map(() => ({ agregado: true }))
+      );
     }
   }
 }

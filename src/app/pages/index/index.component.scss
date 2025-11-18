@@ -1,5 +1,38 @@
 // stiles para banner
 
+/* ✅ FIX: PREVENIR FOUC (Flash of Unstyled Content) EN BANNERS */
+::ng-deep {
+  .banner {
+    .carousel {
+      /* Ocultar carousel hasta que Slick se inicialice completamente */
+      &:not(.slick-initialized) {
+        opacity: 0;
+        min-height: 450px; /* Reservar espacio para evitar layout shift */
+
+        /* Responsive heights */
+        @media (max-width: 1400px) {
+          min-height: 400px;
+        }
+        @media (max-width: 1200px) {
+          min-height: 350px;
+        }
+        @media (max-width: 992px) {
+          min-height: 300px;
+        }
+        @media (max-width: 768px) {
+          min-height: 250px;
+        }
+      }
+
+      /* Una vez inicializado, mostrar con transición suave */
+      &.slick-initialized {
+        opacity: 1;
+        transition: opacity 0.4s ease-in;
+      }
+    }
+  }
+}
+
 /* ✅ FIX: Eliminar margin de slick-slide en categorías para evitar overflow y corte */
 .feature-item-wrapper {
   .slick-slide {

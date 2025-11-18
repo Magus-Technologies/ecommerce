@@ -23,11 +23,11 @@ export class WhatsappFloatComponent implements OnInit, OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    console.log('WhatsApp Float Component inicializado');
+    // console.log('WhatsApp Float Component inicializado');
   }
 
   ngOnInit(): void {
-    console.log('WhatsApp Float ngOnInit ejecutado');
+    // console.log('WhatsApp Float ngOnInit ejecutado');
     if (this.isBrowser) {
       this.cargarAsesorDisponibles();
       

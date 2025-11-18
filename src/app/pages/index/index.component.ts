@@ -378,11 +378,11 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   // ✅ MEJORADO: Inicializar countdowns después de que la vista se cargue
   ngAfterViewInit(): void {
     if (this.isBrowser) {
-      // ✅ AUMENTAR EL DELAY PARA ASEGURAR QUE TODO ESTÉ CARGADO
+      // ✅ OPTIMIZADO: Reducir delay de 2000ms a 300ms para prevenir FOUC
       setTimeout(() => {
         this.inicializarCountdowns();
         this.reinicializarSliders();
-      }, 2000);
+      }, 300);
     }
   }
 
@@ -852,7 +852,10 @@ agregarAWishlist(product: any): void {
   // Usuario logueado: proceder con la wishlist
   this.FavoritosService.toggleFavorito(product.id).subscribe({
     next: (result) => {
-      if (result.agregado) {
+      // ✅ CORRECCIÓN: Verificar si el resultado tiene la propiedad agregado
+      const agregado = result?.agregado !== undefined ? result.agregado : !this.favoritosState.has(product.id);
+      
+      if (agregado) {
         this.favoritosState.add(product.id);
         // Producto agregado
         Swal.fire({
@@ -898,11 +901,17 @@ agregarAWishlist(product: any): void {
 // ✅ NUEVO MÉTODO CORRECTO:
 private inicializarFavoritosState(): void {
   this.FavoritosService.obtenerFavoritos().subscribe({
-    next: (favoritos) => {
+    next: (response) => {
       this.favoritosState.clear();
-      favoritos.forEach((item: any) => {
-        this.favoritosState.add(item.producto_id);
-      });
+      // ✅ CORRECCIÓN: El backend devuelve { data: [...] } o un array directo
+      const favoritos = response?.data || response || [];
+      
+      // ✅ Verificar que sea un array antes de usar forEach
+      if (Array.isArray(favoritos)) {
+        favoritos.forEach((item: any) => {
+          this.favoritosState.add(item.producto_id);
+        });
+      }
     },
     error: (error) => {
       console.error('Error al cargar favoritos:', error);
@@ -945,7 +954,8 @@ private inicializarFavoritosState(): void {
         if (this.debugMode) {
           console.log('✅ Flash Sales cargadas:', flashSales);
         }
-        this.flashSalesActivas = flashSales;
+        // ✅ CORRECCIÓN: Asegurar que flashSales sea un array
+        this.flashSalesActivas = Array.isArray(flashSales) ? flashSales : [];
         this.cdr.detectChanges();
 
         // ✅ INICIALIZAR COUNTDOWNS DESPUÉS DE CARGAR DATOS
@@ -955,6 +965,7 @@ private inicializarFavoritosState(): void {
       },
       error: (error) => {
         console.error('Error al cargar flash sales:', error);
+        this.flashSalesActivas = []; // ✅ Inicializar como array vacío en caso de error
       },
     });
   }
@@ -1106,33 +1117,37 @@ private inicializarFavoritosState(): void {
     // ✅ LIMPIAR INTERVALOS ANTERIORES
     this.limpiarTodosLosIntervalos();
 
-    // Countdown para Flash Sales
-    this.flashSalesActivas.forEach((sale) => {
-      if (sale.fecha_fin) {
-        const countdownId = `countdown-flash-${sale.id}`;
-        if (this.debugMode) {
-          console.log(
-            `🔄 Inicializando countdown para flash sale ${sale.id}:`,
-            sale.fecha_fin
-          );
+    // ✅ CORRECCIÓN: Verificar que flashSalesActivas sea un array antes de usar forEach
+    if (Array.isArray(this.flashSalesActivas)) {
+      this.flashSalesActivas.forEach((sale) => {
+        if (sale.fecha_fin) {
+          const countdownId = `countdown-flash-${sale.id}`;
+          if (this.debugMode) {
+            console.log(
+              `🔄 Inicializando countdown para flash sale ${sale.id}:`,
+              sale.fecha_fin
+            );
+          }
+          this.inicializarCountdown(countdownId, sale.fecha_fin);
         }
-        this.inicializarCountdown(countdownId, sale.fecha_fin);
-      }
-    });
+      });
+    }
 
-    // Countdown para productos en oferta que son flash sales
-    this.productosEnOferta.forEach((producto) => {
-      if (producto.es_flash_sale && producto.fecha_fin_oferta) {
-        const countdownId = `countdown-producto-${producto.id}`;
-        if (this.debugMode) {
-          console.log(
-            `🔄 Inicializando countdown para producto ${producto.id}:`,
-            producto.fecha_fin_oferta
-          );
+    // ✅ CORRECCIÓN: Verificar que productosEnOferta sea un array antes de usar forEach
+    if (Array.isArray(this.productosEnOferta)) {
+      this.productosEnOferta.forEach((producto) => {
+        if (producto.es_flash_sale && producto.fecha_fin_oferta) {
+          const countdownId = `countdown-producto-${producto.id}`;
+          if (this.debugMode) {
+            console.log(
+              `🔄 Inicializando countdown para producto ${producto.id}:`,
+              producto.fecha_fin_oferta
+            );
+          }
+          this.inicializarCountdown(countdownId, producto.fecha_fin_oferta);
         }
-        this.inicializarCountdown(countdownId, producto.fecha_fin_oferta);
-      }
-    });
+      });
+    }
 
     // ✅ COUNTDOWN PARA OFERTA PRINCIPAL DEL DÍA
     if (this.ofertaPrincipalDelDia?.oferta_principal?.fecha_fin) {

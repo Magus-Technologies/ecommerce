@@ -74,7 +74,7 @@ export class UserProfileComponent implements OnInit {
   }
 
   private updateUserState(user: any): void {
-    console.log('🔧 Actualizando estado con usuario:', user);
+    // console.log('🔧 Actualizando estado con usuario:', user);
 
     const hasValidToken = !!this.authService.getToken();
 

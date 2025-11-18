@@ -209,11 +209,17 @@ export class CartComponent implements OnInit, OnDestroy {
     this.router.navigate(['/shop']); 
   }
   
-  getItemSubtotal(item: CartItem): number { 
+  getItemSubtotal(item: CartItem): number {
     if (!item) return 0;
-    const precio = this.ensureNumber(item.precio);
+
+    // Si tiene descuento, usar precio_con_descuento, sino usar precio normal
+    let precioFinal = this.ensureNumber(item.precio);
+    if (item.descuento_porcentaje && item.descuento_porcentaje > 0 && item.precio_con_descuento) {
+      precioFinal = this.ensureNumber(item.precio_con_descuento);
+    }
+
     const cantidad = this.ensureNumber(item.cantidad);
-    return precio * cantidad; 
+    return precioFinal * cantidad;
   }
   
   getTotalFinal(): number { 

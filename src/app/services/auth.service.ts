@@ -50,7 +50,7 @@ export class AuthService {
       const user = (storedUser && storedToken) ? JSON.parse(storedUser) : null;
       this.currentUserSubject = new BehaviorSubject<User | null>(user);
 
-      console.log('🔧 AuthService inicializado con usuario:', user);
+      // console.log('🔧 AuthService inicializado con usuario:', user);
     } else {
       this.currentUserSubject = new BehaviorSubject<User | null>(null);
     }
