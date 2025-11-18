@@ -62,7 +62,8 @@ export interface Cliente {
   id?: number;
   tipo_documento: '1' | '6' | '4' | '7' | '-'; // 1=DNI, 6=RUC, 4=CE, 7=PASS, -=SIN DOC
   numero_documento: string;
-  nombre: string;
+  nombre?: string; // Opcional para compatibilidad
+  razon_social?: string; // Campo principal que devuelve la API
   nombre_comercial?: string;
   direccion?: string;
   ubigeo?: string;
@@ -397,3 +398,162 @@ export const METODOS_PAGO = {
   YAPE: 'YAPE',
   PLIN: 'PLIN'
 } as const;
+
+// ============================================
+// INTERFACES PARA NOTAS DE CRÉDITO/DÉBITO
+// ============================================
+
+export interface ComprobanteReferencia {
+  id: number;
+  serie: string;
+  correlativo: string;
+  tipo_comprobante: string;
+  numero_completo: string;
+}
+
+export interface NotaCredito {
+  id: number;
+  serie: string;
+  numero: string;
+  serie_comprobante_ref: string;
+  numero_comprobante_ref: string;
+  tipo_comprobante_ref: string;
+  venta_id: number;
+  cliente_id: number;
+  fecha_emision: string;
+  motivo: string;
+  tipo_nota_credito: string;
+  subtotal: string | number;
+  igv: string | number;
+  total: string | number;
+  moneda: string;
+  estado: string; // 'pendiente', 'enviado', 'aceptado', 'rechazado', 'anulado'
+  xml: string | null;
+  cdr: string | null;
+  hash: string | null;
+  observaciones: string | null;
+  created_at: string;
+  updated_at: string;
+  pdf_url?: string;
+  xml_url?: string;
+  cdr_url?: string | null;
+  tipo_nota_credito_nombre?: string;
+  cliente?: Cliente;
+  venta?: any;
+}
+
+export interface NotaDebito {
+  id: number;
+  serie: string;
+  numero: string;
+  serie_comprobante_ref: string;
+  numero_comprobante_ref: string;
+  tipo_comprobante_ref: string;
+  venta_id: number;
+  cliente_id: number;
+  fecha_emision: string;
+  motivo: string;
+  tipo_nota_debito: string;
+  subtotal: string | number;
+  igv: string | number;
+  total: string | number;
+  moneda: string;
+  estado: string; // 'pendiente', 'enviado', 'aceptado', 'rechazado', 'anulado'
+  xml: string | null;
+  cdr: string | null;
+  hash: string | null;
+  observaciones: string | null;
+  created_at: string;
+  updated_at: string;
+  pdf_url?: string;
+  xml_url?: string;
+  cdr_url?: string | null;
+  tipo_nota_debito_nombre?: string;
+  cliente?: Cliente;
+  venta?: any;
+}
+
+export interface NotaCreditoCreateRequest {
+  comprobante_referencia_id: number;
+  motivo_nota: string;
+  motivo_nota_descripcion?: string;
+  productos: Array<{
+    producto_id: number;
+    cantidad: number;
+    precio_unitario: number;
+  }>;
+  observaciones?: string;
+}
+
+export interface NotaDebitoCreateRequest {
+  comprobante_referencia_id: number;
+  motivo_nota: string;
+  motivo_nota_descripcion?: string;
+  productos: Array<{
+    descripcion: string;
+    cantidad: number;
+    precio_unitario: number;
+  }>;
+  observaciones?: string;
+}
+
+export interface NotasEstadisticas {
+  total_notas: number;
+  monto_total: string | number;
+  por_estado: Array<{
+    estado: string;
+    cantidad: number;
+    monto: string | number;
+  }>;
+  periodo: {
+    inicio: string;
+    fin: string;
+  };
+}
+
+export interface NotasPaginatedResponse {
+  current_page: number;
+  data: NotaCredito[] | NotaDebito[];
+  first_page_url: string;
+  from: number;
+  last_page: number;
+  last_page_url: string;
+  next_page_url: string | null;
+  path: string;
+  per_page: number;
+  prev_page_url: string | null;
+  to: number;
+  total: number;
+}
+
+export const TIPOS_NOTA_CREDITO = {
+  ANULACION_OPERACION: '01',
+  ANULACION_ERROR_RUC: '02',
+  CORRECCION_ERROR_DESCRIPCION: '03',
+  DESCUENTO_GLOBAL: '04',
+  DESCUENTO_ITEM: '05',
+  DEVOLUCION_TOTAL: '06',
+  DEVOLUCION_ITEM: '07',
+  BONIFICACION: '08',
+  DISMINUCION_VALOR: '09',
+  OTROS: '10'
+} as const;
+
+export const TIPOS_NOTA_DEBITO = {
+  INTERESES_MORA: '01',
+  AUMENTO_VALOR: '02',
+  PENALIDADES: '03',
+  AJUSTES_EXPORTACION: '10',
+  AJUSTES_IVAP: '11'
+} as const;
+
+export const ESTADOS_NOTA = {
+  PENDIENTE: 'pendiente',
+  GENERADO: 'generado',
+  ENVIADO: 'enviado',
+  ACEPTADO: 'aceptado',
+  RECHAZADO: 'rechazado',
+  ANULADO: 'anulado'
+} as const;
+
+

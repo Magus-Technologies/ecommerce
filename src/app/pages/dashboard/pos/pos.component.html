@@ -45,14 +45,9 @@
       <div *ngIf="terminoBusqueda && productosFiltrados.length > 0" class="search-results">
         <div class="search-results-header">
           <div class="header-left">
-            <input 
-              type="checkbox" 
-              class="custom-checkbox" 
-              [checked]="todosResultadosSeleccionados"
-              [indeterminate]="algunosResultadosSeleccionados"
-              (change)="toggleTodosResultados($event)"
-              title="Seleccionar todos"
-            >
+            <input type="checkbox" class="custom-checkbox" [checked]="todosResultadosSeleccionados"
+              [indeterminate]="algunosResultadosSeleccionados" (change)="toggleTodosResultados($event)"
+              title="Seleccionar todos">
             <span class="results-count">{{ productosFiltrados.length }} resultados</span>
             <span *ngIf="totalResultadosSeleccionados > 0" class="badge-selected">
               <i class="ph ph-check-circle"></i>
@@ -64,13 +59,8 @@
           <div *ngFor="let producto of productosFiltrados.slice(0, 6); trackBy: trackByProductoId" class="result-item"
             [class.selected]="producto.seleccionado">
             <div class="result-left">
-              <input 
-                type="checkbox" 
-                class="custom-checkbox" 
-                [(ngModel)]="producto.seleccionado"
-                (change)="onCheckboxResultadoChange(producto)"
-                (click)="$event.stopPropagation()"
-              >
+              <input type="checkbox" class="custom-checkbox" [(ngModel)]="producto.seleccionado"
+                (change)="onCheckboxResultadoChange(producto)" (click)="$event.stopPropagation()">
               <div class="result-info">
                 <div class="result-name">{{ producto.nombre }}</div>
                 <div class="result-code">
@@ -81,38 +71,27 @@
             </div>
             <div class="result-right">
               <div class="result-price-stock">
-                <div class="result-price">S/ {{ (producto.precio_venta || producto.precio || 0) | number:'1.2-2' }}</div>
-                <div class="result-stock" 
-                  [class.low]="getStockDisponible(producto) < 10 && getStockDisponible(producto) > 0" 
+                <div class="result-price">S/ {{ (producto.precio_venta || producto.precio || 0) | number:'1.2-2' }}
+                </div>
+                <div class="result-stock"
+                  [class.low]="getStockDisponible(producto) < 10 && getStockDisponible(producto) > 0"
                   [class.out]="getStockDisponible(producto) === 0">
                   <i class="ph ph-package"></i>
                   <span>Stock: {{ getStockDisponible(producto) }}</span>
                 </div>
               </div>
               <div class="quantity-controls" *ngIf="producto.seleccionado">
-                <button 
-                  type="button" 
-                  class="btn-quantity btn-minus"
+                <button type="button" class="btn-quantity btn-minus"
                   (click)="decrementarResultado(producto); $event.stopPropagation()"
-                  [disabled]="producto.cantidadSeleccionada <= 1"
-                >
+                  [disabled]="producto.cantidadSeleccionada <= 1">
                   <i class="ph ph-minus"></i>
                 </button>
-                <input 
-                  type="number" 
-                  class="quantity-input" 
-                  [(ngModel)]="producto.cantidadSeleccionada"
-                  (change)="validarCantidadResultado(producto)"
-                  (click)="$event.stopPropagation()"
-                  min="1"
-                  [max]="getStockDisponible(producto)"
-                >
-                <button 
-                  type="button" 
-                  class="btn-quantity btn-plus"
+                <input type="number" class="quantity-input" [(ngModel)]="producto.cantidadSeleccionada"
+                  (change)="validarCantidadResultado(producto)" (click)="$event.stopPropagation()" min="1"
+                  [max]="getStockDisponible(producto)">
+                <button type="button" class="btn-quantity btn-plus"
                   (click)="incrementarResultado(producto); $event.stopPropagation()"
-                  [disabled]="producto.cantidadSeleccionada >= getStockDisponible(producto) || getStockDisponible(producto) === 0"
-                >
+                  [disabled]="producto.cantidadSeleccionada >= getStockDisponible(producto) || getStockDisponible(producto) === 0">
                   <i class="ph ph-plus"></i>
                 </button>
               </div>
@@ -337,8 +316,7 @@
 </div>
 
 <!-- MODAL DE CONFIGURACIÓN DE VENTA -->
-<div *ngIf="mostrarConfiguracionModal" class="modal-overlay" (click)="cerrarConfiguracionModal()"
-  style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; 
+<div *ngIf="mostrarConfiguracionModal" class="modal-overlay" (click)="cerrarConfiguracionModal()" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; 
          width: 100vw !important; height: 100vh !important; display: flex !important; align-items: center !important; 
          justify-content: center !important; background: rgba(0, 0, 0, 0.6) !important; z-index: 99999 !important; 
          padding: 20px !important; margin: 0 !important;">
@@ -460,9 +438,6 @@
   (clienteActualizado)="onClienteActualizado($event)" (clienteGuardado)="onClienteGuardado($event)"
   (cerrar)="cerrarClienteModal()"></app-cliente-edit-modal>
 
-<app-producto-quick-modal *ngIf="mostrarProductoModal" [productos]="productos"
-  (productoSeleccionado)="onSeleccionProductoEvent($event)" (cerrar)="cerrarProductoModal()"></app-producto-quick-modal>
-
 <app-pago-rapido-modal *ngIf="mostrarPagoModal" [totalPagar]="calcularTotal()"
   (pagoProcesado)="onPagoProcesadoEvent($event)" (cerrar)="cerrarPagoModal()"></app-pago-rapido-modal>
 
@@ -473,13 +448,9 @@
   (seleccionarSerie)="onSeleccionSerieEvent($event)" (cerrar)="cerrarSerieModal()"></app-serie-selector-modal>
 
 <!-- Modal Enviar Comprobante -->
-<app-enviar-comprobante-modal 
-  *ngIf="mostrarEnviarComprobanteModal"
-  [comprobante]="comprobanteGenerado()"
-  [emailDefault]="ventaForm.cliente.email || ''"
-  [telefonoDefault]="ventaForm.cliente.telefono || ''"
-  (enviar)="onEnviarComprobante($event)"
-  (cerrar)="cerrarModalEnviarComprobante()">
+<app-enviar-comprobante-modal *ngIf="mostrarEnviarComprobanteModal" [comprobante]="comprobanteGenerado()"
+  [emailDefault]="ventaForm.cliente.email || ''" [telefonoDefault]="ventaForm.cliente.telefono || ''"
+  (enviar)="onEnviarComprobante($event)" (cerrar)="cerrarModalEnviarComprobante()">
 </app-enviar-comprobante-modal>
 
 <!-- Modal de Éxito -->
@@ -503,7 +474,8 @@
     </div>
 
     <div class="success-actions">
-      <button class="btn-modal btn-primary" (click)="cerrarModalExito()" style="width: 100%; padding: 14px; font-size: 16px;">
+      <button class="btn-modal btn-primary" (click)="cerrarModalExito()"
+        style="width: 100%; padding: 14px; font-size: 16px;">
         Continuar
       </button>
     </div>
@@ -515,16 +487,16 @@
 <!-- ========================================== -->
 <!-- MODAL 1: TIPO DE COMPROBANTE (PASO OBLIGATORIO) -->
 <!-- ========================================== -->
-<div *ngIf="mostrarModalTipoComprobante" class="modal-overlay modal-obligatorio" 
-  style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; 
+<div *ngIf="mostrarModalTipoComprobante" class="modal-overlay modal-obligatorio" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; 
          width: 100vw !important; height: 100vh !important; display: flex !important; align-items: center !important; 
          justify-content: center !important; background: rgba(0, 0, 0, 0.6) !important; z-index: 99999 !important; 
          padding: 20px !important; margin: 0 !important;">
-  <div class="modal-container modal-config" (click)="$event.stopPropagation()" 
+  <div class="modal-container modal-config" (click)="$event.stopPropagation()"
     style="max-width: 650px; width: 100%; position: relative; margin: 0 auto !important;">
     <div class="modal-header" style="background-color: var(--main-600) !important; color: white; padding: 20px 24px;">
       <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+        <div
+          style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
           <i class="ph ph-receipt" style="font-size: 24px;"></i>
         </div>
         <div style="flex: 1;">
@@ -536,7 +508,8 @@
 
     <div class="modal-body" style="padding: 24px;">
       <!-- Alerta informativa -->
-      <div style="background: #e7f3ff; border-left: 4px solid #0d6efd; padding: 14px 16px; border-radius: 6px; margin-bottom: 24px;">
+      <div
+        style="background: #e7f3ff; border-left: 4px solid #0d6efd; padding: 14px 16px; border-radius: 6px; margin-bottom: 24px;">
         <div style="display: flex; gap: 12px; align-items: flex-start;">
           <i class="ph ph-info" style="color: #0d6efd; font-size: 20px; margin-top: 2px;"></i>
           <div style="flex: 1;">
@@ -555,22 +528,21 @@
         </label>
         <div class="comprobante-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
           <!-- Nota de Venta -->
-          <div class="comprobante-option" 
-            [class.active]="tipoDocumentoSeleccionado === 'NOTA_DE_VENTA'"
+          <div class="comprobante-option" [class.active]="tipoDocumentoSeleccionado === 'NOTA_DE_VENTA'"
             (click)="tipoDocumentoSeleccionado = 'NOTA_DE_VENTA'; onTipoDocumentoChange()"
             style="cursor: pointer; padding: 20px 16px; border: 2px solid #dee2e6; border-radius: 10px; text-align: center; transition: all 0.2s ease; background: white;"
             [style.border-color]="tipoDocumentoSeleccionado === 'NOTA_DE_VENTA' ? '#0d6efd' : '#dee2e6'"
             [style.background]="tipoDocumentoSeleccionado === 'NOTA_DE_VENTA' ? '#e7f3ff' : 'white'"
             [style.box-shadow]="tipoDocumentoSeleccionado === 'NOTA_DE_VENTA' ? '0 4px 12px rgba(13, 110, 253, 0.15)' : 'none'">
-            <i class="ph ph-note" style="font-size: 36px; display: block; margin-bottom: 12px;" 
+            <i class="ph ph-note" style="font-size: 36px; display: block; margin-bottom: 12px;"
               [style.color]="tipoDocumentoSeleccionado === 'NOTA_DE_VENTA' ? '#0d6efd' : '#6c757d'"></i>
             <strong style="display: block; margin-bottom: 6px; font-size: 14px; color: #212529;">Nota de Venta</strong>
-            <small style="color: #6c757d; font-size: 12px; line-height: 1.4; display: block;">Sin comprobante<br>electrónico</small>
+            <small style="color: #6c757d; font-size: 12px; line-height: 1.4; display: block;">Sin
+              comprobante<br>electrónico</small>
           </div>
 
           <!-- Boleta -->
-          <div class="comprobante-option" 
-            [class.active]="tipoDocumentoSeleccionado === '03'"
+          <div class="comprobante-option" [class.active]="tipoDocumentoSeleccionado === '03'"
             (click)="tipoDocumentoSeleccionado = '03'; onTipoDocumentoChange()"
             style="cursor: pointer; padding: 20px 16px; border: 2px solid #dee2e6; border-radius: 10px; text-align: center; transition: all 0.2s ease; background: white;"
             [style.border-color]="tipoDocumentoSeleccionado === '03' ? '#0d6efd' : '#dee2e6'"
@@ -579,12 +551,12 @@
             <i class="ph ph-receipt" style="font-size: 36px; display: block; margin-bottom: 12px;"
               [style.color]="tipoDocumentoSeleccionado === '03' ? '#0d6efd' : '#6c757d'"></i>
             <strong style="display: block; margin-bottom: 6px; font-size: 14px; color: #212529;">Boleta</strong>
-            <small style="color: #6c757d; font-size: 12px; line-height: 1.4; display: block;">Requiere DNI/RUC<br>Obligatorio</small>
+            <small style="color: #6c757d; font-size: 12px; line-height: 1.4; display: block;">Requiere
+              DNI/RUC<br>Obligatorio</small>
           </div>
 
           <!-- Factura -->
-          <div class="comprobante-option" 
-            [class.active]="tipoDocumentoSeleccionado === '01'"
+          <div class="comprobante-option" [class.active]="tipoDocumentoSeleccionado === '01'"
             (click)="tipoDocumentoSeleccionado = '01'; onTipoDocumentoChange()"
             style="cursor: pointer; padding: 20px 16px; border: 2px solid #dee2e6; border-radius: 10px; text-align: center; transition: all 0.2s ease; background: white;"
             [style.border-color]="tipoDocumentoSeleccionado === '01' ? '#0d6efd' : '#dee2e6'"
@@ -593,7 +565,8 @@
             <i class="ph ph-file-text" style="font-size: 36px; display: block; margin-bottom: 12px;"
               [style.color]="tipoDocumentoSeleccionado === '01' ? '#0d6efd' : '#6c757d'"></i>
             <strong style="display: block; margin-bottom: 6px; font-size: 14px; color: #212529;">Factura</strong>
-            <small style="color: #6c757d; font-size: 12px; line-height: 1.4; display: block;">Requiere RUC<br>Obligatorio</small>
+            <small style="color: #6c757d; font-size: 12px; line-height: 1.4; display: block;">Requiere
+              RUC<br>Obligatorio</small>
           </div>
         </div>
       </div>
@@ -606,13 +579,17 @@
         <div class="serie-selector"
           style="border: 2px solid #dee2e6; border-radius: 8px; padding: 16px; display: flex; align-items: center; gap: 16px; background: #f8f9fa;">
           <div class="serie-info" style="flex: 1;">
-            <span class="serie-label" style="display: block; font-size: 11px; color: #6c757d; margin-bottom: 4px; text-transform: uppercase; font-weight: 500;">Serie</span>
-            <span class="serie-value" style="font-weight: 600; color: #212529; font-size: 15px;">{{ serieSeleccionada()?.serie || 'No disponible' }}</span>
+            <span class="serie-label"
+              style="display: block; font-size: 11px; color: #6c757d; margin-bottom: 4px; text-transform: uppercase; font-weight: 500;">Serie</span>
+            <span class="serie-value" style="font-weight: 600; color: #212529; font-size: 15px;">{{
+              serieSeleccionada()?.serie || 'No disponible' }}</span>
           </div>
           <div class="serie-divider" style="width: 1px; height: 36px; background: #dee2e6;"></div>
           <div class="serie-info" style="flex: 1;">
-            <span class="serie-label" style="display: block; font-size: 11px; color: #6c757d; margin-bottom: 4px; text-transform: uppercase; font-weight: 500;">Número</span>
-            <span class="serie-value" style="font-weight: 600; color: #212529; font-size: 15px;">{{ getNumeroSiguiente() }}</span>
+            <span class="serie-label"
+              style="display: block; font-size: 11px; color: #6c757d; margin-bottom: 4px; text-transform: uppercase; font-weight: 500;">Número</span>
+            <span class="serie-value" style="font-weight: 600; color: #212529; font-size: 15px;">{{ getNumeroSiguiente()
+              }}</span>
           </div>
           <i class="ph ph-check-circle" style="color: #198754; font-size: 20px;"></i>
         </div>
@@ -626,8 +603,7 @@
       style="background: #f8f9fa; padding: 16px 24px; display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid #dee2e6;">
       <button class="btn-modal btn-secondary" (click)="cancelarConfiguracion()"
         style="padding: 10px 24px; border-radius: 6px; border: 1px solid #dee2e6; cursor: pointer; background: white; color: #6c757d; font-weight: 500; transition: all 0.2s ease;"
-        onmouseover="this.style.background='#e9ecef';"
-        onmouseout="this.style.background='white';">
+        onmouseover="this.style.background='#e9ecef';" onmouseout="this.style.background='white';">
         Cancelar
       </button>
       <button class="btn-modal btn-primary" (click)="confirmarTipoComprobante()"
@@ -646,12 +622,11 @@
 <!-- ========================================== -->
 <!-- MODAL 2: DATOS DEL CLIENTE (SEGÚN TIPO DE COMPROBANTE) -->
 <!-- ========================================== -->
-<div *ngIf="mostrarModalDatosCliente" class="modal-overlay modal-obligatorio"
-  style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; 
+<div *ngIf="mostrarModalDatosCliente" class="modal-overlay modal-obligatorio" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; 
          width: 100vw !important; height: 100vh !important; display: flex !important; align-items: center !important; 
          justify-content: center !important; background: rgba(0, 0, 0, 0.6) !important; z-index: 99999 !important; 
          padding: 20px !important; margin: 0 !important;">
-  <div class="modal-container modal-config" (click)="$event.stopPropagation()" 
+  <div class="modal-container modal-config" (click)="$event.stopPropagation()"
     style="max-width: 650px; width: 100%; margin: 0 auto !important;">
     <div class="modal-header" style="background-color: var(--main-600) !important; color: white; padding: 20px 24px;">
       <div style="display: flex; align-items: center; gap: 12px;">
@@ -709,11 +684,10 @@
           <input type="text" class="form-control" [(ngModel)]="ventaForm.cliente.numero_documento"
             [placeholder]="ventaForm.cliente.tipo_documento === TIPOS_DOCUMENTO.RUC ? '20123456789' : '12345678'"
             [maxlength]="ventaForm.cliente.tipo_documento === TIPOS_DOCUMENTO.RUC ? 11 : 8"
+            (keydown.enter)="$event.preventDefault(); ventaForm.cliente.numero_documento.length >= 8 && !loading ? buscarCliente() : null"
             style="flex: 1; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
-          <button
-            *ngIf="ventaForm.cliente.numero_documento.length >= 8"
-            class="btn btn-sm btn-primary" (click)="buscarCliente()"
-            [disabled]="loading"
+          <button *ngIf="ventaForm.cliente.numero_documento.length >= 8" class="btn btn-sm btn-primary"
+            (click)="buscarCliente()" [disabled]="loading"
             style="padding: 10px 16px; border-radius: 6px; border: none; background: var(--main-600); color: white; cursor: pointer; display: flex; align-items: center; gap: 6px; min-width: 100px; justify-content: center;">
             <i class="ph ph-magnifying-glass" *ngIf="!loading"></i>
             <i class="ph ph-spinner ph-spin" *ngIf="loading"></i>
@@ -726,7 +700,7 @@
         <small *ngIf="error && !loading" style="color: #dc3545; display: block; margin-top: 6px; font-size: 13px;">
           <i class="ph ph-warning-circle"></i> {{ error }}
         </small>
-        <small *ngIf="!loading && !success && !error && ventaForm.cliente.numero_documento.length >= 8" 
+        <small *ngIf="!loading && !success && !error && ventaForm.cliente.numero_documento.length >= 8"
           style="color: #6c757d; display: block; margin-top: 6px; font-size: 12px;">
           <i class="ph ph-info"></i> Presione "Buscar" para consultar en Sistema → RENIEC/SUNAT
         </small>

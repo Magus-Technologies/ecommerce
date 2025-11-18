@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClienteService } from '../../services/cliente.service';
@@ -163,6 +163,34 @@ export class ClienteEditModalComponent implements OnInit {
           this.guardando = false;
         }
       });
+  }
+
+  // ============================================
+  // ATAJOS DE TECLADO
+  // ============================================
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent): void {
+    event.preventDefault();
+    this.cerrar.emit();
+  }
+
+  @HostListener('document:keydown.enter', ['$event'])
+  onEnterKey(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'TEXTAREA') return;
+    
+    event.preventDefault();
+    if (!this.formulario.invalid && !this.guardando) {
+      this.guardar();
+    }
+  }
+
+  @HostListener('document:keydown.control.s', ['$event'])
+  onCtrlS(event: KeyboardEvent): void {
+    event.preventDefault();
+    if (!this.formulario.invalid && !this.guardando) {
+      this.guardar();
+    }
   }
 
 }

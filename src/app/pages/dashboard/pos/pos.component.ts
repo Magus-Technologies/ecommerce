@@ -114,7 +114,7 @@ export class PosComponent implements OnInit, OnDestroy {
   pagaCon = 0;
 
   // Pagos múltiples registrados
-  pagosMixtosRegistrados: Array<{metodo_pago: string, monto: number, referencia?: string | null}> = [];
+  pagosMixtosRegistrados: Array<{ metodo_pago: string, monto: number, referencia?: string | null }> = [];
 
   // Tasa de cambio (fija para PEN)
   tasaCambio = 1.00;
@@ -612,7 +612,7 @@ export class PosComponent implements OnInit, OnDestroy {
    */
   buscarCliente(): void {
     const numeroDocumento = this.ventaForm.cliente.numero_documento;
-    
+
     if (!numeroDocumento || numeroDocumento.trim() === '') {
       return;
     }
@@ -1257,7 +1257,7 @@ export class PosComponent implements OnInit, OnDestroy {
       console.log('   - Cliente ID:', datosVenta.cliente_id);
       console.log('   - Método pago:', datosVenta.metodo_pago);
       console.log('   - Pagos mixtos:', datosVenta.pagos?.length || 0);
-      
+
       if (datosVenta.productos) {
         datosVenta.productos.forEach((p: any, i: number) => {
           console.log(`   Producto ${i + 1}:`, {
@@ -1268,7 +1268,7 @@ export class PosComponent implements OnInit, OnDestroy {
           });
         });
       }
-      
+
       if (datosVenta.pagos) {
         datosVenta.pagos.forEach((p: any, i: number) => {
           console.log(`   Pago ${i + 1}:`, {
@@ -1302,7 +1302,7 @@ export class PosComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             this.loading = false;
-            
+
             console.log('');
             console.log('═══════════════════════════════════════════════════════');
             console.log('❌ ERROR AL ACTUALIZAR VENTA - REPORTE COMPLETO');
@@ -1324,7 +1324,7 @@ export class PosComponent implements OnInit, OnDestroy {
             console.log('📋 ERRORES DE VALIDACIÓN:');
             if (error.error?.errors) {
               console.log(JSON.stringify(error.error.errors, null, 2));
-              
+
               console.log('');
               console.log('📝 ERRORES FORMATEADOS:');
               Object.entries(error.error.errors).forEach(([campo, mensajes]: [string, any]) => {
@@ -1341,13 +1341,13 @@ export class PosComponent implements OnInit, OnDestroy {
             console.log('');
             console.log('═══════════════════════════════════════════════════════');
             console.log('');
-            
+
             // Mostrar errores de validación detallados
             if (error.error?.errors) {
               const errores = Object.entries(error.error.errors)
                 .map(([campo, mensajes]: [string, any]) => `• ${campo}: ${Array.isArray(mensajes) ? mensajes.join(', ') : mensajes}`)
                 .join('\n');
-              
+
               this.error = `❌ Errores de validación:\n${errores}`;
             } else {
               this.error = error.error?.message || 'Error al actualizar la venta';
@@ -1438,10 +1438,10 @@ export class PosComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (response.success && response.comprobante) {
             console.log('✅ Comprobante generado localmente:', response.comprobante);
-            
+
             // Guardar comprobante generado
             this.comprobanteGenerado.set(response.comprobante as any);
-            
+
             // PASO 2: Enviar automáticamente a SUNAT
             this.enviarComprobanteASunat(this.ventaGuardada!.id!);
           } else {
@@ -1470,19 +1470,19 @@ export class PosComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           this.facturando.set(false);
-          
+
           if (response.success && response.data) {
             console.log('✅ Comprobante enviado a SUNAT:', response.data);
-            
+
             // Actualizar comprobante con datos de SUNAT
             this.comprobanteGenerado.set(response.data.comprobante as any);
             this.mostrarPanelComprobante.set(true);
-            
+
             // Actualizar estado de venta
             if (this.ventaGuardada) {
               this.ventaGuardada.estado = 'FACTURADO';
             }
-            
+
             this.success = `✅ Comprobante ${response.data.numero_completo} ${response.data.estado} por SUNAT`;
             this.error = null;
           } else {
@@ -1954,7 +1954,7 @@ export class PosComponent implements OnInit, OnDestroy {
 
   onPagoProcesado(resultado: PagoResultado): void {
     console.log('💰 Pago procesado:', resultado);
-    
+
     // Guardar los pagos múltiples si existen
     if (resultado.pagosMixtos && resultado.pagosMixtos.length > 0) {
       this.pagosMixtosRegistrados = resultado.pagosMixtos.map(p => ({
@@ -1971,10 +1971,10 @@ export class PosComponent implements OnInit, OnDestroy {
         referencia: resultado.referencia || null
       }];
     }
-    
+
     // Cerrar modal y guardar venta directamente
     this.cerrarPagoModal();
-    
+
     // Guardar la venta (sin emitir a SUNAT)
     this.guardarVenta();
   }
@@ -2109,7 +2109,7 @@ export class PosComponent implements OnInit, OnDestroy {
       console.log('🔧 ACTUALIZANDO VENTA (emitirFlujoEncadenado) - ID:', this.ventaIdEditar);
       console.log('📦 Productos originales:', this.ventaOriginal?.detalles?.length || 0);
       console.log('📦 Productos nuevos:', datosVenta.productos.length);
-      
+
       this.ventasService.actualizarVenta(this.ventaIdEditar, datosVenta)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
@@ -2126,11 +2126,11 @@ export class PosComponent implements OnInit, OnDestroy {
           error: (error) => {
             this.loading = false;
             console.error('Error detallado:', error);
-            
+
             // Manejo específico de errores de stock
             if (error.error?.error_type === 'stock_insuficiente') {
               this.error = `❌ ${error.error.error}`;
-              
+
               // Mostrar alerta más detallada con explicación del bug
               const mensaje = `⚠️ ERROR DE VALIDACIÓN DE STOCK\n\n${error.error.error}\n\n` +
                 `🐛 NOTA: Este es un bug conocido del backend.\n` +
@@ -2141,9 +2141,9 @@ export class PosComponent implements OnInit, OnDestroy {
                 `3. Ajusta manualmente el stock del producto\n` +
                 `4. Vuelve a editar la venta\n\n` +
                 `O contacta al administrador para que corrija el backend.`;
-              
+
               alert(mensaje);
-              
+
               // Log detallado para debugging
               console.error('🐛 BUG DE BACKEND - Validación de stock incorrecta:');
               console.error('   El backend debería:');
@@ -2160,7 +2160,7 @@ export class PosComponent implements OnInit, OnDestroy {
     } else {
       // MODO CREACIÓN: Usar POST
       console.log('📝 CREANDO NUEVA VENTA (emitirFlujoEncadenado)');
-      
+
       this.facturacionService.createVenta(datosVenta)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
@@ -2181,11 +2181,11 @@ export class PosComponent implements OnInit, OnDestroy {
           error: (error) => {
             this.loading = false;
             console.error('Error detallado:', error);
-            
+
             // Manejo específico de errores de stock
             if (error.error?.error_type === 'stock_insuficiente') {
               this.error = `❌ ${error.error.error}`;
-              
+
               // Mostrar alerta más detallada
               alert(`⚠️ STOCK INSUFICIENTE\n\n${error.error.error}\n\nPor favor, ajusta la cantidad o elimina el producto del carrito.`);
             } else {
@@ -2416,7 +2416,7 @@ export class PosComponent implements OnInit, OnDestroy {
       if (!producto.cantidadSeleccionada) {
         producto.cantidadSeleccionada = 1;
       }
-      
+
       // Agregar automáticamente al carrito
       this.agregarProductoAlCarrito(producto);
     } else {
@@ -2431,7 +2431,7 @@ export class PosComponent implements OnInit, OnDestroy {
   private agregarProductoAlCarrito(producto: any): void {
     const stockDisponible = this.getStockDisponible(producto);
     const cantidadAgregar = producto.cantidadSeleccionada || 1;
-    
+
     if (cantidadAgregar > stockDisponible) {
       this.error = `El producto "${producto.nombre}" no tiene suficiente stock. Disponible: ${stockDisponible}`;
       producto.seleccionado = false;
@@ -2493,19 +2493,19 @@ export class PosComponent implements OnInit, OnDestroy {
 
   validarCantidadResultado(producto: any): void {
     const stockDisponible = this.getStockDisponible(producto);
-    
+
     // Asegurar que sea un número válido
     if (isNaN(producto.cantidadSeleccionada) || producto.cantidadSeleccionada < 1) {
       producto.cantidadSeleccionada = 1;
     }
-    
+
     // No permitir más que el stock disponible
     if (producto.cantidadSeleccionada > stockDisponible) {
       producto.cantidadSeleccionada = stockDisponible;
       this.error = `Stock máximo disponible: ${stockDisponible}`;
       setTimeout(() => this.error = null, 3000);
     }
-    
+
     // Redondear a entero
     producto.cantidadSeleccionada = Math.floor(producto.cantidadSeleccionada);
   }
@@ -2522,36 +2522,36 @@ export class PosComponent implements OnInit, OnDestroy {
    */
   getStockDisponible(producto: any): number {
     if (!producto) return 0;
-    
+
     const stockTotal = producto.stock ?? 0;
-    
+
     // Buscar si el producto ya está en el carrito
     const itemEnCarrito = this.ventaForm.items.find(item => item.producto_id === producto.id);
-    
+
     if (itemEnCarrito) {
       // Restar la cantidad que ya está en el carrito
       const disponible = Math.max(0, stockTotal - itemEnCarrito.cantidad);
       console.log(`📦 Stock de "${producto.nombre}": Total=${stockTotal}, EnCarrito=${itemEnCarrito.cantidad}, Disponible=${disponible}`);
       return disponible;
     }
-    
+
     return stockTotal;
   }
 
   agregarResultadosSeleccionados(): void {
     const seleccionados = this.productosFiltrados.filter(p => p.seleccionado);
-    
+
     if (seleccionados.length === 0) {
       return;
     }
 
     let productosAgregados = 0;
-    
+
     seleccionados.forEach(producto => {
       // Validar stock disponible REAL (considerando lo que ya está en el carrito)
       const stockDisponible = this.getStockDisponible(producto);
       const cantidadAgregar = producto.cantidadSeleccionada || 1;
-      
+
       if (cantidadAgregar > stockDisponible) {
         this.error = `El producto "${producto.nombre}" no tiene suficiente stock. Disponible: ${stockDisponible}`;
         return;
@@ -2565,7 +2565,7 @@ export class PosComponent implements OnInit, OnDestroy {
         itemExistente.cantidad += cantidadAgregar;
         this.calcularItem(itemExistente);
         console.log(`📈 Cantidad actualizada para "${producto.nombre}": ${itemExistente.cantidad}`);
-        
+
         // Crear nueva referencia del array para forzar detección de cambios
         this.ventaForm.items = [...this.ventaForm.items];
       } else {
@@ -2585,9 +2585,9 @@ export class PosComponent implements OnInit, OnDestroy {
         this.ventaForm.items = [...this.ventaForm.items, nuevoItem];
         console.log(`✅ Producto agregado: "${producto.nombre}" x${cantidadAgregar}`);
       }
-      
+
       productosAgregados++;
-      
+
       // Limpiar selección del producto
       producto.seleccionado = false;
       producto.cantidadSeleccionada = 1;
@@ -2596,10 +2596,10 @@ export class PosComponent implements OnInit, OnDestroy {
     if (productosAgregados > 0) {
       this.success = `✅ ${productosAgregados} producto(s) agregado(s) al carrito`;
       setTimeout(() => this.success = null, 3000);
-      
+
       // Forzar actualización de productosFiltrados para que Angular detecte el cambio
       this.productosFiltrados = [...this.productosFiltrados];
-      
+
       // Forzar detección de cambios para actualizar el stock en la vista
       this.cdr.detectChanges();
     }
@@ -2660,7 +2660,7 @@ export class PosComponent implements OnInit, OnDestroy {
     // Resetear variables de notificación
     this.enviandoNotificacion = false;
     this.notificacionEnviada = false;
-    
+
     // Redirigir a la lista de ventas
     this.router.navigate(['/dashboard/ventas']);
   }
@@ -3376,5 +3376,55 @@ export class PosComponent implements OnInit, OnDestroy {
       this.actualizarSerieSegunTipo();
     }
     this.mostrarConfiguracionModal = false;
+  }
+
+  // ============================================
+  // ATAJOS DE TECLADO PARA MODALES
+  // ============================================
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent): void {
+    // ESC cierra cualquier modal abierto
+    if (this.mostrarModalTipoComprobante) {
+      event.preventDefault();
+      this.cancelarConfiguracion();
+    } else if (this.mostrarModalDatosCliente) {
+      event.preventDefault();
+      this.mostrarModalDatosCliente = false;
+      this.iniciarFlujoVenta();
+    }
+  }
+
+  @HostListener('document:keydown.enter', ['$event'])
+  onEnterKey(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement;
+    
+    // Ctrl+Enter siempre confirma el modal activo (incluso desde inputs)
+    if (event.ctrlKey) {
+      event.preventDefault();
+      if (this.mostrarModalTipoComprobante) {
+        if (this.tipoDocumentoSeleccionado && (this.tipoDocumentoSeleccionado === 'NOTA_DE_VENTA' || this.serieSeleccionada())) {
+          this.confirmarTipoComprobante();
+        }
+      } else if (this.mostrarModalDatosCliente) {
+        this.confirmarDatosCliente();
+      }
+      return;
+    }
+
+    // Enter solo (sin Ctrl) no funciona si estás en un input
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+      return;
+    }
+
+    // Enter confirma el modal activo
+    if (this.mostrarModalTipoComprobante) {
+      event.preventDefault();
+      if (this.tipoDocumentoSeleccionado && (this.tipoDocumentoSeleccionado === 'NOTA_DE_VENTA' || this.serieSeleccionada())) {
+        this.confirmarTipoComprobante();
+      }
+    } else if (this.mostrarModalDatosCliente) {
+      event.preventDefault();
+      this.confirmarDatosCliente();
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -81,5 +81,33 @@ export class EnviarComprobanteModalComponent {
   esEmailValido(email: string): boolean {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
+  }
+
+  // ============================================
+  // ATAJOS DE TECLADO
+  // ============================================
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent): void {
+    event.preventDefault();
+    this.onCerrar();
+  }
+
+  @HostListener('document:keydown.enter', ['$event'])
+  onEnterKey(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') return;
+    
+    event.preventDefault();
+    if (this.puedeEnviar && !this.enviando) {
+      this.onEnviar();
+    }
+  }
+
+  @HostListener('document:keydown.control.s', ['$event'])
+  onCtrlS(event: KeyboardEvent): void {
+    event.preventDefault();
+    if (this.puedeEnviar && !this.enviando) {
+      this.onEnviar();
+    }
   }
 }

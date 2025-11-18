@@ -779,6 +779,15 @@ export class VentasService {
   }
 
   /**
+   * Buscar comprobante por número completo
+   * GET /api/comprobantes/buscar?numero={numero}
+   */
+  buscarComprobantePorNumero(numero: string): Observable<any> {
+    const params = new HttpParams().set('numero', numero);
+    return this.http.get(`${environment.apiUrl}/comprobantes/buscar`, { params });
+  }
+
+  /**
    * Obtiene el icono para el tipo de documento
    */
   obtenerIconoTipoDocumento(tipo: 'FT' | 'BI' | 'NC' | 'ND' | 'NV'): string {
