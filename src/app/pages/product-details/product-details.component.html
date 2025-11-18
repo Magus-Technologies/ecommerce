@@ -181,10 +181,17 @@
                             <!-- <div [innerHTML]="safeDescripcionDetallada"></div> -->
                             
                             <div class="mt-32 flex-align flex-wrap gap-32">
-                                <div class="flex-align gap-8">
-                                    <h4 class="mb-0">S/ {{ getPrecioActual() | number:'1.2-2' }}</h4>
-                                    <span *ngIf="tieneOferta()" class="text-md text-gray-500 text-decoration-line-through">
-                                      S/ {{ getPrecioOriginal() | number:'1.2-2' }}
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="flex-align gap-8">
+                                        <h4 class="mb-0 text-danger-600" [class.text-heading]="!tieneOferta()">
+                                          S/ {{ getPrecioActual() | number:'1.2-2' }}
+                                        </h4>
+                                        <span *ngIf="tieneOferta()" class="badge bg-danger-600 text-white px-8 py-4 text-xs">
+                                          -{{ getPorcentajeDescuento() }}%
+                                        </span>
+                                    </div>
+                                    <span *ngIf="tieneOferta()" class="text-sm text-gray-500 text-decoration-line-through">
+                                      Antes: S/ {{ getPrecioOriginal() | number:'1.2-2' }}
                                     </span>
                                 </div>
                                 <button (click)="ordenarPorWhatsApp()" class="btn bg-danger-20 hover:bg-danger-10 rounded-pill">

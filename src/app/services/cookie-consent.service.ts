@@ -410,7 +410,7 @@ export class CookieConsentService {
     if (!this.isBrowser) return;
 
     // Implementar activación de Facebook Pixel si es necesario
-    console.log('Facebook Pixel activado');
+    // console.log('Facebook Pixel activado');
   }
 
   private disableFacebookPixel(): void {

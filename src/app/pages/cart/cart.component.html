@@ -102,7 +102,24 @@
 
                   <!-- Precio -->
                   <td class="px-12 py-12" style="vertical-align: middle;">
-                    <span class="fw-semibold" style="font-size: 0.9rem;">S/ {{ formatPrice(item.precio) }}</span>
+                    <!-- Si tiene descuento, mostrar precio original tachado y precio con descuento -->
+                    <div *ngIf="item.descuento_porcentaje && item.descuento_porcentaje > 0" class="d-flex flex-column gap-1">
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="text-decoration-line-through text-gray-400" style="font-size: 0.7rem;">
+                          S/ {{ formatPrice(item.precio) }}
+                        </span>
+                        <span class="badge bg-danger-600 text-white px-4 py-1" style="font-size: 0.6rem; line-height: 1;">
+                          -{{ item.descuento_porcentaje }}%
+                        </span>
+                      </div>
+                      <span class="fw-semibold text-danger-600" style="font-size: 0.85rem;">
+                        S/ {{ formatPrice(item.precio_con_descuento) }}
+                      </span>
+                    </div>
+                    <!-- Si NO tiene descuento, mostrar precio normal -->
+                    <span *ngIf="!item.descuento_porcentaje || item.descuento_porcentaje === 0" class="fw-semibold" style="font-size: 0.9rem;">
+                      S/ {{ formatPrice(item.precio) }}
+                    </span>
                   </td>
 
                   <!-- Cantidad -->

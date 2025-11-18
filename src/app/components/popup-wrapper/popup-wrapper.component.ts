@@ -48,11 +48,11 @@ export class PopupWrapperComponent implements OnInit, OnDestroy {
     if (userId) {
       // Usuario con ID (puede ser cliente, admin, o motorizado)
       // El backend decidirá si debe ver popups o devolver 403
-      console.log(`👤 Usuario con ID ${userId} - usando endpoint de cliente con user_cliente_id`);
+      // console.log(`👤 Usuario con ID ${userId} - usando endpoint de cliente con user_cliente_id`);
       obs = this.popupsService.obtenerPopupsActivosConUserId(userId);
     } else {
       // Visitante sin identificar
-      console.log('👋 Visitante no registrado - usando endpoint público con segmento no_registrados');
+      // console.log('👋 Visitante no registrado - usando endpoint público con segmento no_registrados');
       obs = this.popupsService.obtenerPopupsPublicosActivos('no_registrados');
     }
 

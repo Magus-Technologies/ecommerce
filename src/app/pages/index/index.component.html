@@ -664,7 +664,7 @@
                 class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2"
               >
                 <a
-                  [routerLink]="['/producto', producto.id]"
+                  [routerLink]="getProductLink(producto)"
                   class="product-card__thumb rounded-8 position-relative overflow-hidden"
                   style="
                     height: 200px;
@@ -698,7 +698,7 @@
                 <div class="product-card__content mt-16">
                   <h6 class="title text-lg fw-semibold mt-12 mb-8">
                     <a
-                      [routerLink]="['/producto', producto.id]"
+                      [routerLink]="getProductLink(producto)"
                       class="link text-line-2"
                     >
                       {{ producto.nombre }}
@@ -797,81 +797,79 @@
 <!-- ========================= CUPÓN DISPONIBLE ================================ -->
 <section class="coupon-section pt-40" *ngIf="!isLoadingCupones && cuponesActivos.length > 0">
   <div class="container container-lg">
-    <!-- Mostrar solo el primer cupón (más importante) -->
-    <div class="row" *ngIf="cuponesActivos[0]" data-aos="fade-up" data-aos-duration="600">
-      <div class="col-12">
-        <div class="coupon-banner">
-          <div class="row align-items-center">
-            <!-- Contenido principal -->
-            <div class="col-lg-9 col-md-8">
-              <!-- Badge y título en la misma línea -->
-              <div class="d-flex align-items-center mb-2">
-                <span class="coupon-badge me-3">
-                  <i class="ph ph-ticket me-1"></i>
-                  Cupón Disponible
-                </span>
-                <h6 class="coupon-title mb-0">{{ cuponesActivos[0].titulo }}</h6>
+    <div class="row justify-content-center" *ngIf="cuponesActivos[0]" data-aos="fade-up" data-aos-duration="600">
+      <div class="col-lg-11 col-xl-10">
+        <div class="coupon-banner coupon-orange">
+          <div class="row align-items-center g-0">
+            <!-- Columna izquierda: Círculo de descuento -->
+            <div class="col-lg-3 col-md-3 col-12">
+              <div class="discount-circle-wrapper">
+                <div class="discount-circle">
+                  <span class="discount-value" *ngIf="cuponesActivos[0].tipo_descuento === 'porcentaje'">
+                    {{ cuponesActivos[0].valor_descuento }}%
+                  </span>
+                  <span class="discount-value" *ngIf="cuponesActivos[0].tipo_descuento !== 'porcentaje'">
+                    S/{{ cuponesActivos[0].valor_descuento }}
+                  </span>
+                  <span class="discount-label">DESCUENTO</span>
+                </div>
               </div>
-              
-              <!-- Descripción -->
-              <div class="mb-3">
+            </div>
+
+            <!-- Columna central: Contenido principal -->
+            <div class="col-lg-6 col-md-6 col-12">
+              <div class="coupon-content">
+                <!-- Badge y título -->
+                <div class="mb-2">
+                  <span class="coupon-badge">
+                    <i class="ph ph-ticket"></i> Cupón Disponible
+                  </span>
+                </div>
+                <h4 class="coupon-title mb-2">{{ cuponesActivos[0].titulo }}</h4>
                 <p class="coupon-description mb-0" *ngIf="cuponesActivos[0].descripcion">
                   {{ cuponesActivos[0].descripcion }}
                 </p>
                 <p class="coupon-description mb-0" *ngIf="!cuponesActivos[0].descripcion">
                   {{ cuponesActivos[0].tipo_descuento === 'porcentaje' ? 
-                      'Obtén ' + cuponesActivos[0].valor_descuento + '% de descuento en tu compra' : 
+                      'EN TODA NUESTRA PÁGINA WEB POR COMPRAS MAYORES A ' + (cuponesActivos[0].compra_minima || '0') + ' SOLES.' : 
                       'Ahorra S/' + cuponesActivos[0].valor_descuento + ' en tu pedido' }}
                 </p>
               </div>
-              
-              <!-- Acciones organizadas -->
-              <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                <!-- Código y botón copiar -->
-                <div class="d-flex align-items-center gap-2">
+            </div>
+
+            <!-- Columna derecha: Código y acciones -->
+            <div class="col-lg-3 col-md-3 col-12">
+              <div class="coupon-actions">
+                <!-- Código del cupón -->
+                <div class="coupon-code-box mb-2">
+                  <div class="coupon-code-label">CÓDIGO DEL CUPÓN</div>
                   <div class="coupon-code-container">
                     <span class="coupon-code">{{ cuponesActivos[0].codigo }}</span>
+                    <button 
+                      type="button"
+                      class="coupon-copy-btn"
+                      (click)="copiarCupon(cuponesActivos[0].codigo)"
+                      title="Copiar"
+                    >
+                      <i class="ph ph-copy"></i>
+                    </button>
                   </div>
-                  <button 
-                    type="button"
-                    class="coupon-btn"
-                    (click)="copiarCupon(cuponesActivos[0].codigo)"
-                  >
-                    Copiar <i class="ph ph-copy"></i>
-                  </button>
                 </div>
-                
+
+                <!-- Compra mínima -->
+                <div class="coupon-info mb-2" *ngIf="cuponesActivos[0].compra_minima">
+                  <i class="ph ph-info"></i> Compra mínima: S/{{ cuponesActivos[0].compra_minima }}
+                </div>
+
                 <!-- Ver más cupones -->
-                <div>
-                  <a 
-                    *ngIf="cuponesActivos.length > 1"
-                    href="javascript:void(0)"
-                    class="text-white text-decoration-underline"
-                    style="font-size: 0.9rem; opacity: 0.9;"
-                    (click)="verTodosCupones()"
-                  >
-                    Ver más cupones ({{ cuponesActivos.length - 1 }})
-                  </a>
-                </div>
-              </div>
-              
-              <!-- Compra mínima -->
-              <div class="mt-3" *ngIf="cuponesActivos[0].compra_minima">
-                <p class="coupon-minimum mb-0">
-                  * Compra mínima: S/{{ cuponesActivos[0].compra_minima }}
-                </p>
-              </div>
-            </div>
-            
-            <!-- Círculo de descuento -->
-            <div class="col-lg-3 col-md-4 d-flex justify-content-end align-items-center">
-              <div class="discount-circle bg-white text-main-600 d-flex align-items-center justify-content-center rounded-circle fw-bold">
-                <span *ngIf="cuponesActivos[0].tipo_descuento === 'porcentaje'">
-                  {{ cuponesActivos[0].valor_descuento }}%
-                </span>
-                <span *ngIf="cuponesActivos[0].tipo_descuento !== 'porcentaje'">
-                  S/{{ cuponesActivos[0].valor_descuento }}
-                </span>
+                <a 
+                  *ngIf="cuponesActivos.length > 1"
+                  href="javascript:void(0)"
+                  class="coupon-more-link"
+                  (click)="verTodosCupones()"
+                >
+                  <i class="ph ph-gift"></i> Ver más cupones ({{ cuponesActivos.length - 1 }}) →
+                </a>
               </div>
             </div>
           </div>
