@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface SerieItem {
@@ -62,6 +62,23 @@ export class SerieSelectorModalComponent {
 
   seleccionar(s: any): void {
     this.seleccionarSerie.emit(s);
+  }
+
+  // ============================================
+  // ATAJOS DE TECLADO
+  // ============================================
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent): void {
+    event.preventDefault();
+    this.cerrar.emit();
+  }
+
+  @HostListener('document:keydown.enter', ['$event'])
+  onEnterKey(event: KeyboardEvent): void {
+    event.preventDefault();
+    if (this.series && this.series.length > 0) {
+      this.seleccionar(this.series[0]);
+    }
   }
 }
 

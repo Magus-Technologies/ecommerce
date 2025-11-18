@@ -799,4 +799,13 @@ export class FacturacionService {
   }): Observable<ApiResponse<Comprobante>> {
     return this.http.post<ApiResponse<Comprobante>>(`${this.apiUrl}/ventas/${ventaId}/generar-comprobante`, datos);
   }
+
+  /**
+   * Buscar comprobante por número completo
+   * GET /api/comprobantes/buscar?numero={numero}
+   */
+  buscarComprobantePorNumero(numero: string): Observable<any> {
+    const params = new HttpParams().set('numero', numero);
+    return this.http.get(`${this.apiUrl}/comprobantes/buscar`, { params });
+  }
 }
