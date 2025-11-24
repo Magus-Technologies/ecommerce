@@ -1065,7 +1065,14 @@ private inicializarFavoritosState(): void {
 
   cargarCuponesActivos(): void {
     this.isLoadingCupones = true;
-    this.ofertasService.obtenerCuponesActivos().subscribe({
+
+    // Si el usuario está logueado, obtener solo cupones que no ha usado
+    // Si no está logueado, obtener todos los cupones activos
+    const cuponesObservable = this.authService.isLoggedIn()
+      ? this.ofertasService.obtenerCuponesDisponiblesUsuario()
+      : this.ofertasService.obtenerCuponesActivos();
+
+    cuponesObservable.subscribe({
       next: (cupones) => {
         this.cuponesActivos = cupones;
         this.isLoadingCupones = false;
@@ -1074,25 +1081,8 @@ private inicializarFavoritosState(): void {
       error: (error) => {
         console.error('Error al cargar cupones activos:', error);
         this.isLoadingCupones = false;
-        // Fallback: usar cupones estáticos si hay error
-        this.cuponesActivos = [
-          {
-            id: 1,
-            codigo: 'BIENVENIDO20',
-            titulo: 'Bienvenido - 20% de descuento',
-            tipo_descuento: 'porcentaje',
-            valor_descuento: 20,
-            compra_minima: 100,
-          },
-          {
-            id: 2,
-            codigo: 'ENVIOGRATIS',
-            titulo: 'Envío gratis',
-            tipo_descuento: 'cantidad_fija',
-            valor_descuento: 15,
-            compra_minima: 50,
-          },
-        ];
+        // En caso de error, dejar el array vacío en lugar de mostrar cupones estáticos
+        this.cuponesActivos = [];
         this.cdr.detectChanges();
       },
     });

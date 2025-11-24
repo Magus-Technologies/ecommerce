@@ -7,6 +7,7 @@ import { BreadcrumbComponent } from '../../component/breadcrumb/breadcrumb.compo
 import { ShippingComponent } from '../../component/shipping/shipping.component';
 import { CartService, CartItem, CartSummary } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
+import { OfertasService } from '../../services/ofertas.service';
 import { Subject } from 'rxjs';
 import { takeUntil, take } from 'rxjs/operators';
 import Swal from 'sweetalert2';
@@ -22,13 +23,16 @@ export class CartComponent implements OnInit, OnDestroy {
   cartSummary: CartSummary = { subtotal: 0, igv: 0, total: 0, cantidad_items: 0 };
   codigoCupon = '';
   descuentoCupon = 0;
+  cuponAplicado: any = null; // Guarda la info del cupón aplicado
   isUpdating = false;
   isLoggedIn = false;
+  isValidatingCupon = false;
   private destroy$ = new Subject<void>();
 
   constructor(
     private cartService: CartService,
     private authService: AuthService,
+    private ofertasService: OfertasService,
     private router: Router
   ) {}
 
@@ -149,37 +153,88 @@ export class CartComponent implements OnInit, OnDestroy {
 
   aplicarCupon(): void {
     if (!this.codigoCupon.trim()) {
-      Swal.fire({ 
-        title: 'Código requerido', 
-        text: 'Por favor ingresa un código de cupón', 
-        icon: 'warning', 
-        confirmButtonColor: '#dc3545' 
+      Swal.fire({
+        title: 'Código requerido',
+        text: 'Por favor ingresa un código de cupón',
+        icon: 'warning',
+        confirmButtonColor: '#dc3545'
       });
       return;
     }
-    const cuponesValidos: { [key: string]: number } = { 
-      'DESCUENTO10': 10, 
-      'DESCUENTO20': 20, 
-      'BIENVENIDO': 15, 
-      'FREE25BAC': 25 
-    };
-    const descuento = cuponesValidos[this.codigoCupon.toUpperCase()];
-    if (descuento) {
-      this.descuentoCupon = ((this.cartSummary.total || 0) * descuento) / 100;
-      Swal.fire({ 
-        title: '¡Cupón aplicado!', 
-        text: `Se ha aplicado un descuento del ${descuento}%`, 
-        icon: 'success', 
-        confirmButtonColor: '#198754' 
-      });
-    } else {
-      Swal.fire({ 
-        title: 'Cupón inválido', 
-        text: 'El código de cupón ingresado no es válido', 
-        icon: 'error', 
-        confirmButtonColor: '#dc3545' 
-      });
-    }
+
+    // Evitar múltiples clics
+    if (this.isValidatingCupon) return;
+
+    this.isValidatingCupon = true;
+    const total = this.cartSummary.total || 0;
+
+    this.ofertasService.validarCupon(this.codigoCupon, total).subscribe({
+      next: (response) => {
+        this.isValidatingCupon = false;
+
+        if (response.valido) {
+          this.descuentoCupon = response.descuento;
+          this.cuponAplicado = response.cupon;
+
+          // Guardar cupón en sessionStorage para usarlo en el checkout
+          sessionStorage.setItem('cupon_aplicado', JSON.stringify({
+            ...response.cupon,
+            descuento_calculado: response.descuento,
+            total_original: this.cartSummary.total
+          }));
+
+          let mensajeDescuento = '';
+          if (response.cupon.tipo_descuento === 'porcentaje') {
+            mensajeDescuento = `${response.cupon.valor_descuento}% de descuento`;
+          } else {
+            mensajeDescuento = `S/ ${response.descuento.toFixed(2)} de descuento`;
+          }
+
+          Swal.fire({
+            title: '¡Cupón aplicado!',
+            text: mensajeDescuento,
+            icon: 'success',
+            confirmButtonColor: '#198754'
+          });
+        } else {
+          this.descuentoCupon = 0;
+          this.cuponAplicado = null;
+          Swal.fire({
+            title: 'Cupón no válido',
+            text: response.mensaje || 'El código de cupón ingresado no es válido',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+          });
+        }
+      },
+      error: (error) => {
+        this.isValidatingCupon = false;
+        this.descuentoCupon = 0;
+        this.cuponAplicado = null;
+        console.error('Error al validar cupón:', error);
+        Swal.fire({
+          title: 'Error',
+          text: 'Hubo un error al validar el cupón. Intenta nuevamente.',
+          icon: 'error',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
+  }
+
+  quitarCupon(): void {
+    this.codigoCupon = '';
+    this.descuentoCupon = 0;
+    this.cuponAplicado = null;
+    // Eliminar del sessionStorage
+    sessionStorage.removeItem('cupon_aplicado');
+    Swal.fire({
+      title: 'Cupón removido',
+      text: 'El cupón ha sido removido del carrito',
+      icon: 'info',
+      timer: 2000,
+      showConfirmButton: false
+    });
   }
 
   proceedToCheckout(): void {

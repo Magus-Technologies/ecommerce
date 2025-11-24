@@ -26,6 +26,7 @@ export class UserProfileComponent implements OnInit {
   showAuthDropdown = false;
   showUserDropdown = false;
   isInitializing = true;
+  isLoggingOut = false;
 
   // Variable pública para usar en el template
   isBrowser: boolean;
@@ -132,8 +133,18 @@ export class UserProfileComponent implements OnInit {
   }
 
   logout(): void {
-    this.authService.logout().subscribe(() => {
-      this.closeUserDropdown();
+    // Evitar múltiples clics
+    if (this.isLoggingOut) return;
+
+    this.isLoggingOut = true;
+    this.authService.logout().subscribe({
+      next: () => {
+        this.closeUserDropdown();
+        this.isLoggingOut = false;
+      },
+      error: () => {
+        this.isLoggingOut = false;
+      }
     });
   }
 

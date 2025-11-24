@@ -13,26 +13,26 @@ export class ShippingComponent {
 shippingItems = [
     {
       icon: 'ph-car-profile',
-      title: 'Free Shipping',
-      description: 'Free shipping all over the US',
+      title: 'Envio Gratis',
+      description: 'Si eres cliente y con nuestras promociones',
       duration: '400'
     },
     {
       icon: 'ph-hand-heart',
-      title: '100% Satisfaction',
-      description: 'Free shipping all over the US',
+      title: '100% Entregas Satisfactorias',
+      description: 'Delivery seguro con nuestro sistema de envio.',
       duration: '600'
     },
     {
       icon: 'ph-credit-card',
-      title: 'Secure Payments',
-      description: 'Free shipping all over the US',
+      title: ' Pagos Seguros',
+      description: 'Seguridad en los pagos con nuestro sistema de seguridad y filtros',
       duration: '800'
     },
     {
       icon: 'ph-chats',
-      title: '24/7 Support',
-      description: 'Free shipping all over the US',
+      title: 'Atención 24x7',
+      description: 'Brindamos una respuesta rapida y eficaz ante cualquier consulta o soporte',
       duration: '1000'
     }
   ];
