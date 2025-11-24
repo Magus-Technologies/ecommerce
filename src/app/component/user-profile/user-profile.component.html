@@ -80,9 +80,16 @@
               type="button"
               class="dropdown-item d-flex align-items-center gap-8 px-16 py-12 text-gray-700 hover-bg-main-50 hover-text-main-600 transition-1 w-100 border-0 bg-transparent text-start"
               (click)="logout()"
+              [disabled]="isLoggingOut"
             >
-              <i class="ph ph-sign-out text-lg"></i>
-              <span>Cerrar Sesión</span>
+              <ng-container *ngIf="!isLoggingOut">
+                <i class="ph ph-sign-out text-lg"></i>
+                <span>Cerrar Sesión</span>
+              </ng-container>
+              <ng-container *ngIf="isLoggingOut">
+                <span class="spinner-border spinner-border-sm me-8" role="status" aria-hidden="true"></span>
+                <span>Cerrando sesión...</span>
+              </ng-container>
             </button>
           </div>
         </div>

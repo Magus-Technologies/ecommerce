@@ -117,4 +117,29 @@ obtenerOfertaSemanaActiva(): Observable<OfertaSemanaResponse> {
         );
     }
 
+    /**
+     * Obtener cupones disponibles para el usuario autenticado
+     * Excluye los cupones que el usuario ya ha usado
+     */
+    obtenerCuponesDisponiblesUsuario(): Observable<Cupon[]> {
+      return this.http.get<Cupon[]>(`${this.apiUrl}/cupones/disponibles`)
+        .pipe(
+          catchError(error => {
+            console.error('Error al obtener cupones disponibles:', error);
+            return of([]);
+          })
+        );
+    }
+
+    /**
+     * Registrar el uso de un cupón
+     */
+    registrarUsoCupon(cuponId: number, descuentoAplicado: number, totalCompra: number, ventaId?: number): Observable<any> {
+      return this.http.post(`${this.apiUrl}/cupones/registrar-uso`, {
+        cupon_id: cuponId,
+        descuento_aplicado: descuentoAplicado,
+        total_compra: totalCompra,
+        venta_id: ventaId
+      });
+    }
 }
