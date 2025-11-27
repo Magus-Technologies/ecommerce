@@ -4,17 +4,38 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface TipoGuia {
-  codigo: 'REMITENTE' | 'INTERNO';
+  codigo: 'REMITENTE' | 'TRANSPORTISTA' | 'INTERNO';
   nombre: string;
-  tipo_comprobante: '09';
+  tipo_comprobante: '09' | '31';
   requiere_sunat: boolean;
   descripcion: string;
 }
 
+// Interfaces auxiliares para mejor tipado
+export interface ClienteBasico {
+  id: number;
+  razon_social: string;
+  numero_documento: string;
+  tipo_documento: string;
+  direccion?: string;
+  email?: string;
+  telefono?: string;
+}
+
+export interface ProductoBasico {
+  id: number;
+  nombre: string;
+  codigo_producto?: string;
+  codigo?: string;
+  unidad_medida: string;
+  precio_venta?: number;
+  stock?: number;
+}
+
 export interface GuiaRemision {
   id?: number;
-  tipo_guia: 'REMITENTE' | 'INTERNO';
-  tipo_comprobante: '09';
+  tipo_guia: 'REMITENTE' | 'TRANSPORTISTA' | 'INTERNO';
+  tipo_comprobante: '09' | '31';
   requiere_sunat: boolean;
   serie: string;
   correlativo: number;
@@ -22,7 +43,7 @@ export interface GuiaRemision {
   fecha_emision: string;
   fecha_inicio_traslado: string;
   cliente_id: number;
-  cliente?: any;
+  cliente?: ClienteBasico;
   destinatario_tipo_documento: string;
   destinatario_numero_documento: string;
   destinatario_razon_social: string;
@@ -37,6 +58,17 @@ export interface GuiaRemision {
   conductor_dni?: string;
   conductor_nombres?: string;
 
+  // Campos para TRANSPORTISTA
+  transportista_ruc?: string;
+  transportista_razon_social?: string;
+  transportista_numero_mtc?: string;
+  conductor_tipo_documento?: string;
+  conductor_numero_documento?: string;
+  conductor_apellidos?: string;
+  conductor_licencia?: string;
+  vehiculo_placa_principal?: string;
+  vehiculo_placa_secundaria?: string;
+
   punto_partida_ubigeo: string;
   punto_partida_direccion: string;
   punto_llegada_ubigeo: string;
@@ -44,6 +76,9 @@ export interface GuiaRemision {
   observaciones?: string;
   estado: string;
   estado_nombre?: string;
+  estado_logistico?: string;
+  tiene_xml?: boolean;
+  tiene_pdf?: boolean;
   xml_firmado?: string;
   mensaje_sunat?: string;
   codigo_hash?: string;
@@ -58,7 +93,7 @@ export interface GuiaRemisionDetalle {
   guia_remision_id?: number;
   item: number;
   producto_id: number;
-  producto?: any;
+  producto?: ProductoBasico;
   codigo_producto: string;
   descripcion: string;
   unidad_medida: string;
@@ -92,9 +127,13 @@ export interface GuiaRemitentePayload {
   punto_llegada_ubigeo: string;
   punto_llegada_direccion: string;
   modo_transporte?: string;
+  // Modalidad 02 - Transporte Privado
   numero_placa?: string;
   conductor_dni?: string;
   conductor_nombres?: string;
+  // Modalidad 01 - Transporte Público
+  ruc_transportista?: string;
+  razon_social_transportista?: string;
   productos: Array<{
     producto_id: number;
     cantidad: number;
@@ -105,34 +144,79 @@ export interface GuiaRemitentePayload {
   observaciones?: string;
 }
 
-// ❌ ELIMINADO: GuiaTransportistaPayload - El backend ya no soporta este tipo
+export interface GuiaTransportistaPayload {
+  // Datos del transportista (OBLIGATORIOS)
+  transportista_ruc: string;
+  transportista_razon_social: string;
+  transportista_numero_mtc: string;
+  
+  // Datos del conductor (OBLIGATORIOS)
+  conductor_tipo_documento: string;
+  conductor_numero_documento: string;
+  conductor_nombres: string;
+  conductor_apellidos: string;
+  conductor_licencia?: string;
+  
+  // Datos del vehículo (OBLIGATORIOS)
+  vehiculo_placa_principal: string;
+  vehiculo_placa_secundaria?: string;
+  
+  // Destinatario
+  destinatario_tipo_documento: string;
+  destinatario_numero_documento: string;
+  destinatario_razon_social: string;
+  destinatario_direccion: string;
+  destinatario_ubigeo: string;
+  
+  // Traslado
+  motivo_traslado: string;
+  modalidad_traslado: string;
+  fecha_inicio_traslado: string;
+  peso_total?: number;
+  numero_bultos?: number;
+  
+  // Puntos
+  punto_partida_ubigeo: string;
+  punto_partida_direccion: string;
+  punto_llegada_ubigeo: string;
+  punto_llegada_direccion: string;
+  
+  // Productos
+  productos: Array<{
+    producto_id: number;
+    cantidad: number;
+    peso_unitario: number;
+    observaciones?: string;
+  }>;
+  
+  observaciones?: string;
+}
 
 export interface GuiaInternoPayload {
-    motivo_traslado: string;
-    fecha_inicio_traslado: string;
-    punto_partida_ubigeo: string;
-    punto_partida_direccion: string;
-    punto_llegada_ubigeo: string;
-    punto_llegada_direccion: string;
-    productos: Array<{
-      producto_id: number;
-      cantidad: number;
-      peso_unitario: number;
-      observaciones?: string;
-    }>;
-    numero_bultos?: number;
+  motivo_traslado: string;
+  fecha_inicio_traslado: string;
+  punto_partida_ubigeo: string;
+  punto_partida_direccion: string;
+  punto_llegada_ubigeo: string;
+  punto_llegada_direccion: string;
+  productos: Array<{
+    producto_id: number;
+    cantidad: number;
+    peso_unitario: number;
     observaciones?: string;
-    destinatario_tipo_documento?: string;
-    destinatario_numero_documento?: string;
-    destinatario_razon_social?: string;
-    destinatario_direccion?: string;
-    destinatario_ubigeo?: string;
+  }>;
+  numero_bultos?: number;
+  observaciones?: string;
+  destinatario_tipo_documento?: string;
+  destinatario_numero_documento?: string;
+  destinatario_razon_social?: string;
+  destinatario_direccion?: string;
+  destinatario_ubigeo?: string;
 }
 
 export interface EstadisticasGuias {
   total_guias: number;
   guias_pendientes: number;
-  guias_enviadas: number;
   guias_aceptadas: number;
   guias_rechazadas: number;
   peso_total_transportado: number;
@@ -148,7 +232,7 @@ export interface EstadisticasGuias {
 export class GuiasRemisionService {
   private apiUrl = `${environment.apiUrl}/guias-remision`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * Obtener tipos de guía disponibles
@@ -171,7 +255,7 @@ export class GuiasRemisionService {
     per_page?: number;
   }): Observable<any> {
     let params = new HttpParams();
-    
+
     if (filtros) {
       Object.keys(filtros).forEach(key => {
         const value = (filtros as any)[key];
@@ -198,13 +282,18 @@ export class GuiasRemisionService {
     return this.http.post<{ success: boolean; message: string; data: GuiaRemision }>(`${this.apiUrl}/remitente`, datos);
   }
 
-  // ❌ ELIMINADO: crearGuiaTransportista - El backend ya no soporta este endpoint
+  /**
+   * Crear Guía de Remisión Transportista
+   */
+  crearGuiaTransportista(datos: GuiaTransportistaPayload): Observable<{ success: boolean; message: string; data: GuiaRemision }> {
+    return this.http.post<{ success: boolean; message: string; data: GuiaRemision }>(`${this.apiUrl}/transportista`, datos);
+  }
 
   /**
    * Crear Traslado Interno
    */
   crearTrasladoInterno(datos: GuiaInternoPayload): Observable<{ success: boolean; message: string; data: GuiaRemision }> {
-    return this.http.post<{ success: boolean; message: string; data: GuiaRemision }>(`${this.apiUrl}/interno`, datos);
+    return this.http.post<{ success: boolean; message: string; data: GuiaRemision }>(`${this.apiUrl}/traslado-interno`, datos);
   }
 
   /**
@@ -215,10 +304,11 @@ export class GuiasRemisionService {
   }
 
   /**
-   * Descargar XML de la guía
+   * Ver XML (retorna URL para visualizar)
+   * Según la API: Retorna { url: "http://...", filename: "..." }
    */
-  descargarXML(id: number): Observable<{ success: boolean; data: { xml: string; filename: string } }> {
-    return this.http.get<{ success: boolean; data: { xml: string; filename: string } }>(`${this.apiUrl}/${id}/xml`);
+  getXml(id: number): Observable<{ success: boolean; data: { url: string; filename: string } }> {
+    return this.http.get<{ success: boolean; data: { url: string; filename: string } }>(`${this.apiUrl}/${id}/xml`);
   }
 
   /**
@@ -229,7 +319,7 @@ export class GuiasRemisionService {
     fecha_fin?: string;
   }): Observable<{ success: boolean; data: EstadisticasGuias }> {
     let params = new HttpParams();
-    
+
     if (filtros) {
       Object.keys(filtros).forEach(key => {
         const value = (filtros as any)[key];
@@ -240,5 +330,175 @@ export class GuiasRemisionService {
     }
 
     return this.http.get<{ success: boolean; data: EstadisticasGuias }>(`${this.apiUrl}/estadisticas/resumen`, { params });
+  }
+
+  // ==================== GESTIÓN DE PDF ====================
+
+  /**
+   * Obtener URL del PDF
+   */
+  getPdf(id: number): Observable<{ success: boolean; data: { url: string; filename: string } }> {
+    return this.http.get<{ success: boolean; data: { url: string; filename: string } }>(`${this.apiUrl}/${id}/pdf`);
+  }
+
+  /**
+   * NOTA: La API NO tiene endpoint para descargar PDF directamente
+   * Solo retorna URL con getPdf() que apunta a /ver-pdf-archivo
+   * El navegador maneja la descarga desde esa URL
+   */
+
+  /**
+   * Descargar CDR (Constancia de Recepción)
+   */
+  descargarCdr(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${id}/cdr`, { responseType: 'blob' });
+  }
+
+  /**
+   * Regenerar PDF
+   */
+  generarPdf(id: number): Observable<{ success: boolean; message: string; data: { url: string; filename: string } }> {
+    return this.http.post<{ success: boolean; message: string; data: { url: string; filename: string } }>(`${this.apiUrl}/${id}/generar-pdf`, {});
+  }
+
+  /**
+   * Generar XML firmado (y PDF automáticamente)
+   */
+  generarXml(id: number): Observable<{ success: boolean; message: string; data: any }> {
+    return this.http.post<{ success: boolean; message: string; data: any }>(`${this.apiUrl}/${id}/generar-xml`, {});
+  }
+
+  // ==================== OPERACIONES SUNAT ====================
+
+  /**
+   * Consultar estado en SUNAT
+   */
+  consultarSunat(id: number): Observable<{ success: boolean; message: string; data: any }> {
+    return this.http.post<{ success: boolean; message: string; data: any }>(`${this.apiUrl}/${id}/consultar-sunat`, {});
+  }
+
+  /**
+   * Actualizar guía (solo PENDIENTE y sin XML)
+   */
+  actualizarGuia(id: number, datos: Partial<GuiaRemitentePayload | GuiaInternoPayload>): Observable<{ success: boolean; message: string; data: GuiaRemision }> {
+    return this.http.put<{ success: boolean; message: string; data: GuiaRemision }>(`${this.apiUrl}/${id}`, datos);
+  }
+
+  // ==================== NOTIFICACIONES ====================
+
+  /**
+   * Enviar guía por correo
+   */
+  enviarEmail(id: number, datos: { email: string; mensaje?: string }): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(`${this.apiUrl}/${id}/email`, datos);
+  }
+
+  /**
+   * Enviar guía por WhatsApp
+   */
+  enviarWhatsapp(id: number, datos: { telefono: string; mensaje?: string }): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(`${this.apiUrl}/${id}/whatsapp`, datos);
+  }
+
+  /**
+   * Obtener datos para WhatsApp
+   */
+  getWhatsappDatos(id: number): Observable<{ success: boolean; data: { telefono: string; mensaje: string; url: string } }> {
+    return this.http.get<{ success: boolean; data: { telefono: string; mensaje: string; url: string } }>(`${this.apiUrl}/${id}/whatsapp-datos`);
+  }
+
+  /**
+   * Obtener datos para Email
+   */
+  getEmailDatos(id: number): Observable<{ success: boolean; data: { email: string; asunto: string; mensaje: string } }> {
+    return this.http.get<{ success: boolean; data: { email: string; asunto: string; mensaje: string } }>(`${this.apiUrl}/${id}/email-datos`);
+  }
+
+  // ==================== BÚSQUEDA Y FILTROS ====================
+
+  /**
+   * Búsqueda avanzada
+   */
+  buscar(termino: string, filtros?: any): Observable<any> {
+    let params = new HttpParams().set('q', termino);
+
+    if (filtros) {
+      Object.keys(filtros).forEach(key => {
+        const value = filtros[key];
+        if (value !== null && value !== undefined && value !== '') {
+          params = params.set(key, value.toString());
+        }
+      });
+    }
+
+    return this.http.get<any>(`${this.apiUrl}/buscar`, { params });
+  }
+
+  /**
+   * Listar guías pendientes de envío
+   */
+  getPendientesEnvio(filtros?: any): Observable<any> {
+    let params = new HttpParams();
+
+    if (filtros) {
+      Object.keys(filtros).forEach(key => {
+        const value = filtros[key];
+        if (value !== null && value !== undefined && value !== '') {
+          params = params.set(key, value.toString());
+        }
+      });
+    }
+
+    return this.http.get<any>(`${this.apiUrl}/pendientes-envio`, { params });
+  }
+
+  /**
+   * Listar guías rechazadas
+   */
+  getRechazadas(filtros?: any): Observable<any> {
+    let params = new HttpParams();
+
+    if (filtros) {
+      Object.keys(filtros).forEach(key => {
+        const value = filtros[key];
+        if (value !== null && value !== undefined && value !== '') {
+          params = params.set(key, value.toString());
+        }
+      });
+    }
+
+    return this.http.get<any>(`${this.apiUrl}/rechazadas`, { params });
+  }
+
+  // ==================== VALIDACIONES ====================
+
+  /**
+   * Validar ubigeo
+   */
+  validarUbigeo(ubigeo: string): Observable<{ success: boolean; data: { valido: boolean; departamento?: string; provincia?: string; distrito?: string } }> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/validar-ubigeo`, { ubigeo });
+  }
+
+  /**
+   * Validar RUC de transportista
+   */
+  validarRucTransportista(ruc: string): Observable<{ success: boolean; data: { valido: boolean; razon_social?: string; estado?: string } }> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/validar-ruc-transportista`, { ruc });
+  }
+
+  /**
+   * Validar placa vehicular
+   */
+  validarPlaca(placa: string): Observable<{ success: boolean; data: { valido: boolean; formato_correcto: boolean } }> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/validar-placa`, { placa });
+  }
+
+  // ==================== ESTADO LOGÍSTICO ====================
+
+  /**
+   * Actualizar estado logístico (físico) del traslado
+   */
+  actualizarEstadoLogistico(id: number, estado: string): Observable<{ success: boolean; message: string }> {
+    return this.http.patch<{ success: boolean; message: string }>(`${this.apiUrl}/${id}/estado-logistico`, { estado_logistico: estado });
   }
 }

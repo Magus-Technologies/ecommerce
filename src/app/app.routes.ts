@@ -579,6 +579,16 @@ export const routes: Routes = [
         data: { permission: 'facturacion.guias_remision.ver' },
       },
       {
+        path: 'guias-remision/transportista',
+        loadComponent: () =>
+          import('./pages/dashboard/guias-remision/transportista/guias-transportista-list.component').then(
+            (m) => m.GuiasTransportistaListComponent
+          ),
+        title: 'GRE Transportista',
+        canActivate: [permissionGuard],
+        data: { permission: 'facturacion.guias_remision.ver' },
+      },
+      {
         path: 'guias-remision/traslado-interno',
         loadComponent: () =>
           import('./pages/dashboard/guias-remision/traslado-interno/traslado-interno-list.component').then(
