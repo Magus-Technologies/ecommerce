@@ -324,6 +324,45 @@ export class AuthService {
   }
 
   /**
+   * Actualizar perfil del usuario
+   */
+  updateProfile(formData: FormData): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/user/update-profile`, formData).pipe(
+      tap((response: any) => {
+        if (response && response.user) {
+          const updatedUser = response.user;
+          updatedUser.tipo_usuario = this.getCurrentUser()?.tipo_usuario;
+          localStorage.setItem('current_user', JSON.stringify(updatedUser));
+          this.currentUserSubject.next(updatedUser);
+        }
+      })
+    );
+  }
+
+  /**
+   * Cambiar contraseña del usuario
+   */
+  changePassword(passwordData: any): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/user/change-password`, passwordData);
+  }
+
+  /**
+   * Verificar si el usuario tiene un permiso específico
+   */
+  hasPermission(permission: string): boolean {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+
+    // Superadmin tiene todos los permisos
+    if (user.roles?.some((role: any) => role.name === 'superadmin')) {
+      return true;
+    }
+
+    // Verificar si el usuario tiene el permiso
+    return user.permissions?.some((p: any) => p.name === permission) || false;
+  }
+
+  /**
    * Procesar login con Google
    */
   processGoogleAuth(token: string, userData: string): void {

@@ -12,7 +12,7 @@ import {
 import { SlickCarouselComponent } from 'ngx-slick-carousel';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { SlickCarouselModule } from 'ngx-slick-carousel';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   CategoriaPublica,
   CategoriasPublicasService,
@@ -340,7 +340,8 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     private bannerOfertaService: BannerOfertaService,
     private cdr: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
-    private cartNotificationService: CartNotificationService
+    private cartNotificationService: CartNotificationService,
+    private router: Router
   ) {
     // ✅ VERIFICAR SI ESTAMOS EN EL NAVEGADOR
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -1365,13 +1366,26 @@ private inicializarFavoritosState(): void {
   }
 
   verTodosCupones(): void {
-    // Por ahora mostrar un mensaje, luego crearemos la página de cupones
-    Swal.fire({
-      title: 'Próximamente',
-      text: 'La página de cupones estará disponible pronto',
-      icon: 'info',
-      confirmButtonColor: 'hsl(var(--main))',
-    });
+    // Verificar si el usuario está logueado
+    if (this.authService.isLoggedIn()) {
+      // Redirigir a la página de cupones
+      this.router.navigate(['/my-account/cupones']);
+    } else {
+      // Mostrar mensaje para iniciar sesión
+      Swal.fire({
+        title: 'Inicia sesión',
+        text: 'Debes iniciar sesión para ver tus cupones disponibles',
+        icon: 'info',
+        confirmButtonColor: 'hsl(var(--main))',
+        confirmButtonText: 'Iniciar sesión',
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.router.navigate(['/account']);
+        }
+      });
+    }
   }
 
   onImageError(event: any): void {

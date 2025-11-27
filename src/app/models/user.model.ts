@@ -10,6 +10,11 @@ export interface User {
   created_at?: string;
   updated_at?: string;
 
+  // Información de perfil
+  telefono?: string;
+  direccion?: string;
+  avatar?: string;
+
   // Para clientes - foto de perfil
   foto_url?: string;
   foto?: string;

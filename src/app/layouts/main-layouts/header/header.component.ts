@@ -12,6 +12,7 @@ import { CartService } from '../../../services/cart.service';
 import { EmpresaInfoService } from '../../../services/empresa-info.service';
 import { FavoritosService } from '../../../services/favoritos.service';
 import { CartNotificationService } from '../../../services/cart-notification.service';
+import { MenuService, Menu } from '../../../services/menu.service';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, filter } from 'rxjs';
 import { IndexTwoService } from '../../../services/index-two.service';
 import Swal from 'sweetalert2';
@@ -155,7 +156,11 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   categorie: any[] = [];
   categoriasPublicas: CategoriaPublica[] = [];
   isLoadingCategorias = false;
-  
+
+  // ✅ NUEVO: Menús dinámicos
+  menuItems: Menu[] = [];
+  isLoadingMenus = false;
+
   constructor(
     @Inject(PLATFORM_ID) private platformId: any,
     private router: Router,
@@ -165,6 +170,7 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     private empresaInfoService: EmpresaInfoService,
     private favoritosService: FavoritosService,
     private cartNotificationService: CartNotificationService,
+    private menuService: MenuService,
     private route: ActivatedRoute,
     private indexTwoService: IndexTwoService
   ) {
@@ -182,7 +188,8 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit() {
     this.updateRouteFlags(this.router.url);
     this.cargarCategoriasPublicas();
-    
+    this.cargarMenusPublicos(); // ✅ NUEVO: Cargar menús dinámicos
+
     // ✅ NUEVO: Suscribirse a cambios de ruta
     this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
@@ -206,10 +213,40 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     this.setupSearchSubscription();
      this.cargarInformacionEmpresa();
   }
+  // ✅ NUEVO: Cargar menús públicos desde la API
+  private cargarMenusPublicos(): void {
+    if (!this.isBrowser) return;
+
+    this.isLoadingMenus = true;
+    this.menuService.obtenerMenusPublicos('header')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.menuItems = response.menus || [];
+          this.isLoadingMenus = false;
+        },
+        error: (error) => {
+          console.error('Error al cargar menús:', error);
+          this.isLoadingMenus = false;
+          this.menuItems = []; // Mantener vacío en caso de error
+        }
+      });
+  }
+
+  // ✅ NUEVO: Obtener submenús de un menú padre
+  getSubmenus(menu: Menu): Menu[] {
+    return menu.hijos || [];
+  }
+
+  // ✅ NUEVO: Verificar si un menú tiene submenús
+  hasSubmenus(menu: Menu): boolean {
+    return (menu.hijos && menu.hijos.length > 0) || false;
+  }
+
   // Agregar este nuevo método
 private cargarInformacionEmpresa(): void {
   if (!this.isBrowser) return;
-  
+
   this.empresaInfoService.obtenerEmpresaInfoPublica()
     .pipe(takeUntil(this.destroy$))
     .subscribe({

@@ -75,258 +75,59 @@
     <div class="mobile-menu__menu">
       <!-- Nav Menu Start -->
       <ul class="nav-menu flex-align nav-menu--mobile">
-        <li
-          class="on-hover-item nav-menu__item has-submenu"
-          routerLinkActive="activePage"
-          (click)="toggleSubmenu('home')"
-        >
-          <a href="javascript:void(0)" class="nav-menu__link text-gray-700"
-            >INICIO</a
-          >
-          <ul
-            class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
-            [style.display]="activeIndex === 'home' ? 'block' : 'none'"
-          >
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              routerLinkActive="activePage"
-            >
-              <a
-                [routerLink]="['/ofertas']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Ofertas
-              </a>
-            </li>
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              routerLinkActive="activePage"
-            >
-              <a
-                [routerLink]="['/remates']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Remates
-              </a>
-            </li>
-            <!-- <li
-              class="common-dropdown__item nav-submenu__item"
-              routerLinkActive="activePage"
-            >
-              <a
-                [routerLink]="['/index-three']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Home Fashion
-              </a>
-            </li> -->
-          </ul>
-        </li>
+        <!-- ✅ SKELETON LOADER MÓVIL -->
+        <ng-container *ngIf="isLoadingMenus">
+          <li class="nav-menu__item">
+            <div class="menu-skeleton-mobile">
+              <div class="menu-skeleton-mobile__item menu-skeleton-mobile__item--1"></div>
+              <div class="menu-skeleton-mobile__item menu-skeleton-mobile__item--2"></div>
+              <div class="menu-skeleton-mobile__item menu-skeleton-mobile__item--3"></div>
+              <div class="menu-skeleton-mobile__item menu-skeleton-mobile__item--4"></div>
+              <div class="menu-skeleton-mobile__item menu-skeleton-mobile__item--5"></div>
+              <div class="menu-skeleton-mobile__item menu-skeleton-mobile__item--6"></div>
+            </div>
+          </li>
+        </ng-container>
 
+        <!-- ✅ MENÚS MÓVILES DINÁMICOS DESDE LA BASE DE DATOS -->
         <li
-          class="on-hover-item nav-menu__item has-submenu"
-          routerLinkActive="activePage"
-          (click)="toggleSubmenu('shop')"
-        >
-          <a href="javascript:void(0)" class="nav-menu__link text-gray-70"
-            >Computadoras</a
-          >
-          <ul
-            class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
-            [style.display]="activeIndex === 'shop' ? 'block' : 'none'"
-          >
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              routerLinkActive="activePage"
-            >
-              <a
-                [routerLink]="['/shop']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Shop
-              </a>
-            </li>
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              routerLinkActive="activePage"
-            >
-              <a
-                [routerLink]="['/product-details']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Shop Details
-              </a>
-            </li>
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              routerLinkActive="activePage"
-            >
-              <a
-                [routerLink]="['/product-details-two']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Shop Details Two
-              </a>
-            </li>
-          </ul>
-        </li>
-
-        <!-- Pages Dropdown -->
-        <li
-          class="on-hover-item nav-menu__item has-submenu"
+          *ngFor="let menu of menuItems; let i = index"
+          class="nav-menu__item"
+          [class.on-hover-item]="hasSubmenus(menu)"
+          [class.has-submenu]="hasSubmenus(menu)"
           [routerLinkActive]="'activePage'"
-          (click)="toggleSubmenu('pages')"
-          [routerLinkActiveOptions]="{ exact: true }"
+          (click)="hasSubmenus(menu) ? toggleSubmenu('menu-' + i) : null"
         >
-          <span
-            class="badge-notification bg-danger-20 text-white text-sm py-2 px-5 rounded-4"
-            >Nuevo</span
+          <a
+            [href]="menu.url"
+            [routerLink]="menu.url !== 'javascript:void(0)' && !hasSubmenus(menu) ? menu.url : null"
+            [target]="menu.target"
+            class="nav-menu__link"
+            [ngClass]="menu.url === '/arma-tu-pc' ? 'text-main-600' : 'text-gray-700'"
           >
-          <a href="javascript:void(0)" class="nav-menu__link text-main-600"
-            >Laptos</a
-          >
+            {{ menu.nombre }}
+          </a>
+
+          <!-- Submenús móviles (si existen) -->
           <ul
+            *ngIf="hasSubmenus(menu)"
             class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
-            [style.display]="activeIndex === 'pages' ? 'block' : 'none'"
+            [style.display]="activeIndex === 'menu-' + i ? 'block' : 'none'"
           >
             <li
+              *ngFor="let submenu of getSubmenus(menu)"
               class="common-dropdown__item nav-submenu__item"
               [routerLinkActive]="'activePage'"
-              [routerLinkActiveOptions]="{ exact: true }"
             >
               <a
-                [routerLink]="['/cart']"
+                [routerLink]="submenu.url"
+                [target]="submenu.target"
                 class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
               >
-                Carrito
-              </a>
-            </li>
-
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              [routerLinkActive]="'activePage'"
-              [routerLinkActiveOptions]="{ exact: true }"
-            >
-              <a
-                [routerLink]="['/my-account/favoritos']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Favoritos
-              </a>
-            </li>
-
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              [routerLinkActive]="'activePage'"
-              [routerLinkActiveOptions]="{ exact: true }"
-            >
-              <a
-                [routerLink]="['/checkout']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Pagar
-              </a>
-            </li>
-
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              [routerLinkActive]="'activePage'"
-              [routerLinkActiveOptions]="{ exact: true }"
-            >
-              <a
-                [routerLink]="['/become-seller']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Convertirse en vendedor
-              </a>
-            </li>
-
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              [routerLinkActive]="'activePage'"
-              [routerLinkActiveOptions]="{ exact: true }"
-            >
-              <a
-                [routerLink]="['/account']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Cuenta
+                {{ submenu.nombre }}
               </a>
             </li>
           </ul>
-        </li>
-        <li
-          class="on-hover-item nav-menu__item has-submenu"
-          (click)="toggleSubmenu('vendor')"
-        >
-          <span
-            class="badge-notification bg-tertiary-600 text-white text-sm py-2 px-8 rounded-4"
-            >New</span
-          >
-          <a href="javascript:void(0)" class="nav-menu__link text-white"
-            >Vendors</a
-          >
-          <ul
-            class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
-            [style.display]="activeIndex === 'vendor' ? 'block' : 'none'"
-          >
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              [routerLinkActive]="'activePage'"
-            >
-              <a
-                [routerLink]="['vendor']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Vendors
-              </a>
-            </li>
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              [routerLinkActive]="'activePage'"
-            >
-              <a
-                [routerLink]="['vendor-details']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Vendor Details
-              </a>
-            </li>
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              [routerLinkActive]="'activePage'"
-            >
-              <a
-                [routerLink]="['vendor-two']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Vendors Two</a
-              >
-            </li>
-            <li
-              class="common-dropdown__item nav-submenu__item"
-              [routerLinkActive]="'activePage'"
-            >
-              <a
-                [routerLink]="['vendor-two-details']"
-                class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-              >
-                Vendors Two Details</a
-              >
-            </li>
-          </ul>
-        </li>
-        <!-- Delivery -->
-        <li class="nav-menu__item" [routerLinkActive]="'activePage'">
-          <a [routerLink]="['delivery']" class="nav-menu__link text-gray-700"
-            >Delivery</a
-          >
-        </li>
-        <!-- contactanos -->
-        <li class="nav-menu__item" [routerLinkActive]="'activePage'">
-          <a [routerLink]="['contact']" class="nav-menu__link text-gray-700"
-            >Contactanos</a
-          >
         </li>
       </ul>
       <!-- Nav Menu End -->
@@ -747,147 +548,58 @@
         <div class="header-menu d-lg-block d-none">
           <!-- Nav Menu Start -->
           <ul class="nav-menu flex-align">
-            <li
-              class="on-hover-item nav-menu__item has-submenu activePage"
-              [class.activePage]="
-                isParentActive(['/', '/index-two', '/index-three'])
-              "
-            >
-              <a href="javascript:void(0)" class="nav-menu__link text-gray-700"
-                >Hogar</a
-              >
-              <ul
-                class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
-              >
-               <li
-                  class="common-dropdown__item nav-submenu__item"
-                  [class.activePage]="isRouteActive('/shop')"
-                >
-                  <a
-                    [routerLink]="['shop']"
-                    class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-                  >
-                    Productos</a
-                  >
-                </li>
-                <li
-                  class="common-dropdown__item nav-submenu__item"
-                  [class.activePage]="isRouteActive('/ofertas')"
-                >
-                  <a
-                    [routerLink]="['ofertas']"
-                    class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-                  >
-                    Ofertas</a
-                  >
-                </li>
-                <li
-                  class="common-dropdown__item nav-submenu__item"
-                  [class.activePage]="isRouteActive('/index-three')"
-                >
-                  <a
-                    [routerLink]="['index-three']"
-                    class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-                  >
-                    Remates</a
-                  >
-                </li>
-              </ul>
-            </li>
-            <!-- ✅ NUEVO: Botón Arma tu PC solo en página de inicio -->
-            <li
-              *ngIf="isHomePageActive"
-              class="nav-menu__item"
-              [class.activePage]="isRouteActive('/arma-tu-pc')"
-            >
-              <a routerLink="/arma-tu-pc" class="nav-menu__link text-main-600 fw-semibold"
-                >Arma tu PC</a
-              >
-            </li>
-            <li
-              class="nav-menu__item"
-              [class.activePage]="isRouteActive('/index-two')"
-            >
-              <a routerLink="/index-two" class="nav-menu__link text-gray-700"
-                >Computadoras</a
-              >
-            </li>
-            <li
-              class="nav-menu__item"
-              [class.activePage]="isRouteActive('/index-laptop')"
-            >
-              <a routerLink="/index-laptop" class="nav-menu__link text-gray-700"
-                >laptos</a
-              >
-            </li>
-            <li
-              class="on-hover-item nav-menu__item has-submenu"
-              [class.activePage]="
-                isParentActive([
-                  '/shop',
-                  '/product-details',
-                  '/product-details-two'
-                ])
-              "
-            >
-              <a href="javascript:void(0)" class="nav-menu__link text-gray-700"
-                >Tienda</a
-              >
-              <ul
-                class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
-              >
-                <li
-                  class="common-dropdown__item nav-submenu__item"
-                  [class.activePage]="isRouteActive('/shop')"
-                >
-                  <a
-                    [routerLink]="['shop']"
-                    class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-                  >
-                    Tienda</a
-                  >
-                </li>
-                <li
-                  class="common-dropdown__item nav-submenu__item"
-                  [class.activePage]="isRouteActive('/product-details')"
-                >
-                  <a
-                    [routerLink]="['product-details']"
-                    class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-                  >
-                    Detalles del Producto</a
-                  >
-                </li>
-                <li
-                  class="common-dropdown__item nav-submenu__item"
-                  [class.activePage]="isRouteActive('/product-details-two')"
-                >
-                  <a
-                    [routerLink]="['product-details-two']"
-                    class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
-                  >
-                    Detalles del Producto 2</a
-                  >
-                </li>
-              </ul>
-            </li>
+            <!-- ✅ SKELETON LOADER DESKTOP -->
+            <ng-container *ngIf="isLoadingMenus">
+              <li class="nav-menu__item">
+                <div class="menu-skeleton">
+                  <div class="menu-skeleton__item menu-skeleton__item--short"></div>
+                  <div class="menu-skeleton__item menu-skeleton__item--long"></div>
+                  <div class="menu-skeleton__item menu-skeleton__item--medium"></div>
+                  <div class="menu-skeleton__item menu-skeleton__item--medium"></div>
+                  <div class="menu-skeleton__item menu-skeleton__item--long"></div>
+                  <div class="menu-skeleton__item menu-skeleton__item--medium"></div>
+                </div>
+              </li>
+            </ng-container>
 
+            <!-- ✅ MENÚS DINÁMICOS DESDE LA BASE DE DATOS -->
             <li
+              *ngFor="let menu of menuItems"
               class="nav-menu__item"
-              [class.activePage]="isRouteActive('/pasos-envio')"
+              [class.on-hover-item]="hasSubmenus(menu)"
+              [class.has-submenu]="hasSubmenus(menu)"
+              [class.activePage]="isRouteActive(menu.url)"
             >
-              <a routerLink="/pasos-envio" class="nav-menu__link text-gray-700">
-                Pasos de Envío
+              <!-- Enlace del menú principal -->
+              <a
+                [href]="menu.url"
+                [routerLink]="menu.url !== 'javascript:void(0)' ? menu.url : null"
+                [target]="menu.target"
+                class="nav-menu__link"
+                [ngClass]="menu.url === '/arma-tu-pc' ? 'text-main-600 fw-semibold' : 'text-gray-700'"
+              >
+                {{ menu.nombre }}
               </a>
-            </li>
 
-            <li
-              class="nav-menu__item"
-              [class.activePage]="isRouteActive('/contact')"
-            >
-              <a routerLink="/contact" class="nav-menu__link text-gray-700"
-                >Contáctanos</a
+              <!-- Submenús (si existen) -->
+              <ul
+                *ngIf="hasSubmenus(menu)"
+                class="on-hover-dropdown common-dropdown nav-submenu scroll-sm"
               >
+                <li
+                  *ngFor="let submenu of getSubmenus(menu)"
+                  class="common-dropdown__item nav-submenu__item"
+                  [class.activePage]="isRouteActive(submenu.url)"
+                >
+                  <a
+                    [routerLink]="submenu.url"
+                    [target]="submenu.target"
+                    class="common-dropdown__link nav-submenu__link text-heading-two hover-bg-neutral-100"
+                  >
+                    {{ submenu.nombre }}
+                  </a>
+                </li>
+              </ul>
             </li>
           </ul>
           <!-- Nav Menu End -->

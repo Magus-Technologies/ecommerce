@@ -7,19 +7,19 @@ import { environment } from '../../environments/environment';
 export interface Departamento {
   id: string;
   nombre: string;
-  id_ubigeo: string;
+  id_ubigeo: string;  // Código de 6 dígitos (ej: 150000)
 }
 
 export interface Provincia {
   id: string;
   nombre: string;
-  id_ubigeo: string;
+  id_ubigeo: string;  // Código de 6 dígitos (ej: 150100)
 }
 
 export interface Distrito {
   id: string;
   nombre: string;
-  id_ubigeo: string;
+  id_ubigeo: string;  // Código de 6 dígitos (ej: 150122)
 }
 
 @Injectable({

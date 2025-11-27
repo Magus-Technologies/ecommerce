@@ -321,6 +321,9 @@ export class AlmacenService {
       params = params.set('page', filtros.page.toString());
     }
 
+    // ✅ CACHE BUSTING: Agregar timestamp para evitar caché del navegador
+    params = params.set('_t', Date.now().toString());
+
     return this.http.get<ProductosPublicosResponse>(
       `${this.apiUrl}/productos-publicos`,
       { params }
