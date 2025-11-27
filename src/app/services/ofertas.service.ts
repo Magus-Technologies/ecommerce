@@ -142,4 +142,17 @@ obtenerOfertaSemanaActiva(): Observable<OfertaSemanaResponse> {
         venta_id: ventaId
       });
     }
+
+    /**
+     * Obtener cupones usados por el usuario autenticado
+     */
+    obtenerCuponesUsados(): Observable<any[]> {
+      return this.http.get<any[]>(`${this.apiUrl}/cupones/usados`)
+        .pipe(
+          catchError(error => {
+            console.error('Error al obtener cupones usados:', error);
+            return of([]);
+          })
+        );
+    }
 }

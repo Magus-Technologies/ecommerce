@@ -146,6 +146,14 @@ export const routes: Routes = [
                 (m) => m.RecompensasMiCuentaComponent
               ),
             title: 'Mis Recompensas'
+          },
+          {
+            path: 'cupones',
+            loadComponent: () =>
+              import('./pages/my-account/cupones/cupones.component').then(
+                (m) => m.CuponesComponent
+              ),
+            title: 'Mis Cupones'
           }
         ]
       },
@@ -868,6 +876,25 @@ export const routes: Routes = [
         title: 'Gestión de Correos',
         canActivate: [permissionGuard],
         data: { permission: 'envio_correos.ver' },
+      },
+      // ✅ RUTAS DE PERFIL Y CONFIGURACIÓN
+      {
+        path: 'perfil',
+        loadComponent: () =>
+          import('./pages/dashboard/perfil/perfil.component').then(
+            (m) => m.PerfilComponent
+          ),
+        title: 'Mi Perfil',
+        canActivate: [authGuard],
+      },
+      {
+        path: 'configuracion',
+        loadComponent: () =>
+          import('./pages/dashboard/configuracion/configuracion.component').then(
+            (m) => m.ConfiguracionComponent
+          ),
+        title: 'Configuración del Sistema',
+        canActivate: [authGuard],
       },
       // ✅ RUTAS DE FACTURACIÓN ELECTRÓNICA
       // La ruta POS ahora está en /dashboard/ventas/nueva

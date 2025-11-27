@@ -181,7 +181,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private loadFormasEnvio(): void {
     this.formaEnvioService.obtenerActivas().subscribe({
       next: (response) => {
-        this.formasEnvio = response.formas_envio;
+        this.formasEnvio = response.formas_envio || [];
       },
       error: (error) => {
         console.error('Error cargando formas de envío:', error);
@@ -656,8 +656,9 @@ private mostrarErrorDocumento(): void {
   getTotalFinal(): number {
     const subtotal = typeof this.cartSummary.subtotal === 'number' ? this.cartSummary.subtotal : 0;
     const envio = this.costoEnvioCalculado;
-    
-    return subtotal + envio;
+    const descuento = this.descuentoCupon || 0;
+
+    return subtotal - descuento + envio;
   }
 
   formatPrice(price: number | string | null | undefined): string {

@@ -190,6 +190,10 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'my-account/favoritos',
     renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'my-account/cupones',
+    renderMode: RenderMode.Prerender
   }
 
   

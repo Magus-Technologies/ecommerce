@@ -1,24 +1,42 @@
+// src/app/services/forma-envio.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface FormaEnvio {
   id?: number;
-  nombre: string;
-  codigo: string;
-  descripcion?: string;
+  departamento_id: string;  // Código de 6 dígitos (ej: 150000)
+  provincia_id?: string | null;  // Código de 6 dígitos (ej: 150100)
+  distrito_id?: string | null;  // Código de 6 dígitos (ej: 150122)
   costo: number;
   activo: boolean;
-  orden: number;
   created_at?: string;
   updated_at?: string;
+  // Campos adicionales de la vista
+  departamento_nombre?: string;
+  provincia_nombre?: string;
+  distrito_nombre?: string;
+  ubicacion_completa?: string;
 }
 
 export interface FormaEnvioResponse {
-  status: string;
-  formas_envio: FormaEnvio[];
+  success: boolean;
+  message: string;
+  forma_envio?: FormaEnvio;
+  formas_envio?: FormaEnvio[];
+}
+
+export interface CostoEnvioRequest {
+  departamento_id: string;
+  provincia_id?: string;
+  distrito_id?: string;
+}
+
+export interface CostoEnvioResponse {
+  success: boolean;
+  costo: number;
+  forma_envio?: FormaEnvio;
   message?: string;
 }
 
@@ -26,53 +44,52 @@ export interface FormaEnvioResponse {
   providedIn: 'root'
 })
 export class FormaEnvioService {
-  private apiUrl = `${environment.apiUrl}/formas-envio`;
+  private baseUrl = `${environment.apiUrl}/formas-envio`;
 
   constructor(private http: HttpClient) { }
 
-  // Obtener todas las formas de envío (admin)
+  // Obtener todas las formas de envío
   obtenerTodas(): Observable<FormaEnvioResponse> {
-    return this.http.get<FormaEnvioResponse>(this.apiUrl).pipe(
-      map(response => ({
-        ...response,
-        formas_envio: response.formas_envio.map(forma => ({
-          ...forma,
-          costo: Number(forma.costo)
-        }))
-      }))
-    );
+    return this.http.get<FormaEnvioResponse>(this.baseUrl);
   }
 
-  // Obtener solo formas de envío activas (público)
+  // Obtener solo las activas
   obtenerActivas(): Observable<FormaEnvioResponse> {
-    return this.http.get<FormaEnvioResponse>(`${this.apiUrl}/activas`).pipe(
-      map(response => ({
-        ...response,
-        formas_envio: response.formas_envio.map(forma => ({
-          ...forma,
-          costo: Number(forma.costo)
-        }))
-      }))
-    );
+    return this.http.get<FormaEnvioResponse>(`${this.baseUrl}/activas`);
   }
 
-  // Crear forma de envío
-  crear(formaEnvio: FormaEnvio): Observable<any> {
-    return this.http.post(this.apiUrl, formaEnvio);
+  // Obtener una forma de envío por ID
+  obtenerPorId(id: number): Observable<FormaEnvioResponse> {
+    return this.http.get<FormaEnvioResponse>(`${this.baseUrl}/${id}`);
+  }
+
+  // ✅ NUEVO: Calcular costo de envío según ubicación
+  calcularCostoEnvio(ubicacion: CostoEnvioRequest): Observable<CostoEnvioResponse> {
+    return this.http.post<CostoEnvioResponse>(`${this.baseUrl}/calcular-costo`, ubicacion);
+  }
+
+  // ✅ NUEVO: Obtener formas de envío por departamento
+  obtenerPorDepartamento(departamentoId: string): Observable<FormaEnvioResponse> {
+    return this.http.get<FormaEnvioResponse>(`${this.baseUrl}/departamento/${departamentoId}`);
+  }
+
+  // Crear nueva forma de envío
+  crear(data: Partial<FormaEnvio>): Observable<FormaEnvioResponse> {
+    return this.http.post<FormaEnvioResponse>(this.baseUrl, data);
   }
 
   // Actualizar forma de envío
-  actualizar(id: number, formaEnvio: FormaEnvio): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}`, formaEnvio);
+  actualizar(id: number, data: Partial<FormaEnvio>): Observable<FormaEnvioResponse> {
+    return this.http.put<FormaEnvioResponse>(`${this.baseUrl}/${id}`, data);
   }
 
-  // Toggle estado
-  toggleEstado(id: number): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${id}/toggle-estado`, {});
+  // Eliminar forma de envío
+  eliminar(id: number): Observable<FormaEnvioResponse> {
+    return this.http.delete<FormaEnvioResponse>(`${this.baseUrl}/${id}`);
   }
 
-  // Eliminar
-  eliminar(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+  // Toggle estado activo/inactivo
+  toggleEstado(id: number): Observable<FormaEnvioResponse> {
+    return this.http.patch<FormaEnvioResponse>(`${this.baseUrl}/${id}/toggle-estado`, {});
   }
 }
