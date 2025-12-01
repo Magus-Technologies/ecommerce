@@ -1,12 +1,14 @@
-import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseModalComponent } from '../base-modal/base-modal.component';
 import { GuiasRemisionService } from '../../services/guias-remision.service';
 import { ProductosService } from '../../services/productos.service';
+import { UtilidadesService } from '../../services/utilidades.service';
+import { ClienteService } from '../../services/cliente.service';
 
 interface GuiaRemisionForm {
-  tipo_guia: 'REMITENTE' | 'INTERNO';
+  tipo_guia: 'REMITENTE' | 'TRANSPORTISTA' | 'INTERNO';
 
   // Fecha
   fecha_inicio_traslado: string;
@@ -28,10 +30,25 @@ interface GuiaRemisionForm {
   modo_transporte: string;
   numero_bultos: number;
 
-  // Vehículo y conductor (solo REMITENTE con modalidad 02)
+  // Vehículo y conductor (solo REMITENTE con modalidad 02 - Privado)
   numero_placa?: string;
   conductor_dni?: string;
   conductor_nombres?: string;
+
+  // Transportista (solo REMITENTE con modalidad 01 - Público)
+  ruc_transportista?: string;
+  razon_social_transportista?: string;
+
+  // Datos para TRANSPORTISTA (tipo 31)
+  transportista_ruc?: string;
+  transportista_razon_social?: string;
+  transportista_numero_mtc?: string;
+  conductor_tipo_documento?: string;
+  conductor_numero_documento?: string;
+  conductor_apellidos?: string;
+  conductor_licencia?: string;
+  vehiculo_placa_principal?: string;
+  vehiculo_placa_secundaria?: string;
 
   // Puntos de partida y llegada
   punto_partida_ubigeo: string;
@@ -71,6 +88,11 @@ interface GuiaRemisionForm {
       (onConfirm)="submit()">
 
       <div class="gre-modal">
+      <!-- DEBUG INFO -->
+      <div class="alert alert-info" style="font-size: 0.75rem;">
+        <strong>DEBUG:</strong> paso={{ paso }}, tipo_guia={{ form.tipo_guia }}, tipoGuiaPredefinido={{ tipoGuiaPredefinido }}
+      </div>
+
       <!-- Navegación de pasos mejorada -->
       <div class="steps-container mb-4" *ngIf="!tipoGuiaPredefinido">
         <div class="steps-wrapper">
@@ -204,6 +226,16 @@ interface GuiaRemisionForm {
                 </div>
               </div>
             </div>
+
+            <div class="alert alert-warning" *ngIf="form.tipo_guia === 'TRANSPORTISTA'">
+              <div class="d-flex align-items-start">
+                <i class="ph ph-truck me-3" style="font-size: 1.5rem;"></i>
+                <div>
+                  <strong>GRE Transportista:</strong> Guía para empresas de transporte.
+                  Requiere datos del transportista, conductor y vehículo. Tipo de documento 31.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -280,16 +312,30 @@ interface GuiaRemisionForm {
                   <option value="7">Pasaporte</option>
                 </select>
               </div>
-              <div class="col-md-4">
+              <div class="col-md-8">
                 <label class="form-label">N° Documento *</label>
-                <input type="text" class="form-control" [(ngModel)]="form.destinatario_numero_documento"
-                       [maxlength]="form.destinatario_tipo_documento === '6' ? 11 : 8"
-                       (click)="$event.stopPropagation()">
+                <div class="input-group" (click)="$event.stopPropagation()">
+                  <input type="text" class="form-control" [(ngModel)]="form.destinatario_numero_documento"
+                         [maxlength]="form.destinatario_tipo_documento === '6' ? 11 : 8"
+                         placeholder="{{form.destinatario_tipo_documento === '6' ? '20123456789' : '12345678'}}">
+                  <button type="button" class="btn btn-primary" 
+                          (click)="form.destinatario_tipo_documento === '6' ? buscarDestinatarioPorRuc() : buscarDestinatarioPorDni()"
+                          [disabled]="buscandoRuc || buscandoDni || !form.destinatario_numero_documento"
+                          title="Buscar en {{form.destinatario_tipo_documento === '6' ? 'SUNAT' : 'RENIEC'}}">
+                    <span *ngIf="!buscandoRuc && !buscandoDni" class="ph ph-magnifying-glass"></span>
+                    <span *ngIf="buscandoRuc || buscandoDni" class="spinner-border spinner-border-sm"></span>
+                  </button>
+                </div>
+                <small class="text-muted">
+                  <i class="ph ph-info me-1"></i>
+                  Busca automáticamente en {{form.destinatario_tipo_documento === '6' ? 'SUNAT' : 'RENIEC'}}
+                </small>
               </div>
-              <div class="col-md-4">
+              <div class="col-12">
                 <label class="form-label">Razón Social / Nombres *</label>
                 <input type="text" class="form-control" [(ngModel)]="form.destinatario_razon_social"
-                       (click)="$event.stopPropagation()">
+                       (click)="$event.stopPropagation()"
+                       placeholder="Se completará automáticamente al buscar">
               </div>
               <div class="col-md-8">
                 <label class="form-label">Dirección *</label>
@@ -329,7 +375,10 @@ interface GuiaRemisionForm {
           <div class="col-md-6" *ngIf="form.tipo_guia === 'INTERNO'">
             <label class="form-label">Motivo de Traslado *</label>
             <select class="form-select" [(ngModel)]="form.motivo_traslado">
+              <option value="01">Venta</option>
+              <option value="02">Compra</option>
               <option value="04">Traslado entre establecimientos</option>
+              <option value="13">Otros</option>
             </select>
           </div>
 
@@ -391,9 +440,54 @@ interface GuiaRemisionForm {
         </div>
       </div>
 
-      <!-- Paso 3: Vehículo y Conductor (Solo para REMITENTE con modalidad privado) -->
-      <div *ngIf="paso === 3 && form.tipo_guia === 'REMITENTE' && form.modalidad_traslado === '02'" class="step-content">
-        <div class="row g-3">
+      <!-- Paso 3: Transporte (Solo para REMITENTE) -->
+      <div *ngIf="paso === 3 && form.tipo_guia === 'REMITENTE'" class="step-content">
+        
+        <!-- Modalidad 01: Transporte Público -->
+        <div *ngIf="form.modalidad_traslado === '01'" class="row g-3">
+          <div class="col-12">
+            <div class="alert alert-info">
+              <i class="ph ph-info me-2"></i>
+              <strong>Transporte Público:</strong> Ingresa los datos de la empresa transportista (Olva, Shalom, etc.)
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">RUC del Transportista *</label>
+            <div class="input-group">
+              <input type="text" class="form-control" [(ngModel)]="form.ruc_transportista"
+                     placeholder="20123456789" maxlength="11"
+                     [class.is-invalid]="!form.ruc_transportista || form.ruc_transportista.length !== 11"
+                     [class.is-valid]="form.ruc_transportista && form.ruc_transportista.length === 11">
+              <button type="button" class="btn btn-primary" 
+                      (click)="buscarTransportistaPorRuc()"
+                      [disabled]="buscandoRucTransportista || !form.ruc_transportista"
+                      title="Buscar en SUNAT">
+                <span *ngIf="!buscandoRucTransportista" class="ph ph-magnifying-glass"></span>
+                <span *ngIf="buscandoRucTransportista" class="spinner-border spinner-border-sm"></span>
+              </button>
+            </div>
+            <small class="text-muted">
+              <i class="ph ph-info me-1"></i>
+              Busca automáticamente en SUNAT
+            </small>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Razón Social del Transportista *</label>
+            <input type="text" class="form-control" [(ngModel)]="form.razon_social_transportista"
+                   placeholder="Se completará automáticamente al buscar"
+                   [class.is-invalid]="!form.razon_social_transportista"
+                   [class.is-valid]="form.razon_social_transportista">
+          </div>
+        </div>
+
+        <!-- Modalidad 02: Transporte Privado -->
+        <div *ngIf="form.modalidad_traslado === '02'" class="row g-3">
+          <div class="col-12">
+            <div class="alert alert-info">
+              <i class="ph ph-info me-2"></i>
+              <strong>Transporte Privado:</strong> Ingresa los datos del vehículo y conductor propio
+            </div>
+          </div>
           <div class="col-md-4">
             <label class="form-label">Modo de Transporte *</label>
             <select class="form-select" [(ngModel)]="form.modo_transporte">
@@ -406,17 +500,37 @@ interface GuiaRemisionForm {
           <div class="col-md-8">
             <label class="form-label">Placa del Vehículo *</label>
             <input type="text" class="form-control" [(ngModel)]="form.numero_placa"
-                   placeholder="ABC-123" maxlength="7">
+                   placeholder="ABC-123 o ABC-1234" maxlength="8"
+                   [class.is-invalid]="form.numero_placa && !validarFormatoPlaca(form.numero_placa)"
+                   [class.is-valid]="form.numero_placa && validarFormatoPlaca(form.numero_placa)">
+            <small class="text-muted">Formato: ABC-123 (antiguo) o ABC-1234 (nuevo)</small>
           </div>
-          <div class="col-md-6">
+          <div class="col-12">
             <label class="form-label">DNI del Conductor *</label>
-            <input type="text" class="form-control" [(ngModel)]="form.conductor_dni"
-                   maxlength="8" placeholder="12345678">
+            <div class="input-group">
+              <input type="text" class="form-control" [(ngModel)]="form.conductor_dni"
+                     maxlength="8" placeholder="12345678"
+                     [class.is-invalid]="form.conductor_dni && form.conductor_dni.length !== 8"
+                     [class.is-valid]="form.conductor_dni && form.conductor_dni.length === 8">
+              <button type="button" class="btn btn-primary" 
+                      (click)="buscarConductorPorDni()"
+                      [disabled]="buscandoDniConductor || !form.conductor_dni"
+                      title="Buscar en RENIEC">
+                <span *ngIf="!buscandoDniConductor" class="ph ph-magnifying-glass"></span>
+                <span *ngIf="buscandoDniConductor" class="spinner-border spinner-border-sm"></span>
+              </button>
+            </div>
+            <small class="text-muted">
+              <i class="ph ph-info me-1"></i>
+              Busca automáticamente en RENIEC
+            </small>
           </div>
-          <div class="col-md-6">
+          <div class="col-12">
             <label class="form-label">Nombres del Conductor *</label>
             <input type="text" class="form-control" [(ngModel)]="form.conductor_nombres"
-                   placeholder="JUAN PEREZ GARCIA">
+                   placeholder="Se completará automáticamente al buscar"
+                   [class.is-invalid]="!form.conductor_nombres"
+                   [class.is-valid]="form.conductor_nombres">
           </div>
         </div>
       </div>
@@ -630,7 +744,16 @@ interface GuiaRemisionForm {
 
       <!-- Mensajes -->
       <div *ngIf="error" class="alert alert-danger mt-3">
-        <i class="ph ph-warning me-2"></i>{{ error }}
+        <div class="d-flex align-items-start">
+          <i class="ph ph-warning me-2" style="font-size: 1.25rem;"></i>
+          <div class="flex-grow-1">
+            <strong>Error al procesar la guía:</strong>
+            <div *ngIf="errores.length === 1">{{ error }}</div>
+            <ul *ngIf="errores.length > 1" class="mb-0 mt-2">
+              <li *ngFor="let err of errores">{{ err }}</li>
+            </ul>
+          </div>
+        </div>
       </div>
       <div *ngIf="success" class="alert alert-success mt-3">
         <i class="ph ph-check-circle me-2"></i>{{ success }}
@@ -1213,10 +1336,10 @@ interface GuiaRemisionForm {
     }
   `]
 })
-export class GuiaRemisionModalComponent implements OnInit {
+export class GuiaRemisionModalComponent implements OnInit, OnChanges {
   @Input() isOpen = false;
   @Input() guiaId?: number;
-  @Input() tipoGuiaPredefinido?: 'REMITENTE' | 'INTERNO';
+  @Input() tipoGuiaPredefinido?: 'REMITENTE' | 'TRANSPORTISTA' | 'INTERNO';
   @Output() onClose = new EventEmitter<void>();
   @Output() onSuccess = new EventEmitter<any>();
 
@@ -1224,6 +1347,7 @@ export class GuiaRemisionModalComponent implements OnInit {
   loading = false;
   error = '';
   success = '';
+  errores: string[] = [];
   tiposGuia: any[] = [];
   usarClienteComoDestinatario = false;
 
@@ -1278,21 +1402,45 @@ export class GuiaRemisionModalComponent implements OnInit {
     detalles: []
   };
 
+  // Estados de carga para las búsquedas
+  buscandoRuc = false;
+  buscandoDni = false;
+  buscandoRucTransportista = false;
+  buscandoDniConductor = false;
+
   constructor(
     private guiasService: GuiasRemisionService,
-    private productosService: ProductosService
+    private productosService: ProductosService,
+    private utilidadesService: UtilidadesService
   ) { }
 
   ngOnInit(): void {
+    console.log('🔵 GuiaRemisionModal ngOnInit - tipoGuiaPredefinido:', this.tipoGuiaPredefinido);
+
     this.cargarTiposGuia();
     this.cargarProductos(); // ✅ Cargar productos al iniciar
-    this.resetearFormulario();
 
+    // Inicializar el formulario
+    this.inicializarFormulario();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Detectar cuando se abre el modal
+    if (changes['isOpen'] && changes['isOpen'].currentValue === true) {
+      console.log('🟢 Modal abierto - Reinicializando formulario');
+      this.inicializarFormulario();
+    }
+  }
+
+  inicializarFormulario(): void {
     // Si hay tipo predefinido, configurar y saltar al paso correspondiente
     if (this.tipoGuiaPredefinido) {
       this.form.tipo_guia = this.tipoGuiaPredefinido;
       // INTERNO empieza en paso 2 (sin destinatario), otros en paso 1
       this.paso = this.tipoGuiaPredefinido === 'INTERNO' ? 2 : 1;
+      console.log('🔵 Tipo predefinido configurado - tipo_guia:', this.form.tipo_guia, 'paso:', this.paso);
+    } else {
+      this.paso = 0; // Empezar desde la selección de tipo
     }
 
     // Por defecto, NO usar cliente como destinatario para evitar confusión
@@ -1474,7 +1622,11 @@ export class GuiaRemisionModalComponent implements OnInit {
 
     if (this.form.tipo_guia === 'REMITENTE') {
       // Estructura para GRE Remitente
-      formData.cliente_id = this.form.cliente_id;
+      // ✅ CORRECCIÓN: cliente_id siempre se envía si existe (para trazabilidad)
+      if (this.form.cliente_id && this.form.cliente_id > 0) {
+        formData.cliente_id = this.form.cliente_id;
+      }
+
       formData.motivo_traslado = this.form.motivo_traslado;
       formData.modalidad_traslado = this.form.modalidad_traslado;
       formData.fecha_inicio_traslado = this.form.fecha_inicio_traslado;
@@ -1499,15 +1651,22 @@ export class GuiaRemisionModalComponent implements OnInit {
         formData.observaciones = this.form.observaciones;
       }
 
-      // Destinatario
+      // ✅ CORRECCIÓN: Destinatario según la API
       if (this.usarClienteComoDestinatario) {
         formData.usar_cliente_como_destinatario = true;
       } else {
+        // Enviar datos del destinatario manual
         formData.destinatario_tipo_documento = this.form.destinatario_tipo_documento;
         formData.destinatario_numero_documento = this.form.destinatario_numero_documento;
         formData.destinatario_razon_social = this.form.destinatario_razon_social;
         formData.destinatario_direccion = this.form.destinatario_direccion;
         formData.destinatario_ubigeo = this.form.destinatario_ubigeo;
+      }
+
+      // Modalidad 01 - Transporte Público
+      if (this.form.modalidad_traslado === '01') {
+        formData.ruc_transportista = this.form.ruc_transportista;
+        formData.razon_social_transportista = this.form.razon_social_transportista;
       }
 
       // Modalidad 02 - Transporte Privado
@@ -1516,6 +1675,60 @@ export class GuiaRemisionModalComponent implements OnInit {
         formData.numero_placa = this.form.numero_placa;
         formData.conductor_dni = this.form.conductor_dni;
         formData.conductor_nombres = this.form.conductor_nombres;
+      }
+    } else if (this.form.tipo_guia === 'TRANSPORTISTA') {
+      // Estructura para Guía de Remisión Transportista (tipo 31)
+
+      // Datos del transportista (OBLIGATORIOS)
+      formData.transportista_ruc = this.form.transportista_ruc;
+      formData.transportista_razon_social = this.form.transportista_razon_social;
+      formData.transportista_numero_mtc = this.form.transportista_numero_mtc;
+
+      // Datos del conductor (OBLIGATORIOS)
+      formData.conductor_tipo_documento = this.form.conductor_tipo_documento;
+      formData.conductor_numero_documento = this.form.conductor_numero_documento;
+      formData.conductor_nombres = this.form.conductor_nombres;
+      formData.conductor_apellidos = this.form.conductor_apellidos;
+      if (this.form.conductor_licencia) {
+        formData.conductor_licencia = this.form.conductor_licencia;
+      }
+
+      // Datos del vehículo (OBLIGATORIOS)
+      formData.vehiculo_placa_principal = this.form.vehiculo_placa_principal;
+      if (this.form.vehiculo_placa_secundaria) {
+        formData.vehiculo_placa_secundaria = this.form.vehiculo_placa_secundaria;
+      }
+
+      // Destinatario (OBLIGATORIO)
+      formData.destinatario_tipo_documento = this.form.destinatario_tipo_documento;
+      formData.destinatario_numero_documento = this.form.destinatario_numero_documento;
+      formData.destinatario_razon_social = this.form.destinatario_razon_social;
+      formData.destinatario_direccion = this.form.destinatario_direccion;
+      formData.destinatario_ubigeo = this.form.destinatario_ubigeo;
+
+      // Traslado
+      formData.motivo_traslado = this.form.motivo_traslado;
+      formData.modalidad_traslado = this.form.modalidad_traslado;
+      formData.fecha_inicio_traslado = this.form.fecha_inicio_traslado;
+      formData.punto_partida_ubigeo = this.form.punto_partida_ubigeo;
+      formData.punto_partida_direccion = this.form.punto_partida_direccion;
+      formData.punto_llegada_ubigeo = this.form.punto_llegada_ubigeo;
+      formData.punto_llegada_direccion = this.form.punto_llegada_direccion;
+
+      // Productos
+      formData.productos = this.form.detalles.map(detalle => ({
+        producto_id: detalle.producto_id,
+        cantidad: detalle.cantidad,
+        peso_unitario: detalle.peso_unitario,
+        observaciones: detalle.observaciones
+      }));
+
+      // Opcionales
+      if (this.form.numero_bultos) {
+        formData.numero_bultos = this.form.numero_bultos;
+      }
+      if (this.form.observaciones) {
+        formData.observaciones = this.form.observaciones;
       }
     } else {
       // Estructura para Traslado Interno
@@ -1556,6 +1769,8 @@ export class GuiaRemisionModalComponent implements OnInit {
     let request;
     if (this.form.tipo_guia === 'REMITENTE') {
       request = this.guiasService.crearGuiaRemitente(formData);
+    } else if (this.form.tipo_guia === 'TRANSPORTISTA') {
+      request = this.guiasService.crearGuiaTransportista(formData);
     } else {
       request = this.guiasService.crearTrasladoInterno(formData);
     }
@@ -1571,15 +1786,39 @@ export class GuiaRemisionModalComponent implements OnInit {
       },
       error: (err: any) => {
         console.error('Error al crear guía:', err);
-        this.error = err.error?.message || 'Error al crear la guía de remisión';
+        this.loading = false;
+
+        // Limpiar errores anteriores
+        this.errores = [];
+        this.error = '';
 
         // Mostrar errores de validación si existen
         if (err.error?.errors) {
-          const erroresValidacion = Object.values(err.error.errors).flat();
-          this.error = erroresValidacion.join(', ');
+          // Convertir objeto de errores a array
+          Object.keys(err.error.errors).forEach(campo => {
+            const mensajes = err.error.errors[campo];
+            if (Array.isArray(mensajes)) {
+              mensajes.forEach(mensaje => {
+                this.errores.push(`${this.traducirCampo(campo)}: ${mensaje}`);
+              });
+            }
+          });
+
+          // Si hay errores, mostrar el primero como error principal
+          if (this.errores.length > 0) {
+            this.error = this.errores[0];
+          }
+        } else {
+          // Error genérico
+          this.error = err.error?.message || 'Error al crear la guía de remisión';
+          this.errores = [this.error];
         }
 
-        this.loading = false;
+        // Auto-ocultar después de 5 segundos
+        setTimeout(() => {
+          this.error = '';
+          this.errores = [];
+        }, 5000);
       }
     });
   }
@@ -1591,27 +1830,25 @@ export class GuiaRemisionModalComponent implements OnInit {
     return 4;
   }
 
-  siguientePaso(): void {
+  async siguientePaso(): Promise<void> {
     // Limpiar errores anteriores
     this.error = '';
 
-    // Validar paso actual antes de avanzar
-    if (!this.validarPasoActual()) {
+    // Validar paso actual antes de avanzar (async)
+    const esValido = await this.validarPasoActual();
+    if (!esValido) {
       return;
     }
 
-    // Saltar paso 3 si no es necesario (INTERNO o REMITENTE con modalidad 01)
-    if (this.paso === 2) {
-      if (this.form.tipo_guia === 'INTERNO' ||
-        (this.form.tipo_guia === 'REMITENTE' && this.form.modalidad_traslado === '01')) {
-        this.paso = 4; // Saltar al paso de productos
-        return;
-      }
+    // Saltar paso 3 si es INTERNO (no requiere transporte)
+    if (this.paso === 2 && this.form.tipo_guia === 'INTERNO') {
+      this.paso = 4; // Saltar al paso de productos
+      return;
     }
     this.paso++;
   }
 
-  validarPasoActual(): boolean {
+  async validarPasoActual(): Promise<boolean> {
     switch (this.paso) {
       case 0: // Tipo de guía
         if (!this.form.tipo_guia) {
@@ -1626,14 +1863,13 @@ export class GuiaRemisionModalComponent implements OnInit {
           // Si USA cliente como destinatario, validar que haya cliente
           if (this.usarClienteComoDestinatario) {
             if (!this.form.cliente_id || this.form.cliente_id <= 0) {
-              this.error = 'Debes seleccionar un cliente para crear una GRE Remitente';
+              this.error = 'Debes seleccionar un cliente válido';
               setTimeout(() => this.error = '', 5000);
               return false;
             }
-          }
-
-          // Si NO usa cliente como destinatario, validar datos del destinatario
-          if (!this.usarClienteComoDestinatario) {
+            // Nota: El backend validará que el cliente tenga RUC
+          } else {
+            // Si NO usa cliente como destinatario, validar datos del destinatario manual
             if (!this.form.destinatario_numero_documento || !this.form.destinatario_razon_social ||
               !this.form.destinatario_direccion || !this.form.destinatario_ubigeo) {
               this.error = 'Completa todos los datos del destinatario';
@@ -1645,6 +1881,8 @@ export class GuiaRemisionModalComponent implements OnInit {
               setTimeout(() => this.error = '', 5000);
               return false;
             }
+            // Validar ubigeo del destinatario (async)
+            return await this.validarUbigeoAsync(this.form.destinatario_ubigeo, 'destinatario');
           }
         }
         return true;
@@ -1675,29 +1913,62 @@ export class GuiaRemisionModalComponent implements OnInit {
           setTimeout(() => this.error = '', 3000);
           return false;
         }
-        return true;
+        // Validar ubigeos (async)
+        return await this.validarUbigeosTraslado();
 
-      case 3: // Vehículo (solo REMITENTE con modalidad 02)
-        if (this.form.tipo_guia === 'REMITENTE' && this.form.modalidad_traslado === '02') {
-          if (!this.form.numero_placa) {
-            this.error = 'Ingresa la placa del vehículo';
-            setTimeout(() => this.error = '', 3000);
-            return false;
+      case 3: // Transporte (REMITENTE)
+        if (this.form.tipo_guia === 'REMITENTE') {
+          // ✅ CORRECCIÓN: Modalidad 01 - Transporte Público (ya estaba implementada correctamente)
+          if (this.form.modalidad_traslado === '01') {
+            if (!this.form.ruc_transportista) {
+              this.error = 'Ingresa el RUC del transportista';
+              setTimeout(() => this.error = '', 3000);
+              return false;
+            }
+            if (this.form.ruc_transportista.length !== 11) {
+              this.error = 'El RUC del transportista debe tener 11 dígitos';
+              setTimeout(() => this.error = '', 3000);
+              return false;
+            }
+            if (!this.form.razon_social_transportista) {
+              this.error = 'Ingresa la razón social del transportista';
+              setTimeout(() => this.error = '', 3000);
+              return false;
+            }
+            // Validar RUC con API (async)
+            return await this.validarRucTransportistaAsync();
           }
-          if (!this.form.conductor_dni) {
-            this.error = 'Ingresa el DNI del conductor';
-            setTimeout(() => this.error = '', 3000);
-            return false;
-          }
-          if (this.form.conductor_dni.length !== 8) {
-            this.error = 'El DNI del conductor debe tener 8 dígitos';
-            setTimeout(() => this.error = '', 3000);
-            return false;
-          }
-          if (!this.form.conductor_nombres) {
-            this.error = 'Ingresa el nombre del conductor';
-            setTimeout(() => this.error = '', 3000);
-            return false;
+
+          // Modalidad 02 - Transporte Privado
+          if (this.form.modalidad_traslado === '02') {
+            if (!this.form.numero_placa) {
+              this.error = 'Ingresa la placa del vehículo';
+              setTimeout(() => this.error = '', 3000);
+              return false;
+            }
+            // Validar formato de placa
+            if (!this.validarFormatoPlaca(this.form.numero_placa)) {
+              this.error = 'Formato de placa inválido. Use ABC-123 o ABC-1234';
+              setTimeout(() => this.error = '', 3000);
+              return false;
+            }
+            if (!this.form.conductor_dni) {
+              this.error = 'Ingresa el DNI del conductor';
+              setTimeout(() => this.error = '', 3000);
+              return false;
+            }
+            if (this.form.conductor_dni.length !== 8) {
+              this.error = 'El DNI del conductor debe tener 8 dígitos';
+              setTimeout(() => this.error = '', 3000);
+              return false;
+            }
+            if (!this.form.conductor_nombres) {
+              this.error = 'Ingresa el nombre del conductor';
+              setTimeout(() => this.error = '', 3000);
+              return false;
+            }
+            // Validar placa con API (async)
+            return await this.validarPlacaAsync();
           }
         }
         return true;
@@ -1891,10 +2162,283 @@ export class GuiaRemisionModalComponent implements OnInit {
     return producto.id || index;
   }
 
+  // ============================================
+  // MÉTODOS DE VALIDACIÓN CON API
+  // ============================================
+
+  /**
+   * Validar formato de placa (local)
+   */
+  validarFormatoPlaca(placa: string): boolean {
+    if (!placa) return false;
+    // Formato antiguo: ABC-123 (3 letras, guión, 3 números)
+    const formatoAntiguo = /^[A-Z]{3}-[0-9]{3}$/;
+    // Formato nuevo: ABC-1234 (3 letras, guión, 4 números)
+    const formatoNuevo = /^[A-Z]{3}-[0-9]{4}$/;
+    return formatoAntiguo.test(placa.toUpperCase()) || formatoNuevo.test(placa.toUpperCase());
+  }
+
+  /**
+   * Validar placa con API (async) - Retorna Promise
+   */
+  async validarPlacaAsync(): Promise<boolean> {
+    if (!this.form.numero_placa) return true;
+
+    try {
+      const response = await this.guiasService.validarPlaca(this.form.numero_placa).toPromise();
+
+      if (response && response.data.valido) {
+        console.log('✅ Placa válida');
+        return true;
+      } else {
+        this.error = 'La placa ingresada no es válida';
+        return false;
+      }
+    } catch (err) {
+      console.warn('Error al validar placa:', err);
+      // Continuar sin validación si el servicio falla
+      return true;
+    }
+  }
+
+  /**
+   * Validar RUC de transportista con API (async) - Retorna Promise
+   */
+  async validarRucTransportistaAsync(): Promise<boolean> {
+    if (!this.form.ruc_transportista) return true;
+
+    try {
+      const response = await this.guiasService.validarRucTransportista(this.form.ruc_transportista).toPromise();
+
+      if (response && response.data.valido) {
+        console.log('✅ RUC de transportista válido');
+        // Si la API retorna la razón social, auto-completar
+        if (response.data.razon_social && !this.form.razon_social_transportista) {
+          this.form.razon_social_transportista = response.data.razon_social;
+        }
+        return true;
+      } else {
+        this.error = 'El RUC del transportista no es válido';
+        return false;
+      }
+    } catch (err) {
+      console.warn('Error al validar RUC transportista:', err);
+      // Continuar sin validación si el servicio falla
+      return true;
+    }
+  }
+
+  /**
+   * Validar ubigeo con API (async) - Retorna Promise
+   */
+  async validarUbigeoAsync(ubigeo: string, tipo: 'destinatario' | 'partida' | 'llegada'): Promise<boolean> {
+    if (!ubigeo || ubigeo.length !== 6) {
+      this.error = `El ubigeo de ${tipo} debe tener 6 dígitos`;
+      return false;
+    }
+
+    try {
+      const response = await this.guiasService.validarUbigeo(ubigeo).toPromise();
+
+      if (response && response.data.valido) {
+        // Mostrar información del ubigeo
+        const info = `${response.data.departamento || ''} - ${response.data.provincia || ''} - ${response.data.distrito || ''}`;
+        console.log(`✅ Ubigeo ${tipo} válido:`, info);
+        return true;
+      } else {
+        this.error = `El ubigeo de ${tipo} no es válido`;
+        return false;
+      }
+    } catch (err) {
+      console.warn('Error al validar ubigeo:', err);
+      // Continuar sin validación si el servicio falla
+      return true;
+    }
+  }
+
+  /**
+   * Validar ubigeos de traslado - Ahora es async
+   */
+  async validarUbigeosTraslado(): Promise<boolean> {
+    const partidaValida = await this.validarUbigeoAsync(this.form.punto_partida_ubigeo, 'partida');
+    if (!partidaValida) return false;
+
+    const llegadaValida = await this.validarUbigeoAsync(this.form.punto_llegada_ubigeo, 'llegada');
+    return llegadaValida;
+  }
+
+  /**
+   * Traducir nombres de campos para mensajes de error
+   */
+  traducirCampo(campo: string): string {
+    const traducciones: { [key: string]: string } = {
+      'cliente_id': 'Cliente',
+      'motivo_traslado': 'Motivo de traslado',
+      'modalidad_traslado': 'Modalidad de traslado',
+      'fecha_inicio_traslado': 'Fecha de inicio',
+      'punto_partida_ubigeo': 'Ubigeo de partida',
+      'punto_partida_direccion': 'Dirección de partida',
+      'punto_llegada_ubigeo': 'Ubigeo de llegada',
+      'punto_llegada_direccion': 'Dirección de llegada',
+      'destinatario_tipo_documento': 'Tipo de documento',
+      'destinatario_numero_documento': 'Número de documento',
+      'destinatario_razon_social': 'Razón social',
+      'destinatario_direccion': 'Dirección',
+      'destinatario_ubigeo': 'Ubigeo',
+      'numero_placa': 'Placa del vehículo',
+      'conductor_dni': 'DNI del conductor',
+      'conductor_nombres': 'Nombres del conductor',
+      'ruc_transportista': 'RUC del transportista',
+      'razon_social_transportista': 'Razón social del transportista',
+      'productos': 'Productos'
+    };
+    return traducciones[campo] || campo;
+  }
+
+  /**
+   * Buscar destinatario por RUC en SUNAT
+   */
+  buscarDestinatarioPorRuc(): void {
+    if (!this.form.destinatario_numero_documento || this.form.destinatario_numero_documento.length !== 11) {
+      this.error = 'Ingresa un RUC válido de 11 dígitos';
+      setTimeout(() => this.error = '', 3000);
+      return;
+    }
+
+    this.buscandoRuc = true;
+    this.utilidadesService.validarRuc(this.form.destinatario_numero_documento).subscribe({
+      next: (res: any) => {
+        this.buscandoRuc = false;
+        if (res.success && res.data) {
+          this.form.destinatario_razon_social = res.data.razon_social || res.data.nombre_o_razon_social;
+          this.form.destinatario_direccion = res.data.direccion || '';
+          this.form.destinatario_ubigeo = res.data.ubigeo || '';
+          this.success = '✅ Datos obtenidos de SUNAT';
+          setTimeout(() => this.success = '', 2000);
+        } else {
+          this.error = 'No se encontró información del RUC';
+          setTimeout(() => this.error = '', 3000);
+        }
+      },
+      error: (err: any) => {
+        this.buscandoRuc = false;
+        this.error = 'Error al consultar RUC en SUNAT';
+        setTimeout(() => this.error = '', 3000);
+        console.error('Error al consultar RUC:', err);
+      }
+    });
+  }
+
+  /**
+   * Buscar destinatario por DNI en RENIEC
+   */
+  buscarDestinatarioPorDni(): void {
+    if (!this.form.destinatario_numero_documento || this.form.destinatario_numero_documento.length !== 8) {
+      this.error = 'Ingresa un DNI válido de 8 dígitos';
+      setTimeout(() => this.error = '', 3000);
+      return;
+    }
+
+    this.buscandoDni = true;
+    this.utilidadesService.validarDni(this.form.destinatario_numero_documento).subscribe({
+      next: (res: any) => {
+        this.buscandoDni = false;
+        if (res.success && res.data) {
+          const nombres = res.data.nombres || '';
+          const apellidoPaterno = res.data.apellido_paterno || '';
+          const apellidoMaterno = res.data.apellido_materno || '';
+          this.form.destinatario_razon_social = `${nombres} ${apellidoPaterno} ${apellidoMaterno}`.trim();
+          this.success = '✅ Datos obtenidos de RENIEC';
+          setTimeout(() => this.success = '', 2000);
+        } else {
+          this.error = 'No se encontró información del DNI';
+          setTimeout(() => this.error = '', 3000);
+        }
+      },
+      error: (err: any) => {
+        this.buscandoDni = false;
+        this.error = 'Error al consultar DNI en RENIEC';
+        setTimeout(() => this.error = '', 3000);
+        console.error('Error al consultar DNI:', err);
+      }
+    });
+  }
+
+  /**
+   * Buscar transportista por RUC en SUNAT
+   */
+  buscarTransportistaPorRuc(): void {
+    if (!this.form.ruc_transportista || this.form.ruc_transportista.length !== 11) {
+      this.error = 'Ingresa un RUC válido de 11 dígitos';
+      setTimeout(() => this.error = '', 3000);
+      return;
+    }
+
+    this.buscandoRucTransportista = true;
+    this.utilidadesService.validarRuc(this.form.ruc_transportista).subscribe({
+      next: (res: any) => {
+        this.buscandoRucTransportista = false;
+        if (res.success && res.data) {
+          this.form.razon_social_transportista = res.data.razon_social || res.data.nombre_o_razon_social;
+          this.success = '✅ Datos obtenidos de SUNAT';
+          setTimeout(() => this.success = '', 2000);
+        } else {
+          this.error = 'No se encontró información del RUC';
+          setTimeout(() => this.error = '', 3000);
+        }
+      },
+      error: (err: any) => {
+        this.buscandoRucTransportista = false;
+        this.error = 'Error al consultar RUC en SUNAT';
+        setTimeout(() => this.error = '', 3000);
+        console.error('Error al consultar RUC:', err);
+      }
+    });
+  }
+
+  /**
+   * Buscar conductor por DNI en RENIEC
+   */
+  buscarConductorPorDni(): void {
+    if (!this.form.conductor_dni || this.form.conductor_dni.length !== 8) {
+      this.error = 'Ingresa un DNI válido de 8 dígitos';
+      setTimeout(() => this.error = '', 3000);
+      return;
+    }
+
+    this.buscandoDniConductor = true;
+    this.utilidadesService.validarDni(this.form.conductor_dni).subscribe({
+      next: (res: any) => {
+        this.buscandoDniConductor = false;
+        if (res.success && res.data) {
+          const nombres = res.data.nombres || '';
+          const apellidoPaterno = res.data.apellido_paterno || '';
+          const apellidoMaterno = res.data.apellido_materno || '';
+          this.form.conductor_nombres = `${nombres} ${apellidoPaterno} ${apellidoMaterno}`.trim();
+          this.success = '✅ Datos obtenidos de RENIEC';
+          setTimeout(() => this.success = '', 2000);
+        } else {
+          this.error = 'No se encontró información del DNI';
+          setTimeout(() => this.error = '', 3000);
+        }
+      },
+      error: (err: any) => {
+        this.buscandoDniConductor = false;
+        this.error = 'Error al consultar DNI en RENIEC';
+        setTimeout(() => this.error = '', 3000);
+        console.error('Error al consultar DNI:', err);
+      }
+    });
+  }
+
+  /**
+   * Cerrar modal
+   */
   close(): void {
     this.paso = this.tipoGuiaPredefinido ? 1 : 0;
     this.error = '';
     this.success = '';
+    this.errores = [];
     this.busquedaProducto = '';
     this.productosBuscados = [];
     this.onClose.emit();
