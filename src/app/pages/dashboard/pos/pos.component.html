@@ -26,20 +26,47 @@
 
     <!-- BÚSQUEDA RÁPIDA -->
     <div class="search-section">
-      <div class="search-wrapper">
-        <div class="search-input-container">
-          <i class="ph ph-magnifying-glass search-icon"></i>
-          <input type="text" class="search-input" placeholder="Buscar producto por código o nombre..."
-            [(ngModel)]="terminoBusqueda" (keyup.enter)="onBuscarProductos()" (input)="filtrarProductos()" autofocus>
-          <button *ngIf="terminoBusqueda" class="btn-clear-search" (click)="onLimpiarBusqueda()">
-            <i class="ph ph-x"></i>
+      <!-- Pestañas: Productos y Servicios -->
+      <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button 
+            class="nav-link" 
+            [class.active]="pestanaActiva === 'productos'"
+            (click)="cambiarPestana('productos')"
+            type="button">
+            <i class="ph ph-package me-2"></i>
+            Productos
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button 
+            class="nav-link" 
+            [class.active]="pestanaActiva === 'servicios'"
+            (click)="cambiarPestana('servicios')"
+            type="button">
+            <i class="ph ph-briefcase me-2"></i>
+            Servicios
+          </button>
+        </li>
+      </ul>
+
+      <!-- CONTENIDO PESTAÑA PRODUCTOS -->
+      <div *ngIf="pestanaActiva === 'productos'">
+        <div class="search-wrapper">
+          <div class="search-input-container">
+            <i class="ph ph-magnifying-glass search-icon"></i>
+            <input type="text" class="search-input" 
+              placeholder="Buscar producto por código o nombre..."
+              [(ngModel)]="terminoBusqueda" (keyup.enter)="onBuscarProductos()" (input)="filtrarProductos()" autofocus>
+            <button *ngIf="terminoBusqueda" class="btn-clear-search" (click)="onLimpiarBusqueda()">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
+          <button class="btn-advanced-search" (click)="abrirProductoModal()">
+            <i class="ph ph-funnel"></i>
+            Avanzado
           </button>
         </div>
-        <button class="btn-advanced-search" (click)="abrirProductoModal()">
-          <i class="ph ph-funnel"></i>
-          Avanzado
-        </button>
-      </div>
 
       <!-- RESULTADOS DE BÚSQUEDA RÁPIDA -->
       <div *ngIf="terminoBusqueda && productosFiltrados.length > 0" class="search-results">
@@ -62,10 +89,19 @@
               <input type="checkbox" class="custom-checkbox" [(ngModel)]="producto.seleccionado"
                 (change)="onCheckboxResultadoChange(producto)" (click)="$event.stopPropagation()">
               <div class="result-info">
-                <div class="result-name">{{ producto.nombre }}</div>
+                <div class="result-name">
+                  {{ producto.nombre }}
+                  <span class="badge ms-2" 
+                    [class.bg-primary]="producto.tipo_item === 'PRODUCTO'"
+                    [class.bg-info]="producto.tipo_item === 'SERVICIO'">
+                    <i class="ph" [class.ph-package]="producto.tipo_item === 'PRODUCTO'" 
+                       [class.ph-briefcase]="producto.tipo_item === 'SERVICIO'"></i>
+                    {{ producto.tipo_item === 'SERVICIO' ? 'Servicio' : 'Producto' }}
+                  </span>
+                </div>
                 <div class="result-code">
                   <i class="ph ph-barcode"></i>
-                  {{ producto.codigo_producto || producto.codigo || 'N/A' }}
+                  {{ producto.codigo_servicio || producto.codigo_producto || producto.codigo || 'N/A' }}
                 </div>
               </div>
             </div>
@@ -73,11 +109,15 @@
               <div class="result-price-stock">
                 <div class="result-price">S/ {{ (producto.precio_venta || producto.precio || 0) | number:'1.2-2' }}
                 </div>
-                <div class="result-stock"
+                <div class="result-stock" *ngIf="producto.tipo_item === 'PRODUCTO'"
                   [class.low]="getStockDisponible(producto) < 10 && getStockDisponible(producto) > 0"
                   [class.out]="getStockDisponible(producto) === 0">
                   <i class="ph ph-package"></i>
                   <span>Stock: {{ getStockDisponible(producto) }}</span>
+                </div>
+                <div class="result-stock" *ngIf="producto.tipo_item === 'SERVICIO'">
+                  <i class="ph ph-infinity"></i>
+                  <span>Disponible</span>
                 </div>
               </div>
               <div class="quantity-controls" *ngIf="producto.seleccionado">
@@ -104,11 +144,86 @@
         </button>
       </div>
 
-      <!-- SIN RESULTADOS -->
-      <div *ngIf="terminoBusqueda && productosFiltrados.length === 0" class="no-results">
-        <i class="ph ph-magnifying-glass-minus"></i>
-        <p>No se encontraron productos</p>
-        <button class="btn-link" (click)="abrirProductoModal()">Búsqueda avanzada</button>
+        <!-- SIN RESULTADOS -->
+        <div *ngIf="terminoBusqueda && productosFiltrados.length === 0" class="no-results">
+          <i class="ph ph-magnifying-glass-minus"></i>
+          <p>No se encontraron productos</p>
+          <button class="btn-link" (click)="abrirProductoModal()">Búsqueda avanzada</button>
+        </div>
+      </div>
+
+      <!-- CONTENIDO PESTAÑA SERVICIOS -->
+      <div *ngIf="pestanaActiva === 'servicios'" class="servicios-form">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="mb-3">
+              <i class="ph ph-briefcase me-2"></i>
+              Agregar Servicio Manual
+            </h6>
+            <form (ngSubmit)="agregarServicioManual()">
+              <!-- Descripción -->
+              <div class="mb-3">
+                <label class="form-label">Descripción del Servicio <span class="text-danger">*</span></label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [(ngModel)]="servicioManual.descripcion"
+                  name="descripcion"
+                  placeholder="Ej: Consultoría IT, Desarrollo web, Soporte técnico..."
+                  required>
+              </div>
+
+              <!-- Cantidad y Precio -->
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Cantidad <span class="text-danger">*</span></label>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="servicioManual.cantidad"
+                    name="cantidad"
+                    min="0.01"
+                    step="0.01"
+                    (input)="calcularTotalServicio()"
+                    required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">
+                    Precio Unitario <span class="text-danger">*</span>
+                    <small class="text-muted">(incluye IGV 18%)</small>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">S/</span>
+                    <input 
+                      type="number" 
+                      class="form-control" 
+                      [(ngModel)]="servicioManual.precio_unitario"
+                      name="precio"
+                      min="0.01"
+                      step="0.01"
+                      placeholder="0.00"
+                      (input)="calcularTotalServicio()"
+                      required>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Total y Botón -->
+              <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded">
+                <span class="text-muted">Total:</span>
+                <strong class="fs-5">S/ {{ calcularTotalServicio() | number:'1.2-2' }}</strong>
+              </div>
+
+              <button 
+                type="submit" 
+                class="btn btn-primary w-100"
+                [disabled]="!servicioManual.descripcion || !servicioManual.cantidad || !servicioManual.precio_unitario">
+                <i class="ph ph-plus me-2"></i>
+                Agregar al Carrito
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
 

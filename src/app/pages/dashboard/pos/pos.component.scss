@@ -1363,3 +1363,81 @@
         justify-content: space-between;
     }
 }
+
+// ==========================================
+// FORMULARIO DE SERVICIOS
+// ==========================================
+.servicios-form {
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #374151;
+    min-height: 40px; // Altura mínima para labels
+    display: flex;
+    align-items: center;
+  }
+
+  .form-control,
+  .form-select {
+    height: 42px;
+    font-size: 0.9375rem;
+  }
+
+  .input-group-text {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+    font-weight: 500;
+  }
+
+  // Alinear inputs en la misma fila
+  .row {
+    align-items: flex-end;
+  }
+
+  // Espaciado consistente
+  .mb-3 {
+    margin-bottom: 1rem !important;
+  }
+
+  // Botón
+  .btn-primary {
+    height: 44px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  // Total discreto
+  .bg-light {
+    background-color: #f8f9fa !important;
+  }
+
+  .text-danger {
+    color: #dc3545 !important;
+    font-weight: 700;
+  }
+}
+
+// Estilos adicionales para campos obligatorios y total
+.servicios-form {
+  .text-danger {
+    color: #dc3545 !important;
+    font-weight: 700;
+  }
+
+  .badge.bg-warning {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    font-weight: 600;
+  }
+
+  .bg-success-subtle {
+    background-color: #d1f4e0 !important;
+    border-color: #a7e9c4 !important;
+  }
+
+  .text-success {
+    color: #198754 !important;
+  }
+}

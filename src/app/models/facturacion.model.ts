@@ -287,7 +287,9 @@ export interface VentaFormData {
 }
 
 export interface VentaItemFormData {
+  tipo_item?: 'PRODUCTO' | 'SERVICIO'; // Nuevo campo para diferenciar
   producto_id?: number;
+  servicio_id?: number; // Nuevo campo para servicios
   codigo_producto?: string;
   descripcion: string;
   unidad_medida: string;
@@ -295,6 +297,7 @@ export interface VentaItemFormData {
   precio_unitario: number;
   tipo_afectacion_igv: string;
   descuento?: number;
+  descuento_unitario?: number; // Alias para compatibilidad con API
   subtotal?: number;
   igv?: number;
   total?: number;

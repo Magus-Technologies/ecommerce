@@ -12,6 +12,8 @@ import { EmpresaInfoService } from '../../../services/empresa-info.service';
 import { ReniecService } from '../../../services/reniec.service';
 import { VentasService } from '../../../services/ventas.service';
 import { ClienteService } from '../../../services/cliente.service';
+import { ServiciosService } from '../../../services/servicios.service';
+import { Servicio } from '../../../models/servicio.model';
 import { ClienteEditModalComponent } from '../../../components/cliente-edit-modal/cliente-edit-modal.component';
 import { ProductoQuickModalComponent, ProductoQuickItem } from '../../../components/producto-quick-modal/producto-quick-modal.component';
 import { PagoRapidoModalComponent, PagoResultado } from '../../../components/pago-rapido-modal/pago-rapido-modal.component';
@@ -74,12 +76,26 @@ export class PosComponent implements OnInit, OnDestroy {
     moneda: 'PEN'
   };
 
-  // Productos disponibles (se cargan desde la API)
+  // Productos y servicios disponibles (se cargan desde la API)
   productos: any[] = [];
+  servicios: Servicio[] = [];
 
   // Búsqueda y filtrado
   terminoBusqueda = '';
   productosFiltrados: any[] = [];
+
+  // Pestaña activa (productos o servicios)
+  pestanaActiva: 'productos' | 'servicios' = 'productos';
+
+  // Formulario de servicio manual
+  servicioManual = {
+    descripcion: '',
+    cantidad: 1,
+    precio_unitario: 0,
+    unidad_medida: 'ZZ',
+    tipo_afectacion_igv: '10',
+    descuento_unitario: 0
+  };
 
   // Getters para selección de resultados de búsqueda
   get totalResultadosSeleccionados(): number {
@@ -301,6 +317,7 @@ export class PosComponent implements OnInit, OnDestroy {
     private reniecService: ReniecService,
     private ventasService: VentasService,
     private clienteService: ClienteService,
+    private serviciosService: ServiciosService,
     private router: Router,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
@@ -319,6 +336,7 @@ export class PosComponent implements OnInit, OnDestroy {
         this.cargarDatosIniciales();
         this.cargarSeriesDisponibles();
         this.cargarProductos();
+        this.cargarServicios(); // ✅ Cargar servicios
         this.cargarEmpresaInfo();
         this.probarAPIs();
 
@@ -723,6 +741,26 @@ export class PosComponent implements OnInit, OnDestroy {
         error: (err: any) => {
           console.error('❌ Error al cargar productos:', err);
           // Mantener productos simulados como fallback
+        }
+      });
+  }
+
+  /**
+   * Cargar servicios activos desde la API
+   */
+  cargarServicios(): void {
+    this.serviciosService.getServiciosActivos()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.servicios = response.data || [];
+          console.log('✅ Servicios cargados:', this.servicios.length);
+          // Actualizar la lista filtrada si el tipo de búsqueda incluye servicios
+          this.filtrarItems();
+        },
+        error: (err: any) => {
+          console.error('❌ Error al cargar servicios:', err);
+          this.servicios = [];
         }
       });
   }
@@ -1197,16 +1235,34 @@ export class PosComponent implements OnInit, OnDestroy {
     this.error = null;
     this.success = null;
 
-    // ✅ Preparar datos según especificación del backend
+    // ✅ Preparar datos según especificación del backend (CORREGIDO: items en lugar de productos)
     const datosVenta: any = {
-      productos: this.ventaForm.items.map(item => ({
-        producto_id: Number(item.producto_id), // ✅ Número
-        cantidad: Number(item.cantidad), // ✅ Número
-        precio_unitario: Number(item.precio_unitario), // ✅ Número
-        descuento_unitario: item.descuento ? Number((item.descuento / item.cantidad).toFixed(2)) : 0 // ✅ Número o 0
-      })),
-      descuento_total: Number(this.ventaForm.descuento_global || 0), // ✅ Número
-      observaciones: this.ventaForm.observaciones || '' // ✅ String vacío si no hay
+      items: this.ventaForm.items.map(item => {
+        const itemData: any = {
+          cantidad: Number(item.cantidad),
+          precio_unitario: Number(item.precio_unitario),
+          descuento_unitario: item.descuento ? Number((item.descuento / item.cantidad).toFixed(2)) : 0,
+          unidad_medida: item.unidad_medida || 'NIU',
+          tipo_afectacion_igv: item.tipo_afectacion_igv || '10'
+        };
+
+        // Si es un servicio
+        if (item.tipo_item === 'SERVICIO') {
+          itemData.tipo_item = 'SERVICIO';
+          itemData.descripcion = item.descripcion;
+          if (item.servicio_id) {
+            itemData.servicio_id = Number(item.servicio_id);
+          }
+        } else {
+          // Si es un producto
+          itemData.tipo_item = 'PRODUCTO';
+          itemData.producto_id = Number(item.producto_id);
+        }
+
+        return itemData;
+      }),
+      descuento_total: Number(this.ventaForm.descuento_global || 0),
+      observaciones: this.ventaForm.observaciones || ''
     };
 
     // ✅ SIEMPRE enviar cliente_datos para permitir actualización
@@ -1253,18 +1309,20 @@ export class PosComponent implements OnInit, OnDestroy {
       console.log('🔧 ACTUALIZANDO VENTA - ID:', this.ventaIdEditar);
       console.log('📤 Datos a enviar:', JSON.stringify(datosVenta, null, 2));
       console.log('📦 Estructura detallada:');
-      console.log('   - Productos:', datosVenta.productos?.length || 0);
+      console.log('   - Items:', datosVenta.items?.length || 0);
       console.log('   - Cliente ID:', datosVenta.cliente_id);
       console.log('   - Método pago:', datosVenta.metodo_pago);
       console.log('   - Pagos mixtos:', datosVenta.pagos?.length || 0);
 
-      if (datosVenta.productos) {
-        datosVenta.productos.forEach((p: any, i: number) => {
-          console.log(`   Producto ${i + 1}:`, {
-            id: p.producto_id,
-            cantidad: p.cantidad,
-            precio: p.precio_unitario,
-            descuento: p.descuento_unitario
+      if (datosVenta.items) {
+        datosVenta.items.forEach((item: any, i: number) => {
+          console.log(`   Item ${i + 1}:`, {
+            tipo: item.tipo_item,
+            id: item.producto_id || item.servicio_id,
+            descripcion: item.descripcion,
+            cantidad: item.cantidad,
+            precio: item.precio_unitario,
+            descuento: item.descuento_unitario
           });
         });
       }
@@ -1954,6 +2012,8 @@ export class PosComponent implements OnInit, OnDestroy {
 
   onPagoProcesado(resultado: PagoResultado): void {
     console.log('💰 Pago procesado:', resultado);
+    console.log('🔍 ITEMS EN CARRITO AL PROCESAR PAGO:', this.ventaForm.items);
+    console.log('🔍 CANTIDAD DE ITEMS:', this.ventaForm.items.length);
 
     // Guardar los pagos múltiples si existen
     if (resultado.pagosMixtos && resultado.pagosMixtos.length > 0) {
@@ -1975,6 +2035,7 @@ export class PosComponent implements OnInit, OnDestroy {
     // Cerrar modal y guardar venta directamente
     this.cerrarPagoModal();
 
+    console.log('🚀 LLAMANDO A guardarVenta()...');
     // Guardar la venta (sin emitir a SUNAT)
     this.guardarVenta();
   }
@@ -2070,12 +2131,31 @@ export class PosComponent implements OnInit, OnDestroy {
 
     // Preparar datos para envío según documentación API
     const datosVenta: any = {
-      productos: this.ventaForm.items.map(item => ({
-        producto_id: item.producto_id,
-        cantidad: item.cantidad,
-        precio_unitario: item.precio_unitario,
-        descuento_unitario: (item.descuento || 0) / item.cantidad
-      })),
+      items: this.ventaForm.items.map(item => {
+        const itemData: any = {
+          cantidad: item.cantidad,
+          precio_unitario: item.precio_unitario,
+          descuento_unitario: (item.descuento || 0) / item.cantidad,
+          unidad_medida: item.unidad_medida || 'NIU',
+          tipo_afectacion_igv: item.tipo_afectacion_igv || '10'
+        };
+
+        // Si es un servicio
+        if (item.tipo_item === 'SERVICIO') {
+          itemData.tipo_item = 'SERVICIO';
+          itemData.descripcion = item.descripcion;
+          // servicio_id es opcional
+          if (item.servicio_id) {
+            itemData.servicio_id = item.servicio_id;
+          }
+        } else {
+          // Si es un producto
+          itemData.tipo_item = 'PRODUCTO';
+          itemData.producto_id = item.producto_id;
+        }
+
+        return itemData;
+      }),
       descuento_total: this.ventaForm.descuento_global || 0,
       observaciones: this.ventaForm.observaciones || ''
     };
@@ -2104,11 +2184,16 @@ export class PosComponent implements OnInit, OnDestroy {
       datosVenta.metodo_pago = this.ventaForm.metodo_pago || 'EFECTIVO';
     }
 
+    // Log detallado del payload
+    console.log('📤 PAYLOAD COMPLETO A ENVIAR:', JSON.stringify(datosVenta, null, 2));
+    console.log('📊 Items en el carrito:', this.ventaForm.items);
+    console.log('📊 Items mapeados:', datosVenta.items);
+
     // MODO EDICIÓN: Usar PUT
     if (this.modoEdicion && this.ventaIdEditar) {
       console.log('🔧 ACTUALIZANDO VENTA (emitirFlujoEncadenado) - ID:', this.ventaIdEditar);
       console.log('📦 Productos originales:', this.ventaOriginal?.detalles?.length || 0);
-      console.log('📦 Productos nuevos:', datosVenta.productos.length);
+      console.log('📦 Productos nuevos:', datosVenta.items?.length || 0);
 
       this.ventasService.actualizarVenta(this.ventaIdEditar, datosVenta)
         .pipe(takeUntil(this.destroy$))
@@ -2161,7 +2246,7 @@ export class PosComponent implements OnInit, OnDestroy {
       // MODO CREACIÓN: Usar POST
       console.log('📝 CREANDO NUEVA VENTA (emitirFlujoEncadenado)');
 
-      this.facturacionService.createVenta(datosVenta)
+      this.ventasService.crearVenta(datosVenta)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response: any) => {
@@ -2364,37 +2449,168 @@ export class PosComponent implements OnInit, OnDestroy {
   // ============================================
   // BÚSQUEDA Y FILTRADO DE PRODUCTOS
   // ============================================
-  filtrarProductos(): void {
-    // Si el término está vacío, mostrar todos los productos
-    if (!this.terminoBusqueda || this.terminoBusqueda.trim() === '') {
-      this.productosFiltrados = [...this.productos];
-      // Inicializar propiedades de selección
-      this.productosFiltrados.forEach(p => {
-        if (!p.hasOwnProperty('seleccionado')) {
-          p.seleccionado = false;
-          p.cantidadSeleccionada = 1;
-        }
-      });
+  /**
+   * Filtrar items (productos y/o servicios) según el tipo seleccionado
+   */
+  filtrarItems(): void {
+    const termino = (this.terminoBusqueda || '').toLowerCase().trim();
+
+    // Si no hay término de búsqueda, mostrar todos según el filtro
+    if (!termino) {
+      this.productosFiltrados = this.obtenerItemsSegunFiltro();
+      this.inicializarPropiedadesSeleccion();
       return;
     }
 
-    // Si hay término de búsqueda, buscar en la API
-    this.buscarProductos(this.terminoBusqueda);
+    // Filtrar según el término de búsqueda
+    const items = this.obtenerItemsSegunFiltro();
+    this.productosFiltrados = items.filter(item => {
+      const nombre = (item.nombre || item.descripcion || '').toLowerCase();
+      const codigo = (item.codigo_servicio || item.codigo_producto || item.codigo || '').toLowerCase();
+      return nombre.includes(termino) || codigo.includes(termino);
+    });
+
+    this.inicializarPropiedadesSeleccion();
+  }
+
+  /**
+   * Obtener items según el filtro de tipo seleccionado
+   */
+  private obtenerItemsSegunFiltro(): any[] {
+    // Solo productos (los servicios se agregan manualmente)
+    return this.productos.map(p => ({ ...p, tipo_item: 'PRODUCTO' }));
+  }
+
+  /**
+   * Inicializar propiedades de selección en los items
+   */
+  private inicializarPropiedadesSeleccion(): void {
+    this.productosFiltrados.forEach(item => {
+      if (!item.hasOwnProperty('seleccionado')) {
+        item.seleccionado = false;
+        item.cantidadSeleccionada = 1;
+      }
+    });
+  }
+
+  /**
+   * Método legacy para compatibilidad
+   */
+  filtrarProductos(): void {
+    this.filtrarItems();
   }
 
   onBuscarProductos(): void {
     console.log('🔍 Botón buscar presionado');
-    this.filtrarProductos();
+    this.filtrarItems();
   }
 
   onLimpiarBusqueda(): void {
     this.terminoBusqueda = '';
-    this.productosFiltrados = [...this.productos];
-    // Limpiar selecciones
-    this.productosFiltrados.forEach(p => {
-      p.seleccionado = false;
-      p.cantidadSeleccionada = 1;
-    });
+    this.filtrarItems();
+  }
+
+  /**
+   * Cambiar pestaña activa
+   */
+  cambiarPestana(pestana: 'productos' | 'servicios'): void {
+    this.pestanaActiva = pestana;
+    if (pestana === 'productos') {
+      this.terminoBusqueda = '';
+      this.filtrarProductos();
+    } else {
+      // Limpiar formulario de servicio
+      this.resetearServicioManual();
+    }
+  }
+
+  /**
+   * Resetear formulario de servicio manual
+   */
+  resetearServicioManual(): void {
+    this.servicioManual = {
+      descripcion: '',
+      cantidad: 1,
+      precio_unitario: 0,
+      unidad_medida: 'ZZ',
+      tipo_afectacion_igv: '10',
+      descuento_unitario: 0
+    };
+  }
+
+  /**
+   * Calcular base imponible del servicio
+   */
+  calcularBaseServicio(): number {
+    const total = (this.servicioManual.cantidad * this.servicioManual.precio_unitario) - this.servicioManual.descuento_unitario;
+
+    if (this.servicioManual.tipo_afectacion_igv === '10') {
+      // Gravado: desglosar IGV
+      return total / 1.18;
+    }
+    // Exonerado o Inafecto: el total es la base
+    return total;
+  }
+
+  /**
+   * Calcular IGV del servicio
+   */
+  calcularIGVServicio(): number {
+    if (this.servicioManual.tipo_afectacion_igv === '10') {
+      const base = this.calcularBaseServicio();
+      return base * 0.18;
+    }
+    return 0;
+  }
+
+  /**
+   * Calcular total del servicio
+   */
+  calcularTotalServicio(): number {
+    return this.calcularBaseServicio() + this.calcularIGVServicio();
+  }
+
+  /**
+   * Agregar servicio manual al carrito
+   */
+  agregarServicioManual(): void {
+    if (!this.servicioManual.descripcion || !this.servicioManual.cantidad || !this.servicioManual.precio_unitario) {
+      this.error = 'Complete todos los campos obligatorios';
+      setTimeout(() => this.error = '', 3000);
+      return;
+    }
+
+    const base = this.calcularBaseServicio();
+    const igv = this.calcularIGVServicio();
+    const total = this.calcularTotalServicio();
+
+    const item: VentaItemFormData = {
+      tipo_item: 'SERVICIO',
+      descripcion: this.servicioManual.descripcion,
+      cantidad: this.servicioManual.cantidad,
+      precio_unitario: this.servicioManual.precio_unitario,
+      unidad_medida: this.servicioManual.unidad_medida,
+      tipo_afectacion_igv: this.servicioManual.tipo_afectacion_igv,
+      descuento: this.servicioManual.descuento_unitario,
+      descuento_unitario: this.servicioManual.descuento_unitario,
+      subtotal: base,
+      igv: igv,
+      total: total
+    };
+
+    console.log('🔍 SERVICIO CREADO:', item);
+    console.log('🔍 ITEMS ANTES DE AGREGAR:', this.ventaForm.items.length);
+
+    this.ventaForm.items.push(item);
+
+    console.log('🔍 ITEMS DESPUÉS DE AGREGAR:', this.ventaForm.items.length);
+    console.log('🔍 TODOS LOS ITEMS:', this.ventaForm.items);
+
+    this.success = `✅ Servicio "${this.servicioManual.descripcion}" agregado al carrito`;
+    setTimeout(() => this.success = '', 2000);
+
+    // Resetear formulario
+    this.resetearServicioManual();
   }
 
   // ============================================
@@ -3397,7 +3613,7 @@ export class PosComponent implements OnInit, OnDestroy {
   @HostListener('document:keydown.enter', ['$event'])
   onEnterKey(event: KeyboardEvent): void {
     const target = event.target as HTMLElement;
-    
+
     // Ctrl+Enter siempre confirma el modal activo (incluso desde inputs)
     if (event.ctrlKey) {
       event.preventDefault();
@@ -3427,4 +3643,5 @@ export class PosComponent implements OnInit, OnDestroy {
       this.confirmarDatosCliente();
     }
   }
+
 }
