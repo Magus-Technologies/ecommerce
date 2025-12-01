@@ -44,14 +44,16 @@ export interface Certificado {
 
 export interface Serie {
   id?: number;
-  empresa_id: number;
-  tipo_comprobante: '01' | '03' | '07' | '08'; // 01=Factura, 03=Boleta, 07=NC, 08=ND
+  empresa_id?: number;
+  tipo_comprobante: '01' | '03' | '07' | '08' | '09'; // 01=Factura, 03=Boleta, 07=NC, 08=ND, 09=Guía
   serie: string;
-  correlativo_actual: number;
+  correlativo?: number; // Campo que devuelve el backend
+  correlativo_actual?: number; // Alias para compatibilidad
   correlativo_minimo?: number;
   correlativo_maximo?: number;
   sede_id?: number;
   caja_id?: number;
+  activo?: boolean; // Campo que devuelve el backend
   estado?: 'activo' | 'inactivo';
   descripcion?: string;
   created_at?: string;

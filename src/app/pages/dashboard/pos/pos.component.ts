@@ -299,8 +299,10 @@ export class PosComponent implements OnInit, OnDestroy {
   getNumeroSiguiente(): string {
     const serie = this.serieSeleccionada();
     if (!serie) return '--';
-    const siguiente = (Number(serie.correlativo_actual) || 0) + 1;
-    return String(siguiente);
+    // El backend devuelve 'correlativo' en lugar de 'correlativo_actual'
+    const correlativoActual = (serie as any).correlativo || serie.correlativo_actual || 0;
+    const siguiente = Number(correlativoActual) + 1;
+    return String(siguiente).padStart(8, '0');
   }
 
   // Vuelto calculado
@@ -850,6 +852,7 @@ export class PosComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (response.success && response.data) {
+            console.log('📊 Series cargadas desde backend:', response.data);
             this.seriesDisponibles.set(response.data);
             this.actualizarSerieSegunTipo();
           }
