@@ -650,7 +650,11 @@
         </button>
 
         <ngx-slick-carousel
-          *ngIf="bannerOfertaActivo && bannerOfertaActivo.productos && bannerOfertaActivo.productos.length > 0"
+          *ngIf="
+            bannerOfertaActivo &&
+            bannerOfertaActivo.productos &&
+            bannerOfertaActivo.productos.length > 0
+          "
           #ofertasCarousel="slick-carousel"
           [config]="ofertasEspecialesSlideConfig"
           class="ofertas-carousel"
@@ -750,7 +754,11 @@
 
         <!-- Empty state si no hay productos -->
         <div
-          *ngIf="bannerOfertaActivo && (!bannerOfertaActivo.productos || bannerOfertaActivo.productos.length === 0)"
+          *ngIf="
+            bannerOfertaActivo &&
+            (!bannerOfertaActivo.productos ||
+              bannerOfertaActivo.productos.length === 0)
+          "
           class="text-center py-60"
         >
           <div class="bg-gray-50 rounded-12 py-40 px-30">
@@ -795,23 +803,37 @@
 </section>
 
 <!-- ========================= CUPÓN DISPONIBLE ================================ -->
-<section class="coupon-section pt-40" *ngIf="!isLoadingCupones && cuponesActivos.length > 0">
+<section
+  class="coupon-section pt-40"
+  *ngIf="!isLoadingCupones && cuponesActivos.length > 0"
+>
   <div class="container container-lg">
-    <div class="row justify-content-center" *ngIf="cuponesActivos[0]" data-aos="fade-up" data-aos-duration="600">
+    <div
+      class="row justify-content-center"
+      *ngIf="cuponesActivos[0]"
+      data-aos="fade-up"
+      data-aos-duration="600"
+    >
       <div class="col-lg-11 col-xl-10">
-        <div class="coupon-banner coupon-orange">
+        <div class="coupon-banner coupon-turquoise">
           <div class="row align-items-center g-0">
             <!-- Columna izquierda: Círculo de descuento -->
             <div class="col-lg-3 col-md-3 col-12">
               <div class="discount-circle-wrapper">
                 <div class="discount-circle">
-                  <span class="discount-value" *ngIf="cuponesActivos[0].tipo_descuento === 'porcentaje'">
-                    {{ cuponesActivos[0].valor_descuento }}%
+                  <span
+                    class="discount-value"
+                    *ngIf="cuponesActivos[0].tipo_descuento === 'porcentaje'"
+                  >
+                    {{ cuponesActivos[0].valor_descuento | number:'1.0-0' }}%
                   </span>
-                  <span class="discount-value" *ngIf="cuponesActivos[0].tipo_descuento !== 'porcentaje'">
-                    S/{{ cuponesActivos[0].valor_descuento }}
+                  <span
+                    class="discount-value"
+                    *ngIf="cuponesActivos[0].tipo_descuento !== 'porcentaje'"
+                  >
+                    S/{{ cuponesActivos[0].valor_descuento | number:'1.0-0' }}
                   </span>
-                  <span class="discount-label">DESCUENTO</span>
+                  <span class="discount-label">DSCTO</span>
                 </div>
               </div>
             </div>
@@ -825,14 +847,28 @@
                     <i class="ph ph-ticket"></i> Cupón Disponible
                   </span>
                 </div>
-                <h4 class="coupon-title mb-2">{{ cuponesActivos[0].titulo }}</h4>
-                <p class="coupon-description mb-0" *ngIf="cuponesActivos[0].descripcion">
+                <h4 class="coupon-title mb-2">
+                  {{ cuponesActivos[0].titulo }}
+                </h4>
+                <p
+                  class="coupon-description mb-0"
+                  *ngIf="cuponesActivos[0].descripcion"
+                >
                   {{ cuponesActivos[0].descripcion }}
                 </p>
-                <p class="coupon-description mb-0" *ngIf="!cuponesActivos[0].descripcion">
-                  {{ cuponesActivos[0].tipo_descuento === 'porcentaje' ? 
-                      'EN TODA NUESTRA PÁGINA WEB POR COMPRAS MAYORES A ' + (cuponesActivos[0].compra_minima || '0') + ' SOLES.' : 
-                      'Ahorra S/' + cuponesActivos[0].valor_descuento + ' en tu pedido' }}
+                <p
+                  class="coupon-description mb-0"
+                  *ngIf="!cuponesActivos[0].descripcion"
+                >
+                  {{
+                    cuponesActivos[0].tipo_descuento === "porcentaje"
+                      ? "EN TODA NUESTRA PÁGINA WEB POR COMPRAS MAYORES A " +
+                        (cuponesActivos[0].compra_minima || "0") +
+                        " SOLES."
+                      : "Ahorra S/" +
+                        cuponesActivos[0].valor_descuento +
+                        " en tu pedido"
+                  }}
                 </p>
               </div>
             </div>
@@ -844,8 +880,10 @@
                 <div class="coupon-code-box mb-2">
                   <div class="coupon-code-label">CÓDIGO DEL CUPÓN</div>
                   <div class="coupon-code-container">
-                    <span class="coupon-code">{{ cuponesActivos[0].codigo }}</span>
-                    <button 
+                    <span class="coupon-code">{{
+                      cuponesActivos[0].codigo
+                    }}</span>
+                    <button
                       type="button"
                       class="coupon-copy-btn"
                       (click)="copiarCupon(cuponesActivos[0].codigo)"
@@ -857,18 +895,25 @@
                 </div>
 
                 <!-- Compra mínima -->
-                <div class="coupon-info mb-2" *ngIf="cuponesActivos[0].compra_minima">
-                  <i class="ph ph-info"></i> Compra mínima: S/{{ cuponesActivos[0].compra_minima }}
+                <div
+                  class="coupon-info mb-2"
+                  *ngIf="cuponesActivos[0].compra_minima"
+                >
+                  <i class="ph ph-info"></i> Compra mínima: S/{{
+                    cuponesActivos[0].compra_minima
+                  }}
                 </div>
 
                 <!-- Ver más cupones -->
-                <a 
+                <a
                   *ngIf="cuponesActivos.length > 1"
                   href="javascript:void(0)"
                   class="coupon-more-link"
                   (click)="verTodosCupones()"
                 >
-                  <i class="ph ph-gift"></i> Ver más cupones ({{ cuponesActivos.length - 1 }}) →
+                  <i class="ph ph-gift"></i> Ver más cupones ({{
+                    cuponesActivos.length - 1
+                  }}) →
                 </a>
               </div>
             </div>
