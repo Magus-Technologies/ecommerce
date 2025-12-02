@@ -82,6 +82,7 @@ interface ComprobanteReferencia {
                   <option value="07">07 - Devolución por ítem</option>
                   <option value="08">08 - Bonificación</option>
                   <option value="09">09 - Disminución en el valor</option>
+                  <option value="13">13 - Otros</option>
                 </select>
               </div>
 
@@ -360,9 +361,9 @@ export class NotaCreditoModalComponent implements OnInit {
     // Preparar datos según lo que el backend realmente espera
     const datos: any = {
       comprobante_referencia_id: this.comprobanteReferencia.id,
-      tipo_nota_credito: this.notaCredito.tipo_nota_credito, // Código del catálogo 09
-      motivo: this.notaCredito.motivo, // Descripción del motivo
-      descripcion: this.notaCredito.descripcion || '', // Descripción adicional
+      motivo_nota: this.notaCredito.tipo_nota_credito, // Código del catálogo SUNAT (ej: "01", "13")
+      motivo_nota_descripcion: this.notaCredito.motivo, // Descripción del motivo
+      descripcion: this.notaCredito.descripcion || '', // Descripción adicional (opcional)
       items: this.itemsSeleccionados
         .filter(item => item.seleccionado)
         .map(item => ({
@@ -374,7 +375,7 @@ export class NotaCreditoModalComponent implements OnInit {
         }))
     };
 
-    // Agregar observaciones si existen
+    // Agregar observaciones si existen (campo adicional)
     if (this.notaCredito.observaciones) {
       datos.observaciones = this.notaCredito.observaciones;
     }
