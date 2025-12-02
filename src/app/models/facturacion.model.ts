@@ -44,14 +44,16 @@ export interface Certificado {
 
 export interface Serie {
   id?: number;
-  empresa_id: number;
-  tipo_comprobante: '01' | '03' | '07' | '08'; // 01=Factura, 03=Boleta, 07=NC, 08=ND
+  empresa_id?: number;
+  tipo_comprobante: '01' | '03' | '07' | '08' | '09'; // 01=Factura, 03=Boleta, 07=NC, 08=ND, 09=Guía
   serie: string;
-  correlativo_actual: number;
+  correlativo?: number; // Campo que devuelve el backend
+  correlativo_actual?: number; // Alias para compatibilidad
   correlativo_minimo?: number;
   correlativo_maximo?: number;
   sede_id?: number;
   caja_id?: number;
+  activo?: boolean; // Campo que devuelve el backend
   estado?: 'activo' | 'inactivo';
   descripcion?: string;
   created_at?: string;
@@ -287,7 +289,9 @@ export interface VentaFormData {
 }
 
 export interface VentaItemFormData {
+  tipo_item?: 'PRODUCTO' | 'SERVICIO'; // Nuevo campo para diferenciar
   producto_id?: number;
+  servicio_id?: number; // Nuevo campo para servicios
   codigo_producto?: string;
   descripcion: string;
   unidad_medida: string;
@@ -295,6 +299,7 @@ export interface VentaItemFormData {
   precio_unitario: number;
   tipo_afectacion_igv: string;
   descuento?: number;
+  descuento_unitario?: number; // Alias para compatibilidad con API
   subtotal?: number;
   igv?: number;
   total?: number;
