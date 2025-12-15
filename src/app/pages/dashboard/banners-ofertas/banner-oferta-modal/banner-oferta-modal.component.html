@@ -46,7 +46,7 @@
                   </label>
                   <small class="text-gray-500 d-block mt-8">
                     <strong>Dimensiones recomendadas:</strong> 1734 x 2862 px<br>
-                    Formatos: JPG, PNG, WEBP, GIF (máx. 2MB)
+                    Formatos: JPG, PNG, WEBP, GIF (máx. 10MB)
                   </small>
                 </div>
               </div>
@@ -54,6 +54,20 @@
 
             <!-- Columna derecha: Configuración -->
             <div class="col-md-7">
+
+              <!-- Tipo de Banner -->
+              <div class="mb-16">
+                <label class="form-label fw-semibold">
+                  Tipo de Banner <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" formControlName="tipo">
+                  <option value="especiales">Ofertas Especiales</option>
+                  <option value="semana">Oferta de la Semana</option>
+                </select>
+                <small class="text-gray-500">
+                  Selecciona dónde se mostrará este banner en el index
+                </small>
+              </div>
 
               <!-- Prioridad -->
               <div class="mb-16">
@@ -66,7 +80,7 @@
                        min="0"
                        placeholder="Ej: 1, 2, 3...">
                 <small class="text-gray-500">
-                  Mayor prioridad = se muestra primero en el index
+                  Mayor prioridad = se muestra primero
                 </small>
               </div>
 
