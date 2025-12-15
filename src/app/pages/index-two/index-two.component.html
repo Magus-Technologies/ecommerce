@@ -247,7 +247,7 @@
           <li class="page-item">
             <a
               class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
-              href="#"
+              href="javascript:void(0)"
               (click)="onPageChange(currentPage - 1)"
               [class.disabled]="currentPage === 1"
             >
@@ -263,7 +263,7 @@
           >
             <a
               class="page-link h-64 w-64 flex-center text-md rounded-8 fw-medium text-neutral-600 border border-gray-100"
-              href="#"
+              href="javascript:void(0)"
               (click)="onPageChange(page)"
             >
               {{ page < 10 ? "0" + page : page }}
@@ -273,7 +273,7 @@
           <li class="page-item">
             <a
               class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
-              href="#"
+              href="javascript:void(0)"
               (click)="onPageChange(currentPage + 1)"
               [class.disabled]="currentPage === totalPages"
             >

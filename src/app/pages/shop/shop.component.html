@@ -226,7 +226,7 @@
                 <ul class="pagination flex-center flex-wrap gap-16">
                     <li class="page-item">
                         <a class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
-                            href="#" (click)="onPageChange(currentPage - 1)" [class.disabled]="currentPage === 1">
+                            href="javascript:void(0)" (click)="onPageChange(currentPage - 1)" [class.disabled]="currentPage === 1">
                             <i class="ph-bold ph-arrow-left"></i>
                         </a>
                     </li>
@@ -234,13 +234,13 @@
                     <!-- Loop through the pages dynamically -->
                     <li *ngFor="let page of getPages()" class="page-item" [class.active]="page === currentPage">
                         <a class="page-link h-64 w-64 flex-center text-md rounded-8 fw-medium text-neutral-600 border border-gray-100"
-                            href="#" (click)="onPageChange(page)">
+                            href="javascript:void(0)" (click)="onPageChange(page)">
                             {{ page < 10 ? '0' + page : page }} </a>
                     </li>
 
                     <li class="page-item">
                         <a class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
-                            href="#" (click)="onPageChange(currentPage + 1)"
+                            href="javascript:void(0)" (click)="onPageChange(currentPage + 1)"
                             [class.disabled]="currentPage === totalPages">
                             <i class="ph-bold ph-arrow-right"></i>
                         </a>

@@ -303,7 +303,8 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   ofertaPrincipalDelDia: OfertaPrincipalResponse | null = null;
   isLoadingOfertaPrincipal = false;
 
-  ofertaSemanaActiva: OfertaSemanaResponse | null = null;
+  // ofertaSemanaActiva: OfertaSemanaResponse | null = null; // ❌ DEPRECADO
+  bannerOfertaSemana: BannerOferta | null = null; // ✅ NUEVO: Banner de oferta de la semana
   isLoadingOfertaSemana = false;
 
   cargarBannersPromocionales(): void {
@@ -1035,30 +1036,21 @@ private inicializarFavoritosState(): void {
       },
     });
   }
-  // ✅ NUEVA FUNCIÓN: Cargar oferta de la semana
+  // ✅ NUEVA FUNCIÓN: Cargar banner oferta de la semana
   cargarOfertaSemanaActiva(): void {
     this.isLoadingOfertaSemana = true;
-    this.ofertasService.obtenerOfertaSemanaActiva().subscribe({
-      next: (response) => {
+    this.bannerOfertaService.getBannerActivoSemana().subscribe({
+      next: (banner) => {
         if (this.debugMode) {
-          console.log('✅ Oferta de la semana cargada:', response);
+          console.log('✅ Banner oferta de la semana cargado:', banner);
         }
-        this.ofertaSemanaActiva = response;
+        this.bannerOfertaSemana = banner;
         this.isLoadingOfertaSemana = false;
         this.cdr.detectChanges();
-
-        // ✅ INICIALIZAR COUNTDOWN PARA LA OFERTA DE LA SEMANA
-        if (this.isBrowser && response.oferta_semana?.fecha_fin) {
-          setTimeout(() => {
-            this.inicializarCountdown(
-              'countdown-oferta-semana',
-              response.oferta_semana!.fecha_fin
-            );
-          }, 1000);
-        }
       },
       error: (error) => {
-        console.error('Error al cargar oferta de la semana:', error);
+        console.error('Error al cargar banner oferta de la semana:', error);
+        this.bannerOfertaSemana = null;
         this.isLoadingOfertaSemana = false;
       },
     });
@@ -1145,13 +1137,6 @@ private inicializarFavoritosState(): void {
       this.inicializarCountdown(
         'countdown-oferta-principal',
         this.ofertaPrincipalDelDia.oferta_principal.fecha_fin
-      );
-    }
-    // ✅ COUNTDOWN PARA OFERTA DE LA SEMANA
-    if (this.ofertaSemanaActiva?.oferta_semana?.fecha_fin) {
-      this.inicializarCountdown(
-        'countdown-oferta-semana',
-        this.ofertaSemanaActiva.oferta_semana.fecha_fin
       );
     }
 

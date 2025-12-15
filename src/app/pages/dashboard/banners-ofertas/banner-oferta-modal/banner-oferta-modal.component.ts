@@ -29,6 +29,7 @@ export class BannerOfertaModalComponent implements OnChanges {
     private bannerOfertaService: BannerOfertaService
   ) {
     this.bannerForm = this.fb.group({
+      tipo: ['especiales', [Validators.required]],
       activo: [true],
       prioridad: [0, [Validators.required, Validators.min(0)]]
     });
@@ -47,6 +48,7 @@ export class BannerOfertaModalComponent implements OnChanges {
   cargarDatosBanner(): void {
     if (this.banner) {
       this.bannerForm.patchValue({
+        tipo: this.banner.tipo || 'especiales',
         activo: this.banner.activo,
         prioridad: this.banner.prioridad
       });
@@ -82,6 +84,7 @@ export class BannerOfertaModalComponent implements OnChanges {
     this.isSubmitting = true;
 
     const formData = new FormData();
+    formData.append('tipo', this.bannerForm.value.tipo);
     formData.append('activo', this.bannerForm.value.activo ? '1' : '0');
     formData.append('prioridad', this.bannerForm.value.prioridad);
 
@@ -110,6 +113,7 @@ export class BannerOfertaModalComponent implements OnChanges {
 
   resetForm(): void {
     this.bannerForm.reset({
+      tipo: 'especiales',
       activo: true,
       prioridad: 0
     });

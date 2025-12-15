@@ -1728,164 +1728,29 @@
         data-aos="fade-up"
         data-aos-duration="900"
       >
-        <!-- ✅ LOADING STATE PARA OFERTA DE LA SEMANA -->
+        <!-- ✅ LOADING STATE PARA BANNER OFERTA DE LA SEMANA -->
         <div *ngIf="isLoadingOfertaSemana" class="text-center py-40">
           <div class="spinner-border text-main-600" role="status">
             <span class="visually-hidden">Cargando oferta de la semana...</span>
           </div>
         </div>
 
-        <!-- ✅ OFERTA DE LA SEMANA DINÁMICA -->
-        <div
-          *ngIf="
-            !isLoadingOfertaSemana &&
-            ofertaSemanaActiva &&
-            ofertaSemanaActiva.oferta_semana
-          "
-          class="product-card h-100 p-24 pt-32 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 group-item pt-32"
-        >
-          <button type="button" class="wishlist-btn-two">
-            <i class="ph-bold ph-heart"></i>
-          </button>
-
-          <div class="">
-            <h6 class="position-relative mb-0 pb-12 d-inline-block">
-              {{ ofertaSemanaActiva.oferta_semana.titulo }}
-            </h6>
-            <div class="countdown mb-10" id="countdown-oferta-semana">
-              <ul class="countdown-list flex-align flex-wrap">
-                <li
-                  class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
-                >
-                  <span class="days">0</span> D
-                </li>
-                <li
-                  class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
-                >
-                  <span class="hours">0</span> H
-                </li>
-                <li
-                  class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
-                >
-                  <span class="minutes">0</span> M
-                </li>
-                <li
-                  class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
-                >
-                  <span class="seconds">0</span> S
-                </li>
-              </ul>
-            </div>
-            <p class="text-neutral-300 fw-medium text-sm">
-              {{
-                ofertaSemanaActiva.oferta_semana.subtitulo ||
-                  "No te pierdas esta oportunidad especial"
-              }}
-            </p>
-          </div>
-
-          <!-- ✅ MOSTRAR IMAGEN DE LA OFERTA EN LUGAR DEL PRODUCTO -->
-          <div class="product-card__thumb flex-center overflow-hidden">
+        <!-- ✅ BANNER OFERTA DE LA SEMANA -->
+        <div *ngIf="!isLoadingOfertaSemana && bannerOfertaSemana" class="product-card h-100 p-0 border-0">
+          <a class="d-block h-100" style="cursor: default;">
             <img
-              [src]="
-                ofertaSemanaActiva.oferta_semana.imagen_url ||
-                'assets/images/thumbs/product-img32.png'
-              "
-              [alt]="ofertaSemanaActiva.oferta_semana.titulo"
+              [src]="bannerOfertaSemana.imagen_url"
+              alt="Oferta de la Semana"
+              class="w-100 h-100 object-fit-cover rounded-16"
               (error)="onImageError($event)"
-              style="max-width: 200px; max-height: 200px; object-fit: contain"
+              style="min-height: 300px; max-height: 600px"
             />
-          </div>
-
-          <div class="product-card__content w-100">
-            <!-- ✅ RATING GENÉRICO PARA LA OFERTA -->
-            <div class="flex-align gap-4">
-              <div class="flex-align gap-2 me-4">
-                <span class="text-12 fw-medium text-warning-600 d-flex"
-                  ><i class="ph-fill ph-star"></i
-                ></span>
-                <span class="text-12 fw-medium text-warning-600 d-flex"
-                  ><i class="ph-fill ph-star"></i
-                ></span>
-                <span class="text-12 fw-medium text-warning-600 d-flex"
-                  ><i class="ph-fill ph-star"></i
-                ></span>
-                <span class="text-12 fw-medium text-warning-600 d-flex"
-                  ><i class="ph-fill ph-star"></i
-                ></span>
-                <span class="text-12 fw-medium text-warning-600 d-flex"
-                  ><i class="ph-fill ph-star"></i
-                ></span>
-              </div>
-              <span class="text-xs fw-medium text-heading"
-                >(Oferta especial)</span
-              >
-            </div>
-
-            <!-- ✅ MOSTRAR DESCUENTO DE LA OFERTA -->
-            <div class="d-flex align-items-center gap-12 mt-6">
-              <h6 class="text-danger-600 mb-0 text-lg">
-                {{
-                  ofertaSemanaActiva.oferta_semana.tipo_descuento ===
-                  "porcentaje"
-                    ? ofertaSemanaActiva.oferta_semana.valor_descuento + "% OFF"
-                    : "S/ " +
-                      ofertaSemanaActiva.oferta_semana.valor_descuento +
-                      " OFF"
-                }}
-              </h6>
-            </div>
-
-            <h6 class="title text-md fw-semibold mt-10 mb-0">
-              <span class="fw-bold">{{
-                ofertaSemanaActiva.oferta_semana.titulo
-              }}</span>
-            </h6>
-
-            <p
-              class="text-gray-500 text-sm mt-12 pb-12 border-bottom border-neutral-100 mb-8"
-            >
-              {{
-                ofertaSemanaActiva.oferta_semana.descripcion ||
-                  "Oferta especial de la semana"
-              }}
-            </p>
-
-            <!-- ✅ BARRA DE PROGRESO GENÉRICA O OCULTA -->
-            <div
-              class="progress w-100 bg-gray-100 rounded-pill h-8 mb-3"
-              role="progressbar"
-            >
-              <div
-                class="progress-bar bg-success-600 rounded-pill"
-                style="width: 75%"
-              ></div>
-            </div>
-            <div class="d-flex align-items-center gap-6">
-              <span class="text-sm text-gray-500">¡Oferta limitada!</span>
-            </div>
-
-            <!-- ✅ BOTÓN QUE REDIRIJA A LA TIENDA O URL ESPECÍFICA -->
-            <a
-              [routerLink]="[
-                ofertaSemanaActiva.oferta_semana.enlace_url || '/shop'
-              ]"
-              class="product-card__cart btn bg-success-600 text-white hover-bg-success-700 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-16 w-100 justify-content-center"
-            >
-              {{
-                ofertaSemanaActiva.oferta_semana.texto_boton || "Ver Ofertas"
-              }}
-              <i class="ph ph-arrow-right"></i>
-            </a>
-          </div>
+          </a>
         </div>
 
-        <!-- ✅ FALLBACK CUANDO NO HAY OFERTA DE LA SEMANA -->
+        <!-- ✅ FALLBACK CUANDO NO HAY BANNER OFERTA DE LA SEMANA -->
         <div
-          *ngIf="
-            !isLoadingOfertaSemana &&
-            (!ofertaSemanaActiva || !ofertaSemanaActiva.oferta_semana)
-          "
+          *ngIf="!isLoadingOfertaSemana && !bannerOfertaSemana"
           class="product-card h-100 p-24 pt-32 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 group-item pt-32"
         >
           <div class="text-center py-40">
