@@ -38,52 +38,18 @@
 /* Header Menu and Submenu Css Start */
 .nav-menu {
     gap: 32px;
-    flex-wrap: nowrap; /* Evitar que se envuelvan los items */
-    overflow-x: auto; /* Permitir scroll horizontal si es necesario */
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling en iOS */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE y Edge */
-    
-    /* Ocultar scrollbar en Chrome, Safari y Opera */
-    &::-webkit-scrollbar {
-        display: none;
-    }
-    
-    /* Ajustar gap dinámicamente según cantidad de items */
-    &:has(> .nav-menu__item:nth-child(8)) {
-        gap: 16px; /* 8 o más items */
-    }
-    
-    &:has(> .nav-menu__item:nth-child(10)) {
-        gap: 12px; /* 10 o más items */
-    }
+    flex-wrap: nowrap;
     
     @include xl-screen {
-        gap: 20px;
-        
-        &:has(> .nav-menu__item:nth-child(8)) {
-            gap: 12px;
-        }
-        
-        &:has(> .nav-menu__item:nth-child(10)) {
-            gap: 8px;
-        }
+        gap: 24px;
     }
     @include lg-screen {
         gap: 16px;
-        
-        &:has(> .nav-menu__item:nth-child(7)) {
-            gap: 10px;
-        }
-        
-        &:has(> .nav-menu__item:nth-child(9)) {
-            gap: 6px;
-        }
     }
+    
     &__item {
-        flex-shrink: 0; /* Evitar que los items se compriman */
-        white-space: nowrap; /* Evitar que el texto se envuelva */
+        flex-shrink: 0;
+        white-space: nowrap;
         
         &.activePage {
             > a {
@@ -113,13 +79,6 @@
         } 
         @include lg-screen {
             font-size: rem(13px);
-            padding: 14px 0;
-        }
-        
-        /* Reducir tamaño de fuente si hay muchos items */
-        .nav-menu:has(> .nav-menu__item:nth-child(10)) & {
-            font-size: rem(12px);
-            padding: 12px 0;
         }
     }   
 
@@ -226,45 +185,6 @@
 /* Category Submenus Submenu Css Start */
 .menu-category-wrapper {
     gap: clampCal(12, 72, 1199, 1699);
-    flex: 1; /* Permitir que ocupe el espacio disponible */
-    min-width: 0; /* Permitir que se comprima si es necesario */
-    overflow: hidden; /* Ocultar desbordamiento */
-}
-
-/* Contenedor del menú con mejor manejo de espacio */
-.header-menu {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    
-    /* Agregar indicadores visuales de scroll */
-    position: relative;
-    
-    /* Gradiente sutil en los bordes para indicar más contenido */
-    &::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: 40px;
-        background: linear-gradient(to left, rgba(255, 255, 255, 0.9), transparent);
-        pointer-events: none;
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
-    
-    /* Mostrar gradiente cuando hay scroll */
-    &:has(.nav-menu:not(:hover)) .nav-menu {
-        &::-webkit-scrollbar {
-            height: 4px;
-        }
-        
-        &::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-        }
-    }
 }
 
 .submenus-submenu-wrapper {

@@ -1,5 +1,6 @@
 // src/app/services/ofertas.service.ts
-import { Injectable } from '@angular/core';
+import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -76,8 +77,14 @@ export interface Cupon {
 })
 export class OfertasService {
   private apiUrl = `${environment.apiUrl}`;
+  private isBrowser: boolean;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
 
   obtenerOfertasPublicas(): Observable<Oferta[]> {
     return this.http.get<Oferta[]>(`${this.apiUrl}/ofertas/publicas`);
@@ -106,8 +113,14 @@ obtenerOfertaSemanaActiva(): Observable<OfertaSemanaResponse> {
 
     /**
      * Obtener cupones activos para la tienda
+     * ✅ OPTIMIZADO: Solo se ejecuta en el navegador, NO durante SSR
      */
     obtenerCuponesActivos(): Observable<Cupon[]> {
+      // ✅ Si estamos en el servidor (SSR), retornar array vacío inmediatamente
+      if (!this.isBrowser) {
+        return of([]);
+      }
+
       return this.http.get<Cupon[]>(`${this.apiUrl}/cupones/activos`)
         .pipe(
           catchError(error => {
@@ -120,8 +133,14 @@ obtenerOfertaSemanaActiva(): Observable<OfertaSemanaResponse> {
     /**
      * Obtener cupones disponibles para el usuario autenticado
      * Excluye los cupones que el usuario ya ha usado
+     * ✅ OPTIMIZADO: Solo se ejecuta en el navegador, NO durante SSR
      */
     obtenerCuponesDisponiblesUsuario(): Observable<Cupon[]> {
+      // ✅ Si estamos en el servidor (SSR), retornar array vacío inmediatamente
+      if (!this.isBrowser) {
+        return of([]);
+      }
+
       return this.http.get<Cupon[]>(`${this.apiUrl}/cupones/disponibles`)
         .pipe(
           catchError(error => {

@@ -160,6 +160,11 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   // ✅ NUEVO: Menús dinámicos
   menuItems: Menu[] = [];
   isLoadingMenus = false;
+  
+  // ✅ NUEVO: Menús visibles y ocultos
+  visibleMenuItems: Menu[] = [];
+  hiddenMenuItems: Menu[] = [];
+  maxVisibleMenus: number = 7; // Máximo de menús visibles antes del "Más"
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: any,
@@ -223,14 +228,30 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe({
         next: (response) => {
           this.menuItems = response.menus || [];
+          this.organizarMenusVisibles();
           this.isLoadingMenus = false;
         },
         error: (error) => {
           console.error('Error al cargar menús:', error);
           this.isLoadingMenus = false;
-          this.menuItems = []; // Mantener vacío en caso de error
+          this.menuItems = [];
+          this.visibleMenuItems = [];
+          this.hiddenMenuItems = [];
         }
       });
+  }
+
+  // ✅ NUEVO: Organizar menús visibles y ocultos
+  private organizarMenusVisibles(): void {
+    if (this.menuItems.length <= this.maxVisibleMenus) {
+      // Si hay pocos menús, mostrar todos
+      this.visibleMenuItems = this.menuItems;
+      this.hiddenMenuItems = [];
+    } else {
+      // Si hay muchos menús, mostrar solo los primeros y el resto en "Más"
+      this.visibleMenuItems = this.menuItems.slice(0, this.maxVisibleMenus - 1);
+      this.hiddenMenuItems = this.menuItems.slice(this.maxVisibleMenus - 1);
+    }
   }
 
   // ✅ NUEVO: Obtener submenús de un menú padre

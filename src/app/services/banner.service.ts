@@ -1,7 +1,8 @@
 // src/app/services/banner.service.ts
-import { Injectable } from '@angular/core';
+import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
@@ -81,8 +82,14 @@ export class BannersService {
 
   private apiUrl = `${environment.apiUrl}`;
   private baseUrl = environment.apiUrl.replace('/api', '');
+  private isBrowser: boolean;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
 
   // ===== MÉTODOS PARA BANNERS PRINCIPALES =====
   obtenerBanners(): Observable<Banner[]> {
@@ -96,6 +103,11 @@ export class BannersService {
   }
 
   obtenerBannersPublicos(): Observable<Banner[]> {
+    // ✅ Si estamos en el servidor (SSR), retornar array vacío inmediatamente
+    if (!this.isBrowser) {
+      return of([]);
+    }
+
     return this.http.get<ApiResponse<Banner[]>>(`${this.apiUrl}/banners/publicos`)
       .pipe(
         map(response => response.data)
@@ -104,6 +116,11 @@ export class BannersService {
 
   // ✅ NUEVO: Obtener banners horizontales públicos
   obtenerBannersHorizontalesPublicos(): Observable<Banner[]> {
+    // ✅ Si estamos en el servidor (SSR), retornar array vacío inmediatamente
+    if (!this.isBrowser) {
+      return of([]);
+    }
+
     return this.http.get<ApiResponse<Banner[]>>(`${this.apiUrl}/banners-horizontales/publicos`)
       .pipe(
         map(response => response.data)
@@ -112,6 +129,11 @@ export class BannersService {
 
   // ✅ NUEVO: Obtener banner para sidebar de shop
   obtenerBannerSidebarShop(): Observable<Banner | null> {
+    // ✅ Si estamos en el servidor (SSR), retornar null inmediatamente
+    if (!this.isBrowser) {
+      return of(null);
+    }
+
     return this.http.get<ApiResponse<Banner | null>>(`${this.apiUrl}/banners-sidebar-shop/publico`)
       .pipe(
         map(response => response.data)
@@ -194,6 +216,11 @@ export class BannersService {
   }
 
   obtenerBannersPromocionalesPublicos(): Observable<BannerPromocional[]> {
+    // ✅ Si estamos en el servidor (SSR), retornar array vacío inmediatamente
+    if (!this.isBrowser) {
+      return of([]);
+    }
+
     return this.http.get<ApiResponse<BannerPromocional[]>>(`${this.apiUrl}/banners-promocionales/publicos`)
       .pipe(
         map(response => response.data)
