@@ -16,6 +16,7 @@ import { AuthService } from "../../services/auth.service"
 import Swal from "sweetalert2"
 import { environment } from "../../../environments/environment"
 import { DomSanitizer, SafeHtml, SafeResourceUrl, Title } from "@angular/platform-browser"
+import { SeoService } from "../../services/seo.service"
 
 @Pipe({
   name: 'trustUrl',
@@ -77,7 +78,8 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     private favoritosService: FavoritosService,
     private authService: AuthService,
     private sanitizer: DomSanitizer,
-    private titleService: Title
+    private titleService: Title,
+    private seoService: SeoService
   ) {
     this.isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   }
@@ -235,6 +237,8 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // ✅ NUEVO: Limpiar meta tags al salir del componente
+    this.seoService.clearMetaTags();
     this.resetZoom()
   }
 
@@ -269,10 +273,10 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     this.procesarCaracteristicas()
     const rawDescription = this.detalles?.descripcion_detallada || this.producto?.descripcion || ""
     this.safeDescripcionDetallada = this.sanitizer.bypassSecurityTrustHtml(rawDescription)
-    
-    // Actualizar el título de la página con el nombre del producto
-    if (this.producto?.nombre) {
-      this.titleService.setTitle(this.producto.nombre + ' - MAGUS');
+
+    // ✅ NUEVO: Configurar SEO completo para el producto
+    if (this.producto) {
+      this.configurarSEO();
     }
 
     // Verificar si el producto está en favoritos
@@ -284,6 +288,96 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     console.error("Error en procesarDatosProducto:", error)
   }
 }
+
+  // ✅ NUEVO: Método para configurar SEO completo
+  private configurarSEO(): void {
+    const baseUrl = environment.apiUrl.replace('/api', '');
+    const productUrl = `https://magus-ecommerce.com/product/${this.producto.id}/${this.generateSlug(this.producto.nombre)}`;
+    const productImage = this.imagenPrincipal || `${baseUrl}/storage/productos/${this.producto.imagen}`;
+
+    // Crear descripción optimizada para SEO
+    const descripcionSEO = this.detalles?.descripcion_detallada
+      ? this.stripHtml(this.detalles.descripcion_detallada).substring(0, 160)
+      : `Compra ${this.producto.nombre} al mejor precio en MAGUS. Stock disponible. Envío rápido a todo el Perú.`;
+
+    // Generar keywords desde el nombre del producto
+    const keywords = this.generarKeywords();
+
+    // Determinar disponibilidad
+    const availability = this.producto.stock > 0 ? 'in stock' : 'out of stock';
+
+    // ✅ 1. Configurar meta tags básicos
+    this.seoService.updateMetaTags({
+      title: `${this.producto.nombre} - S/ ${this.producto.precio_venta || this.producto.precio} | MAGUS`,
+      description: descripcionSEO,
+      keywords: keywords,
+      image: productImage,
+      url: productUrl,
+      type: 'product',
+      price: this.producto.precio_venta || this.producto.precio,
+      currency: 'PEN',
+      availability: availability,
+      brand: this.producto.marca_nombre || 'MAGUS',
+      sku: this.producto.codigo || this.producto.id.toString()
+    });
+
+    // ✅ 2. Agregar Schema.org JSON-LD para Google Rich Snippets
+    this.seoService.addProductSchema({
+      name: this.producto.nombre,
+      description: descripcionSEO,
+      image: productImage,
+      sku: this.producto.codigo || this.producto.id.toString(),
+      brand: this.producto.marca_nombre || 'MAGUS',
+      price: this.producto.precio_venta || this.producto.precio,
+      currency: 'PEN',
+      availability: this.producto.stock > 0 ? 'InStock' : 'OutOfStock',
+      rating: this.producto.rating || undefined,
+      reviewCount: this.producto.total_reviews || undefined,
+      url: productUrl
+    });
+
+    // ✅ 3. Agregar breadcrumb schema
+    const breadcrumbs = [
+      { name: 'Inicio', url: 'https://magus-ecommerce.com/' },
+      { name: 'Productos', url: 'https://magus-ecommerce.com/shop' },
+      { name: this.producto.categoria_nombre || 'Categoría', url: `https://magus-ecommerce.com/shop/categoria/${this.producto.categoria_id}` },
+      { name: this.producto.nombre, url: productUrl }
+    ];
+    this.seoService.addBreadcrumbSchema(breadcrumbs);
+  }
+
+  // ✅ Helper: Generar slug para URL
+  private generateSlug(text: string): string {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  // ✅ Helper: Limpiar HTML para meta description
+  private stripHtml(html: string): string {
+    const tmp = document.createElement('DIV');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  }
+
+  // ✅ Helper: Generar keywords desde el nombre del producto
+  private generarKeywords(): string {
+    const keywords = [
+      this.producto.nombre,
+      this.producto.marca_nombre || '',
+      this.producto.categoria_nombre || '',
+      'MAGUS',
+      'Perú',
+      'comprar',
+      'precio',
+      'oferta'
+    ];
+
+    return keywords.filter(k => k).join(', ');
+  }
 
   private configurarImagenes(): void {
     this.imagenesProducto = []
