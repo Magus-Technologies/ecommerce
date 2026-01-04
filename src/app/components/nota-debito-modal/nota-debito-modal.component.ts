@@ -386,14 +386,18 @@ export class NotaDebitoModalComponent implements OnInit {
     const datos: any = {
       comprobante_referencia_id: this.comprobanteReferencia.id,
       motivo_nota: this.tipoNotaDebito,
-      motivo_nota_descripcion: this.motivo || this.descripcion,
-      productos: this.items.map(item => ({
-        descripcion: item.concepto,
+      motivo_nota_descripcion: this.motivo,
+      descripcion: this.descripcion || this.observaciones,
+      items: this.items.map(item => ({
+        concepto: item.concepto,
         cantidad: item.cantidad,
-        precio_unitario: item.precio_unitario
-      })),
-      observaciones: this.observaciones
+        precio_unitario: item.precio_unitario,
+        tipo_afectacion_igv: item.tipo_afectacion_igv
+      }))
     };
+
+    // Debug: mostrar payload en consola
+    console.log('Payload enviado:', JSON.stringify(datos, null, 2));
 
     this.notasDebitoService.create(datos).subscribe({
       next: (response) => {
@@ -405,6 +409,7 @@ export class NotaDebitoModalComponent implements OnInit {
         }, 2000);
       },
       error: (err) => {
+        console.error('Error al emitir ND:', err);
         this.error = err.error?.error || err.error?.message || 'Error al emitir Nota de Débito';
         this.procesando = false;
       }
