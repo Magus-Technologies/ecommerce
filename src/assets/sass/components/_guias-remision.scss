@@ -29,9 +29,10 @@
   background-color: var(--main-600) !important;
   border-color: var(--main-600) !important;
   color: #fff !important;
-  padding: var(--size-12) var(--size-20);
+  padding: var(--size-10) var(--size-16);
   border-radius: var(--size-8);
   font-weight: 500;
+  font-size: var(--font-sm);
   transition: all 0.2s ease;
 
   &:hover {
@@ -40,7 +41,8 @@
   }
 
   i {
-    margin-right: var(--size-8);
+    margin-right: var(--size-6);
+    font-size: 1rem;
   }
 }
 
@@ -472,6 +474,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

@@ -376,7 +376,17 @@ export class BannerFlashSaleModalComponent implements OnChanges {
   }
 
   private formatDateForInput(dateString: string): string {
+    // ✅ CORREGIDO: Mantener la hora local sin conversión UTC
     const date = new Date(dateString);
-    return date.toISOString().slice(0, 16);
+
+    // Obtener componentes en hora local
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    // Formato: YYYY-MM-DDTHH:mm (datetime-local)
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 }

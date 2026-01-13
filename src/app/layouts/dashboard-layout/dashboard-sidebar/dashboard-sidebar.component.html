@@ -92,6 +92,14 @@
               <span class="fw-medium">Tipos de Pago</span>
             </a>
           </li>
+
+          <li class="mb-4">
+            <a routerLink="/dashboard/pasos-envio" routerLinkActive="active"
+              class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+              <i class="ph ph-package text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Pasos de Envío</span>
+            </a>
+          </li>
         </ul>
       </li>
       <!-- ✅ NUEVO: Facturación -->
@@ -120,31 +128,10 @@
             </a>
           </li>
           <li class="mb-4">
-            <a routerLink="/dashboard/facturacion/comprobantes" routerLinkActive="active"
-              class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
-              <i class="ph ph-files text-lg flex-shrink-0"></i>
-              <span class="fw-medium">Comprobantes</span>
-            </a>
-          </li>
-          <li class="mb-4">
             <a routerLink="/dashboard/facturacion/series" routerLinkActive="active"
               class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
               <i class="ph ph-number-square-seven text-lg flex-shrink-0"></i>
               <span class="fw-medium">Series</span>
-            </a>
-          </li>
-          <li class="mb-4">
-            <a routerLink="/dashboard/facturacion/resumenes" routerLinkActive="active"
-              class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
-              <i class="ph ph-list-bullets text-lg flex-shrink-0"></i>
-              <span class="fw-medium">Resúmenes</span>
-            </a>
-          </li>
-          <li class="mb-4">
-            <a routerLink="/dashboard/facturacion/bajas" routerLinkActive="active"
-              class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
-              <i class="ph ph-arrow-fat-down text-lg flex-shrink-0"></i>
-              <span class="fw-medium">Bajas</span>
             </a>
           </li>
           <li class="mb-4">
@@ -240,6 +227,22 @@
               <span class="fw-medium">Marcas</span>
             </a>
           </li>
+
+          <li class="mb-4">
+            <a routerLink="/dashboard/contabilidad/kardex" routerLinkActive="active"
+              class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+              <i class="ph ph-list-dashes text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Kardex</span>
+            </a>
+          </li>
+
+          <li class="mb-4">
+            <a routerLink="/dashboard/guias-remision/traslado-interno" routerLinkActive="active"
+              class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
+              <i class="ph ph-arrows-left-right text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Traslados Internos</span>
+            </a>
+          </li>
         </ul>
       </li>
 
@@ -255,22 +258,6 @@
 
         <!-- Submódulos -->
         <ul *ngIf="isContabilidadOpen && !isCollapsed" class="list-style-none p-0 ms-28 mt-8 submenu">
-          <li class="mb-4">
-            <a routerLink="/dashboard/contabilidad/kardex" routerLinkActive="active"
-              class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
-              <i class="ph ph-list-dashes text-lg flex-shrink-0"></i>
-              <span class="fw-medium">Kardex</span>
-            </a>
-          </li>
-
-          <li class="mb-4">
-            <a routerLink="/dashboard/contabilidad/caja" routerLinkActive="active"
-              class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
-              <i class="ph ph-vault text-lg flex-shrink-0"></i>
-              <span class="fw-medium">Caja</span>
-            </a>
-          </li>
-
           <li class="mb-4">
             <a routerLink="/dashboard/contabilidad/cxc" routerLinkActive="active"
               class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
@@ -288,10 +275,10 @@
           </li>
 
           <li class="mb-4">
-            <a routerLink="/dashboard/guias-remision/traslado-interno" routerLinkActive="active"
+            <a routerLink="/dashboard/contabilidad/cajas" routerLinkActive="active"
               class="nav-link flex-align gap-8 px-12 py-8 text-white text-decoration-none rounded-6 transition-2 hover-bg-main-500 text-sm">
-              <i class="ph ph-arrows-left-right text-lg flex-shrink-0"></i>
-              <span class="fw-medium">Traslados Internos</span>
+              <i class="ph ph-cash-register text-lg flex-shrink-0"></i>
+              <span class="fw-medium">Cajas</span>
             </a>
           </li>
         </ul>

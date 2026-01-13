@@ -12,7 +12,7 @@ import {
 import { SlickCarouselComponent } from 'ngx-slick-carousel';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { SlickCarouselModule } from 'ngx-slick-carousel';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   CategoriaPublica,
   CategoriasPublicasService,
@@ -25,7 +25,7 @@ import {
 import { AlmacenService } from '../../services/almacen.service';
 import { MarcaProducto, ProductoPublico } from '../../types/almacen.types';
 import { CartService } from '../../services/cart.service';
-import { WishlistService } from '../../services/wishlist.service';
+import { FavoritosService } from '../../services/favoritos.service';
 import { AuthService } from '../../services/auth.service';
 import { CartNotificationService } from '../../services/cart-notification.service';
 
@@ -125,7 +125,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   isLoadingProductosMasVendidos = false;
 
   // ✅ NUEVA PROPIEDAD: Cache para el estado de wishlist
-  private wishlistState = new Set<number>();
+  private favoritosState = new Set<number>();
 
   slideConfig = {
     slidesToShow: 1,
@@ -303,7 +303,8 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   ofertaPrincipalDelDia: OfertaPrincipalResponse | null = null;
   isLoadingOfertaPrincipal = false;
 
-  ofertaSemanaActiva: OfertaSemanaResponse | null = null;
+  // ofertaSemanaActiva: OfertaSemanaResponse | null = null; // ❌ DEPRECADO
+  bannerOfertaSemana: BannerOferta | null = null; // ✅ NUEVO: Banner de oferta de la semana
   isLoadingOfertaSemana = false;
 
   cargarBannersPromocionales(): void {
@@ -333,14 +334,15 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     private bannersService: BannersService,
     private almacenService: AlmacenService,
     private cartService: CartService,
-    private wishlistService: WishlistService,
+    private FavoritosService: FavoritosService,
     private authService: AuthService,
     private ofertasService: OfertasService,
     private bannerFlashSalesService: BannerFlashSalesService,
     private bannerOfertaService: BannerOfertaService,
     private cdr: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
-    private cartNotificationService: CartNotificationService
+    private cartNotificationService: CartNotificationService,
+    private router: Router
   ) {
     // ✅ VERIFICAR SI ESTAMOS EN EL NAVEGADOR
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -365,7 +367,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cargarOfertaSemanaActiva();
 
     // ✅ NUEVA LÍNEA: Inicializar wishlist state
-    this.inicializarWishlistState();
+    this.inicializarFavoritosState();
 
     // NUEVA LÍNEA: Actualizar cupones cada 5 minutos
     if (this.isBrowser) {
@@ -378,11 +380,11 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   // ✅ MEJORADO: Inicializar countdowns después de que la vista se cargue
   ngAfterViewInit(): void {
     if (this.isBrowser) {
-      // ✅ AUMENTAR EL DELAY PARA ASEGURAR QUE TODO ESTÉ CARGADO
+      // ✅ OPTIMIZADO: Reducir delay de 2000ms a 300ms para prevenir FOUC
       setTimeout(() => {
         this.inicializarCountdowns();
         this.reinicializarSliders();
-      }, 2000);
+      }, 300);
     }
   }
 
@@ -828,78 +830,107 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
   // ✅ NUEVO MÉTODO: Agregar a wishlist con verificación de autenticación
-  agregarAWishlist(product: any): void {
-    // Verificar si el usuario está logueado
-    if (!this.authService.isLoggedIn()) {
-      Swal.fire({
-        title: 'Inicia sesión requerido',
-        text: 'Debes iniciar sesión para agregar productos a tu lista de deseos',
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonColor: '#198754',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Registrarse',
-        cancelButtonText: 'Cancelar',
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Redirigir a la página de registro
-          window.location.href = '/register';
-        }
-      });
-      return;
-    }
 
-    // Usuario logueado: proceder con la wishlist
-    const isToggled = this.wishlistService.toggleWishlist(product);
-
-    // ✅ ACTUALIZAR CACHE
-    if (isToggled) {
-      this.wishlistState.add(product.id);
-      // Producto agregado
-      Swal.fire({
-        title: '¡Agregado a favoritos!',
-        text: `${
-          product.nombre || product.name || product.title
-        } ha sido agregado a tu lista de deseos`,
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false,
-        toast: true,
-        position: 'top-end',
-        background: '#f8f9fa',
-        color: '#333',
-      });
-    } else {
-      this.wishlistState.delete(product.id);
-      // Producto removido
-      Swal.fire({
-        title: 'Removido de favoritos',
-        text: `${
-          product.nombre || product.name || product.title
-        } ha sido removido de tu lista de deseos`,
-        icon: 'info',
-        timer: 2000,
-        showConfirmButton: false,
-        toast: true,
-        position: 'top-end',
-        background: '#f8f9fa',
-        color: '#333',
-      });
-    }
-  }
-
-  // ✅ NUEVO MÉTODO: Inicializar estado de wishlist
-  private inicializarWishlistState(): void {
-    const wishlistItems = this.wishlistService.getCurrentItems();
-    this.wishlistState.clear();
-    wishlistItems.forEach((item) => {
-      this.wishlistState.add(item.producto_id);
+agregarAWishlist(product: any): void {
+  // Verificar si el usuario está logueado
+  if (!this.authService.isLoggedIn()) {
+    Swal.fire({
+      title: 'Inicia sesión requerido',
+      text: 'Debes iniciar sesión para agregar productos a tu lista de deseos',
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonColor: '#198754',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Registrarse',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.href = '/register';
+      }
     });
+    return;
   }
 
-  // ✅ NUEVO MÉTODO: Verificar si un producto está en wishlist (con cache)
+  // Usuario logueado: proceder con la wishlist
+  this.FavoritosService.toggleFavorito(product.id).subscribe({
+    next: (result) => {
+      // ✅ CORRECCIÓN: Verificar si el resultado tiene la propiedad agregado
+      const agregado = result?.agregado !== undefined ? result.agregado : !this.favoritosState.has(product.id);
+      
+      if (agregado) {
+        this.favoritosState.add(product.id);
+        // Producto agregado
+        Swal.fire({
+          title: '¡Agregado a favoritos!',
+          text: `${product.nombre || product.name || product.title} ha sido agregado a tu lista de deseos`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
+          background: '#f8f9fa',
+          color: '#333',
+        });
+      } else {
+        this.favoritosState.delete(product.id);
+        // Producto removido
+        Swal.fire({
+          title: 'Removido de favoritos',
+          text: `${product.nombre || product.name || product.title} ha sido removido de tu lista de deseos`,
+          icon: 'info',
+          timer: 2000,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
+          background: '#f8f9fa',
+          color: '#333',
+        });
+      }
+    },
+    error: (error) => {
+      console.error('Error al agregar/quitar favorito:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo actualizar los favoritos',
+        icon: 'error',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    }
+  });
+}
+
+// ✅ NUEVO MÉTODO CORRECTO:
+private inicializarFavoritosState(): void {
+  // Solo cargar favoritos si el usuario está autenticado
+  if (!this.authService.isLoggedIn()) {
+    this.favoritosState.clear();
+    return;
+  }
+
+  this.FavoritosService.obtenerFavoritos().subscribe({
+    next: (response) => {
+      this.favoritosState.clear();
+      // ✅ CORRECCIÓN: El backend devuelve { data: [...] } o un array directo
+      const favoritos = response?.data || response || [];
+      
+      // ✅ Verificar que sea un array antes de usar forEach
+      if (Array.isArray(favoritos)) {
+        favoritos.forEach((item: any) => {
+          this.favoritosState.add(item.producto_id);
+        });
+      }
+    },
+    error: (error) => {
+      console.error('Error al cargar favoritos:', error);
+      this.favoritosState.clear();
+    }
+  });
+}
+
+  // ✅ NUEVO MÉTODO: Verificar si un producto está en favoritos (con cache)
   isInWishlist(productoId: number): boolean {
-    return this.wishlistState.has(productoId);
+    return this.favoritosState.has(productoId);
   }
 
   cargarOfertasActivas(): void {
@@ -931,7 +962,8 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
         if (this.debugMode) {
           console.log('✅ Flash Sales cargadas:', flashSales);
         }
-        this.flashSalesActivas = flashSales;
+        // ✅ CORRECCIÓN: Asegurar que flashSales sea un array
+        this.flashSalesActivas = Array.isArray(flashSales) ? flashSales : [];
         this.cdr.detectChanges();
 
         // ✅ INICIALIZAR COUNTDOWNS DESPUÉS DE CARGAR DATOS
@@ -941,6 +973,7 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       },
       error: (error) => {
         console.error('Error al cargar flash sales:', error);
+        this.flashSalesActivas = []; // ✅ Inicializar como array vacío en caso de error
       },
     });
   }
@@ -948,9 +981,6 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
   cargarBannerOfertaActivo(): void {
     this.bannerOfertaService.getBannerActivo().subscribe({
       next: (banner) => {
-        if (this.debugMode) {
-          console.log('✅ Banner Oferta activo cargado:', banner);
-        }
         this.bannerOfertaActivo = banner;
         this.cdr.detectChanges();
       },
@@ -1012,30 +1042,21 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       },
     });
   }
-  // ✅ NUEVA FUNCIÓN: Cargar oferta de la semana
+  // ✅ NUEVA FUNCIÓN: Cargar banner oferta de la semana
   cargarOfertaSemanaActiva(): void {
     this.isLoadingOfertaSemana = true;
-    this.ofertasService.obtenerOfertaSemanaActiva().subscribe({
-      next: (response) => {
+    this.bannerOfertaService.getBannerActivoSemana().subscribe({
+      next: (banner) => {
         if (this.debugMode) {
-          console.log('✅ Oferta de la semana cargada:', response);
+          console.log('✅ Banner oferta de la semana cargado:', banner);
         }
-        this.ofertaSemanaActiva = response;
+        this.bannerOfertaSemana = banner;
         this.isLoadingOfertaSemana = false;
         this.cdr.detectChanges();
-
-        // ✅ INICIALIZAR COUNTDOWN PARA LA OFERTA DE LA SEMANA
-        if (this.isBrowser && response.oferta_semana?.fecha_fin) {
-          setTimeout(() => {
-            this.inicializarCountdown(
-              'countdown-oferta-semana',
-              response.oferta_semana!.fecha_fin
-            );
-          }, 1000);
-        }
       },
       error: (error) => {
-        console.error('Error al cargar oferta de la semana:', error);
+        console.error('Error al cargar banner oferta de la semana:', error);
+        this.bannerOfertaSemana = null;
         this.isLoadingOfertaSemana = false;
       },
     });
@@ -1043,9 +1064,15 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
 
   cargarCuponesActivos(): void {
     this.isLoadingCupones = true;
-    this.ofertasService.obtenerCuponesActivos().subscribe({
+
+    // Si el usuario está logueado, obtener solo cupones que no ha usado
+    // Si no está logueado, obtener todos los cupones activos
+    const cuponesObservable = this.authService.isLoggedIn()
+      ? this.ofertasService.obtenerCuponesDisponiblesUsuario()
+      : this.ofertasService.obtenerCuponesActivos();
+
+    cuponesObservable.subscribe({
       next: (cupones) => {
-        console.log('✅ Cupones activos cargados desde backend:', cupones);
         this.cuponesActivos = cupones;
         this.isLoadingCupones = false;
         this.cdr.detectChanges();
@@ -1053,25 +1080,8 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       error: (error) => {
         console.error('Error al cargar cupones activos:', error);
         this.isLoadingCupones = false;
-        // Fallback: usar cupones estáticos si hay error
-        this.cuponesActivos = [
-          {
-            id: 1,
-            codigo: 'BIENVENIDO20',
-            titulo: 'Bienvenido - 20% de descuento',
-            tipo_descuento: 'porcentaje',
-            valor_descuento: 20,
-            compra_minima: 100,
-          },
-          {
-            id: 2,
-            codigo: 'ENVIOGRATIS',
-            titulo: 'Envío gratis',
-            tipo_descuento: 'cantidad_fija',
-            valor_descuento: 15,
-            compra_minima: 50,
-          },
-        ];
+        // En caso de error, dejar el array vacío en lugar de mostrar cupones estáticos
+        this.cuponesActivos = [];
         this.cdr.detectChanges();
       },
     });
@@ -1096,46 +1106,43 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
     // ✅ LIMPIAR INTERVALOS ANTERIORES
     this.limpiarTodosLosIntervalos();
 
-    // Countdown para Flash Sales
-    this.flashSalesActivas.forEach((sale) => {
-      if (sale.fecha_fin) {
-        const countdownId = `countdown-flash-${sale.id}`;
-        if (this.debugMode) {
-          console.log(
-            `🔄 Inicializando countdown para flash sale ${sale.id}:`,
-            sale.fecha_fin
-          );
+    // ✅ CORRECCIÓN: Verificar que flashSalesActivas sea un array antes de usar forEach
+    if (Array.isArray(this.flashSalesActivas)) {
+      this.flashSalesActivas.forEach((sale) => {
+        if (sale.fecha_fin) {
+          const countdownId = `countdown-flash-${sale.id}`;
+          if (this.debugMode) {
+            console.log(
+              `🔄 Inicializando countdown para flash sale ${sale.id}:`,
+              sale.fecha_fin
+            );
+          }
+          this.inicializarCountdown(countdownId, sale.fecha_fin);
         }
-        this.inicializarCountdown(countdownId, sale.fecha_fin);
-      }
-    });
+      });
+    }
 
-    // Countdown para productos en oferta que son flash sales
-    this.productosEnOferta.forEach((producto) => {
-      if (producto.es_flash_sale && producto.fecha_fin_oferta) {
-        const countdownId = `countdown-producto-${producto.id}`;
-        if (this.debugMode) {
-          console.log(
-            `🔄 Inicializando countdown para producto ${producto.id}:`,
-            producto.fecha_fin_oferta
-          );
+    // ✅ CORRECCIÓN: Verificar que productosEnOferta sea un array antes de usar forEach
+    if (Array.isArray(this.productosEnOferta)) {
+      this.productosEnOferta.forEach((producto) => {
+        if (producto.es_flash_sale && producto.fecha_fin_oferta) {
+          const countdownId = `countdown-producto-${producto.id}`;
+          if (this.debugMode) {
+            console.log(
+              `🔄 Inicializando countdown para producto ${producto.id}:`,
+              producto.fecha_fin_oferta
+            );
+          }
+          this.inicializarCountdown(countdownId, producto.fecha_fin_oferta);
         }
-        this.inicializarCountdown(countdownId, producto.fecha_fin_oferta);
-      }
-    });
+      });
+    }
 
     // ✅ COUNTDOWN PARA OFERTA PRINCIPAL DEL DÍA
     if (this.ofertaPrincipalDelDia?.oferta_principal?.fecha_fin) {
       this.inicializarCountdown(
         'countdown-oferta-principal',
         this.ofertaPrincipalDelDia.oferta_principal.fecha_fin
-      );
-    }
-    // ✅ COUNTDOWN PARA OFERTA DE LA SEMANA
-    if (this.ofertaSemanaActiva?.oferta_semana?.fecha_fin) {
-      this.inicializarCountdown(
-        'countdown-oferta-semana',
-        this.ofertaSemanaActiva.oferta_semana.fecha_fin
       );
     }
 
@@ -1347,6 +1354,29 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
           position: 'top-end',
         });
       });
+  }
+
+  verTodosCupones(): void {
+    // Verificar si el usuario está logueado
+    if (this.authService.isLoggedIn()) {
+      // Redirigir a la página de cupones
+      this.router.navigate(['/my-account/cupones']);
+    } else {
+      // Mostrar mensaje para iniciar sesión
+      Swal.fire({
+        title: 'Inicia sesión',
+        text: 'Debes iniciar sesión para ver tus cupones disponibles',
+        icon: 'info',
+        confirmButtonColor: 'hsl(var(--main))',
+        confirmButtonText: 'Iniciar sesión',
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.router.navigate(['/account']);
+        }
+      });
+    }
   }
 
   onImageError(event: any): void {
@@ -1651,5 +1681,15 @@ export class IndexComponent implements OnInit, OnDestroy, AfterViewInit {
       slide.marcaSlug || SlugHelper.generateSlug(slide.marcaNombre || 'marca');
     // Formato: /shop/marca/:slug (ej: /shop/marca/antryx)
     return ['/shop/marca', slug];
+  }
+
+  // ✅ NUEVO: Método para navegar a producto con recarga completa (estilo Amazon)
+  navegarAProducto(producto: any, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+    const slug = producto.slug || SlugHelper.generateSlug(producto.nombre);
+    const url = `/product/${producto.id}/${slug}`;
+    window.location.href = url;
   }
 }

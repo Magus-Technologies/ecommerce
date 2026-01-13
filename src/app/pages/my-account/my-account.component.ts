@@ -6,11 +6,12 @@ import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
 import { ModalFotoComponent } from '../../component/modal-foto/modal-foto.component';
+import { BreadcrumbComponent } from 'src/app/component/breadcrumb/breadcrumb.component';
 import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-my-account',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterOutlet, ModalFotoComponent],
+  imports: [CommonModule, RouterLink, RouterOutlet, ModalFotoComponent, BreadcrumbComponent],
   templateUrl: './my-account.component.html',
   styleUrl: './my-account.component.scss'
 })

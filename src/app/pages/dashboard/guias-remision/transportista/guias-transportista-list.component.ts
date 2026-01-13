@@ -9,7 +9,7 @@ import Swal from 'sweetalert2';
   selector: 'app-guias-transportista-list',
   standalone: true,
   imports: [CommonModule, FormsModule, GuiaRemisionModalComponent],
-  styleUrl: '../../../../../assets/sass/components/_guias-remision.scss',
+  styleUrl: './guias-transportista-list.component.scss',
   template: `
     <div class="gre-container">
       <div class="gre-header">
@@ -508,14 +508,15 @@ export class GuiasTransportistaListComponent implements OnInit {
   }
 
   verXML(guia: GuiaRemision): void {
-    this.guiasService.getXml(guia.id!).subscribe({
-      next: (response) => {
-        window.open(response.data.url, '_blank');
-      },
-      error: (err) => {
-        Swal.fire('Error', err.error?.message || 'No hay XML disponible para esta guía', 'error');
-      }
-    });
+    // Abrir XML en nueva pestaña usando el endpoint correcto
+    // Pasar numero_completo, y como respaldo serie y correlativo
+    const url = this.guiasService.verXmlArchivo(
+      guia.id!, 
+      guia.numero_completo!, 
+      guia.serie, 
+      guia.correlativo
+    );
+    window.open(url, '_blank');
   }
 
   descargarCDR(guia: GuiaRemision): void {
@@ -568,12 +569,12 @@ export class GuiasTransportistaListComponent implements OnInit {
           preConfirm: () => {
             const email = (document.getElementById('email-input') as HTMLInputElement).value;
             const mensaje = (document.getElementById('mensaje-input') as HTMLTextAreaElement).value;
-            
+
             if (!email) {
               Swal.showValidationMessage('El email es requerido');
               return false;
             }
-            
+
             return { email, mensaje };
           }
         }).then((result) => {
@@ -618,12 +619,12 @@ export class GuiasTransportistaListComponent implements OnInit {
           preConfirm: () => {
             const telefono = (document.getElementById('telefono-input') as HTMLInputElement).value;
             const mensaje = (document.getElementById('mensaje-wa-input') as HTMLTextAreaElement).value;
-            
+
             if (!telefono) {
               Swal.showValidationMessage('El teléfono es requerido');
               return false;
             }
-            
+
             return { telefono, mensaje };
           }
         }).then((result) => {

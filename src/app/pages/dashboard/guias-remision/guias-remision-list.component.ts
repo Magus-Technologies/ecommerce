@@ -1121,15 +1121,15 @@ export class GuiasRemisionListComponent implements OnInit {
   }
 
   verXML(guia: GuiaRemision): void {
-    this.guiasService.getXml(guia.id!).subscribe({
-      next: (response) => {
-        // Abrir URL del XML en nueva pestaña
-        window.open(response.data.url, '_blank');
-      },
-      error: (_err: any) => {
-        Swal.fire('Error', 'No hay XML disponible para esta guía', 'error');
-      }
-    });
+    // Abrir XML en nueva pestaña usando el endpoint correcto
+    // Pasar numero_completo, y como respaldo serie y correlativo
+    const url = this.guiasService.verXmlArchivo(
+      guia.id!, 
+      guia.numero_completo!, 
+      guia.serie, 
+      guia.correlativo
+    );
+    window.open(url, '_blank');
   }
 
   generarXML(guia: GuiaRemision): void {

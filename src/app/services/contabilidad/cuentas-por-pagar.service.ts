@@ -70,10 +70,12 @@ export class CuentasPorPagarService {
    * Listar cuentas por pagar con filtros
    */
   getCuentas(params?: {
+    proveedor_id?: number;
     estado?: string;
-    proveedor?: string;
-    vencidas?: string;
+    fecha_inicio?: string;
+    fecha_fin?: string;
     page?: number;
+    per_page?: number;
   }): Observable<any> {
     let httpParams = new HttpParams();
     if (params) {

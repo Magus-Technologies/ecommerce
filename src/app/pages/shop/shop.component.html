@@ -38,45 +38,12 @@
         </li>
     </ul>
 </div>
-                    <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
-                        <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">Filtrar por Precio</h6>
-                        <div class="custom--range">
-                            <div class="mb-3">
-                                <label class="text-sm text-gray-600">Precio mínimo: S/ {{ minPrice }}</label>
-                                <input
-                                    type="range"
-                                    class="form-range w-100"
-                                    [(ngModel)]="minPrice"
-                                    [min]="0"
-                                    [max]="maxPrice"
-                                    step="10">
-                            </div>
-                            <div class="mb-3">
-                                <label class="text-sm text-gray-600">Precio máximo: S/ {{ maxPrice }}</label>
-                                <input
-                                    type="range"
-                                    class="form-range w-100"
-                                    [(ngModel)]="maxPrice"
-                                    [min]="minPrice"
-                                    [max]="10000"
-                                    step="10">
-                            </div>
-                            <div class="flex-between flex-wrap gap-8 mt-24">
-                                <button
-                                    type="button"
-                                    class="btn btn-main h-40 flex-align"
-                                    (click)="aplicarFiltroPrecio()">
-                                    Filtrar
-                                </button>
-                                <button
-                                    type="button"
-                                    class="btn btn-outline-main h-40 flex-align"
-                                    (click)="limpiarFiltroPrecio()">
-                                    Limpiar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Filtros usando componente reutilizable -->
+                    <app-product-filter 
+                        [categories]="categorias" 
+                        [marcas]="marcas" 
+                        (filtersApplied)="onFiltersApplied($event)">
+                    </app-product-filter>
                  
                     <div class="shop-sidebar__box border border-gray-100 rounded-8 p-32 mb-32">
                         <h6 class="text-xl border-bottom border-gray-100 pb-24 mb-24">Filtrar por marca</h6>
@@ -259,7 +226,7 @@
                 <ul class="pagination flex-center flex-wrap gap-16">
                     <li class="page-item">
                         <a class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
-                            href="#" (click)="onPageChange(currentPage - 1)" [class.disabled]="currentPage === 1">
+                            href="javascript:void(0)" (click)="onPageChange(currentPage - 1)" [class.disabled]="currentPage === 1">
                             <i class="ph-bold ph-arrow-left"></i>
                         </a>
                     </li>
@@ -267,13 +234,13 @@
                     <!-- Loop through the pages dynamically -->
                     <li *ngFor="let page of getPages()" class="page-item" [class.active]="page === currentPage">
                         <a class="page-link h-64 w-64 flex-center text-md rounded-8 fw-medium text-neutral-600 border border-gray-100"
-                            href="#" (click)="onPageChange(page)">
+                            href="javascript:void(0)" (click)="onPageChange(page)">
                             {{ page < 10 ? '0' + page : page }} </a>
                     </li>
 
                     <li class="page-item">
                         <a class="page-link h-64 w-64 flex-center text-xxl rounded-8 fw-medium text-neutral-600 border border-gray-100"
-                            href="#" (click)="onPageChange(currentPage + 1)"
+                            href="javascript:void(0)" (click)="onPageChange(currentPage + 1)"
                             [class.disabled]="currentPage === totalPages">
                             <i class="ph-bold ph-arrow-right"></i>
                         </a>

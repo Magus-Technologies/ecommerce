@@ -14,7 +14,7 @@ export interface CuentaPorCobrar {
     monto_total: number;
     monto_pagado: number;
     saldo: number;
-    estado: 'PENDIENTE' | 'PAGADO_PARCIAL' | 'PAGADO' | 'VENCIDO';
+    estado: 'PENDIENTE' | 'PARCIAL' | 'PAGADO' | 'VENCIDO';
     dias_credito: number;
     observaciones?: string;
     created_at?: string;

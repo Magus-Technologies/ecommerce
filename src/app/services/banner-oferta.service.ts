@@ -9,6 +9,7 @@ export interface BannerOferta {
   imagen_url?: string | null;
   activo: boolean;
   prioridad: number;
+  tipo: 'especiales' | 'semana';
   productos?: ProductoBannerOferta[];
   created_at?: string;
   updated_at?: string;
@@ -45,10 +46,17 @@ export class BannerOfertaService {
   }
 
   /**
-   * Obtener el banner activo para el index (Público)
+   * Obtener el banner activo para el index - Ofertas Especiales (Público)
    */
   getBannerActivo(): Observable<BannerOferta> {
     return this.http.get<BannerOferta>(`${this.apiUrl}/activo`);
+  }
+
+  /**
+   * Obtener el banner activo para la Oferta de la Semana (Público)
+   */
+  getBannerActivoSemana(): Observable<BannerOferta> {
+    return this.http.get<BannerOferta>(`${this.apiUrl}/activo-semana`);
   }
 
   /**

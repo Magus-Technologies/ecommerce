@@ -102,7 +102,24 @@
 
                   <!-- Precio -->
                   <td class="px-12 py-12" style="vertical-align: middle;">
-                    <span class="fw-semibold" style="font-size: 0.9rem;">S/ {{ formatPrice(item.precio) }}</span>
+                    <!-- Si tiene descuento, mostrar precio original tachado y precio con descuento -->
+                    <div *ngIf="item.descuento_porcentaje && item.descuento_porcentaje > 0" class="d-flex flex-column gap-1">
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="text-decoration-line-through text-gray-400" style="font-size: 0.7rem;">
+                          S/ {{ formatPrice(item.precio) }}
+                        </span>
+                        <span class="badge bg-danger-600 text-white px-4 py-1" style="font-size: 0.6rem; line-height: 1;">
+                          -{{ item.descuento_porcentaje }}%
+                        </span>
+                      </div>
+                      <span class="fw-semibold text-danger-600" style="font-size: 0.85rem;">
+                        S/ {{ formatPrice(item.precio_con_descuento) }}
+                      </span>
+                    </div>
+                    <!-- Si NO tiene descuento, mostrar precio normal -->
+                    <span *ngIf="!item.descuento_porcentaje || item.descuento_porcentaje === 0" class="fw-semibold" style="font-size: 0.9rem;">
+                      S/ {{ formatPrice(item.precio) }}
+                    </span>
                   </td>
 
                   <!-- Cantidad -->
@@ -159,18 +176,59 @@
           <div class="cart-actions mt-32 pt-24 border-top border-gray-100">
             <div class="row align-items-center">
               <div class="col-md-6">
-                <div class="d-flex gap-12">
-                  <input 
-                    type="text" 
+                <!-- Input y botón de cupón -->
+                <div class="d-flex gap-12" *ngIf="!cuponAplicado">
+                  <input
+                    type="text"
                     [(ngModel)]="codigoCupon"
                     class="form-control px-16 py-12 border rounded-8"
-                    placeholder="Código de cupón">
-                  <button 
-                    type="button" 
+                    placeholder="Código de cupón"
+                    [disabled]="isValidatingCupon">
+                  <button
+                    type="button"
                     class="btn btn-main py-12 px-24 rounded-8 flex-shrink-0"
-                    (click)="aplicarCupon()">
-                    Aplicar
+                    (click)="aplicarCupon()"
+                    [disabled]="isValidatingCupon || !codigoCupon.trim()">
+                    <ng-container *ngIf="!isValidatingCupon">
+                      Aplicar
+                    </ng-container>
+                    <ng-container *ngIf="isValidatingCupon">
+                      <span class="spinner-border spinner-border-sm me-8" role="status"></span>
+                      Validando...
+                    </ng-container>
                   </button>
+                </div>
+
+                <!-- Badge de cupón aplicado -->
+                <div *ngIf="cuponAplicado" class="cupon-aplicado-badge">
+                  <div class="d-flex align-items-center gap-12 bg-success-50 border border-success-200 rounded-8 p-12">
+                    <div class="flex-grow-1">
+                      <div class="d-flex align-items-center gap-8">
+                        <i class="ph ph-check-circle text-success-600 text-xl"></i>
+                        <span class="fw-semibold text-success-600">Cupón aplicado</span>
+                      </div>
+                      <div class="mt-4">
+                        <span class="badge bg-success-600 text-white px-8 py-4 rounded-4 me-8">
+                          {{ cuponAplicado.codigo }}
+                        </span>
+                        <span class="text-sm text-gray-600">
+                          <ng-container *ngIf="cuponAplicado.tipo_descuento === 'porcentaje'">
+                            {{ cuponAplicado.valor_descuento }}% de descuento
+                          </ng-container>
+                          <ng-container *ngIf="cuponAplicado.tipo_descuento === 'cantidad_fija'">
+                            S/ {{ cuponAplicado.valor_descuento }} de descuento
+                          </ng-container>
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn btn-sm bg-transparent border-0 text-gray-500 hover-text-danger-600 p-4"
+                      (click)="quitarCupon()"
+                      title="Quitar cupón">
+                      <i class="ph ph-x text-lg"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="col-md-6 text-md-end mt-16 mt-md-0">

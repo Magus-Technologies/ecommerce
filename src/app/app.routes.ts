@@ -10,7 +10,6 @@ import { BlogComponent } from './pages/blog/blog.component';
 import { ContactComponent } from './pages/contact/contact.component';
 import { BlogDetailsComponent } from './pages/blog-details/blog-details.component';
 import { CartComponent } from './pages/cart/cart.component';
-import { WishlistComponent } from './pages/wishlist/wishlist.component';
 import { CheckoutComponent } from './pages/checkout/checkout.component';
 import { BecomeSellerComponent } from './pages/become-seller/become-seller.component';
 import { AccountComponent } from './pages/account/account.component';
@@ -43,6 +42,14 @@ export const routes: Routes = [
         title: 'Blog',
       },
       {
+        path: 'pasos-envio',
+        loadComponent: () =>
+          import('./pages/pasos-envio/pasos-envio.component').then(
+            (m) => m.PasosEnvioComponent
+          ),
+        title: 'Pasos de Envío',
+      },
+      {
         path: 'contact',
         component: ContactComponent,
         title: 'Contact',
@@ -57,11 +64,7 @@ export const routes: Routes = [
         component: CartComponent,
         title: 'Cart',
       },
-      {
-        path: 'wishlist',
-        component: WishlistComponent,
-        title: 'Wishlist',
-      },
+
       {
         path: 'checkout',
         component: CheckoutComponent,
@@ -121,6 +124,14 @@ export const routes: Routes = [
             title: 'Mis Compras'
           },
           {
+            path: 'favoritos',
+            loadComponent: () =>
+              import('./pages/my-account/favoritos/favoritos.component').then(
+                (m) => m.FavoritosComponent
+              ),
+            title: 'Mis Favoritos'
+          },
+          {
             path: 'reclamos',
             loadComponent: () =>
               import('./pages/my-account/reclamos/reclamos.component').then(
@@ -135,10 +146,18 @@ export const routes: Routes = [
                 (m) => m.RecompensasMiCuentaComponent
               ),
             title: 'Mis Recompensas'
+          },
+          {
+            path: 'cupones',
+            loadComponent: () =>
+              import('./pages/my-account/cupones/cupones.component').then(
+                (m) => m.CuponesComponent
+              ),
+            title: 'Mis Cupones'
           }
         ]
       },
-            {
+      {
         path: 'verify-email',
         loadComponent: () =>
           import('./pages/email-verification/email-verification.component').then(
@@ -518,16 +537,7 @@ export const routes: Routes = [
         ],
       },
       // ✅ MÓDULO DE CONTABILIDAD
-      {
-        path: 'contabilidad/caja',
-        loadComponent: () =>
-          import('./pages/dashboard/contabilidad/caja/caja-list.component').then(
-            (m) => m.CajaListComponent
-          ),
-        title: 'Gestión de Caja',
-        canActivate: [permissionGuard],
-        data: { permission: 'contabilidad.ver' },
-      },
+
       {
         path: 'contabilidad/kardex',
         loadComponent: () =>
@@ -536,7 +546,7 @@ export const routes: Routes = [
           ),
         title: 'Kardex de Inventario',
         canActivate: [permissionGuard],
-        data: { permission: 'contabilidad.ver' },
+        data: { permission: 'contabilidad.kardex.ver' },
       },
       {
         path: 'contabilidad/cxc',
@@ -546,7 +556,7 @@ export const routes: Routes = [
           ),
         title: 'Cuentas por Cobrar',
         canActivate: [permissionGuard],
-        data: { permission: 'contabilidad.ver' },
+        data: { permission: 'contabilidad.cuentas-cobrar.ver' },
       },
       {
         path: 'contabilidad/cxp',
@@ -556,7 +566,71 @@ export const routes: Routes = [
           ),
         title: 'Cuentas por Pagar',
         canActivate: [permissionGuard],
-        data: { permission: 'contabilidad.ver' },
+        data: { permission: 'contabilidad.cuentas-pagar.ver' },
+      },
+      {
+        path: 'contabilidad/cajas',
+        loadComponent: () =>
+          import('./pages/dashboard/contabilidad/cajas/cajas-main.component').then(
+            (m) => m.CajasMainComponent
+          ),
+        title: 'Gestión de Cajas',
+        canActivate: [permissionGuard],
+        data: { permission: 'contabilidad.cajas.ver' },
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./pages/dashboard/contabilidad/cajas/cajas-dashboard.component').then(
+                (m) => m.CajasDashboardComponent
+              ),
+            title: 'Cajas'
+          },
+          {
+            path: 'tiendas',
+            loadComponent: () =>
+              import('./pages/dashboard/contabilidad/cajas/tiendas-list.component').then(
+                (m) => m.TiendasListComponent
+              ),
+            title: 'Tiendas'
+          },
+          {
+            path: 'caja-chica',
+            loadComponent: () =>
+              import('./pages/dashboard/contabilidad/caja-chica/mis-cajas.component').then(
+                (m) => m.MisCajasComponent
+              ),
+            title: 'Caja Chica'
+          },
+          {
+            path: 'flujo-caja',
+            loadComponent: () =>
+              import('./pages/dashboard/contabilidad/cajas/flujo-caja.component').then(
+                (m) => m.FlujoCajaComponent
+              ),
+            title: 'Flujo de Caja'
+          }
+        ]
+      },
+      {
+        path: 'contabilidad/cajas/operacion',
+        loadComponent: () =>
+          import('./pages/dashboard/contabilidad/cajas/operacion-diaria.component').then(
+            (m) => m.OperacionDiariaComponent
+          ),
+        title: 'Operación Diaria',
+        canActivate: [permissionGuard],
+        data: { permission: 'contabilidad.cajas.ver' },
+      },
+      {
+        path: 'contabilidad/cajas/historial',
+        loadComponent: () =>
+          import('./pages/dashboard/contabilidad/cajas/historial-cajas.component').then(
+            (m) => m.HistorialCajasComponent
+          ),
+        title: 'Historial de Cajas',
+        canActivate: [permissionGuard],
+        data: { permission: 'contabilidad.cajas.ver' },
       },
       {
         path: 'guias-remision',
@@ -603,16 +677,16 @@ export const routes: Routes = [
         component: VentasComponent,
         children: [
           { path: '', component: VentasListComponent },
-          { 
-            path: 'nueva', 
+          {
+            path: 'nueva',
             loadComponent: () =>
               import('./pages/dashboard/pos/pos.component').then(
                 (m) => m.PosComponent
               ),
             title: 'Nueva Venta - POS'
           },
-          { 
-            path: 'editar/:id', 
+          {
+            path: 'editar/:id',
             loadComponent: () =>
               import('./pages/dashboard/pos/pos.component').then(
                 (m) => m.PosComponent
@@ -796,6 +870,16 @@ export const routes: Routes = [
         canActivate: [permissionGuard],
         data: { permission: 'configuracion.ver' },
       },
+      {
+        path: 'pasos-envio',
+        loadComponent: () =>
+          import('./pages/dashboard/pasos-envio/pasos-envio-admin.component').then(
+            (m) => m.PasosEnvioAdminComponent
+          ),
+        title: 'Gestión de Tipos de Pago',
+        canActivate: [permissionGuard],
+        data: { permission: 'configuracion.ver' },
+      },
       // Agrega estas rutas justo después:
       {
         path: 'motorizados/crear',
@@ -809,7 +893,7 @@ export const routes: Routes = [
       },
       {
         path: 'motorizados/ver/:id',
-        loadComponent: () => 
+        loadComponent: () =>
           import('./pages/dashboard/motorizados/motorizados-ver/motorizados-ver.component').then(
             m => m.MotorizadosVerComponent
           ),
@@ -857,6 +941,25 @@ export const routes: Routes = [
         title: 'Gestión de Correos',
         canActivate: [permissionGuard],
         data: { permission: 'envio_correos.ver' },
+      },
+      // ✅ RUTAS DE PERFIL Y CONFIGURACIÓN
+      {
+        path: 'perfil',
+        loadComponent: () =>
+          import('./pages/dashboard/perfil/perfil.component').then(
+            (m) => m.PerfilComponent
+          ),
+        title: 'Mi Perfil',
+        canActivate: [authGuard],
+      },
+      {
+        path: 'configuracion',
+        loadComponent: () =>
+          import('./pages/dashboard/configuracion/configuracion.component').then(
+            (m) => m.ConfiguracionComponent
+          ),
+        title: 'Configuración del Sistema',
+        canActivate: [authGuard],
       },
       // ✅ RUTAS DE FACTURACIÓN ELECTRÓNICA
       // La ruta POS ahora está en /dashboard/ventas/nueva

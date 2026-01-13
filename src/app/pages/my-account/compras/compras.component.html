@@ -48,7 +48,7 @@
               {{ compra.estado_compra?.nombre || 'En proceso' }}
             </span>
             <h6 class="text-heading mb-0">S/ {{ compra.total | number:'1.2-2' }}</h6>
-            <p class="text-xs text-gray-500 mb-0">{{ compra.productos?.length || 0 }} productos</p>
+            <p class="text-xs text-gray-500 mb-0">{{ compra.productos.length || 0 }} productos</p>
           </div>
 
           <!-- Acciones -->

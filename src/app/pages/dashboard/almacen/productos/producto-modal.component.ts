@@ -715,17 +715,15 @@ export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
         next: (response) => {
           console.log('Producto guardado exitosamente:', response);
 
-          // ✅ OPTIMIZACIÓN: Guardar el producto para emitirlo después
-          const productoGuardado = response.producto;
+          // ✅ OPTIMIZACIÓN: Obtener el producto completo con todas sus relaciones
+          const productoId = this.producto?.id || response.producto?.id;
 
           // Si hay detalles para guardar
-          const productoId = this.producto?.id || response.producto?.id;
           if (productoId && this.tieneDetallesParaGuardar()) {
-            this.guardarDetalles(productoId, productoGuardado);
+            this.guardarDetalles(productoId);
           } else {
-            // ✅ Emitir el producto guardado
-            this.productoGuardado.emit(productoGuardado);
-            this.cerrarModal();
+            // ✅ Obtener el producto completo con sus relaciones (marca, categoría)
+            this.obtenerProductoCompleto(productoId);
           }
         },
         error: (error) => {
@@ -762,7 +760,7 @@ export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
     );
   }
 
-  private guardarDetalles(productoId: number, productoGuardado?: any): void {
+  private guardarDetalles(productoId: number): void {
     const formData = new FormData();
 
     // Datos básicos
@@ -819,18 +817,54 @@ export class ProductoModalComponent implements OnInit, OnChanges, OnDestroy {
       .subscribe({
         next: (response) => {
           console.log('Detalles guardados exitosamente:', response);
-          // ✅ Emitir el producto guardado
-          this.productoGuardado.emit(productoGuardado);
-          this.cerrarModal();
+          // ✅ Obtener el producto completo con sus relaciones
+          this.obtenerProductoCompleto(productoId);
         },
         error: (error) => {
           console.error('Error al guardar detalles:', error);
           // Aunque los detalles fallen, el producto ya se guardó
-          // ✅ Emitir el producto guardado
-          this.productoGuardado.emit(productoGuardado);
-          this.cerrarModal();
+          // ✅ Obtener el producto completo con sus relaciones
+          this.obtenerProductoCompleto(productoId);
         },
       });
+  }
+
+  // ✅ NUEVO MÉTODO: Obtener producto completo con relaciones
+  private obtenerProductoCompleto(productoId: number): void {
+    this.almacenService.obtenerProducto(productoId).subscribe({
+      next: (productoCompleto) => {
+        console.log('✅ Producto obtenido del servidor:', productoCompleto);
+
+        // ✅ WORKAROUND: El backend no devuelve la marca en GET /productos/{id}
+        // Agregarla manualmente desde el array de marcas ya cargado
+        if (productoCompleto.marca_id && !productoCompleto.marca) {
+          const marca = this.marcas.find(m => m.id === Number(productoCompleto.marca_id));
+          if (marca) {
+            productoCompleto.marca = marca;
+            console.log('✅ Marca agregada manualmente:', marca.nombre);
+          }
+        }
+
+        // También agregar categoría si no viene (por seguridad)
+        if (productoCompleto.categoria_id && !productoCompleto.categoria) {
+          const categoria = this.categorias.find(c => c.id === Number(productoCompleto.categoria_id));
+          if (categoria) {
+            productoCompleto.categoria = categoria;
+            console.log('✅ Categoría agregada manualmente:', categoria.nombre);
+          }
+        }
+
+        console.log('✅ Producto completo final con relaciones:', productoCompleto);
+        // Emitir el producto completo con marca y categoría expandidas
+        this.productoGuardado.emit(productoCompleto);
+        this.cerrarModal();
+      },
+      error: (error) => {
+        console.error('Error al obtener producto completo:', error);
+        // Si falla, cerrar el modal de todos modos
+        this.cerrarModal();
+      },
+    });
   }
 
   private markFormGroupTouched(): void {

@@ -14,12 +14,14 @@ export interface CartItem {
   nombre: string;
   imagen_url: string;
   precio: number;
+  descuento_porcentaje?: number | null; // Porcentaje de descuento si aplica
+  precio_con_descuento?: number | null; // Precio final con descuento
   cantidad: number;
   stock_disponible: number;
   codigo_producto: string;
   categoria?: string;
   marca?: string;
-  mostrar_igv?: boolean;  // <- NUEVA LÍNEA
+  mostrar_igv?: boolean;
 }
 
 export interface CartSummary {
@@ -54,7 +56,7 @@ export class CartService {
 
   private initCart(): void {
     this.authService.currentUser.subscribe(user => {
-      console.log('CartService - Usuario cambió:', user);
+      // console.log('CartService - Usuario cambió:', user);
       if (user) {
         // console.log('CartService - Cargando carrito desde API');
         this.loadCartFromApi().subscribe({
@@ -362,11 +364,17 @@ export class CartService {
 
   // REEMPLAZAR COMPLETAMENTE EL MÉTODO updateCartSummary:
   private updateCartSummary(items: CartItem[]): void {
-    // Calcular el total como suma de (precio * cantidad) de todos los productos
+    // Calcular el total usando precio con descuento si existe
     const total = items.reduce((sum, item) => {
-      const precio = item.precio || 0;
+      let precioFinal = item.precio || 0;
+
+      // Si tiene descuento, usar precio_con_descuento
+      if (item.descuento_porcentaje && item.descuento_porcentaje > 0 && item.precio_con_descuento) {
+        precioFinal = item.precio_con_descuento;
+      }
+
       const cantidad = item.cantidad || 0;
-      return sum + (precio * cantidad);
+      return sum + (precioFinal * cantidad);
     }, 0);
 
     let subtotal = total;
@@ -380,12 +388,12 @@ export class CartService {
     }
 
     const cantidad_items = items.reduce((sum, item) => sum + (item.cantidad || 0), 0);
-    
-    this.cartSummarySubject.next({ 
-      subtotal: subtotal, 
-      igv: igv, 
-      total: total, 
-      cantidad_items: cantidad_items 
+
+    this.cartSummarySubject.next({
+      subtotal: subtotal,
+      igv: igv,
+      total: total,
+      cantidad_items: cantidad_items
     });
   }
 

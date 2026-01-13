@@ -14,6 +14,10 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Prerender
   },
   {
+    path: 'pasos-envio',
+    renderMode: RenderMode.Prerender
+  },
+  {
     path: 'forgot-password',
     renderMode: RenderMode.Prerender
   },
@@ -33,10 +37,7 @@ export const serverRoutes: ServerRoute[] = [
     path: 'cart',
     renderMode: RenderMode.Prerender
   },
-  {
-    path: 'wishlist',
-    renderMode: RenderMode.Prerender
-  },
+
   {
     path: 'checkout',
     renderMode: RenderMode.Prerender
@@ -184,6 +185,14 @@ export const serverRoutes: ServerRoute[] = [
   },
   {
     path: 'ofertas',
+    renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'my-account/favoritos',
+    renderMode: RenderMode.Prerender
+  },
+  {
+    path: 'my-account/cupones',
     renderMode: RenderMode.Prerender
   }
 

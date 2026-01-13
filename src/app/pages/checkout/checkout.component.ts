@@ -14,6 +14,7 @@ import { ReniecService } from '../../services/reniec.service';
 import { ClienteService } from '../../services/cliente.service';
 import { FormaEnvioService, FormaEnvio } from '../../services/forma-envio.service';
 import { TipoPagoService, TipoPago } from '../../services/tipo-pago.service';
+import { OfertasService } from '../../services/ofertas.service';
 import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
 
@@ -61,6 +62,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   tiposPago: TipoPago[] = [];
   costoEnvioCalculado = 0;
 
+  // ✅ Cupón aplicado
+  cuponAplicado: any = null;
+  descuentoCupon = 0;
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -75,6 +80,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     private clienteService: ClienteService,
     private formaEnvioService: FormaEnvioService,
     private tipoPagoService: TipoPagoService,
+    private ofertasService: OfertasService,
     private router: Router
   ) {
     this.initializeForm();
@@ -86,10 +92,32 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.checkAuthStatus();
     this.loadFormasEnvio(); // ✅ Cargar formas de envío
     this.loadTiposPago(); // ✅ Cargar tipos de pago
+    this.loadCuponAplicado(); // ✅ Cargar cupón aplicado desde el carrito
     // Cargar ubigeo primero, luego direcciones
     this.loadUbigeoData().then(() => {
       this.loadDireccionesGuardadas();
     });
+  }
+
+  // ✅ Cargar cupón aplicado desde sessionStorage
+  private loadCuponAplicado(): void {
+    const cuponData = sessionStorage.getItem('cupon_aplicado');
+    if (cuponData) {
+      try {
+        this.cuponAplicado = JSON.parse(cuponData);
+        this.descuentoCupon = this.cuponAplicado.descuento_calculado || 0;
+        console.log('Cupón cargado:', this.cuponAplicado);
+      } catch (e) {
+        console.error('Error al parsear cupón:', e);
+        this.cuponAplicado = null;
+        this.descuentoCupon = 0;
+      }
+    }
+  }
+
+  // ✅ Calcular total con descuento
+  getTotalConDescuento(): number {
+    return (this.cartSummary.total || 0) - this.descuentoCupon + this.costoEnvioCalculado;
   }
 
   ngOnDestroy(): void {
@@ -153,7 +181,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private loadFormasEnvio(): void {
     this.formaEnvioService.obtenerActivas().subscribe({
       next: (response) => {
-        this.formasEnvio = response.formas_envio;
+        this.formasEnvio = response.formas_envio || [];
       },
       error: (error) => {
         console.error('Error cargando formas de envío:', error);
@@ -473,7 +501,7 @@ private mostrarErrorDocumento(): void {
     const distritoNombre = this.distritos.find(d => d.id === formData.distrito)?.nombre || '';
 
     // Preparar datos para la compra
-    const compraData: CrearCompraRequest = {
+    const compraData: any = {
       productos: this.cartItems.map(item => ({
         producto_id: item.producto_id,
         cantidad: item.cantidad
@@ -490,14 +518,42 @@ private mostrarErrorDocumento(): void {
       observaciones: formData.observaciones || ''
     };
 
+    // ✅ Agregar cupón si está aplicado
+    if (this.cuponAplicado) {
+      compraData.cupon_id = this.cuponAplicado.id;
+      compraData.descuento_cupon = this.descuentoCupon;
+    }
+
     // Crear compra en el backend
     this.comprasService.crearCompra(compraData).subscribe({
       next: (response) => {
         this.procesandoPedido = false;
 
         if (response.status === 'success') {
+          // ✅ Registrar uso del cupón si se aplicó
+          if (this.cuponAplicado) {
+            this.ofertasService.registrarUsoCupon(
+              this.cuponAplicado.id,
+              this.descuentoCupon,
+              this.cartSummary.total,
+              response.compra?.id || undefined
+            ).subscribe({
+              next: () => {
+                console.log('Uso de cupón registrado exitosamente');
+              },
+              error: (error) => {
+                console.error('Error al registrar uso de cupón:', error);
+              }
+            });
+
+            // Limpiar cupón del sessionStorage
+            sessionStorage.removeItem('cupon_aplicado');
+          }
+
           // Limpiar carrito
           this.cartService.clearCart();
+
+          const totalFinal = this.getTotalConDescuento();
 
           Swal.fire({
             title: '¡Compra creada exitosamente!',
@@ -506,7 +562,8 @@ private mostrarErrorDocumento(): void {
                 <i class="ph ph-check-circle text-success mb-3" style="font-size: 4rem;"></i>
                 <h5>Compra ${response.codigo_compra}</h5>
                 <p class="text-muted">Tu compra ha sido registrada exitosamente.</p>
-                <p><strong>Total: S/ ${this.formatPrice(this.getTotalFinal())}</strong></p>
+                ${this.cuponAplicado ? `<p class="text-success">Descuento aplicado: -S/ ${this.formatPrice(this.descuentoCupon)}</p>` : ''}
+                <p><strong>Total: S/ ${this.formatPrice(totalFinal)}</strong></p>
                 <p class="text-sm text-gray-600">Puedes ver el estado de tu compra en "Mi Cuenta"</p>
               </div>
             `,
@@ -599,8 +656,9 @@ private mostrarErrorDocumento(): void {
   getTotalFinal(): number {
     const subtotal = typeof this.cartSummary.subtotal === 'number' ? this.cartSummary.subtotal : 0;
     const envio = this.costoEnvioCalculado;
-    
-    return subtotal + envio;
+    const descuento = this.descuentoCupon || 0;
+
+    return subtotal - descuento + envio;
   }
 
   formatPrice(price: number | string | null | undefined): string {

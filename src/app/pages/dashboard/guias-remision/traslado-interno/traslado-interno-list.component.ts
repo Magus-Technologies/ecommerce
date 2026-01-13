@@ -184,8 +184,8 @@ import Swal from 'sweetalert2';
               <i class="ph ph-file-text"></i>
               <h6>No hay traslados internos</h6>
               <p>No se encontraron traslados con los filtros aplicados</p>
-              <button class="gre-btn-primary" (click)="nuevaGuia()">
-                <i class="ph ph-plus"></i>
+              <button class="btn btn-primary" (click)="nuevaGuia()">
+                <i class="ph ph-plus me-2"></i>
                 Crear Primer Traslado
               </button>
             </div>
@@ -237,6 +237,11 @@ export class TrasladoInternoListComponent implements OnInit {
     this.guiasService.getGuias(filtros).subscribe({
       next: (response) => {
         this.guias = response.data?.data || response.data || [];
+        // Construir numero_completo si no viene del backend
+        this.guias = this.guias.map(guia => ({
+          ...guia,
+          numero_completo: guia.numero_completo || `${guia.serie}-${String(guia.correlativo).padStart(8, '0')}`
+        }));
         this.calcularEstadisticas();
         this.loading = false;
       },
@@ -296,19 +301,62 @@ export class TrasladoInternoListComponent implements OnInit {
   }
 
   eliminar(guia: GuiaRemision): void {
+    // Validar que se pueda eliminar
+    if (guia.estado !== 'PENDIENTE') {
+      Swal.fire({
+        title: 'No se puede eliminar',
+        text: 'Solo se pueden eliminar guías en estado PENDIENTE',
+        icon: 'warning'
+      });
+      return;
+    }
+
+    if (guia.tiene_xml || guia.tiene_cdr) {
+      Swal.fire({
+        title: 'No se puede eliminar',
+        html: `
+          <p>Esta guía ya fue enviada a SUNAT.</p>
+          <p class="text-muted small">Debe anularla mediante el proceso oficial de comunicación de baja.</p>
+        `,
+        icon: 'warning'
+      });
+      return;
+    }
+
     Swal.fire({
       title: '¿Eliminar traslado?',
-      text: `¿Desea eliminar el traslado ${guia.numero_completo}?`,
+      html: `
+        <p>¿Está seguro de eliminar el traslado <strong>${guia.numero_completo}</strong>?</p>
+        <p class="text-danger small"><i class="ph ph-warning"></i> Esta acción no se puede deshacer</p>
+      `,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
+      cancelButtonColor: '#6c757d',
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
-      if (result.isConfirmed) {
-        // TODO: Implementar eliminación cuando exista el endpoint
-        Swal.fire('Información', 'Funcionalidad de eliminación en desarrollo', 'info');
+      if (result.isConfirmed && guia.id) {
+        this.guiasService.eliminarGuia(guia.id).subscribe({
+          next: (response) => {
+            Swal.fire({
+              title: 'Eliminado',
+              text: response.message || 'Traslado eliminado correctamente',
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false
+            });
+            this.cargarGuias();
+          },
+          error: (err) => {
+            const mensaje = err?.error?.message || 'No se pudo eliminar el traslado';
+            Swal.fire({
+              title: 'Error al eliminar',
+              text: mensaje,
+              icon: 'error'
+            });
+          }
+        });
       }
     });
   }

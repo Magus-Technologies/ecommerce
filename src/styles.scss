@@ -72,16 +72,18 @@ input[type="checkbox"] {
 // Fix para tablas con texto blanco
 .table {
   color: #212529 !important;
-  
-  td, th {
+
+  td,
+  th {
     color: #212529 !important;
   }
-  
+
   td strong {
     color: #000 !important;
   }
-  
-  td small, .text-muted {
+
+  td small,
+  .text-muted {
     color: #6c757d !important;
   }
 }

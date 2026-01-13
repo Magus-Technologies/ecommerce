@@ -321,6 +321,9 @@ export class AlmacenService {
       params = params.set('page', filtros.page.toString());
     }
 
+    // ✅ CACHE BUSTING: Agregar timestamp para evitar caché del navegador
+    params = params.set('_t', Date.now().toString());
+
     return this.http.get<ProductosPublicosResponse>(
       `${this.apiUrl}/productos-publicos`,
       { params }
@@ -450,5 +453,15 @@ obtenerProductosDestacados(): Observable<Producto[]> {
     )
   );
 }
+
+  // Obtener información de la empresa
+  obtenerInfoEmpresa(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/empresa-info`);
+  }
+
+  // Obtener asesores disponibles
+  obtenerAsesorDisponibles(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/asesores/disponibles`);
+  }
 
 }

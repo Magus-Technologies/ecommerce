@@ -9,90 +9,7 @@ import Swal from 'sweetalert2';
   selector: 'app-guias-remitente-list',
   standalone: true,
   imports: [CommonModule, FormsModule, GuiaRemisionModalComponent],
-  styles: [`
-    .table {
-      color: #212529 !important;
-    }
-    .table td, .table th {
-      color: #212529 !important;
-    }
-    .table td strong {
-      color: #000 !important;
-    }
-    .table td small {
-      color: #6c757d !important;
-    }
-    .text-muted {
-      color: #6c757d !important;
-    }
-    
-    .dropdown-menu-custom {
-      position: absolute;
-      right: 0;
-      top: 100%;
-      margin-top: 8px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-      min-width: 220px;
-      padding: 8px;
-      z-index: 1000;
-      animation: fadeInDown 0.2s ease;
-    }
-    
-    @keyframes fadeInDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    .dropdown-item-custom {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      padding: 12px 16px;
-      border: none;
-      background: transparent;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 14px;
-      font-weight: 500;
-      text-align: left;
-    }
-    
-    .dropdown-item-custom:hover:not(:disabled) {
-      background: #f8f9fa;
-    }
-    
-    .dropdown-item-custom:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    .dropdown-item-custom i {
-      font-size: 18px;
-    }
-    
-    .dropdown-item-custom.text-purple {
-      color: #6f42c1;
-    }
-    
-    .dropdown-item-custom.text-teal {
-      color: #20c997;
-    }
-    
-    .dropdown-divider {
-      height: 1px;
-      background: #e9ecef;
-      margin: 8px 0;
-    }
-  `],
+  styleUrl: './guias-remitente-list.component.scss',
   template: `
     <div class="gre-container">
       <div class="gre-header">
@@ -267,35 +184,9 @@ import Swal from 'sweetalert2';
                   </td>
                   <td>{{ guia.peso_total | number:'1.2-2' }}</td>
                   <td>
-                    <div class="d-flex flex-wrap gap-2 align-items-center">
-                      <span class="gre-badge" [ngClass]="getEstadoClass(guia.estado)">
-                        {{ guia.estado_nombre || guia.estado }}
-                      </span>
-                      
-                      <!-- Badge XML -->
-                      <span *ngIf="guia.tiene_xml" 
-                            class="badge bg-info" 
-                            title="XML generado"
-                            style="font-size: 0.7rem;">
-                        <i class="ph ph-file-code"></i> XML
-                      </span>
-                      
-                      <!-- Badge PDF -->
-                      <span *ngIf="guia.tiene_pdf" 
-                            class="badge bg-success" 
-                            title="PDF disponible"
-                            style="font-size: 0.7rem;">
-                        <i class="ph ph-file-pdf"></i> PDF
-                      </span>
-                      
-                      <!-- Badge Requiere SUNAT -->
-                      <span *ngIf="guia.estado === 'PENDIENTE'" 
-                            class="badge bg-warning text-dark" 
-                            title="Requiere envío a SUNAT"
-                            style="font-size: 0.7rem;">
-                        <i class="ph ph-cloud-arrow-up"></i> SUNAT
-                      </span>
-                    </div>
+                    <span class="gre-badge" [ngClass]="getEstadoClass(guia.estado)">
+                      {{ guia.estado_nombre || guia.estado }}
+                    </span>
                   </td>
                   <td>
                     <div class="position-relative">
@@ -602,7 +493,7 @@ export class GuiasRemitenteListComponent implements OnInit {
         this.guiasService.generarXml(guia.id!).subscribe({
           next: (responseXml) => {
             console.log('✅ XML generado:', responseXml.message);
-            
+
             // Paso 2: Enviar a SUNAT
             this.guiasService.enviarSunat(guia.id!).subscribe({
               next: (responseSunat) => {
@@ -678,15 +569,15 @@ export class GuiasRemitenteListComponent implements OnInit {
   }
 
   verXML(guia: GuiaRemision): void {
-    this.guiasService.getXml(guia.id!).subscribe({
-      next: (response) => {
-        // Abrir URL del XML en nueva pestaña
-        window.open(response.data.url, '_blank');
-      },
-      error: (err) => {
-        Swal.fire('Error', err.error?.message || 'No hay XML disponible para esta guía', 'error');
-      }
-    });
+    // Abrir XML en nueva pestaña usando el endpoint correcto
+    // Pasar numero_completo, y como respaldo serie y correlativo
+    const url = this.guiasService.verXmlArchivo(
+      guia.id!, 
+      guia.numero_completo!, 
+      guia.serie, 
+      guia.correlativo
+    );
+    window.open(url, '_blank');
   }
 
   generarXML(guia: GuiaRemision): void {
@@ -805,12 +696,12 @@ export class GuiasRemitenteListComponent implements OnInit {
             const email = (document.getElementById('email-input') as HTMLInputElement).value;
             const asunto = (document.getElementById('asunto-input') as HTMLInputElement).value;
             const mensaje = (document.getElementById('mensaje-input') as HTMLTextAreaElement).value;
-            
+
             if (!email) {
               Swal.showValidationMessage('El email es requerido');
               return false;
             }
-            
+
             return { email, asunto, mensaje };
           }
         }).then((result) => {
@@ -855,12 +746,12 @@ export class GuiasRemitenteListComponent implements OnInit {
           preConfirm: () => {
             const telefono = (document.getElementById('telefono-input') as HTMLInputElement).value;
             const mensaje = (document.getElementById('mensaje-wa-input') as HTMLTextAreaElement).value;
-            
+
             if (!telefono) {
               Swal.showValidationMessage('El teléfono es requerido');
               return false;
             }
-            
+
             return { telefono, mensaje };
           }
         }).then((result) => {

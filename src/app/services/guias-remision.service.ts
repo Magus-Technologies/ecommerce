@@ -79,6 +79,7 @@ export interface GuiaRemision {
   estado_logistico?: string;
   tiene_xml?: boolean;
   tiene_pdf?: boolean;
+  tiene_cdr?: boolean;
   xml_firmado?: string;
   mensaje_sunat?: string;
   codigo_hash?: string;
@@ -303,12 +304,62 @@ export class GuiasRemisionService {
     return this.http.post<{ success: boolean; message: string; data: any }>(`${this.apiUrl}/${id}/enviar-sunat`, {});
   }
 
+  // ==================== GESTIÓN DE XML ====================
+
   /**
-   * Ver XML (retorna URL para visualizar)
-   * Según la API: Retorna { url: "http://...", filename: "..." }
+   * Descargar XML (retorna el archivo directamente)
    */
-  getXml(id: number): Observable<{ success: boolean; data: { url: string; filename: string } }> {
-    return this.http.get<{ success: boolean; data: { url: string; filename: string } }>(`${this.apiUrl}/${id}/xml`);
+  descargarXml(id: number, numeroCompleto: string): Observable<Blob> {
+    const numeroFormateado = this.formatearNumeroCompleto(numeroCompleto);
+    return this.http.get(`${environment.apiUrl}/guia-remision/xml/${id}/${numeroFormateado}`, { 
+      responseType: 'blob',
+      headers: { 'Accept': 'application/xml' }
+    });
+  }
+
+  /**
+   * Ver XML en navegador (abre en nueva pestaña)
+   * Asegura que el numeroCompleto tenga el formato correcto: SERIE-CORRELATIVO (8 dígitos)
+   */
+  verXmlArchivo(id: number, numeroCompleto: string, serie?: string, correlativo?: number): string {
+    // Si no viene numeroCompleto pero sí serie y correlativo, construirlo
+    let numeroAUsar = numeroCompleto;
+    if (!numeroAUsar && serie && correlativo !== undefined) {
+      numeroAUsar = `${serie}-${correlativo}`;
+    }
+    
+    // Validar y formatear el numeroCompleto
+    const numeroFormateado = this.formatearNumeroCompleto(numeroAUsar);
+    return `${environment.apiUrl}/guia-remision/xml/${id}/${numeroFormateado}`;
+  }
+
+  /**
+   * Formatea el número completo asegurando que el correlativo tenga 8 dígitos
+   * Formato esperado: SERIE-CORRELATIVO (ej: T001-00000019)
+   */
+  private formatearNumeroCompleto(numeroCompleto: string): string {
+    if (!numeroCompleto) {
+      throw new Error('Número completo no proporcionado');
+    }
+
+    // Si ya tiene el formato correcto (serie-8dígitos), retornarlo
+    const partes = numeroCompleto.split('-');
+    if (partes.length === 2) {
+      const serie = partes[0];
+      const correlativo = partes[1];
+      
+      // Si el correlativo ya tiene 8 dígitos, retornar tal cual
+      if (correlativo.length === 8) {
+        return numeroCompleto;
+      }
+      
+      // Si tiene menos de 8 dígitos, rellenar con ceros a la izquierda
+      const correlativoFormateado = correlativo.padStart(8, '0');
+      return `${serie}-${correlativoFormateado}`;
+    }
+    
+    // Si no tiene el formato esperado, retornar tal cual y dejar que el backend maneje el error
+    return numeroCompleto;
   }
 
   /**
@@ -382,6 +433,13 @@ export class GuiasRemisionService {
    */
   actualizarGuia(id: number, datos: Partial<GuiaRemitentePayload | GuiaInternoPayload>): Observable<{ success: boolean; message: string; data: GuiaRemision }> {
     return this.http.put<{ success: boolean; message: string; data: GuiaRemision }>(`${this.apiUrl}/${id}`, datos);
+  }
+
+  /**
+   * Eliminar guía (solo PENDIENTE y sin XML)
+   */
+  eliminarGuia(id: number): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/${id}`);
   }
 
   // ==================== NOTIFICACIONES ====================

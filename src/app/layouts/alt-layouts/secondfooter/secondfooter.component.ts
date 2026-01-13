@@ -46,9 +46,9 @@ export class SecondfooterComponent {
         { label: 'Shopping Cart', route: ['cart'] },
         { label: 'Compare', route: ['compare'] },
         { label: 'Help Ticket', route: ['help-ticket'] },
-        { label: 'Wishlist', route: ['wishlist'] },
-        { label: 'Order History', route: ['wishlist'] },
-        { label: 'Product Support', route: ['wishlist'] },
+        { label: 'Favoritos', route: ['my-account/favoritos'] },
+        { label: 'Order History', route: ['my-account/favoritos'] },
+        { label: 'Product Support', route: ['my-account/favoritos'] },
 
       ]
     },

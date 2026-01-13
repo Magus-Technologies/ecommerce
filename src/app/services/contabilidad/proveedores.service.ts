@@ -90,31 +90,6 @@ export class ProveedoresService {
     return this.http.put<any>(`${this.apiUrl}/${id}`, data);
   }
 
-  /**
-   * Eliminar proveedor
-   */
-  eliminar(id: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/${id}`);
-  }
-
-  /**
-   * Activar/Desactivar proveedor
-   */
-  toggleActivo(id: number): Observable<any> {
-    return this.http.patch<any>(`${this.apiUrl}/${id}/toggle-activo`, {});
-  }
-
-  /**
-   * Buscar proveedor por RUC
-   */
-  buscarPorRuc(ruc: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/buscar-ruc/${ruc}`);
-  }
-
-  /**
-   * Obtener estadísticas de proveedor
-   */
-  getEstadisticas(id: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${id}/estadisticas`);
-  }
+  // Nota: Los endpoints DELETE, PATCH y búsqueda por RUC no existen en el backend
+  // Solo están disponibles: GET, POST, PUT para proveedores
 }

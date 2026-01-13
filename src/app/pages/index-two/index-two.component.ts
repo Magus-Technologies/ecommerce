@@ -1,16 +1,22 @@
 // src\app\pages\index-two\index-two.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { SlickCarouselModule } from 'ngx-slick-carousel';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { CategoriasPublicasService } from '../../services/categorias-publicas.service';
 import { MarcaProducto, ProductoPublico } from '../../types/almacen.types';
 import { AlmacenService } from '../../services/almacen.service';
-import { ProductosService } from '../../services/productos.service';
+import {
+  ProductosService,
+  type CategoriaParaSidebar,
+} from '../../services/productos.service';
 import { CartService } from '../../services/cart.service';
 import { CartNotificationService } from '../../services/cart-notification.service';
 import { IndexTwoService } from '../../services/index-two.service';
 import { ProductFilterComponent } from '../../component/product-filter/product-filter.component';
+import { BreadcrumbComponent } from '../../component/breadcrumb/breadcrumb.component';
+import { BannersService, Banner } from '../../services/banner.service';
 import Swal from 'sweetalert2';
 
 interface CategoriaTemplate {
@@ -27,14 +33,23 @@ interface CategoriaTemplate {
 
 @Component({
   selector: 'app-index-two',
-  imports: [CommonModule, SlickCarouselModule, RouterLink, ProductFilterComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    SlickCarouselModule,
+    RouterLink,
+    ProductFilterComponent,
+    BreadcrumbComponent,
+  ],
   templateUrl: './index-two.component.html',
   styleUrl: './index-two.component.scss',
 })
 export class IndexTwoComponent implements OnInit {
   // ✅ CAMBIO: Usar la nueva interfaz compatible
   categories: CategoriaTemplate[] = [];
+  categorias: CategoriaParaSidebar[] = [];
   marcas: MarcaProducto[] = [];
+  bannerSidebar: Banner | null = null;
 
   // ✅ NUEVO: Loading state para mostrar indicador de carga
   categoriesLoading = true;
@@ -43,6 +58,16 @@ export class IndexTwoComponent implements OnInit {
   productosLoading = false;
   categoriaSeleccionada?: number;
   marcaSeleccionada?: number;
+
+  // ✅ FILTRO POR PRECIO
+  minPrice?: number;
+  maxPrice?: number;
+  currentMinPrice?: number;
+  currentMaxPrice?: number;
+
+  // ✅ ORDENAMIENTO
+  sortBy: string = 'price_asc';
+
   // ✅ NUEVO: Propiedades para paginación
   currentPage = 1;
   totalPages = 1;
@@ -56,16 +81,20 @@ export class IndexTwoComponent implements OnInit {
   constructor(
     private categoriasService: CategoriasPublicasService,
     private almacenService: AlmacenService,
-    private productosService: ProductosService, // ✅ NUEVO
-    private route: ActivatedRoute, // ✅ NUEVO
-    private router: Router, // ✅ NUEVO
+    private productosService: ProductosService,
+    private route: ActivatedRoute,
+    private router: Router,
     private cartService: CartService,
     private cartNotificationService: CartNotificationService,
     private indexTwoService: IndexTwoService,
+    private bannersService: BannersService
   ) {}
 
   ngOnInit(): void {
     this.cargarCategoriasSeccion1();
+    this.cargarCategorias();
+    this.cargarMarcas();
+    this.cargarBannerSidebar();
 
     // ✅ NUEVO: Suscribirse a cambios en los query parameters
     this.route.queryParams.subscribe((params) => {
@@ -143,8 +172,11 @@ export class IndexTwoComponent implements OnInit {
       categoria: this.categoriaSeleccionada,
       seccion: 1,
       ...this.filters,
-      marca: this.marcaSeleccionada,
+      brand: this.marcaSeleccionada,  // ✅ CORREGIDO: Cambiar 'marca' por 'brand'
       page: this.currentPage,
+      minPrice: this.currentMinPrice,
+      maxPrice: this.currentMaxPrice,
+      sortBy: this.sortBy,
     };
 
     this.productosService.obtenerProductosPublicos(filtros).subscribe({
@@ -173,10 +205,10 @@ export class IndexTwoComponent implements OnInit {
   }
 
   // ✅ NUEVO: Método para seleccionar marca y actualizar URL
-  seleccionarMarca(categoriaId: number, marcaId: number): void {
+  seleccionarMarca(marcaId: number): void {
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { categoria: categoriaId, marca: marcaId, page: 1 },
+      queryParams: { marca: marcaId, page: 1 },
       queryParamsHandling: 'merge',
     });
   }
@@ -217,7 +249,7 @@ export class IndexTwoComponent implements OnInit {
   // Para que funcione, necesitarías importar CartService y añadirlo al constructor.
   // Por simplicidad, lo dejo comentado si no lo tienes configurado aquí.
 
- // Código antes:
+  // Código antes:
   // addToCart(producto: ProductoPublico): void {
   //   if (producto.stock <= 0) {
 
@@ -228,7 +260,7 @@ export class IndexTwoComponent implements OnInit {
         title: 'Sin stock',
         text: 'Este producto no tiene stock disponible',
         icon: 'warning',
-        confirmButtonColor: '#dc3545'
+        confirmButtonColor: '#dc3545',
       });
       return;
     }
@@ -236,11 +268,13 @@ export class IndexTwoComponent implements OnInit {
     this.cartService.addToCart(producto, 1).subscribe({
       next: () => {
         // Preparar imagen del producto
-        let productImage = producto.imagen_principal || 'assets/images/thumbs/product-default.png';
+        let productImage =
+          producto.imagen_principal ||
+          'assets/images/thumbs/product-default.png';
 
         // Obtener productos sugeridos (primeros 3 productos diferentes al actual)
         const suggestedProducts = this.productos
-          .filter(p => p.id !== producto.id)
+          .filter((p) => p.id !== producto.id)
           .slice(0, 3);
 
         // Mostrar notificación llamativa estilo Coolbox
@@ -257,16 +291,86 @@ export class IndexTwoComponent implements OnInit {
           title: 'Error',
           text: err.message || 'No se pudo agregar el producto al carrito',
           icon: 'error',
-          confirmButtonColor: '#dc3545'
+          confirmButtonColor: '#dc3545',
         });
-      }
+      },
     });
   }
 
   onFiltersApplied(filters: any) {
-    this.filters = filters;
+    this.currentMinPrice = filters.minPrice;
+    this.currentMaxPrice = filters.maxPrice;
+    this.marcaSeleccionada = filters.brand;
+    this.sortBy = filters.sortBy;
     this.currentPage = 1; // Resetear página al filtrar
+    
+    // ✅ ACTUALIZAR URL con los nuevos filtros
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { 
+        marca: this.marcaSeleccionada, 
+        page: 1 
+      },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  // ✅ NUEVO: Cargar categorías para sidebar
+  cargarCategorias(): void {
+    this.productosService.obtenerCategoriasParaSidebar().subscribe({
+      next: (categorias) => {
+        this.categorias = categorias;
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías:', error);
+      },
+    });
+  }
+
+  // ✅ NUEVO: Cargar marcas
+  cargarMarcas(): void {
+    this.almacenService.obtenerMarcasPublicas().subscribe({
+      next: (marcas) => {
+        this.marcas = marcas;
+      },
+      error: (error) => {
+        console.error('Error al cargar marcas:', error);
+      },
+    });
+  }
+
+  // ✅ NUEVO: Cargar banner del sidebar
+  cargarBannerSidebar(): void {
+    this.bannersService.obtenerBannerSidebarShop().subscribe({
+      next: (banner) => {
+        this.bannerSidebar = banner;
+      },
+      error: (error) => {
+        console.error('Error al cargar banner sidebar:', error);
+      },
+    });
+  }
+
+  // ✅ NUEVO: Aplicar filtro por precio
+  aplicarFiltroPrecio(): void {
+    this.currentMinPrice = this.minPrice;
+    this.currentMaxPrice = this.maxPrice;
+    this.currentPage = 1;
     this.cargarProductos();
   }
 
+  // ✅ NUEVO: Limpiar filtro de precio
+  limpiarFiltroPrecio(): void {
+    this.minPrice = undefined;
+    this.maxPrice = undefined;
+    this.currentMinPrice = undefined;
+    this.currentMaxPrice = undefined;
+    this.cargarProductos();
+  }
+
+  // ✅ NUEVO: Aplicar ordenamiento
+  aplicarOrdenamiento(): void {
+    this.currentPage = 1;
+    this.cargarProductos();
+  }
 }

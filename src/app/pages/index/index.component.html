@@ -475,8 +475,10 @@
                 Sale {{ product.discount_percentage }}%
               </span>
               <a
-                [routerLink]="getProductLink(product)"
+                href="javascript:void(0)"
+                (click)="navegarAProducto(product, $event)"
                 class="product-card__thumb flex-center overflow-hidden"
+                style="cursor: pointer"
               >
                 <img
                   [src]="product.imagen_principal"
@@ -487,8 +489,10 @@
               <div class="product-card__content p-sm-2 w-100">
                 <h6 class="title text-lg fw-semibold my-12">
                   <a
-                    [routerLink]="getProductLink(product)"
+                    href="javascript:void(0)"
+                    (click)="navegarAProducto(product, $event)"
                     class="link text-line-2"
+                    style="cursor: pointer"
                     >{{ product.nombre }}</a
                   >
                 </h6>
@@ -647,6 +651,7 @@
 
         <ngx-slick-carousel
           *ngIf="
+            bannerOfertaActivo &&
             bannerOfertaActivo.productos &&
             bannerOfertaActivo.productos.length > 0
           "
@@ -663,7 +668,7 @@
                 class="product-card h-100 p-16 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2"
               >
                 <a
-                  [routerLink]="['/producto', producto.id]"
+                  [routerLink]="getProductLink(producto)"
                   class="product-card__thumb rounded-8 position-relative overflow-hidden"
                   style="
                     height: 200px;
@@ -697,7 +702,7 @@
                 <div class="product-card__content mt-16">
                   <h6 class="title text-lg fw-semibold mt-12 mb-8">
                     <a
-                      [routerLink]="['/producto', producto.id]"
+                      [routerLink]="getProductLink(producto)"
                       class="link text-line-2"
                     >
                       {{ producto.nombre }}
@@ -750,8 +755,9 @@
         <!-- Empty state si no hay productos -->
         <div
           *ngIf="
-            !bannerOfertaActivo.productos ||
-            bannerOfertaActivo.productos.length === 0
+            bannerOfertaActivo &&
+            (!bannerOfertaActivo.productos ||
+              bannerOfertaActivo.productos.length === 0)
           "
           class="text-center py-60"
         >
@@ -794,6 +800,128 @@
       />
     </a>
   </div>
+</section>
+
+<!-- ========================= CUPÓN DISPONIBLE ================================ -->
+<section
+  class="coupon-section pt-40"
+  *ngIf="!isLoadingCupones && cuponesActivos.length > 0"
+>
+  <div class="container container-lg">
+    <div
+      class="row justify-content-center"
+      *ngIf="cuponesActivos[0]"
+      data-aos="fade-up"
+      data-aos-duration="600"
+    >
+      <div class="col-lg-11 col-xl-10">
+        <div class="coupon-banner coupon-turquoise">
+          <div class="row align-items-center g-0">
+            <!-- Columna izquierda: Círculo de descuento -->
+            <div class="col-lg-3 col-md-3 col-12">
+              <div class="discount-circle-wrapper">
+                <div class="discount-circle">
+                  <span
+                    class="discount-value"
+                    *ngIf="cuponesActivos[0].tipo_descuento === 'porcentaje'"
+                  >
+                    {{ cuponesActivos[0].valor_descuento | number:'1.0-0' }}%
+                  </span>
+                  <span
+                    class="discount-value"
+                    *ngIf="cuponesActivos[0].tipo_descuento !== 'porcentaje'"
+                  >
+                    S/{{ cuponesActivos[0].valor_descuento | number:'1.0-0' }}
+                  </span>
+                  <span class="discount-label">DSCTO</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Columna central: Contenido principal -->
+            <div class="col-lg-6 col-md-6 col-12">
+              <div class="coupon-content">
+                <!-- Badge y título -->
+                <div class="mb-2">
+                  <span class="coupon-badge">
+                    <i class="ph ph-ticket"></i> Cupón Disponible
+                  </span>
+                </div>
+                <h4 class="coupon-title mb-2">
+                  {{ cuponesActivos[0].titulo }}
+                </h4>
+                <p
+                  class="coupon-description mb-0"
+                  *ngIf="cuponesActivos[0].descripcion"
+                >
+                  {{ cuponesActivos[0].descripcion }}
+                </p>
+                <p
+                  class="coupon-description mb-0"
+                  *ngIf="!cuponesActivos[0].descripcion"
+                >
+                  {{
+                    cuponesActivos[0].tipo_descuento === "porcentaje"
+                      ? "EN TODA NUESTRA PÁGINA WEB POR COMPRAS MAYORES A " +
+                        (cuponesActivos[0].compra_minima || "0") +
+                        " SOLES."
+                      : "Ahorra S/" +
+                        cuponesActivos[0].valor_descuento +
+                        " en tu pedido"
+                  }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Columna derecha: Código y acciones -->
+            <div class="col-lg-3 col-md-3 col-12">
+              <div class="coupon-actions">
+                <!-- Código del cupón -->
+                <div class="coupon-code-box mb-2">
+                  <div class="coupon-code-label">CÓDIGO DEL CUPÓN</div>
+                  <div class="coupon-code-container">
+                    <span class="coupon-code">{{
+                      cuponesActivos[0].codigo
+                    }}</span>
+                    <button
+                      type="button"
+                      class="coupon-copy-btn"
+                      (click)="copiarCupon(cuponesActivos[0].codigo)"
+                      title="Copiar"
+                    >
+                      <i class="ph ph-copy"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Compra mínima -->
+                <div
+                  class="coupon-info mb-2"
+                  *ngIf="cuponesActivos[0].compra_minima"
+                >
+                  <i class="ph ph-info"></i> Compra mínima: S/{{
+                    cuponesActivos[0].compra_minima
+                  }}
+                </div>
+
+                <!-- Ver más cupones -->
+                <a
+                  *ngIf="cuponesActivos.length > 1"
+                  href="javascript:void(0)"
+                  class="coupon-more-link"
+                  (click)="verTodosCupones()"
+                >
+                  <i class="ph ph-gift"></i> Ver más cupones ({{
+                    cuponesActivos.length - 1
+                  }}) →
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>  
 </section>
 
 <!-- ========================= flash sales Start (DINÁMICO) ================================ -->
@@ -997,16 +1125,14 @@
 </section>
 
 <!-- ✅ SECCIÓN DE CUPONES DINÁMICOS -->
-<div class="pt-80">
+<!-- <div class="pt-80">
   <div class="container container-lg">
-    <!-- Loading cupones -->
     <div *ngIf="isLoadingCupones" class="text-center py-20">
       <div class="spinner-border text-main-600" role="status">
         <span class="visually-hidden">Cargando cupones...</span>
       </div>
     </div>
 
-    <!-- Cupones dinámicos -->
     <div
       *ngIf="!isLoadingCupones && cuponesActivos && cuponesActivos.length > 0"
       class="row gy-4"
@@ -1056,7 +1182,6 @@
       </div>
     </div>
 
-    <!-- Mensaje cuando no hay cupones -->
     <div
       *ngIf="
         !isLoadingCupones && (!cuponesActivos || cuponesActivos.length === 0)
@@ -1072,7 +1197,7 @@
       </div>
     </div>
   </div>
-</div>
+</div> -->
 <!-- SUPER CUPON DE DESCUENTO Discount End -->
 
 <!-- ========================== START productos, destacados,ofertas, mas vendidos ============================== -->
@@ -1603,164 +1728,29 @@
         data-aos="fade-up"
         data-aos-duration="900"
       >
-        <!-- ✅ LOADING STATE PARA OFERTA DE LA SEMANA -->
+        <!-- ✅ LOADING STATE PARA BANNER OFERTA DE LA SEMANA -->
         <div *ngIf="isLoadingOfertaSemana" class="text-center py-40">
           <div class="spinner-border text-main-600" role="status">
             <span class="visually-hidden">Cargando oferta de la semana...</span>
           </div>
         </div>
 
-        <!-- ✅ OFERTA DE LA SEMANA DINÁMICA -->
-        <div
-          *ngIf="
-            !isLoadingOfertaSemana &&
-            ofertaSemanaActiva &&
-            ofertaSemanaActiva.oferta_semana
-          "
-          class="product-card h-100 p-24 pt-32 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 group-item pt-32"
-        >
-          <button type="button" class="wishlist-btn-two">
-            <i class="ph-bold ph-heart"></i>
-          </button>
-
-          <div class="">
-            <h6 class="position-relative mb-0 pb-12 d-inline-block">
-              {{ ofertaSemanaActiva.oferta_semana.titulo }}
-            </h6>
-            <div class="countdown mb-10" id="countdown-oferta-semana">
-              <ul class="countdown-list flex-align flex-wrap">
-                <li
-                  class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
-                >
-                  <span class="days">0</span> D
-                </li>
-                <li
-                  class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
-                >
-                  <span class="hours">0</span> H
-                </li>
-                <li
-                  class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
-                >
-                  <span class="minutes">0</span> M
-                </li>
-                <li
-                  class="countdown-list__item colon-red py-8 px-12 flex-align gap-4 text-sm fw-medium box-shadow-4xl rounded-5 bg-main-600 text-white"
-                >
-                  <span class="seconds">0</span> S
-                </li>
-              </ul>
-            </div>
-            <p class="text-neutral-300 fw-medium text-sm">
-              {{
-                ofertaSemanaActiva.oferta_semana.subtitulo ||
-                  "No te pierdas esta oportunidad especial"
-              }}
-            </p>
-          </div>
-
-          <!-- ✅ MOSTRAR IMAGEN DE LA OFERTA EN LUGAR DEL PRODUCTO -->
-          <div class="product-card__thumb flex-center overflow-hidden">
+        <!-- ✅ BANNER OFERTA DE LA SEMANA -->
+        <div *ngIf="!isLoadingOfertaSemana && bannerOfertaSemana" class="product-card h-100 p-0 border-0">
+          <a class="d-block h-100" style="cursor: default;">
             <img
-              [src]="
-                ofertaSemanaActiva.oferta_semana.imagen_url ||
-                'assets/images/thumbs/product-img32.png'
-              "
-              [alt]="ofertaSemanaActiva.oferta_semana.titulo"
+              [src]="bannerOfertaSemana.imagen_url"
+              alt="Oferta de la Semana"
+              class="w-100 h-100 object-fit-cover rounded-16"
               (error)="onImageError($event)"
-              style="max-width: 200px; max-height: 200px; object-fit: contain"
+              style="min-height: 300px; max-height: 600px"
             />
-          </div>
-
-          <div class="product-card__content w-100">
-            <!-- ✅ RATING GENÉRICO PARA LA OFERTA -->
-            <div class="flex-align gap-4">
-              <div class="flex-align gap-2 me-4">
-                <span class="text-12 fw-medium text-warning-600 d-flex"
-                  ><i class="ph-fill ph-star"></i
-                ></span>
-                <span class="text-12 fw-medium text-warning-600 d-flex"
-                  ><i class="ph-fill ph-star"></i
-                ></span>
-                <span class="text-12 fw-medium text-warning-600 d-flex"
-                  ><i class="ph-fill ph-star"></i
-                ></span>
-                <span class="text-12 fw-medium text-warning-600 d-flex"
-                  ><i class="ph-fill ph-star"></i
-                ></span>
-                <span class="text-12 fw-medium text-warning-600 d-flex"
-                  ><i class="ph-fill ph-star"></i
-                ></span>
-              </div>
-              <span class="text-xs fw-medium text-heading"
-                >(Oferta especial)</span
-              >
-            </div>
-
-            <!-- ✅ MOSTRAR DESCUENTO DE LA OFERTA -->
-            <div class="d-flex align-items-center gap-12 mt-6">
-              <h6 class="text-danger-600 mb-0 text-lg">
-                {{
-                  ofertaSemanaActiva.oferta_semana.tipo_descuento ===
-                  "porcentaje"
-                    ? ofertaSemanaActiva.oferta_semana.valor_descuento + "% OFF"
-                    : "S/ " +
-                      ofertaSemanaActiva.oferta_semana.valor_descuento +
-                      " OFF"
-                }}
-              </h6>
-            </div>
-
-            <h6 class="title text-md fw-semibold mt-10 mb-0">
-              <span class="fw-bold">{{
-                ofertaSemanaActiva.oferta_semana.titulo
-              }}</span>
-            </h6>
-
-            <p
-              class="text-gray-500 text-sm mt-12 pb-12 border-bottom border-neutral-100 mb-8"
-            >
-              {{
-                ofertaSemanaActiva.oferta_semana.descripcion ||
-                  "Oferta especial de la semana"
-              }}
-            </p>
-
-            <!-- ✅ BARRA DE PROGRESO GENÉRICA O OCULTA -->
-            <div
-              class="progress w-100 bg-gray-100 rounded-pill h-8 mb-3"
-              role="progressbar"
-            >
-              <div
-                class="progress-bar bg-success-600 rounded-pill"
-                style="width: 75%"
-              ></div>
-            </div>
-            <div class="d-flex align-items-center gap-6">
-              <span class="text-sm text-gray-500">¡Oferta limitada!</span>
-            </div>
-
-            <!-- ✅ BOTÓN QUE REDIRIJA A LA TIENDA O URL ESPECÍFICA -->
-            <a
-              [routerLink]="[
-                ofertaSemanaActiva.oferta_semana.enlace_url || '/shop'
-              ]"
-              class="product-card__cart btn bg-success-600 text-white hover-bg-success-700 hover-text-white py-11 px-24 rounded-pill flex-align gap-8 mt-16 w-100 justify-content-center"
-            >
-              {{
-                ofertaSemanaActiva.oferta_semana.texto_boton || "Ver Ofertas"
-              }}
-              <i class="ph ph-arrow-right"></i>
-            </a>
-          </div>
+          </a>
         </div>
 
-        <!-- ✅ FALLBACK CUANDO NO HAY OFERTA DE LA SEMANA -->
+        <!-- ✅ FALLBACK CUANDO NO HAY BANNER OFERTA DE LA SEMANA -->
         <div
-          *ngIf="
-            !isLoadingOfertaSemana &&
-            (!ofertaSemanaActiva || !ofertaSemanaActiva.oferta_semana)
-          "
+          *ngIf="!isLoadingOfertaSemana && !bannerOfertaSemana"
           class="product-card h-100 p-24 pt-32 border border-gray-100 hover-border-main-600 rounded-16 position-relative transition-2 group-item pt-32"
         >
           <div class="text-center py-40">

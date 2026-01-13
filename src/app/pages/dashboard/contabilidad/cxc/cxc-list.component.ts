@@ -101,16 +101,14 @@ import Swal from 'sweetalert2';
               </select>
             </div>
             <div class="col-md-3">
-              <label class="form-label">Cliente</label>
-              <input type="text" class="form-control" [(ngModel)]="filtroCliente" 
-                     placeholder="Buscar cliente..." (input)="aplicarFiltros()">
+              <label class="form-label">Fecha Inicio</label>
+              <input type="date" class="form-control" [(ngModel)]="filtroFechaInicio" 
+                     (change)="aplicarFiltros()">
             </div>
-            <div class="col-md-2">
-              <label class="form-label">Vencidas</label>
-              <select class="form-select" [(ngModel)]="filtroVencidas" (change)="aplicarFiltros()">
-                <option value="">Todas</option>
-                <option value="true">Solo vencidas</option>
-              </select>
+            <div class="col-md-3">
+              <label class="form-label">Fecha Fin</label>
+              <input type="date" class="form-control" [(ngModel)]="filtroFechaFin" 
+                     (change)="aplicarFiltros()">
             </div>
           </div>
         </div>
@@ -184,8 +182,9 @@ export class CxcListComponent implements OnInit {
   procesando = false;
 
   filtroEstado = '';
-  filtroCliente = '';
-  filtroVencidas = '';
+  filtroClienteId?: number;
+  filtroFechaInicio = '';
+  filtroFechaFin = '';
 
   totalPorCobrar = 0;
   cuentasVencidas = 0;
@@ -205,11 +204,12 @@ export class CxcListComponent implements OnInit {
 
   cargarCuentas(): void {
     this.loading = true;
-    const params = {
-      estado: this.filtroEstado,
-      cliente: this.filtroCliente,
-      vencidas: this.filtroVencidas
-    };
+    const params: any = {};
+    
+    if (this.filtroEstado) params.estado = this.filtroEstado;
+    if (this.filtroClienteId) params.cliente_id = this.filtroClienteId;
+    if (this.filtroFechaInicio) params.fecha_inicio = this.filtroFechaInicio;
+    if (this.filtroFechaFin) params.fecha_fin = this.filtroFechaFin;
 
     this.cxcService.getCuentas(params).subscribe({
       next: (res) => {

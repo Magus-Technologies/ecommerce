@@ -38,13 +38,19 @@
 /* Header Menu and Submenu Css Start */
 .nav-menu {
     gap: 32px;
+    flex-wrap: nowrap;
+    
     @include xl-screen {
         gap: 24px;
     }
     @include lg-screen {
         gap: 16px;
     }
+    
     &__item {
+        flex-shrink: 0;
+        white-space: nowrap;
+        
         &.activePage {
             > a {
                 color: hsl(var(--main)) !important;
