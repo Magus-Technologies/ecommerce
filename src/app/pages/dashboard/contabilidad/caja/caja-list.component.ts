@@ -16,10 +16,16 @@ import Swal from 'sweetalert2';
           <h5 class="text-heading fw-semibold mb-8">Gestión de Caja</h5>
           <p class="text-gray-500 mb-0">Control de cajas y movimientos diarios</p>
         </div>
-        <button class="btn bg-main-600 text-white" (click)="abrirModalApertura()">
-          <i class="ph ph-plus me-2"></i>
-          Aperturar Caja
-        </button>
+        <div class="d-flex gap-2">
+          <button class="btn bg-main-600 text-white" (click)="abrirModalCrear()">
+            <i class="ph ph-plus me-2"></i>
+            Crear Caja
+          </button>
+          <button class="btn bg-success-600 text-white" (click)="abrirModalApertura()">
+            <i class="ph ph-lock-open me-2"></i>
+            Aperturar Caja
+          </button>
+        </div>
       </div>
 
       <!-- Cajas Activas -->
@@ -192,6 +198,44 @@ import Swal from 'sweetalert2';
       </div>
     </div>
     <div *ngIf="mostrarModalCierre" class="modal-backdrop fade show"></div>
+
+    <!-- Modal Crear Caja -->
+    <div class="modal fade" [class.show]="mostrarModalCrear" 
+         [style.display]="mostrarModalCrear ? 'block' : 'none'" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Crear Nueva Caja</h5>
+            <button type="button" class="btn-close" (click)="cerrarModalCrear()"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Nombre de la Caja *</label>
+              <input type="text" class="form-control" [(ngModel)]="datosCrear.nombre" 
+                     placeholder="Ej: Caja Principal" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Descripción</label>
+              <textarea class="form-control" rows="3" [(ngModel)]="datosCrear.descripcion" 
+                        placeholder="Descripción de la caja"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Ubicación</label>
+              <input type="text" class="form-control" [(ngModel)]="datosCrear.ubicacion" 
+                     placeholder="Ej: Mostrador 1">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="cerrarModalCrear()">Cancelar</button>
+            <button type="button" class="btn btn-primary" (click)="crearCaja()" [disabled]="procesando">
+              <span *ngIf="procesando" class="spinner-border spinner-border-sm me-2"></span>
+              {{ procesando ? 'Creando...' : 'Crear Caja' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="mostrarModalCrear" class="modal-backdrop fade show"></div>
   `,
     styles: [`
     .modal { overflow-y: auto; }
@@ -206,12 +250,19 @@ export class CajaListComponent implements OnInit {
 
     mostrarModalApertura = false;
     mostrarModalCierre = false;
+    mostrarModalCrear = false;
     movimientoSeleccionado: any = null;
 
     datosApertura = {
         caja_id: '',
         monto_inicial: 0,
         observaciones: ''
+    };
+
+    datosCrear = {
+        nombre: '',
+        descripcion: '',
+        ubicacion: ''
     };
 
     datosCierre = {
@@ -256,6 +307,39 @@ export class CajaListComponent implements OnInit {
 
     cerrarModalApertura(): void {
         this.mostrarModalApertura = false;
+    }
+
+    abrirModalCrear(): void {
+        this.datosCrear = { nombre: '', descripcion: '', ubicacion: '' };
+        this.mostrarModalCrear = true;
+    }
+
+    cerrarModalCrear(): void {
+        this.mostrarModalCrear = false;
+    }
+
+    crearCaja(): void {
+        if (!this.datosCrear.nombre.trim()) {
+            Swal.fire('Error', 'El nombre de la caja es requerido', 'error');
+            return;
+        }
+
+        this.procesando = true;
+        this.cajaService.crearCaja({
+            nombre: this.datosCrear.nombre,
+            codigo: this.datosCrear.nombre.toUpperCase().substring(0, 20)
+        }).subscribe({
+            next: (res) => {
+                Swal.fire('Éxito', 'Caja creada correctamente', 'success');
+                this.cerrarModalCrear();
+                this.cargarCajas();
+                this.procesando = false;
+            },
+            error: (err) => {
+                Swal.fire('Error', err.error?.message || 'Error al crear caja', 'error');
+                this.procesando = false;
+            }
+        });
     }
 
     aperturar(): void {
