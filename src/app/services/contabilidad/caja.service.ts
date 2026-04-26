@@ -97,4 +97,8 @@ export class CajaService {
   getMovimientosActivos(): Observable<any> {
     return this.http.get(`${this.apiUrl}/movimientos-activos`);
   }
+
+  getHistorial(page = 1): Observable<any> {
+    return this.http.get(`${this.apiUrl}/historial?page=${page}`);
+  }
 }

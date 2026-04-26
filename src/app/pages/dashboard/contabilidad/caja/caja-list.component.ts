@@ -28,7 +28,27 @@ import Swal from 'sweetalert2';
         </div>
       </div>
 
-      <!-- Cajas Activas -->
+      <!-- Tabs -->
+      <ul class="nav nav-tabs mb-24">
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="tabActivo === 'activas'"
+             (click)="cambiarTab('activas')" style="cursor:pointer">
+            <i class="ph ph-lock-open me-1"></i>
+            Cajas Activas
+            <span class="badge bg-success-100 text-success-600 ms-1">{{ movimientosActivos.length }}</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="tabActivo === 'historial'"
+             (click)="cambiarTab('historial')" style="cursor:pointer">
+            <i class="ph ph-clock-counter-clockwise me-1"></i>
+            Historial
+          </a>
+        </li>
+      </ul>
+
+      <!-- TAB: Cajas Activas -->
+      <div *ngIf="tabActivo === 'activas'">
       <div class="row g-4 mb-24">
         <div class="col-md-4" *ngFor="let movimiento of movimientosActivos">
           <div class="card border-0 shadow-sm">
@@ -75,18 +95,21 @@ import Swal from 'sweetalert2';
         </div>
       </div>
 
-      <!-- Historial de Movimientos -->
+      </div> <!-- /tab activas -->
+
+      <!-- TAB: Historial -->
+      <div *ngIf="tabActivo === 'historial'">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-white border-bottom">
           <h6 class="mb-0">Historial de Movimientos</h6>
         </div>
         <div class="card-body p-0">
-          <div *ngIf="loading" class="text-center py-5">
+          <div *ngIf="loadingHistorial" class="text-center py-5">
             <div class="spinner-border text-primary"></div>
-            <p class="mt-2 text-gray-500">Cargando...</p>
+            <p class="mt-2 text-gray-500">Cargando historial...</p>
           </div>
 
-          <div *ngIf="!loading" class="table-responsive">
+          <div *ngIf="!loadingHistorial" class="table-responsive">
             <table class="table table-hover mb-0">
               <thead class="bg-gray-50">
                 <tr>
@@ -122,6 +145,7 @@ import Swal from 'sweetalert2';
           </div>
         </div>
       </div>
+      </div> <!-- /tab historial -->
     </div>
 
     <!-- Modal Apertura -->
@@ -242,10 +266,12 @@ import Swal from 'sweetalert2';
   `]
 })
 export class CajaListComponent implements OnInit {
+    tabActivo: 'activas' | 'historial' = 'activas';
     cajas: Caja[] = [];
-    movimientos: CajaMovimiento[] = [];
+    movimientos: any[] = [];
     movimientosActivos: any[] = [];
     loading = false;
+    loadingHistorial = false;
     procesando = false;
 
     mostrarModalApertura = false;
@@ -275,6 +301,24 @@ export class CajaListComponent implements OnInit {
     ngOnInit(): void {
         this.cargarCajas();
         this.cargarMovimientosActivos();
+    }
+
+    cambiarTab(tab: 'activas' | 'historial'): void {
+        this.tabActivo = tab;
+        if (tab === 'historial' && this.movimientos.length === 0) {
+            this.cargarHistorial();
+        }
+    }
+
+    cargarHistorial(): void {
+        this.loadingHistorial = true;
+        this.cajaService.getHistorial().subscribe({
+            next: (res) => {
+                this.movimientos = res.data || [];
+                this.loadingHistorial = false;
+            },
+            error: () => { this.loadingHistorial = false; }
+        });
     }
 
     cargarCajas(): void {
