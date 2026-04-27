@@ -1265,7 +1265,15 @@ export class PosComponent implements OnInit, OnDestroy {
         return itemData;
       }),
       descuento_total: Number(this.ventaForm.descuento_global || 0),
-      observaciones: this.ventaForm.observaciones || ''
+      observaciones: this.ventaForm.observaciones || '',
+      productos: this.ventaForm.items
+        .filter((item: any) => item.tipo_item !== 'SERVICIO')
+        .map((item: any) => ({
+          producto_id: Number(item.producto_id),
+          cantidad: Number(item.cantidad),
+          precio_unitario: Number(item.precio_unitario),
+          descuento_unitario: item.descuento ? Number((item.descuento / item.cantidad).toFixed(2)) : 0,
+        }))
     };
 
     // ✅ SIEMPRE enviar cliente_datos para permitir actualización
