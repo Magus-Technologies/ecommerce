@@ -231,9 +231,9 @@ import Swal from 'sweetalert2';
                   </div>
                 </td>
 
-                <!-- Total (Subtotal sin IGV) -->
+                <!-- Total -->
                 <td class="px-24 py-16">
-                  <span class="text-heading fw-semibold">{{ nota.moneda }} {{ nota.subtotal | number:'1.2-2' }}</span>
+                  <span class="text-heading fw-semibold">{{ nota.moneda }} {{ nota.total | number:'1.2-2' }}</span>
                 </td>
 
                 <!-- Estado -->
